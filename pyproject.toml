@@ -1,0 +1,30 @@
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools"]
+
+[project]
+dependencies = [
+    "matplotlib",
+    "pandas",
+    "numpy",
+    "mplhep",
+    "uproot",
+    "black",
+    "isort",
+    # Requirements for NIFTy
+    "nifty8",
+    "ducc0",
+    "h5py",
+    "jax",
+]
+name = "pwa-ift"
+requires-python = ">=3.7"
+version = "0.0.0"
+
+[tool.isort]
+known_third_party = "THIRDPARTY,sympy"
+profile = "black"
+
+[tool.nbqa.addopts]
+black = ["--line-length=85"]

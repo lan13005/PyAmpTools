@@ -1,0 +1,10 @@
+name: pwa-ift
+channels:
+  - defaults
+dependencies:
+  - python==3.10.*
+  - pip
+  - pip:
+      - -e .[dev]
+variables:
+  PYTHONHASHSEED: 0
