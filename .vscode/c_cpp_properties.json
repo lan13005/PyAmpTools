@@ -1,0 +1,17 @@
+{
+  "configurations": [
+    {
+      "includePath": [
+        "${workspaceFolder}/libraries",
+        "/usr/include/c++/4.8.5",
+        "/w/halld-scshelf2101/lng/MambaForge/envs/pwa-ift/include",
+        "/home/lng/WORK/gluex_software/AmpTools/AmpTools"
+      ],
+      "name": "Linux",
+      "cStandard": "c99",
+      "cppStandard": "c++17",
+      "compilerPath": "/usr/bin/gcc"
+    }
+  ],
+  "version": 4
+}

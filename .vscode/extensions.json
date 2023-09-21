@@ -1,0 +1,19 @@
+{
+  "recommendations": [
+    "albertopdrf.root-file-viewer",
+    "eamodio.gitlens",
+    "editorconfig.editorconfig",
+    "esbenp.prettier-vscode",
+    "ms-python.black-formatter",
+    "ms-python.isort",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-vscode.cpptools",
+    "ms-vscode.live-server",
+    "ms-vscode.makefile-tools",
+    "ms-vsliveshare.vsliveshare",
+    "redhat.vscode-yaml",
+    "tamasfe.even-better-toml",
+    "yzhang.markdown-all-in-one"
+  ]
+}
