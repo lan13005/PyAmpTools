@@ -1,5 +1,5 @@
 
-#include "AMPTOOLS_AMPS/wignerD.h"
+#include "AMPTOOLS_AMPS_DATAIO/wignerD.h"
 #include <complex>
 
 using namespace std;

@@ -17,11 +17,10 @@ CXX := scorep-g++ --user
 CXX_FLAGS += -DSCOREP_USER_ENABLE
 endif
 
-INC_DIR :=  -I$(GLUEXAMPLITUDE) -I$(shell root-config --incdir) -I$(AMPTOOLS)
+INC_DIR :=  -I$(AMPTOOLS_AMPS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS)
 ifdef SCOREP
 INC_DIR += -I$(SCOREP_INC)
 endif
-
 
 CXX_FLAGS += $(shell root-config --cflags)
 
@@ -48,7 +47,7 @@ SUFFIX := $(SUFFIX)_MPI
 endif
 
 # setup the targets
-DEFAULT := libGlueXAmplitude$(SUFFIX).a
+DEFAULT := libAmpsDataIO$(SUFFIX).a
 TARGET_LIBS := $(SRCDIRS:%=lib%$(SUFFIX).a)
 
 export

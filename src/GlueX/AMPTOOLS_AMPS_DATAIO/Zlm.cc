@@ -7,8 +7,8 @@
 #include "TLorentzRotation.h"
 #include "TLorentzVector.h"
 
-#include "AMPTOOLS_AMPS/Zlm.h"
-#include "AMPTOOLS_AMPS/wignerD.h"
+#include "AMPTOOLS_AMPS_DATAIO/Zlm.h"
+#include "AMPTOOLS_AMPS_DATAIO/wignerD.h"
 #include "IUAmpTools/Kinematics.h"
 
 #include "TFile.h"
