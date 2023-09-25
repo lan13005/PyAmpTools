@@ -18,7 +18,7 @@ dependencies = [
     "h5py",
     "jax",
 ]
-name = "pwa-ift"
+name = "PyAmpTools"
 requires-python = ">=3.7"
 version = "0.0.0"
 

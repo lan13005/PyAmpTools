@@ -1,6 +1,6 @@
 # Installation
 
-Set some environment variables for CUDA (JLab ifarm)
+Set some required environment variables and setup CUDA 11.4 (JLab ifarm)
 
 ```shell
 source set_environment.sh
@@ -19,6 +19,6 @@ Environment setup. `conda` can be very slow to resolve dependencies. I recommend
 ```shell
 conda env create                            # Creates environment specified by environment.yml and pyproject.toml
 conda activate pwa-ift                      # activate the environment
-conda install mpi4py                        # For NIFTy to use MPI
-conda install -c conda-forge root=6.24.04   # cuda 11.4 requires gcc < 11. Install root v6.24 (matching ifarm) which requires python <3.9
+mamba install mpi4py                        # For NIFTy to use MPI
+mamba install -c conda-forge root=6.24.04   # cuda 11.4 requires gcc < 11. Install root v6.24 (matching ifarm) which requires python <3.9
 ```
