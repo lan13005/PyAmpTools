@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 import random
 import sys
+from utils import get_pid_family
 
 def performFit(fitManager, seed_file_tag):
     ''' Performs a single fit '''
@@ -35,53 +36,67 @@ def runFits( N: int = 0 ):
     '''
     Performs N randomized fits, if N=0 then a single fit with no randomization is performed
     '''
-    print(f'LIKELIHOOD BEFORE MINIMIZATION: {ati.likelihood()}')
-    fitManager: MinuitMinimizationManager = ati.minuitMinimizationManager()
-    fitManager.setMaxIterations(args.maxIter)
 
-    if N == 0: # No randomization
-        bFitFailed, NLL = performFit(fitManager, '0')
-        print(f'LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): {NLL}')
+    if (RANK_MPI==0):
+        print(f'LIKELIHOOD BEFORE MINIMIZATION: {ati.likelihood()}')
+        fitManager: MinuitMinimizationManager = ati.minuitMinimizationManager()
+        fitManager.setMaxIterations(args.maxIter)
 
-    else: # Randomized parameters
-        AmpToolsInterface.setRandomSeed(args.randomSeed)
+        if N == 0: # No randomization
+            bFitFailed, NLL = performFit(fitManager, '0')
+            print(f'LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): {NLL}')
 
-        fitName     = cfgInfo.fitName()
-        maxFraction = 0.5
-        minLL       = sys.float_info.max
-        minFitTag   = -1
+        else: # Randomized parameters
+            fitName     = cfgInfo.fitName()
+            maxFraction = 0.5
+            minLL       = sys.float_info.max
+            minFitTag   = -1
 
-        parRangeKeywords = cfgInfo.userKeywordArguments("parRange")
+            parRangeKeywords = cfgInfo.userKeywordArguments("parRange")
 
-        for i in range(N):
-            print("###############################################")
-            print(f'#############   FIT {i} OF {N} ###############')
-            print("###############################################")
+            for i in range(N):
+                print("###############################################")
+                print(f'#############   FIT {i} OF {N} ###############')
+                print("###############################################")
 
-            ati.reinitializePars()
-            ati.randomizeProductionPars(maxFraction)
-            for ipar in range(len(parRangeKeywords)):
-                ati.randomizeParameter(parRangeKeywords[ipar][0], float(parRangeKeywords[ipar][1]), float(parRangeKeywords[ipar][2]))
+                ati.reinitializePars()
+                ati.randomizeProductionPars(maxFraction)
+                for ipar in range(len(parRangeKeywords)):
+                    ati.randomizeParameter(parRangeKeywords[ipar][0], float(parRangeKeywords[ipar][1]), float(parRangeKeywords[ipar][2]))
 
-            bFitFailed, NLL = performFit(fitManager, f'{i}')
-            if not bFitFailed and NLL < minLL:
-                minLL = NLL
-                minFitTag = i
+                bFitFailed, NLL = performFit(fitManager, f'{i}')
+                if not bFitFailed and NLL < minLL:
+                    minLL = NLL
+                    minFitTag = i
 
-            print(f'LIKELIHOOD AFTER MINIMIZATION: {NLL}')
+                print(f'LIKELIHOOD AFTER MINIMIZATION: {NLL}')
 
-        if minFitTag < 0:
-            print("ALL FITS FAILED!")
-        else:
-            print(f'MINIMUM LIKELHOOD FROM ITERATION {minFitTag} of {N} RANDOM PRODUCTION PARS = {minLL}')
-            os.system(f'cp {fitName}_{minFitTag}.fit {fitName}.fit')
-            if args.seedfile is not None:
-                os.system(f'cp {args.seedfile}_{minFitTag}.txt {args.seedfile}.txt')
+            if minFitTag < 0:
+                print("ALL FITS FAILED!")
+            else:
+                print(f'MINIMUM LIKELHOOD FROM ITERATION {minFitTag} of {N} RANDOM PRODUCTION PARS = {minLL}')
+                os.system(f'cp {fitName}_{minFitTag}.fit {fitName}.fit')
+                if args.seedfile is not None:
+                    os.system(f'cp {args.seedfile}_{minFitTag}.txt {args.seedfile}.txt')
 
+    if USE_MPI:
+        ati.exitMPI()
 
 ############## SET ENVIRONMENT VARIABLES ##############
 REPO_HOME     = os.environ['REPO_HOME']
 
+#################### INITIALIZE MPI IF REQUESTED ###################
+from mpi4py import rc as mpi4pyrc
+mpi4pyrc.threads = False
+from mpi4py import MPI
+import sys
+RANK_MPI = MPI.COMM_WORLD.Get_rank()
+SIZE_MPI = MPI.COMM_WORLD.Get_size()
+caller, parent = get_pid_family()
+SUFFIX, USE_MPI = ("_MPI", True) if "mpi" in parent else ("", False) 
+assert( USE_MPI and (SIZE_MPI > 1) )
+if USE_MPI:
+    print(f'Rank: {RANK_MPI} of {SIZE_MPI}')
 
 ############## PARSE COMMANDLINE ARGUMENTS #############
 parser = argparse.ArgumentParser(description="Perform MLE fits")
@@ -102,35 +117,42 @@ if args.config is None:
     print("No config file specified")
     exit(1)
 
-print("\n\n === COMMANDLINE ARGUMENTS === ")
-print("Config file:", args.config)
-print("Seed file:", args.seedfile)
-print("Number of random fits:", args.numRnd)
-print("Random seed:", args.randomSeed)
-print("Maximum iterations:", args.maxIter)
-print("Use MINOS:", args.useMinos)
-print("Evaluate HESSE matrix:", args.hesse)
-print("Scanning Parameter:", args.scanPar)
-print(" ============================= \n\n")
+if RANK_MPI == 0:
+    print("\n\n === COMMANDLINE ARGUMENTS === ")
+    print("Config file:", args.config)
+    print("Seed file:", args.seedfile)
+    print("Number of random fits:", args.numRnd)
+    print("Random seed:", args.randomSeed)
+    print("Maximum iterations:", args.maxIter)
+    print("Use MINOS:", args.useMinos)
+    print("Evaluate HESSE matrix:", args.hesse)
+    print("Scanning Parameter:", args.scanPar)
+    print(" ============================= \n\n")
 
 
 #################### LOAD LIBRARIES ###################
-ROOT.gSystem.Load('libAmps.so')
-ROOT.gSystem.Load('libDataIO.so')
-ROOT.gSystem.Load('libAmpTools.so')
+ROOT.gSystem.Load(f'libAmpTools{SUFFIX}.so')
+ROOT.gSystem.Load(f'libDataIO.so')
+ROOT.gSystem.Load(f'libAmps.so')
+if RANK_MPI == 0:
+    print(f'Loaded libraries: libAmpTools{SUFFIX}.so, libDataIO.so, libAmps.so')
 
-# Dummy functions that just prints initialization
+# Dummy functions that just prints "initialization"
 #  This is to make sure the libraries are loaded
 #  as python is interpreted.
-ROOT.initializeAmps()
-ROOT.initializeDataIO()
+ROOT.initializeAmps(True)   if RANK_MPI == 0 else ROOT.initializeAmps(False)
+ROOT.initializeDataIO(True) if RANK_MPI == 0 else ROOT.initializeDataIO(False)
 
 ##################### SET ALIAS ########################
 ConfigFileParser            = ROOT.ConfigFileParser
 ConfigurationInfo           = ROOT.ConfigurationInfo
-AmpToolsInterface           = ROOT.AmpToolsInterface
+if USE_MPI:
+    DataReader              = ROOT.DataReaderMPI['ROOTDataReader'] # DataReaderMPI is a template; use [] to specify the type
+    AmpToolsInterface       = ROOT.AmpToolsInterfaceMPI
+else:
+    DataReader              = ROOT.ROOTDataReader
+    AmpToolsInterface       = ROOT.AmpToolsInterface
 Zlm                         = ROOT.Zlm
-ROOTDataReader              = ROOT.ROOTDataReader
 ParameterManager            = ROOT.ParameterManager
 MinuitMinimizationManager   = ROOT.MinuitMinimizationManager
 
@@ -138,13 +160,15 @@ MinuitMinimizationManager   = ROOT.MinuitMinimizationManager
 cfgfile = f'{REPO_HOME}/gen_amp/fit_res.cfg'
 parser = ConfigFileParser(cfgfile)
 cfgInfo: ConfigurationInfo = parser.getConfigurationInfo()
-cfgInfo.display()
+if RANK_MPI == 0:
+    cfgInfo.display()
 
 ############## REGISTER OBJECTS FOR AMPTOOLS ##############
 AmpToolsInterface.registerAmplitude( Zlm() )
-AmpToolsInterface.registerDataReader( ROOTDataReader() )
+AmpToolsInterface.registerDataReader( DataReader() ) 
 
 ati = AmpToolsInterface( cfgInfo )
 parMgr: ParameterManager = ati.parameterManager()
 
+AmpToolsInterface.setRandomSeed(args.randomSeed)
 runFits(args.numRnd)
