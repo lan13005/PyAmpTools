@@ -21,9 +21,12 @@ Set some required environment variables
 source set_environment.sh
 ```
 
-Build AmpTools into a shared library
+Build required libraries
 
 ```shell
-cd external/MakeAmpTools/
-make # distributes modified Makefiles and makes AmpTools
+# Options in brackets are optional
+cd $REPO_HOME/external/MakeAmpTools/
+make [mpi] # distributes modified Makefiles and makes AmpTools into a shared library
+cd $REPO_HOME/external/AMPTOOLS_AMPS; make [MPI=1]
+cd $REPO_HOME/external/AMPTOOLS_DATAIO; make [MPI=1]
 ```
