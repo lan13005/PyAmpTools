@@ -1,3 +1,3 @@
 #include <iostream>
 
-void initializeAmps();
+void initializeAmps(bool verbose);

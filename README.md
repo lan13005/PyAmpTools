@@ -11,7 +11,8 @@ Environment setup. `conda` can be very slow to resolve dependencies for ROOT. I 
 ```shell
 conda env create            		# Creates environment specified by environment.yml and pyproject.toml
 conda activate PyAmpTools   		# activate the environment
-mamba install -c conda-forge root
+pip install mpi4py                  # MPI, mamba will link it against the wrong executables
+mamba install -c conda-forge root   # ROOT!
 ```
 
 Set some required environment variables

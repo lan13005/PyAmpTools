@@ -1,5 +1,6 @@
 #include "initializeDataIO.h"
 
-void initializeDataIO(){
-    std::cout << "Initializing AMPTOOLS_DATAIO for PyROOT..." << std::endl;
+void initializeDataIO(bool verbose){
+	if (verbose)
+    	std::cout << "Initializing AMPTOOLS_DATAIO for PyROOT..." << std::endl;
 }

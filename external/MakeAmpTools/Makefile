@@ -8,24 +8,37 @@ ifndef ROOTSYS
 $(error ROOTSYS environment variable is not set)
 endif
 
-SRC_DIRS := AmpTools
+SRC_DIRS := Distribution
+SUB_DIRS := IUAmpTools IUAmpToolsMPI MinuitInterface UpRootMinuit
 
 # # Default target: Distribute Makefiles and run 'make'
-default: distribute_makefiles run_make
-
-distribute_makefiles:
-	@echo " === Distributing Makefiles... === "
-	@for dir in $(shell ls -d ${SRC_DIRS}/*/); do \
-		cp $$dir/Makefile ../AmpTools/$$dir; \
-		echo "Copied $$dir/Makefile to ../AmpTools/$$dir"; \
-	done
-
-# Target to run 'make' in the target directory
-run_make:
+default: distribute_makefiles
 	@echo " === Running 'make' in the target directory... ==="
 	@cd ../AmpTools/AmpTools; make
 
-.PHONY: distribute_makefiles run_make default
+mpi: default
+	@echo " === Running 'make mpi' in the target directory... ==="
+	@cd ../AmpTools/AmpTools; make MPI=1
+
+gpu:
+	@echo " === Running 'make gpu' in the target directory... ==="
+	@cd ../AmpTools/AmpTools; make GPU=1
+
+mpigpu: gpu
+	@echo " === Running 'make mpigpu' in the target directory... ==="
+	@cd ../AmpTools/AmpTools; make GPU=1 MPI=1
+
+gpumpi: mpigpu
+
+distribute_makefiles:
+	@echo " === Distributing Makefiles... === "
+	@for dir in $(SUB_DIRS); do \
+		cp $(SRC_DIRS)/AmpTools_X_Makefile ../AmpTools/AmpTools/$$dir/Makefile; \
+		echo "Copied $(SRC_DIRS)/AmpTools_X_Makefile to ../AmpTools/AmpTools/$$dir/Makefile"; \
+	done
+	cp $(SRC_DIRS)/AmpTools_Makefile ../AmpTools/AmpTools/Makefile
+
+.PHONY: distribute_makefiles default mpi gpu mpigpu gpumpi clean
 
 clean:
 	@echo " === Cleaning up target directory === "
