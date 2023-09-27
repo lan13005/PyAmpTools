@@ -9,7 +9,7 @@ from amploader import load_amplitude_info, flatten_amplitude_parts, collect_ampl
 import corner
 
 ############## SET OUTPUT FOLDER ##############
-ofolder = 'mcmc' # output results here
+ofolder = 'mcmc/Lasso' # output results here
 save_model = "mcmc.h5" # save MCMC results here
 os.system(f'mkdir -p {ofolder}')
 NWALKERS = int(32)
@@ -52,19 +52,28 @@ ati = AmpToolsInterface( cfgInfo )
 parMgr: ParameterManager = ati.parameterManager()
 
 ############## UTILITY FUNCTIONS ##############
-def LogLikelihood(
+def LogProb(
     par_values:  npt.NDArray[np.float64] = np.array([]), # [real1, imag1, real2, imag2, ...]
     PAR_NAMES:   npt.NDArray[np.str_]    = np.array([]),
     PAR_INDICES: npt.NDArray[np.int64]   = np.array([])
     ):
+    ''' Log probability function = Log Likelihood if no prior '''
+
+    ## Calculate Log likelihood
     ll = -1e7
     complex_values = collect_amplitude_parts(par_values, PAR_NAMES, PAR_INDICES)
     for name, complex_value in zip(PAR_NAMES, complex_values):
         # print(f'Setting {name} to {complex_value}')
         parMgr.setProductionParameter(name, complex_value)
     ll = -ati.likelihood()
-    # print(f'LogLikelihood: {ll}')
-    return ll
+
+    ## Add lasso prior on parameter values we know are small
+    lasso = 0.1
+    prior = -lasso * np.sum(np.abs(par_values[PAR_INDICES >= 2]))
+
+    log_prob = ll + prior
+    # print(f'LogProb: {log_prob} = {ll} + {prior}')
+    return log_prob
 
 
 ############## FIND AVAILABLE AMPS ##############
@@ -98,7 +107,7 @@ if not os.path.exists(f'{ofolder}/mcmc.h5'):
 
     backend = emcee.backends.HDFBackend(f'{ofolder}/{save_model}')
     backend.reset(NWALKERS, NDIM)
-    sampler = emcee.EnsembleSampler(NWALKERS, NDIM, LogLikelihood, args=[PAR_NAMES, PAR_INDICES], backend=backend)
+    sampler = emcee.EnsembleSampler(NWALKERS, NDIM, LogProb, args=[PAR_NAMES, PAR_INDICES], backend=backend)
 
     state = sampler.run_mcmc(par_values, BURN_IN)
     sampler.reset()
@@ -107,7 +116,7 @@ if not os.path.exists(f'{ofolder}/mcmc.h5'):
     autocorr_time = np.mean(sampler.get_autocorr_time(quiet=True))
     print(f"Mean acceptance fraction: {0:.3f}".format(acceptance_fraction))
     print(f"Autocorrelation time: {0:.3f} steps".format(autocorr_time))
-    
+
 else:
     print(f' ================== LOADING MCMC ================== ')
     sampler = emcee.backends.HDFBackend(f'{ofolder}/{save_model}')
@@ -133,8 +142,8 @@ map_idx = np.argmax(sampler.get_log_prob(flat=True)) # maximum a posteriori (MAP
 map_estimate_ReIm = samples[map_idx,:]
 intensity = np.empty((samples.shape[0], len(PAR_NAMES)))
 for i in range(len(PAR_NAMES)):
-    real = samples[:, PAR_INDICES.index(2*i)]   if 2*i   in PAR_INDICES else np.zeros(samples.shape[0])
-    imag = samples[:, PAR_INDICES.index(2*i+1)] if 2*i+1 in PAR_INDICES else np.zeros(samples.shape[0])
+    real = samples[:, np.argwhere(PAR_INDICES==(2*i  ))[0][0]]   if 2*i in PAR_INDICES else np.zeros(samples.shape[0])
+    imag = samples[:, np.argwhere(PAR_INDICES==(2*i+1))[0][0]] if 2*i+1 in PAR_INDICES else np.zeros(samples.shape[0])
     intensity[:, i] = real**2 + imag**2
 map_estimate = intensity[map_idx,:]
 
@@ -157,7 +166,7 @@ print(f'MAP for Intensity: {map_estimate}')
 print(' =============================================== ')
 
 # import pygtc
-# GTC_ReIM = pygtc.plotGTC(chains=[samples], paramNames=PAR_NAMES_PARTS, 
+# GTC_ReIM = pygtc.plotGTC(chains=[samples], paramNames=PAR_NAMES_PARTS,
 #                     chainLabels=['MCMC samples'], legendMarker='Auto', figureSize='MNRAS_page', plotName=f'{ofolder}/mcmc_ReIm.pdf', nContourLevels=3)
-# GTC = pygtc.plotGTC(chains=[intensity], paramNames=PAR_NAMES, 
+# GTC = pygtc.plotGTC(chains=[intensity], paramNames=PAR_NAMES,
 #                     chainLabels=['MCMC samples'], legendMarker='Auto', figureSize='MNRAS_page', plotName=f'{ofolder}/mcmc.pdf', nContourLevels=3)

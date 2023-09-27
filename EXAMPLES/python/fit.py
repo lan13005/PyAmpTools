@@ -15,9 +15,9 @@ def performFit(fitManager, seed_file_tag):
         fitManager.migradMinimization()
     if args.hesse:
         fitManager.setEvaluateHessian(True)
-    
+
     bFitFailed = fitManager.status() != 0 and fitManager.eMatrixStatus() != 3
-    
+
     if bFitFailed:
         print("ERROR: fit failed use results with caution...")
         NLL = 1e6
@@ -69,7 +69,7 @@ def runFits( N: int = 0 ):
                     minLL = NLL
                     minFitTag = i
 
-                print(f'LIKELIHOOD AFTER MINIMIZATION: {NLL}')
+                print(f'LIKELIHOOD AFTER MINIMIZATION: {NLL}\n')
 
             if minFitTag < 0:
                 print("ALL FITS FAILED!")
@@ -80,7 +80,9 @@ def runFits( N: int = 0 ):
                     os.system(f'cp {args.seedfile}_{minFitTag}.txt {args.seedfile}.txt')
 
     if USE_MPI:
-        ati.exitMPI()
+       ati.exitMPI()
+
+
 
 ############## SET ENVIRONMENT VARIABLES ##############
 REPO_HOME     = os.environ['REPO_HOME']
@@ -89,11 +91,10 @@ REPO_HOME     = os.environ['REPO_HOME']
 from mpi4py import rc as mpi4pyrc
 mpi4pyrc.threads = False
 from mpi4py import MPI
-import sys
 RANK_MPI = MPI.COMM_WORLD.Get_rank()
 SIZE_MPI = MPI.COMM_WORLD.Get_size()
 caller, parent = get_pid_family()
-SUFFIX, USE_MPI = ("_MPI", True) if "mpi" in parent else ("", False) 
+SUFFIX, USE_MPI = ("_MPI", True) if "mpi" in parent else ("", False)
 assert( (USE_MPI and (SIZE_MPI > 1)) or not USE_MPI )
 if USE_MPI:
     print(f'Rank: {RANK_MPI} of {SIZE_MPI}')
@@ -142,8 +143,8 @@ if RANK_MPI == 0:
 # Dummy functions that just prints "initialization"
 #  This is to make sure the libraries are loaded
 #  as python is interpreted.
-ROOT.initializeAmps(True)   if RANK_MPI == 0 else ROOT.initializeAmps(False)
-ROOT.initializeDataIO(True) if RANK_MPI == 0 else ROOT.initializeDataIO(False)
+ROOT.initializeAmps(   RANK_MPI == 0 )
+ROOT.initializeDataIO( RANK_MPI == 0 )
 
 ##################### SET ALIAS ########################
 ConfigFileParser            = ROOT.ConfigFileParser
@@ -164,12 +165,15 @@ cfgInfo: ConfigurationInfo = parser.getConfigurationInfo()
 if RANK_MPI == 0:
     cfgInfo.display()
 
-############## REGISTER OBJECTS FOR AMPTOOLS ##############
+# ############## REGISTER OBJECTS FOR AMPTOOLS ##############
 AmpToolsInterface.registerAmplitude( Zlm() )
-AmpToolsInterface.registerDataReader( DataReader() ) 
+AmpToolsInterface.registerDataReader( DataReader() )
 
 ati = AmpToolsInterface( cfgInfo )
+
 parMgr: ParameterManager = ati.parameterManager()
 
 AmpToolsInterface.setRandomSeed(args.randomSeed)
 runFits(args.numRnd)
+
+print("Done! MPI.Finalize() / MPI.Init() automatically called at script end / start\n")
