@@ -129,6 +129,8 @@ if RANK_MPI == 0:
     print("Scanning Parameter:", args.scanPar)
     print(" ============================= \n\n")
 
+cfgfile = args.config
+assert( os.path.isfile(cfgfile) )
 
 #################### LOAD LIBRARIES ###################
 ROOT.gSystem.Load(f'libAmpTools{SUFFIX}.so')
@@ -157,7 +159,6 @@ ParameterManager            = ROOT.ParameterManager
 MinuitMinimizationManager   = ROOT.MinuitMinimizationManager
 
 ############## LOAD CONFIGURATION FILE ##############
-cfgfile = f'{REPO_HOME}/gen_amp/fit_res.cfg'
 parser = ConfigFileParser(cfgfile)
 cfgInfo: ConfigurationInfo = parser.getConfigurationInfo()
 if RANK_MPI == 0:

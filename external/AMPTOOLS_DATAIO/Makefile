@@ -20,10 +20,11 @@ $(info AMPTOOLS: $(AMPTOOLS))
 ######## SET COMPILER AND LIBRARY LOCATIONS ########
 include $(AMPTOOLS_HOME)/Makefile.settings
 CXX = gcc
-INC_DIR  = -I$(AMPTOOLS_AMPS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS)
+INC_DIR  = -I$(AMPTOOLS_AMPS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS) -I$(AMPPLOTTER)
 CXXFLAGS = -Wall -shared -fPIC $(INC_DIR)
 ROOTLIBS   = $(shell root-config --libs)
 AMPTOOLS_LIBS := -L$(AMPTOOLS)/lib -lAmpTools
+AMPPLOTTER_LIBS := -L$(AMPPLOTTER)/lib -lAmpPlotter
 AMPTOOLS_HEADERS := $(shell find $(AMPTOOLS) -type f -name '*.h' -not -name '*GPU*' -not -name '*MPI*' -not -name '*LinkDef*')
 
 ifdef MPI
@@ -37,6 +38,9 @@ AMPTOOLS_HEADERS += mpi.h
 endif
 
 AMPTOOLS_HEADERS := $(patsubst $(AMPTOOLS)/%,%,$(AMPTOOLS_HEADERS))
+
+AMPPLOTTER_HEADERS := $(shell find $(AMPPLOTTER) -type f -name '*.h')
+AMPPLOTTER_HEADERS := $(patsubst $(AMPPLOTTER)/%,%,$(AMPPLOTTER_HEADERS))
 
 ######## SET SOURCES AND HEADER FILES ########
 # Source Files, deriving object and header files from them
@@ -60,7 +64,7 @@ all: $(TARGET_LIBRARY)
 
 $(TARGET_LIBRARY): $(OBJECTS) $(TARGET_DICT)
 	@echo " === Creating final library $@ === "
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(ROOTLIBS) $(AMPTOOLS_LIBS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(ROOTLIBS) $(AMPTOOLS_LIBS) $(AMPPLOTTER_LIBS)
 
 $(TARGET_DICT): $(HEADERS)
 	@echo " === Creating Dictionary $@ === "
@@ -72,10 +76,13 @@ $(TARGET_DICT): $(HEADERS)
 	@for header in $(AMPTOOLS_HEADERS); do \
 		echo "#pragma link C++ defined_in \"$$header\";" >> ${TARGET_LINKDEF}; \
 	done
+	@for header in $(AMPPLOTTER_HEADERS); do \
+		echo "#pragma link C++ defined_in \"$$header\";" >> ${TARGET_LINKDEF}; \
+	done
 	@echo "#pragma link C++ defined_in \"mpi.h\";" >> ${TARGET_LINKDEF}
 	@echo "#endif" >> ${TARGET_LINKDEF}
 
-	rootcling -f $(INC_DIR) $@ $^ $(AMPTOOLS_HEADERS) ${TARGET_LINKDEF}
+	rootcling -f $(INC_DIR) $@ $^ $(AMPTOOLS_HEADERS) $(AMPPLOTTER_HEADERS) ${TARGET_LINKDEF}
 
 %.o: %.cc
 	@echo " ==== Compiling $< === "

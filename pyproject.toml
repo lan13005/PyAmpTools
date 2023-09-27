@@ -13,6 +13,12 @@ dependencies = [
     "black",
     "isort",
     "corner",
+    ### CI
+    "pytest",
+    "pre-commit",
+    ### Fun stuff
+    "termcolor",
+    
     # Requirements for NIFTy
     # "nifty8",
     # "ducc0",
