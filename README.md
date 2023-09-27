@@ -13,6 +13,7 @@ conda env create  # Creates environment specified by environment.yml and pyproje
 conda activate PyAmpTools # activate the environment
 pip install mpi4py # MPI, mamba will link it against the wrong executables
 mamba install -c conda-forge root # ROOT!
+pre-commit install --install-hooks # commit hooks to perform loose formatting
 ```
 
 Set some required environment variables

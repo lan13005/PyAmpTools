@@ -9,7 +9,6 @@ repos:
     hooks:
       - id: check-case-conflict # check for case conflicts on case-insensitive filesystems
       - id: check-merge-conflict
-      - id: check-toml
       - id: check-vcs-permalinks # version control system permalinks
       - id: end-of-file-fixer
       - id: mixed-line-ending
