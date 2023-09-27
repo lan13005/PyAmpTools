@@ -12,11 +12,14 @@ dependencies = [
     "uproot",
     "black",
     "isort",
+    "corner",
     # Requirements for NIFTy
-    "nifty8",
-    "ducc0",
-    "h5py",
-    "jax",
+    # "nifty8",
+    # "ducc0",
+    # "h5py",
+    # "jax",
+	# matplotlib removed function needed by pygtc (corner plot alternative), install 3.7.0 if you want
+    # "pygtc",
 ]
 name = "PyAmpTools"
 requires-python = ">=3.7"
