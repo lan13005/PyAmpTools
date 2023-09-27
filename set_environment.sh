@@ -11,9 +11,8 @@ export AMPTOOLS=$AMPTOOLS_HOME/AmpTools
 
 export LD_LIBRARY_PATH=/lib64:$LD_LIBRARY_PATH  # for libhwloc.so.5 needed to locate hardware for openmpi
 export LD_LIBRARY_PATH=$AMPTOOLS/lib:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=$AMPTOOLS/IUAmpTools:$LD_LIBRARY_PATH 
-export LD_LIBRARY_PATH=$AMPTOOLS/IUAmpToolsMPI:$LD_LIBRARY_PATH 
-export LD_LIBRARY_PATH=$AMPTOOLS/MinuitInterface:$LD_LIBRARY_PATH 
 export LD_LIBRARY_PATH=$REPO_HOME/external/AMPTOOLS_AMPS:$REPO_HOME/external/AMPTOOLS_DATAIO:$LD_LIBRARY_PATH  
 
-export PYTHONPATH=$REPO_HOME/utils:$PYTHONPATH
+python $REPO_HOME/utils/link_modules.py # symlink files into conda environment
+
+

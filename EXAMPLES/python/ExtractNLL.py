@@ -13,8 +13,8 @@ ROOT.gSystem.Load('libAmpTools.so')
 # Dummy functions that just prints initialization
 #  This is to make sure the libraries are loaded
 #  as python is interpreted
-ROOT.initializeAmps()
-ROOT.initializeDataIO()
+ROOT.initializeAmps(True)
+ROOT.initializeDataIO(True)
 
 ################ SET ALIAS ###################
 ConfigFileParser  = ROOT.ConfigFileParser

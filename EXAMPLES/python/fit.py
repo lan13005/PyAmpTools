@@ -94,7 +94,7 @@ RANK_MPI = MPI.COMM_WORLD.Get_rank()
 SIZE_MPI = MPI.COMM_WORLD.Get_size()
 caller, parent = get_pid_family()
 SUFFIX, USE_MPI = ("_MPI", True) if "mpi" in parent else ("", False) 
-assert( USE_MPI and (SIZE_MPI > 1) )
+assert( (USE_MPI and (SIZE_MPI > 1)) or not USE_MPI )
 if USE_MPI:
     print(f'Rank: {RANK_MPI} of {SIZE_MPI}')
 
