@@ -31,3 +31,8 @@ make [mpi] # distributes modified Makefiles and makes AmpTools into a shared lib
 cd $REPO_HOME/external/AMPTOOLS_AMPS; make [MPI=1]
 cd $REPO_HOME/external/AMPTOOLS_DATAIO; make [MPI=1]
 ```
+
+Unit tests
+```shell
+pytest
+```
