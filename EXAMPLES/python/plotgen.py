@@ -7,28 +7,10 @@ import argparse
 
 ############## SET ENVIRONMENT VARIABLES ##############
 REPO_HOME     = os.environ['REPO_HOME']
+os.environ['ATI_USE_MPI'] = "0" # set to 1 to use MPI libraries
+from atiSetup import *
 
-############## LOAD LIBRARIES ##############
-ROOT.gSystem.Load('libAmps.so')
-ROOT.gSystem.Load('libAmpPlotter.so')
-ROOT.gSystem.Load('libDataIO.so')
-ROOT.gSystem.Load('libAmpTools.so')
-
-# Dummy functions that just prints initialization
-#  This is to make sure the libraries are loaded
-#  as python is interpreted
-ROOT.initializeAmps(True)
-ROOT.initializeDataIO(True)
-
-################ SET ALIAS ###################
-TH1                  = ROOT.TH1
-TFile                = ROOT.TFile
-AmpToolsInterface    = ROOT.AmpToolsInterface
-FitResults           = ROOT.FitResults
-ROOTDataReader       = ROOT.ROOTDataReader
-Zlm                  = ROOT.Zlm
-EtaPiPlotGenerator   = ROOT.EtaPiPlotGenerator
-PlotGenerator        = ROOT.PlotGenerator
+################ SET ADDITIONAL ALIAS ###################
 # PlotFactory          = ROOT.PlotFactory
 # PlotterMainWindow    = ROOT.PlotterMainWindow
 
@@ -92,10 +74,9 @@ for waveset in wavesets:
         print(f' >>     {wave}')
     print('--------------------')
 
-    outName = f'plotter_{waveset}.root'
-    print(f' >> Output file: {outName}')
+    print(f' >> Output file: {ofile}')
 
-    plotfile = TFile(outName, 'RECREATE') # : TFile
+    plotfile = TFile(ofile, 'RECREATE') # : TFile
     TH1.AddDirectory(False)
 
     reactionList = results.reactionList() # vector<string>
@@ -137,10 +118,10 @@ for waveset in wavesets:
             if isum < sums.size() and iplot == PlotGenerator.kData: continue # only plot data once
             for ivar in range(EtaPiPlotGenerator.kNumHists):
                 for ireact, reactionName in enumerate(reactionList):
+                    # print(f' >> Plotting reaction {reactionName}, histogram {ivar}, data source {iplot}')
                     histName = reactionName+'_'
                     if not plotAllVars and ivar > 3: continue # only plot mass variables (see EtaPiPlotGenerator.h for enumeration choice)
                     if not plotGenHists and iplot == PlotGenerator.kGenMC: continue # only plot generated histograms if specified
-
                     ## Set unique histogram names for each plot
                     if ivar == EtaPiPlotGenerator.kEtaPiMass: histName += "Metapi"
                     elif ivar == EtaPiPlotGenerator.kEtaPiMass_40MeVBin: histName += "Metapi_40MeVBin"
@@ -163,10 +144,12 @@ for waveset in wavesets:
                     if isum < len(sums):
                         histName += f'_{sums[isum]}'
 
+                    # print(f' >> Plotting histogram {histName} for reaction {reactionName} with data source {iplot}')
                     # Write histogram to file
                     hist = plotGen.projection(ivar, reactionName, iplot)
                     thist = hist.toRoot()
                     if thist.Integral() != 0: # only write if there are entries
+                        print(f" >> Writing histogram {histName} to file")
                         thist.SetName(histName)
                         plotfile.cd()
                         thist.Write()

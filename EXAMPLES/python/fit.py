@@ -83,21 +83,23 @@ def runFits( N: int = 0 ):
        ati.exitMPI()
 
 
-
 ############## SET ENVIRONMENT VARIABLES ##############
-REPO_HOME     = os.environ['REPO_HOME']
-
-#################### INITIALIZE MPI IF REQUESTED ###################
+REPO_HOME = os.environ['REPO_HOME']
+# INITIALIZE MPI IF REQUESTED (Depends on if python or mpirun/mpiexec called this script)
 from mpi4py import rc as mpi4pyrc
 mpi4pyrc.threads = False
 from mpi4py import MPI
 RANK_MPI = MPI.COMM_WORLD.Get_rank()
 SIZE_MPI = MPI.COMM_WORLD.Get_size()
 caller, parent = get_pid_family()
-SUFFIX, USE_MPI = ("_MPI", True) if "mpi" in parent else ("", False)
+USE_MPI = "mpi" in parent
 assert( (USE_MPI and (SIZE_MPI > 1)) or not USE_MPI )
 if USE_MPI:
     print(f'Rank: {RANK_MPI} of {SIZE_MPI}')
+os.environ['ATI_USE_MPI'] = "1" if USE_MPI else "0"
+os.environ['ATI_RANK'] = str(RANK_MPI)
+from atiSetup import *
+
 
 ############## PARSE COMMANDLINE ARGUMENTS #############
 parser = argparse.ArgumentParser(description="Perform MLE fits")
@@ -133,32 +135,6 @@ if RANK_MPI == 0:
 cfgfile = args.config
 assert( os.path.isfile(cfgfile) )
 
-#################### LOAD LIBRARIES ###################
-ROOT.gSystem.Load(f'libAmpTools{SUFFIX}.so')
-ROOT.gSystem.Load(f'libDataIO.so')
-ROOT.gSystem.Load(f'libAmps.so')
-if RANK_MPI == 0:
-    print(f'Loaded libraries: libAmpTools{SUFFIX}.so, libDataIO.so, libAmps.so')
-
-# Dummy functions that just prints "initialization"
-#  This is to make sure the libraries are loaded
-#  as python is interpreted.
-ROOT.initializeAmps(   RANK_MPI == 0 )
-ROOT.initializeDataIO( RANK_MPI == 0 )
-
-##################### SET ALIAS ########################
-ConfigFileParser            = ROOT.ConfigFileParser
-ConfigurationInfo           = ROOT.ConfigurationInfo
-if USE_MPI:
-    DataReader              = ROOT.DataReaderMPI['ROOTDataReader'] # DataReaderMPI is a template; use [] to specify the type
-    AmpToolsInterface       = ROOT.AmpToolsInterfaceMPI
-else:
-    DataReader              = ROOT.ROOTDataReader
-    AmpToolsInterface       = ROOT.AmpToolsInterface
-Zlm                         = ROOT.Zlm
-ParameterManager            = ROOT.ParameterManager
-MinuitMinimizationManager   = ROOT.MinuitMinimizationManager
-
 ############## LOAD CONFIGURATION FILE ##############
 parser = ConfigFileParser(cfgfile)
 cfgInfo: ConfigurationInfo = parser.getConfigurationInfo()
@@ -176,4 +152,4 @@ parMgr: ParameterManager = ati.parameterManager()
 AmpToolsInterface.setRandomSeed(args.randomSeed)
 runFits(args.numRnd)
 
-print("Done! MPI.Finalize() / MPI.Init() automatically called at script end / start\n")
+print("\nDone! MPI.Finalize() / MPI.Init() automatically called at script end / start\n") if USE_MPI else print("\nDone!")
