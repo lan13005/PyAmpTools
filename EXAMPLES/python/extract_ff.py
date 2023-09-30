@@ -8,29 +8,12 @@ import re
 
 ############## SET ENVIRONMENT VARIABLES ##############
 REPO_HOME     = os.environ['REPO_HOME']
+os.environ['ATI_USE_MPI'] = "0" # set to 1 to use MPI libraries
+from atiSetup import *
 
-############## LOAD LIBRARIES ##############
-ROOT.gSystem.Load('libAmps.so')
-ROOT.gSystem.Load('libAmpPlotter.so')
-ROOT.gSystem.Load('libDataIO.so')
-ROOT.gSystem.Load('libAmpTools.so')
-
-# Dummy functions that just prints initialization
-#  This is to make sure the libraries are loaded
-#  as python is interpreted
-ROOT.initializeAmps(True)
-ROOT.initializeDataIO(True)
-
-################ SET ALIAS ###################
+################ SET ADDITIONAL ALIAS ###################
 TH1                  = ROOT.TH1
 TFile                = ROOT.TFile
-AmpToolsInterface    = ROOT.AmpToolsInterface
-FitResults           = ROOT.FitResults
-ROOTDataReader       = ROOT.ROOTDataReader
-Zlm                  = ROOT.Zlm
-EtaPiPlotGenerator   = ROOT.EtaPiPlotGenerator
-PlotGenerator        = ROOT.PlotGenerator
-
 
 ############## PARSE COMMANDLINE ARGUMENTS ##############
 parser = argparse.ArgumentParser(description='Extract Fit Fractions from FitResults')
@@ -38,7 +21,7 @@ parser.add_argument('-f', type=str, default='', help='Fit file name')
 parser.add_argument('-o', type=str, default='', help='Output file name')
 parser.add_argument('-a', type=bool, default=True, help='Acceptance correct values')
 parser.add_argument('-fmt', type=str, default='.5f', help='Format string for printing')
-parser.add_argument('-regex_merge', type=str, nargs='+', help='Merge amplitudes under this regex pattern')
+parser.add_argument('-regex_merge', type=str, nargs='+', help='Merge amplitudes: Regex pair (pattern, replace) separated by ~>')
 args = parser.parse_args()
 
 ############## LOAD FIT RESULTS ##############
@@ -71,57 +54,46 @@ plotGen = EtaPiPlotGenerator( results )
 outfile = open(outfilename, 'w')
 total_intensity, total_error = results.intensity(acceptance)
 outfile.write(f"TOTAL EVENTS = {total_intensity} +/- {total_error}\n")
-fullamps = plotGen.fullAmplitudes() # vector<string>
-uniqueAmps = {} # dictionary of lists
+uniqueAmps = plotGen.fullAmplitudes() # vector<string>
+uniqueAmps = [str(amp) for amp in uniqueAmps]
 
 def write_ff(amp, intensity, error):
     outfile.write(f'FIT FRACTION {amp} = {intensity/total_intensity:{fmt}} +/- {error/total_intensity:{fmt}}\n')
 
 ######## DETERMINE UNIQUE AMPLITUDES AND PLOT THEM ALL #########
-for i, fullamp in enumerate(fullamps): # fullamp ~ "Reaction::Sum::Amp" whereas amp ~ "Amp"
-    amp = str(fullamp).split('::')[-1] # amp is of type TString I think, convert first
-    if amp not in uniqueAmps:
-        uniqueAmps[amp] = [fullamps[i]]
-    else:
-        uniqueAmps[amp].append(fullamps[i])
-    # Plot all amplitudes including including constrained ones, polarizations, etc
-    useamp = [fullamp]
-    print(f' -> {fullamp}')
+print('\nAll Unique Amplitudes:')
+for amp in uniqueAmps: # amp ~ "Reaction::Sum::Amp" whereas amp ~ "Amp"
+    amp = str(amp)#.split('::')[-1] # amp is of type TString I think, convert first
+    # Print all amplitudes including including constrained ones, polarizations, etc
+    useamp = [amp]
+    print(f' -> {amp}')
     intensity, error = results.intensity(useamp, acceptance)
     write_ff(amp, intensity, error)
-
-######### PRINT UNIQUE AMPLITUDES (SUM OVER REACTION / POL) ##########
-print("\nUnique Amplitude Groups Found:")
-for uniqueAmp, amps in uniqueAmps.items():
-    print(f' -> {uniqueAmp}')
-    for amp in amps:
-        print(f'     {amp}')
-for uniqueAmp, amps in uniqueAmps.items():
-    intensity, error = results.intensity(amps, acceptance)
-    write_ff(uniqueAmp, intensity, error)
 
 ######## MERGE AMPLITUDES STRIPPING REGEX MATCHED STRING #########
 if regex_merge is not None:
     for regex in regex_merge:
-        print(f"\nMerged Amplitude Groups based on regex: r'{regex}':")
+        pattern, replace = regex.split('~>') if '~>' in regex else (regex, '')
+        pattern, replace = r""+pattern, r""+replace
+        print(f"\nMerged Amplitude Groups based on regex sub: r'{pattern}' -> r'{replace}':")
         merged = {} # dictionary of lists
-        for uniqueAmp, amps in uniqueAmps.items():
-            filterd_amp = re.sub(r""+regex, '', uniqueAmp) # regex to remove numbers, r"" force conversion to raw string
+        for amps in uniqueAmps:
+            filterd_amp = re.sub(pattern, replace, amps) # regex to remove numbers, r"" force conversion to raw string
             if filterd_amp not in merged:
-                merged[filterd_amp] = amps
+                merged[filterd_amp] =[amps]
             else:
-                merged[filterd_amp].extend(amps)
+                merged[filterd_amp].append(amps)
         for merged_amp, amps in merged.items():
             print(f' -> {merged_amp}')
             for amp in amps: print(f'     {amp}')
-        for merged, amps in merged.items():
+        for merged_amp, amps in merged.items():
             intensity, error = results.intensity(amps, acceptance)
-            write_ff(merged, intensity, error)
-
+            write_ff(merged_amp, intensity, error)
+        merged.clear()
 
 ######### WRITE ALL POSSIBLE PHASE DIFFERENCES ##########
-for amp1 in fullamps:
-    for amp2 in fullamps:
+for amp1 in uniqueAmps:
+    for amp2 in uniqueAmps:
         amp1, amp2 = str(amp1), str(amp2) # amps are TStrings
         if amp1 == amp2: continue
         same_reaction = amp1.split("::")[0] == amp2.split("::")[0]

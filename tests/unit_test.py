@@ -3,7 +3,7 @@ import subprocess
 import ROOT
 import glob
 from termcolor import colored
-from test_functions import parMgr
+from test_files import parMgr
 
 def test_environ_is_set():
 	assert ( os.environ['REPO_HOME'] != "" )
@@ -17,6 +17,17 @@ def test_parMgr():
     assert( prefit_nll != 1e6 and prefit_nll is not None )
     assert( par_real == 15 and par_imag == 0 )
     assert( post_nll != 1e6 and post_nll is not None )
+
+def test_extract_ff():
+    REPO_HOME = os.environ["REPO_HOME"]
+    fit_results = f'{REPO_HOME}/tests/test_files/result.fit'
+    output_file = f'{REPO_HOME}/tests/ff.txt'
+    cmd = [f'python {REPO_HOME}/EXAMPLES/python/extract_ff.py', '-f', fit_results, '-o', output_file, '-regex_merge', "'.*::(.*)::.*~>\\1'", "'.*(.)$~>\\1'"]
+    cmd = ' '.join(cmd)
+    print(cmd)
+    os.system(cmd)
+    assert( os.path.exists(output_file) and os.path.getsize(output_file) > 0 )
+    # os.system(f'rm {output_file}')
 
 def test_fit():
 	REPO_HOME = os.environ['REPO_HOME']
