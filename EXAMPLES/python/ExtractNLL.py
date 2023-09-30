@@ -4,26 +4,8 @@ from typing import List
 
 ############## SET ENVIRONMENT VARIABLES ##############
 REPO_HOME     = os.environ['REPO_HOME']
-
-############## LOAD LIBRARIES ##############
-ROOT.gSystem.Load('libAmps.so')
-ROOT.gSystem.Load('libDataIO.so')
-ROOT.gSystem.Load('libAmpTools.so')
-
-# Dummy functions that just prints initialization
-#  This is to make sure the libraries are loaded
-#  as python is interpreted
-ROOT.initializeAmps(True)
-ROOT.initializeDataIO(True)
-
-################ SET ALIAS ###################
-ConfigFileParser  = ROOT.ConfigFileParser
-ConfigurationInfo = ROOT.ConfigurationInfo
-AmpToolsInterface = ROOT.AmpToolsInterface
-Zlm               = ROOT.Zlm
-ROOTDataReader    = ROOT.ROOTDataReader
-ParameterManager  = ROOT.ParameterManager
-
+os.environ['ATI_USE_MPI'] = "1" # set to 1 to use MPI libraries
+from atiSetup import *
 
 ############## LOAD CONFIGURATION FILE ##############
 cfgfile = f'{REPO_HOME}/gen_amp/fit_res.cfg'
@@ -38,31 +20,12 @@ AmpToolsInterface.registerDataReader( ROOTDataReader() )
 ati = AmpToolsInterface( cfgInfo )
 parMgr: ParameterManager = ati.parameterManager()
 
-
-############## Utility Functions ##############
-class Params:
-    ''' Struct to hold parameters '''
-    def __init__(self, name, value):
-        self.name : str     = name
-        self.value: complex = value
-
-    def __repr__(self):
-        return f'{self.name} = {self.value}'
-
-def getNLL(
-    params_update: List[Params] = []
-    ):
-    nll = 1e7
-    for params in params_update:
-        print(f'Setting {params.name} to {params.value}')
-        parMgr.setProductionParameter(params.name, params.value)
-    nll = ati.likelihood()
-    print(f'Negative LogLikelihood: {nll}')
-    return nll
-
-############## EXTRACT LIKELIHOODS #############
-getNLL()
-params_update = [
-     Params("etapi::reZ::resAmp1", 5+4j),
-]
-getNLL(params_update)
+print("Parameters:\n-----------------")
+print(f'Number of params: {len(parMgr)}')
+print(parMgr)
+print(f'Initial Likelihood {ati.likelihood()}')
+key = 'etapi::imZ::resAmp1'
+print(f'Is {key} in parMgr? {key in parMgr}')
+parMgr[key] = complex(15,10)
+print(parMgr)
+print(f'Final Likelihood {ati.likelihood()}')

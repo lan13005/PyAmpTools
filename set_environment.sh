@@ -1,11 +1,14 @@
 
+echo "Sourcing additional enviornment variables"
+
 ### IF ON IFARM ###
 module add cuda
 export CUDA_INSTALL_PATH=/apps/cuda/11.4.2/
 export GPU_ARCH=sm_75
 ####################
 
-export REPO_HOME=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd ) # location of this script
+export REPO_HOME=$( dirname "$( readlink -f "${BASH_SOURCE[0]}" )" ) # location of this script
+
 export AMPTOOLS_HOME=$REPO_HOME/external/AmpTools
 export AMPTOOLS=$AMPTOOLS_HOME/AmpTools
 export AMPPLOTTER=$AMPTOOLS_HOME/AmpPlotter

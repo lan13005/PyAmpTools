@@ -18,7 +18,7 @@ dependencies = [
     "pre-commit",
     ### Fun stuff
     "termcolor",
-    
+
     # Requirements for NIFTy
     # "nifty8",
     # "ducc0",
@@ -37,3 +37,6 @@ profile = "black"
 
 [tool.nbqa.addopts]
 black = ["--line-length=85"]
+
+[tool.setuptools]
+py-modules = []
