@@ -3,12 +3,20 @@ import subprocess
 import ROOT
 import glob
 from termcolor import colored
+from test_functions import parMgr
 
 def test_environ_is_set():
 	assert ( os.environ['REPO_HOME'] != "" )
 	assert ( os.environ['AMPTOOLS_HOME'] != "" )
 	assert ( os.environ['AMPPLOTTER'] != "" )
 	assert ( os.environ['AMPTOOLS'] != "" )
+
+def test_parMgr():
+    nProdPars, prefit_nll, par_real, par_imag, post_nll = parMgr.runTest()
+    assert( nProdPars == 6 )
+    assert( prefit_nll != 1e6 and prefit_nll is not None )
+    assert( par_real == 15 and par_imag == 0 )
+    assert( post_nll != 1e6 and post_nll is not None )
 
 def test_fit():
 	REPO_HOME = os.environ['REPO_HOME']

@@ -27,8 +27,8 @@ cd $REPO_HOME/external/AMPTOOLS_AMPS; make [MPI=1]
 cd $REPO_HOME/external/AMPTOOLS_DATAIO; make [MPI=1]
 ```
 
-Unit tests
+Simple Unit tests
 
 ```shell
-pytest
+pytest -v
 ```
