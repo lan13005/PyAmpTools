@@ -7,40 +7,33 @@ from typing import List
 import matplotlib.pyplot as plt
 from amploader import load_amplitude_info, flatten_amplitude_parts, collect_amplitude_parts
 import corner
+import argparse
 
-############## SET OUTPUT FOLDER ##############
-ofolder = 'mcmc/Lasso' # output results here
-save_model = "mcmc.h5" # save MCMC results here
+parser = argparse.ArgumentParser(description='emcee fitter')
+parser.add_argument('-c', type=str, help='Config file name')
+parser.add_argument('-m', type=str, help='MLE fitted seed file name')
+parser.add_argument('-o', type=str, default='mcmc', help='Output folder name')
+parser.add_argument('-f', type=str, default='mcmc.h5', help='Output file name')
+parser.add_argument('-n', type=int, default=32, help='Number of walkers')
+parser.add_argument('-b', type=int, default=100, help='Number of burn-in steps')
+parser.add_argument('-s', type=int, default=1000, help='Number of samples')
+args = parser.parse_args()
+
+cfgfile = args.c
+mle_fit = args.m # seed file from amptools fit
+ofolder = args.o
+ofile = args.f
+NWALKERS = args.n
+BURN_IN = args.b
+NSAMPLES = args.s
 os.system(f'mkdir -p {ofolder}')
-NWALKERS = int(32)
-BURN_IN = int(100)
-NSAMPLES = int(1e3)
 
 ############## SET ENVIRONMENT VARIABLES ##############
 REPO_HOME     = os.environ['REPO_HOME']
-
-############## LOAD LIBRARIES ##############
-ROOT.gSystem.Load('libAmps.so')
-ROOT.gSystem.Load('libDataIO.so')
-ROOT.gSystem.Load('libAmpTools.so')
-
-# Dummy functions that just prints initialization
-#  This is to make sure the libraries are loaded
-#  as python is interpreted
-ROOT.initializeAmps(True)
-ROOT.initializeDataIO(True)
-
-################ SET ALIAS ###################
-ConfigFileParser  = ROOT.ConfigFileParser
-ConfigurationInfo = ROOT.ConfigurationInfo
-AmpToolsInterface = ROOT.AmpToolsInterface
-Zlm               = ROOT.Zlm
-ROOTDataReader    = ROOT.ROOTDataReader
-ParameterManager  = ROOT.ParameterManager
-AmplitudeInfo     = ROOT.AmplitudeInfo
+os.environ['ATI_USE_MPI'] = "0" # set to 1 to use MPI libraries
+from atiSetup import *
 
 ############## LOAD CONFIGURATION FILE ##############
-cfgfile = f'{REPO_HOME}/gen_amp/fit_res.cfg'
 parser = ConfigFileParser(cfgfile)
 cfgInfo: ConfigurationInfo = parser.getConfigurationInfo()
 cfgInfo.display()
@@ -76,36 +69,19 @@ def LogProb(
     return log_prob
 
 
-############## FIND AVAILABLE AMPS ##############
-# amplitudes: AmplitudeInfo = cfgInfo.amplitudeList()
-# amp_names = []
-# PAR_NAMES = []
-# for amp in amplitudes:
-#     if amp.fixed(): continue
-#     full_name = amp.fullName() # "Reaction::Sum::Amplitude"
-#     amp_name = full_name.split("::")[-1] # Extract Amplitude from full name
-#     if amp_name in amp_names: continue
-#     amp_names.append(amp_name)
-#     PAR_NAMES.append(full_name)
-# PAR_NAMES = np.array(PAR_NAMES)
-# print(f'amp_names: {amp_names}')
-# print(f'PAR_NAMES: {PAR_NAMES}')
-
-
 ############### LOAD MLE ESTIMATE ###############
-mle_fit = "/w/halld-scshelf2101/lng/WORK/PyAmpTools/gen_amp/MLE.fit" # seed file from amptools fit
 PAR_NAMES, par_values = load_amplitude_info(mle_fit)
 MLE_VALUES, PAR_NAMES_PARTS, PAR_INDICES = flatten_amplitude_parts(PAR_NAMES, par_values)
 NDIM = len(MLE_VALUES) # Dimensionality of parameter space
 
 ############## RUN MCMC IF RESULTS DOES NOT ALREADY EXIST ##############
-if not os.path.exists(f'{ofolder}/mcmc.h5'):
+if not os.path.exists(f'{ofolder}/mcmc.h5') or os.path.getsize(f'{ofolder}/mcmc.h5') < 20000:
     print(f' ================== RUNNING MCMC ================== ')
     par_values = np.array(MLE_VALUES)
     par_values = np.repeat(par_values, NWALKERS).reshape(NDIM, NWALKERS).T
     par_values *= ( 1 + 0.01 * np.random.normal(0, 1, size=(NWALKERS, NDIM)) )
 
-    backend = emcee.backends.HDFBackend(f'{ofolder}/{save_model}')
+    backend = emcee.backends.HDFBackend(f'{ofolder}/{ofile}')
     backend.reset(NWALKERS, NDIM)
     sampler = emcee.EnsembleSampler(NWALKERS, NDIM, LogProb, args=[PAR_NAMES, PAR_INDICES], backend=backend)
 
@@ -119,7 +95,7 @@ if not os.path.exists(f'{ofolder}/mcmc.h5'):
 
 else:
     print(f' ================== LOADING MCMC ================== ')
-    sampler = emcee.backends.HDFBackend(f'{ofolder}/{save_model}')
+    sampler = emcee.backends.HDFBackend(f'{ofolder}/{ofile}')
 
 
 ################# CALCULATE AUTOCORR AND ACCEPTANCE FRAC #################

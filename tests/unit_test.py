@@ -27,7 +27,18 @@ def test_extract_ff():
     print(cmd)
     os.system(cmd)
     assert( os.path.exists(output_file) and os.path.getsize(output_file) > 0 )
-    # os.system(f'rm {output_file}')
+    os.system(f'rm {output_file}')
+
+def test_plotgen():
+    REPO_HOME = os.environ["REPO_HOME"]
+    fit_results = f'{REPO_HOME}/tests/test_files/result.fit'
+    output_root_file = f'{REPO_HOME}/tests/plotgen_test.root'
+    cmd = [f'python {REPO_HOME}/EXAMPLES/python/extract_ff.py', '-f', fit_results, '-o', output_root_file]
+    cmd = ' '.join(cmd)
+    print(cmd)
+    os.system(cmd)
+    assert( os.path.exists(output_root_file) and os.path.getsize(output_root_file) > 1000 )
+    os.system(f'rm {output_root_file}')
 
 def test_fit():
 	REPO_HOME = os.environ['REPO_HOME']
@@ -38,6 +49,19 @@ def test_fit():
 	print(return_code)
 	os.system(r'rm -f *.fit normint*') # clean up
 	assert return_code == 0, f"Command '{cmd}' returned a non-zero exit code: {return_code}"
+
+def test_mcmc():
+    REPO_HOME = os.environ['REPO_HOME']
+    cfgfile = f'{REPO_HOME}/gen_amp/fit_res.cfg'
+    mle_fit = f'{REPO_HOME}/tests/test_files/MLE.fit'
+    ofolder = f'{REPO_HOME}/tests/mcmc'
+    cmd=f"python {REPO_HOME}/EXAMPLES/python/mcmc.py -c {cfgfile} -m {mle_fit} -o {ofolder} -f 'mcmc.h5' -n 10 -b 10 -s 50"
+    print(cmd)
+    return_code = subprocess.call(cmd, shell=True)
+    print(return_code)
+    assert return_code == 0, f"Command '{cmd}' returned a non-zero exit code: {return_code}"
+    os.system(r'rm -rf {ofolder}') # clean up
+
 
 def test_check_root_found_functions():
     include_dirs = [

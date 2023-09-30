@@ -13,6 +13,8 @@ dependencies = [
     "black",
     "isort",
     "corner",
+    "h5py",
+    "emcee",
     ### CI
     "pytest",
     "pre-commit",
