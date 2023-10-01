@@ -10,22 +10,28 @@ import corner
 import argparse
 
 parser = argparse.ArgumentParser(description='emcee fitter')
-parser.add_argument('-c', type=str, help='Config file name')
-parser.add_argument('-m', type=str, help='MLE fitted seed file name')
+parser.add_argument('cfgfile', type=str, help='Config file name')
+parser.add_argument('mle', type=str, help='MLE fitted seed file name to initialze walkers around an N-ball around the MLE estimate')
 parser.add_argument('-o', type=str, default='mcmc', help='Output folder name')
 parser.add_argument('-f', type=str, default='mcmc.h5', help='Output file name')
 parser.add_argument('-n', type=int, default=32, help='Number of walkers')
 parser.add_argument('-b', type=int, default=100, help='Number of burn-in steps')
 parser.add_argument('-s', type=int, default=1000, help='Number of samples')
+parser.add_argument('-overwrite', action='store_true', help='Overwrite existing output file if exists')
 args = parser.parse_args()
 
-cfgfile = args.c
-mle_fit = args.m # seed file from amptools fit
+cfgfile = args.cfgfile
+mle_fit = args.mle
 ofolder = args.o
 ofile = args.f
+overwrite_ofile = args.overwrite
 NWALKERS = args.n
 BURN_IN = args.b
 NSAMPLES = args.s
+assert( os.path.exists(cfgfile) and os.path.exists(mle_fit) ), 'Config file or seed file does not exist at specified path'
+if os.path.isfile(f'{ofolder}/{ofile}') and overwrite_ofile:
+    os.system(f'rm {ofolder}/{ofile}')
+    print("Overwriting existing output file!")
 os.system(f'mkdir -p {ofolder}')
 
 ############## SET ENVIRONMENT VARIABLES ##############
@@ -41,7 +47,7 @@ cfgInfo.display()
 
 ############## REGISTER OBJECTS FOR AMPTOOLS ##############
 AmpToolsInterface.registerAmplitude( Zlm() )
-AmpToolsInterface.registerDataReader( ROOTDataReader() )
+AmpToolsInterface.registerDataReader( DataReader() )
 ati = AmpToolsInterface( cfgInfo )
 parMgr: ParameterManager = ati.parameterManager()
 
@@ -76,7 +82,7 @@ MLE_VALUES, PAR_NAMES_PARTS, PAR_INDICES = flatten_amplitude_parts(PAR_NAMES, pa
 NDIM = len(MLE_VALUES) # Dimensionality of parameter space
 
 ############## RUN MCMC IF RESULTS DOES NOT ALREADY EXIST ##############
-if not os.path.exists(f'{ofolder}/mcmc.h5') or os.path.getsize(f'{ofolder}/mcmc.h5') < 20000:
+if not os.path.exists(f'{ofolder}/{ofile}') or os.path.getsize(f'{ofolder}/{ofile}') < 20000:
     print(f' ================== RUNNING MCMC ================== ')
     par_values = np.array(MLE_VALUES)
     par_values = np.repeat(par_values, NWALKERS).reshape(NDIM, NWALKERS).T

@@ -18,7 +18,7 @@ from atiSetup import *
 
 ############## PARSE COMMANDLINE ARGUMENTS ##############
 parser = argparse.ArgumentParser(description='Plotter')
-parser.add_argument('-f', type=str, default='', help='Fit file name')
+parser.add_argument('fitName', type=str, help='Fit file name')
 parser.add_argument('-o', type=str, default='plotter_results.root', help='Output file name')
 parser.add_argument('-s', type=str, default='all', help='semicolon separated list of coherent sums to plot. Sums are underscore separated amplitudes. Empty string will plot sum of all waves')
 parser.add_argument('-a', type=bool, default=True, help='Do acceptance correction or not')
@@ -26,13 +26,14 @@ parser.add_argument('-var', type=bool, default=False, help='Plot all variables o
 parser.add_argument('-gen', type=bool, default=False, help='Plot gen histograms or not')
 args = parser.parse_args()
 
-fitName = args.f
+fitName = args.fitName
 ofile = args.o
 ampString = args.s
 keepAllAmps = ampString == 'all'
 doAccCorr = args.a
 plotAllVars = args.var
 plotGenHists = args.gen
+assert( os.path.isfile(fitName) ), f'Fit file does not exist at specified path'
 
 if plotAllVars: print(" >> Plotting all variables")
 else: print(" >> Plotting only Mass variables")
@@ -52,7 +53,7 @@ if not results.valid():
 
 ############## REGISTER OBJECTS FOR AMPTOOLS ##############
 AmpToolsInterface.registerAmplitude( Zlm() )
-AmpToolsInterface.registerDataReader( ROOTDataReader() )
+AmpToolsInterface.registerDataReader( DataReader() )
 
 
 ############### PLOTTING TIME! ################

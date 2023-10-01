@@ -22,7 +22,7 @@ def test_extract_ff():
    REPO_HOME = os.environ["REPO_HOME"]
    fit_results = f'{REPO_HOME}/tests/test_files/result.fit'
    output_file = f'{REPO_HOME}/tests/ff.txt'
-   cmd = [f'python {REPO_HOME}/EXAMPLES/python/extract_ff.py', '-f', fit_results, '-o', output_file, '-regex_merge', "'.*::(.*)::.*~>\\1'", "'.*(.)$~>\\1'"]
+   cmd = [f'python {REPO_HOME}/EXAMPLES/python/extract_ff.py', fit_results, output_file, '-regex_merge', "'.*::(.*)::.*~>\\1'", "'.*(.)$~>\\1'"]
    cmd = ' '.join(cmd)
    print(cmd)
    os.system(cmd)
@@ -33,7 +33,7 @@ def test_plotgen():
    REPO_HOME = os.environ["REPO_HOME"]
    fit_results = f'{REPO_HOME}/tests/test_files/result.fit'
    output_root_file = f'{REPO_HOME}/tests/plotgen_test.root'
-   cmd = [f'python {REPO_HOME}/EXAMPLES/python/extract_ff.py', '-f', fit_results, '-o', output_root_file]
+   cmd = [f'python {REPO_HOME}/EXAMPLES/python/plotgen.py', fit_results, '-o', output_root_file]
    cmd = ' '.join(cmd)
    print(cmd)
    os.system(cmd)
@@ -42,8 +42,7 @@ def test_plotgen():
 
 def test_fit():
 	REPO_HOME = os.environ['REPO_HOME']
-	os.chdir(f'{REPO_HOME}/tests/samples')
-	cmd=f"python {REPO_HOME}/EXAMPLES/python/fit.py -c fit_res.cfg"
+	cmd=f"python {REPO_HOME}/EXAMPLES/python/fit.py {REPO_HOME}/tests/samples/fit_res.cfg"
 	print(cmd)
 	return_code = subprocess.call(cmd, shell=True)
 	print(return_code)
@@ -55,13 +54,12 @@ def test_mcmc():
    cfgfile = f'{REPO_HOME}/gen_amp/fit_res.cfg'
    mle_fit = f'{REPO_HOME}/tests/test_files/MLE.fit'
    ofolder = f'{REPO_HOME}/tests/mcmc'
-   cmd=f"python {REPO_HOME}/EXAMPLES/python/mcmc.py -c {cfgfile} -m {mle_fit} -o {ofolder} -f 'mcmc.h5' -n 10 -b 10 -s 50"
+   cmd=f"python {REPO_HOME}/EXAMPLES/python/mcmc.py {cfgfile} {mle_fit} -o {ofolder} -f 'mcmc.h5' -n 20 -b 10 -s 10 -overwrite"
    print(cmd)
    return_code = subprocess.call(cmd, shell=True)
    print(return_code)
    assert return_code == 0, f"Command '{cmd}' returned a non-zero exit code: {return_code}"
    os.system(r'rm -rf {ofolder}') # clean up
-
 
 def test_check_root_found_functions():
     include_dirs = [

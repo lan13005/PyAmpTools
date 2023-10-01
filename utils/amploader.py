@@ -23,9 +23,8 @@ def load_amplitude_info(seedfile):
             line = line.split(" ")
             amp, real, imag = line[1], float(line[3].strip()), float(line[4].strip())
             complex_val = complex(real, imag)
-            if complex_val not in par_values: # Ignore duplicates, these are likely "constrained"
-                par_names.append(amp)
-                par_values.append(complex_val)
+            par_names.append(amp)
+            par_values.append(complex_val)
     return np.array(par_names), np.array(par_values)
 
 def flatten_amplitude_parts(par_names, par_values):

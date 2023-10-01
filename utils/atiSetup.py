@@ -42,27 +42,7 @@ EtaPiPlotGenerator          = ROOT.EtaPiPlotGenerator
 PlotGenerator               = ROOT.PlotGenerator
 TH1                         = ROOT.TH1
 TFile                       = ROOT.TFile
-
-############## LOAD LIBRARIES ##############
-ROOT.gSystem.Load('libAmps.so')
-ROOT.gSystem.Load('libDataIO.so')
-ROOT.gSystem.Load('libAmpTools.so')
-
-# Dummy functions that just prints initialization
-#  This is to make sure the libraries are loaded
-#  as python is interpreted
-ROOT.initializeAmps(True)
-ROOT.initializeDataIO(True)
-
-################ SET ALIAS ###################
-ConfigFileParser            = ROOT.ConfigFileParser
-ConfigurationInfo           = ROOT.ConfigurationInfo
-AmpToolsInterface           = ROOT.AmpToolsInterface
-Zlm                         = ROOT.Zlm
-ROOTDataReader              = ROOT.ROOTDataReader
-ParameterManager            = ROOT.ParameterManager
 AmplitudeInfo               = ROOT.AmplitudeInfo
-MinuitMinimizationManager   = ROOT.MinuitMinimizationManager
 
 ############## UTILITY ##############
 def raiseError(errorType, msg):

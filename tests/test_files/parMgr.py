@@ -15,7 +15,7 @@ def runTest():
 
     ############## REGISTER OBJECTS FOR AMPTOOLS ##############
     AmpToolsInterface.registerAmplitude( Zlm() )
-    AmpToolsInterface.registerDataReader( ROOTDataReader() )
+    AmpToolsInterface.registerDataReader( DataReader() )
 
     ati = AmpToolsInterface( cfgInfo )
     parMgr: ParameterManager = ati.parameterManager()

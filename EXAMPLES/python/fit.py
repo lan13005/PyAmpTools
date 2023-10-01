@@ -105,7 +105,7 @@ from atiSetup import *
 ############## PARSE COMMANDLINE ARGUMENTS #############
 parser = argparse.ArgumentParser(description="Perform MLE fits")
 rndSeed = random.seed(datetime.now().timestamp())
-parser.add_argument('-c', '--config',     type=str,                  help='AmpTools Configuration file')
+parser.add_argument('cfgfile',            type=str,                  help='AmpTools Configuration file')
 parser.add_argument('-s', '--seedfile',   type=str, default=None,    help='Output file for seeding next fit based on this fit')
 parser.add_argument('-r', '--numRnd',     type=int, default=0,       help='Perform N fits each seeded with random parameters')
 parser.add_argument('-rs','--randomSeed', type=int, default=rndSeed, help='Sets the random seed used by the random number generator for the fits with randomized initial parameters. If not set, will use the current time.')
@@ -117,13 +117,10 @@ parser.add_argument('-p', '--scanPar',    type=str, default=None,    help='Perfo
 args = parser.parse_args()
 if args.randomSeed is None:
     args.randomSeed = int(time.time())
-if args.config is None:
-    print("No config file specified")
-    exit(1)
 
 if RANK_MPI == 0:
     print("\n\n === COMMANDLINE ARGUMENTS === ")
-    print("Config file:", args.config)
+    print("Config file:", args.cfgfile)
     print("Seed file:", args.seedfile)
     print("Number of random fits:", args.numRnd)
     print("Random seed:", args.randomSeed)
@@ -133,8 +130,8 @@ if RANK_MPI == 0:
     print("Scanning Parameter:", args.scanPar)
     print(" ============================= \n\n")
 
-cfgfile = args.config
-assert( os.path.isfile(cfgfile) )
+cfgfile = args.cfgfile
+assert( os.path.isfile(cfgfile) ), f'Config file does not exist at specified path'
 
 ############## LOAD CONFIGURATION FILE ##############
 parser = ConfigFileParser(cfgfile)

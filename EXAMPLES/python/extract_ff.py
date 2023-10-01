@@ -19,19 +19,21 @@ TFile                = ROOT.TFile
 
 ############## PARSE COMMANDLINE ARGUMENTS ##############
 parser = argparse.ArgumentParser(description='Extract Fit Fractions from FitResults')
-parser.add_argument('-f', type=str, default='', help='Fit file name')
-parser.add_argument('-o', type=str, default='', help='Output file name')
+parser.add_argument('fitName', type=str, default='', help='Fit file name')
+parser.add_argument('ofileName', type=str, default='', help='Output file name')
 parser.add_argument('-a', type=bool, default=True, help='Acceptance correct values')
 parser.add_argument('-fmt', type=str, default='.5f', help='Format string for printing')
 parser.add_argument('-regex_merge', type=str, nargs='+', help='Merge amplitudes: Regex pair (pattern, replace) separated by ~>')
 args = parser.parse_args()
 
 ############## LOAD FIT RESULTS ##############
-fitName = args.f
-outfilename = args.o
+fitName = args.fitName
+outfilename = args.ofileName
 acceptance = args.a
 fmt=args.fmt
 regex_merge = args.regex_merge
+assert( os.path.isfile(fitName) ), f'Fit file does not exist at specified path'
+
 '''
 Regex merge is a useful tool to merge amplitudes that are related to each other (user-specified)
 For example waveset: D-2- D-1- D0- D1- D2- D-2+ D-1+ D0+ D1+ D2+
@@ -46,7 +48,7 @@ if not results.valid():
 
 ############## REGISTER OBJECTS FOR AMPTOOLS ##############
 AmpToolsInterface.registerAmplitude( Zlm() )
-AmpToolsInterface.registerDataReader( ROOTDataReader() )
+AmpToolsInterface.registerDataReader( DataReader() )
 
 
 ############### PLOTTING TIME! ################
