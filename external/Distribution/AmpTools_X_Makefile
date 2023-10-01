@@ -1,0 +1,49 @@
+SHELL = /bin/bash
+
+SRCFILES := $(wildcard *.cc)
+HEADERS = $(wildcard *.h)
+HEADERS := $(filter-out Linkdef.h, $(HEADERS))
+HEADERS := $(filter-out URLinkDef.h, $(HEADERS)) # Could be problematic for amptools' uproot later
+#$(info SRCFILES: $(SRCFILES))
+#$(info HEADERS: $(HEADERS))
+#$(info INC_DIR: $(INC_DIR))
+
+.PHONY: default clean
+.PRECIOUS: .%$(SUFFIX).o
+
+TARGET_LIBRARY = $(LIB) # Output library name
+TARGET_DICT := $(patsubst lib%,%,$(basename $(LIB)))Dict.cxx
+TARGET_LINKDEF = Linkdef.h
+
+default: $(LIB)
+	$(info TARGET_LIBRARY: $(TARGET_LIBRARY))
+	$(info TARGET_DICT: $(TARGET_DICT))
+
+# %.so:  $(SRCFILES:%.cc=.%$(SUFFIX).o) $(TARGET_DICT)
+%.so:  $(SRCFILES:%.cc=.%$(SUFFIX).o)
+	$(vecho) " === Creating Shared Library $@ ==="
+	$(Q)$(CXX) $(CXX_FLAGS) $(INC_DIR) -o $@ $^ $(ROOTLIBS)
+
+$(TARGET_DICT): $(HEADERS)
+	@echo " === Creating Dictionary $@ === "
+
+	@echo "#ifdef __CLING__" > ${TARGET_LINKDEF}
+	@for header in $^; do \
+		echo "#pragma link C++ defined_in \"$$header\";" >> ${TARGET_LINKDEF}; \
+	done
+	@echo "#endif" >> ${TARGET_LINKDEF}
+
+	$(Q)rootcling -f $(INC_DIR) $@ $^ ${TARGET_LINKDEF}
+
+.%$(SUFFIX).o: %.cc .%$(SUFFIX).d
+	$(vecho) "-> Compiling $<"
+	$(Q)$(CXX) $(CXX_FLAGS) -M -MP -MT $@ -o .$*$(SUFFIX).d $< $(INC_DIR)
+	$(Q)$(CXX) $(CXX_FLAGS) -c -o $@ $< $(INC_DIR)
+
+DEPFILES := $(SRCFILES:%.cc=.%$(SUFFIX).d)
+$(DEPFILES):
+
+clean:
+	$(Q)-rm -f .*.o .*.d *.a *.so *.pcm *.cxx Linkdef.h
+
+-include $(DEPFILES)

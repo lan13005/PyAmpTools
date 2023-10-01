@@ -19,26 +19,26 @@ def test_parMgr():
     assert( post_nll != 1e6 and post_nll is not None )
 
 def test_extract_ff():
-    REPO_HOME = os.environ["REPO_HOME"]
-    fit_results = f'{REPO_HOME}/tests/test_files/result.fit'
-    output_file = f'{REPO_HOME}/tests/ff.txt'
-    cmd = [f'python {REPO_HOME}/EXAMPLES/python/extract_ff.py', '-f', fit_results, '-o', output_file, '-regex_merge', "'.*::(.*)::.*~>\\1'", "'.*(.)$~>\\1'"]
-    cmd = ' '.join(cmd)
-    print(cmd)
-    os.system(cmd)
-    assert( os.path.exists(output_file) and os.path.getsize(output_file) > 0 )
-    os.system(f'rm {output_file}')
+   REPO_HOME = os.environ["REPO_HOME"]
+   fit_results = f'{REPO_HOME}/tests/test_files/result.fit'
+   output_file = f'{REPO_HOME}/tests/ff.txt'
+   cmd = [f'python {REPO_HOME}/EXAMPLES/python/extract_ff.py', '-f', fit_results, '-o', output_file, '-regex_merge', "'.*::(.*)::.*~>\\1'", "'.*(.)$~>\\1'"]
+   cmd = ' '.join(cmd)
+   print(cmd)
+   os.system(cmd)
+   assert( os.path.exists(output_file) and os.path.getsize(output_file) > 0 )
+   os.system(f'rm {output_file}')
 
 def test_plotgen():
-    REPO_HOME = os.environ["REPO_HOME"]
-    fit_results = f'{REPO_HOME}/tests/test_files/result.fit'
-    output_root_file = f'{REPO_HOME}/tests/plotgen_test.root'
-    cmd = [f'python {REPO_HOME}/EXAMPLES/python/extract_ff.py', '-f', fit_results, '-o', output_root_file]
-    cmd = ' '.join(cmd)
-    print(cmd)
-    os.system(cmd)
-    assert( os.path.exists(output_root_file) and os.path.getsize(output_root_file) > 1000 )
-    os.system(f'rm {output_root_file}')
+   REPO_HOME = os.environ["REPO_HOME"]
+   fit_results = f'{REPO_HOME}/tests/test_files/result.fit'
+   output_root_file = f'{REPO_HOME}/tests/plotgen_test.root'
+   cmd = [f'python {REPO_HOME}/EXAMPLES/python/extract_ff.py', '-f', fit_results, '-o', output_root_file]
+   cmd = ' '.join(cmd)
+   print(cmd)
+   os.system(cmd)
+   assert( os.path.exists(output_root_file) and os.path.getsize(output_root_file) > 1000 )
+   os.system(f'rm {output_root_file}')
 
 def test_fit():
 	REPO_HOME = os.environ['REPO_HOME']
@@ -51,16 +51,16 @@ def test_fit():
 	assert return_code == 0, f"Command '{cmd}' returned a non-zero exit code: {return_code}"
 
 def test_mcmc():
-    REPO_HOME = os.environ['REPO_HOME']
-    cfgfile = f'{REPO_HOME}/gen_amp/fit_res.cfg'
-    mle_fit = f'{REPO_HOME}/tests/test_files/MLE.fit'
-    ofolder = f'{REPO_HOME}/tests/mcmc'
-    cmd=f"python {REPO_HOME}/EXAMPLES/python/mcmc.py -c {cfgfile} -m {mle_fit} -o {ofolder} -f 'mcmc.h5' -n 10 -b 10 -s 50"
-    print(cmd)
-    return_code = subprocess.call(cmd, shell=True)
-    print(return_code)
-    assert return_code == 0, f"Command '{cmd}' returned a non-zero exit code: {return_code}"
-    os.system(r'rm -rf {ofolder}') # clean up
+   REPO_HOME = os.environ['REPO_HOME']
+   cfgfile = f'{REPO_HOME}/gen_amp/fit_res.cfg'
+   mle_fit = f'{REPO_HOME}/tests/test_files/MLE.fit'
+   ofolder = f'{REPO_HOME}/tests/mcmc'
+   cmd=f"python {REPO_HOME}/EXAMPLES/python/mcmc.py -c {cfgfile} -m {mle_fit} -o {ofolder} -f 'mcmc.h5' -n 10 -b 10 -s 50"
+   print(cmd)
+   return_code = subprocess.call(cmd, shell=True)
+   print(return_code)
+   assert return_code == 0, f"Command '{cmd}' returned a non-zero exit code: {return_code}"
+   os.system(r'rm -rf {ofolder}') # clean up
 
 
 def test_check_root_found_functions():
@@ -71,16 +71,12 @@ def test_check_root_found_functions():
         f'{os.environ["AMPPLOTTER"]}',
     ]
 
-    not_implemented = [
-        'GPUManager'
-        ]
-
     src_files = []
     for include_dir in include_dirs:
         # print(f' =========== Processing {include_dir} =========== ')
         srcs = glob.glob(f'{include_dir}/**/*.cc') + glob.glob(f'{include_dir}/*.cc') # subdirectories + current directory
         srcs = [src.split('/')[-1].split('.')[0] for src in srcs]
-        srcs = [src for src in srcs if src not in not_implemented]
+        srcs = [src for src in srcs if 'GPU' not in src and 'MPI' not in src]
         src_files += srcs
 
     ############## LOAD LIBRARIES ##############

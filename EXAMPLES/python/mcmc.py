@@ -31,6 +31,7 @@ os.system(f'mkdir -p {ofolder}')
 ############## SET ENVIRONMENT VARIABLES ##############
 REPO_HOME     = os.environ['REPO_HOME']
 os.environ['ATI_USE_MPI'] = "0" # set to 1 to use MPI libraries
+os.environ['ATI_USE_GPU'] = "0" # set to 1 to use MPI libraries
 from atiSetup import *
 
 ############## LOAD CONFIGURATION FILE ##############

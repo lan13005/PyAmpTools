@@ -8,6 +8,7 @@ import argparse
 ############## SET ENVIRONMENT VARIABLES ##############
 REPO_HOME     = os.environ['REPO_HOME']
 os.environ['ATI_USE_MPI'] = "0" # set to 1 to use MPI libraries
+os.environ['ATI_USE_GPU'] = "0"
 from atiSetup import *
 
 ################ SET ADDITIONAL ALIAS ###################

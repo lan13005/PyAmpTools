@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 import random
 import sys
-from utils import get_pid_family
+from utils import get_pid_family, check_nvidia_devices
 
 def performFit(fitManager, seed_file_tag):
     ''' Performs a single fit '''
@@ -96,7 +96,8 @@ USE_MPI = "mpi" in parent
 assert( (USE_MPI and (SIZE_MPI > 1)) or not USE_MPI )
 if USE_MPI:
     print(f'Rank: {RANK_MPI} of {SIZE_MPI}')
-os.environ['ATI_USE_MPI'] = "1" if USE_MPI else "0"
+os.environ['ATI_USE_MPI'] = '1' if USE_MPI else '0'
+os.environ['ATI_USE_GPU'] = '1' if check_nvidia_devices()[0] else '0'
 os.environ['ATI_RANK'] = str(RANK_MPI)
 from atiSetup import *
 

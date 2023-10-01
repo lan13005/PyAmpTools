@@ -29,12 +29,12 @@ SRCDIRS := UpRootMinuit MinuitInterface IUAmpTools
 ALLDIRS := $(SRCDIRS) IUAmpToolsMPI GPUManager
 
 # check if GPU build is requested
-# ifdef GPU
-# SRCDIRS += GPUManager
-# INC_DIR += -I$(CUDA_INSTALL_PATH)/include
-# CXX_FLAGS += -DGPU_ACCELERATION
-# SUFFIX := _GPU
-# endif
+ifdef GPU
+SRCDIRS += GPUManager
+INC_DIR += -I$(CUDA_INSTALL_PATH)/include
+CXX_FLAGS += -DGPU_ACCELERATION
+SUFFIX := _GPU
+endif
 
 # check if MPI build is requested
 ifdef MPI
@@ -51,8 +51,8 @@ endif
 DEFAULT := libAmpTools$(SUFFIX).so
 TARGET_LIBS := $(SRCDIRS:%=lib%$(SUFFIX).so)
 LINKER_LIBS := $(addprefix -l, $(patsubst lib%.so,%,$(TARGET_LIBS)))
-$(info TARGET_LIBS: $(TARGET_LIBS))
-$(info LINKER_LIBS: $(LINKER_LIBS))
+#$(info TARGET_LIBS: $(TARGET_LIBS))
+#$(info LINKER_LIBS: $(LINKER_LIBS))
 
 export
 
@@ -65,7 +65,7 @@ lib:
 
 $(DEFAULT): compiler_flags $(TARGET_LIBS)
 	$(vecho) "--> Creating Final Shared Library $@"
-	$(CXX) $(CXX_FLAGS) -o lib/$@ $(LINKER_LIBS) $(ROOTLIBS) -L$(AMPTOOLS)/lib
+	$(Q)$(CXX) $(CXX_FLAGS) -o lib/$@ $(LINKER_LIBS) $(ROOTLIBS) -L$(AMPTOOLS)/lib
 	$(vecho) "=== Build of $@ is complete. ==="
 
 # descend into the directory obtained by stripping lib and
