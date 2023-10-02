@@ -5,8 +5,9 @@ hopefully simplify the interaction with the AmpTools library while also providin
 
 Features:
 
-- Pythonization of c++ objects: simply interactions with c++ source code, [additional information](https://root.cern/manual/python/#pythonizing-c-user-classes)
-- Dynamically load libraries: (re)compilation of high level scripts (like fits and plotters) are time consuming and distracting
+- Access to PyROOT ecosystem
+- Pythonization of c++ objects: simplify interactions with c++ source code, [additional information](https://root.cern/manual/python/#pythonizing-c-user-classes)
+- Dynamically load appopriate libraries / (re)compilation of high level scripts (like fits and plotters) are time consuming and distracting
 - Python ecosystem:
   - Improved scripting, string parsing (regex)
   - Markov Chain Monte Carlo: [emcee](https://emcee.readthedocs.io/en/stable/)
