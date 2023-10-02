@@ -1,3 +1,6 @@
+#
+
+
 # Installation
 
 To install AmpTools as a submodule:
@@ -21,10 +24,8 @@ Build required libraries
 
 ```shell
 # Options in brackets are optional
-cd $REPO_HOME/external/MakeAmpTools/
-make [mpi] # distributes modified Makefiles and makes AmpTools into a shared library
-cd $REPO_HOME/external/AMPTOOLS_AMPS; make [MPI=1]
-cd $REPO_HOME/external/AMPTOOLS_DATAIO; make [MPI=1]
+cd $REPO_HOME/external
+make [mpi/gpu/mpigpu/gpumpi] # distributes modified Makefiles and makes AmpTools + AMPS/DATAIO into a shared libraries
 ```
 
 Simple Unit tests
