@@ -1,5 +1,14 @@
-#
+# Introduction
 
+This repository contains Python bindings for [AmpTools](https://github.com/mashephe/AmpTools). Under the hood, it uses PyROOT which is based on cppyy. These bindings will
+hopefully simplify the interaction with the AmpTools library while also providing access to the python ecosystem
+
+- Pythonization of c++ objects: simply interactions with c++ source code, [additional information](https://root.cern/manual/python/#pythonizing-c-user-classes)
+- Dynamically load libraries: (re)compilation of high level scripts (like fits and plotters) are time consuming and distracting
+- Python ecosystem:
+  - Improved scripting, string parsing (regex)
+  - Markov Chain Monte Carlo [emcee](https://emcee.readthedocs.io/en/stable/)
+  - ...
 
 # Installation
 
