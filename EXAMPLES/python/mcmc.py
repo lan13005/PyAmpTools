@@ -5,13 +5,13 @@ import ROOT
 import os
 from typing import List
 import matplotlib.pyplot as plt
-from amploader import load_amplitude_info, flatten_amplitude_parts, collect_amplitude_parts
+from amploader import AmplitudeParameters
 import corner
 import argparse
 
 parser = argparse.ArgumentParser(description='emcee fitter')
 parser.add_argument('cfgfile', type=str, help='Config file name')
-parser.add_argument('mle', type=str, help='MLE fitted seed file name to initialze walkers around an N-ball around the MLE estimate')
+parser.add_argument('mle', type=str, help='MLE fit results file to initialze walkers around an N-ball around the MLE estimate')
 parser.add_argument('-o', type=str, default='mcmc', help='Output folder name')
 parser.add_argument('-f', type=str, default='mcmc.h5', help='Output file name')
 parser.add_argument('-n', type=int, default=32, help='Number of walkers')
@@ -54,17 +54,14 @@ parMgr: ParameterManager = ati.parameterManager()
 ############## UTILITY FUNCTIONS ##############
 def LogProb(
     par_values:  npt.NDArray[np.float64] = np.array([]), # [real1, imag1, real2, imag2, ...]
-    PAR_NAMES:   npt.NDArray[np.str_]    = np.array([]),
-    PAR_INDICES: npt.NDArray[np.int64]   = np.array([])
     ):
     ''' Log probability function = Log Likelihood if no prior '''
 
     ## Calculate Log likelihood
     ll = -1e7
-    complex_values = collect_amplitude_parts(par_values, PAR_NAMES, PAR_INDICES)
-    for name, complex_value in zip(PAR_NAMES, complex_values):
-        # print(f'Setting {name} to {complex_value}')
-        parMgr.setProductionParameter(name, complex_value)
+    parameters = amplitudeParameters.unflatten_parameters(par_values, PARS_REAL)
+    for name, complex_value in parameters.items():
+        parMgr[name] = complex_value
     ll = -ati.likelihood()
 
     ## Add lasso prior on parameter values we know are small
@@ -77,9 +74,15 @@ def LogProb(
 
 
 ############### LOAD MLE ESTIMATE ###############
-PAR_NAMES, par_values = load_amplitude_info(mle_fit)
-MLE_VALUES, PAR_NAMES_PARTS, PAR_INDICES = flatten_amplitude_parts(PAR_NAMES, par_values)
-NDIM = len(MLE_VALUES) # Dimensionality of parameter space
+mle_fit = FitResults( mle_fit )
+if not mle_fit.valid():
+    print(f'Invalid fit result in file: {mle_fit}'); exit()
+amplitudeParameters = AmplitudeParameters()
+amplitudeParameters.load_cfg(mle_fit)
+PARS_COMPLEX_VALS, PARS_REAL = amplitudeParameters.uniqueAmps, amplitudeParameters.uniqueReal
+MLE_VALUES = amplitudeParameters.flatten_parameters()
+NDIM = len(MLE_VALUES)
+PAR_NAMES, PAR_NAMES_PARTS, PAR_INDICES = amplitudeParameters.get_naming_convention()
 
 ############## RUN MCMC IF RESULTS DOES NOT ALREADY EXIST ##############
 if not os.path.exists(f'{ofolder}/{ofile}') or os.path.getsize(f'{ofolder}/{ofile}') < 20000:
@@ -90,7 +93,7 @@ if not os.path.exists(f'{ofolder}/{ofile}') or os.path.getsize(f'{ofolder}/{ofil
 
     backend = emcee.backends.HDFBackend(f'{ofolder}/{ofile}')
     backend.reset(NWALKERS, NDIM)
-    sampler = emcee.EnsembleSampler(NWALKERS, NDIM, LogProb, args=[PAR_NAMES, PAR_INDICES], backend=backend)
+    sampler = emcee.EnsembleSampler(NWALKERS, NDIM, LogProb, backend=backend)
 
     state = sampler.run_mcmc(par_values, BURN_IN)
     sampler.reset()

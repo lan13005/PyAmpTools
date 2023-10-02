@@ -1,72 +1,92 @@
-import os
+# import os
 import numpy as np
 
 ############################################################
 # This file holds scripts to load in amptools information
 ############################################################
 
-def load_amplitude_info(seedfile):
+class AmplitudeParameters:
     '''
-    Read in an amptools seed file
-
-    Args:
-        seedfile (str): path to seed file
-
-    Returns:
-        par_names: np.array[str]: array of amplitude names
-        par_values: np.array[complex]: array of complex amplitude values
+    Class to extract amplitude parameters from a FitResults or ConfigurationInfo object
+       Ability to format them (complex -> real, imag) for input to other minimization algorithms
     '''
-    par_names = []
-    par_values = []
-    with open(seedfile) as fit:
-        for line in fit:
-            line = line.split(" ")
-            amp, real, imag = line[1], float(line[3].strip()), float(line[4].strip())
-            complex_val = complex(real, imag)
-            par_names.append(amp)
-            par_values.append(complex_val)
-    return np.array(par_names), np.array(par_values)
+    def __init__(self):
+        self.uniqueAmps = {}
+        self.uniqueReal = {}
 
-def flatten_amplitude_parts(par_names, par_values):
-    '''
-    Flatten the complex amplitude values into a single array of real and imaginary parts.
-    Ignores any amplitude values that are zero (i.e. if amplitude is real)
+    def load_cfg(self, cfg): # cfg: [FitResults, ConfigurationInfo]
+        '''
+        Get a map of unique (amplitude: value) pairs excluding extra constrained ones.
+        For a FitResults object set values to fitted results
+        For a ConfigurationInfo object set values to initial values
+        '''
+        ######## GET UNIQUE AMPLITUDES ########
+        if hasattr(cfg, 'configInfo'): # input was a FitResults object
+            results, cfg = cfg, cfg.configInfo()
+            ftype = "FitResults"
+        elif hasattr(cfg, 'constraintMap'):
+            ftype = "ConfigurationInfo" # input was a ConfigurationInfo object
+        else:
+            raise ValueError("Input must be a FitResults or ConfigurationInfo object")
+        constraintMap = cfg.constraintMap()
+        constraint_index = {}
+        uniqueAmps = []
+        i = 0
+        for k, vs in constraintMap:
+            if k not in constraint_index and not cfg.amplitude(k).fixed():
+                constraint_index[k] = i
+                uniqueAmps.append(k)
+            for v in vs:
+                if v not in constraint_index and not cfg.amplitude(v).fixed():
+                    constraint_index[v] = i
+            i += 1
+        ######## GET VALUES / REALNESS OF UNIQUE AMPLITUDES ########
+        self.uniqueAmps = {k: (results.ampProdParMap()[k] if ftype=="FitResults" else cfg.amplitude(k)) for k in uniqueAmps}
+        self.uniqueReal = {k: cfg.amplitude(k).real() for k in uniqueAmps} # check if amplitude is set to be real
 
-    Args:
-        par_names: np.array[str]: array of amplitude names
-        par_values: np.array[complex]: array of complex amplitude values
+    def flatten_parameters(self, uniqueAmps={}, uniqueReal={}):
+        ''' Flatten amplitude parameters (complex-> real, imag) skipping imaginary parts of real amplitudes.
+         Dictionary to Array
+        '''
+        parameters = []
+        if len(uniqueAmps) == 0:
+            uniqueAmps = self.uniqueAmps
+            uniqueReal = self.uniqueReal
+        for k, v in uniqueAmps.items():
+            parameters.append(v.real)
+            if not uniqueReal[k]:
+                parameters.append(v.imag)
+        return parameters
 
-    Returns:
-        par_array_parts: np.array[float]: array of real and imaginary parts of the complex amplitude values
-        indicies: np.array[int]: array of indicies of the real and imaginary parts of the complex amplitude values
-    '''
-    par_array_parts = []
-    par_name_parts = []
-    indicies = []
-    j=0
-    for i in range(len(par_names)):
-        real, imag =  par_values[i].real, par_values[i].imag
-        if real !=0: par_array_parts.append(real); indicies.append(j); par_name_parts.append(par_names[i]+"_re")
-        j+=1
-        if imag !=0: par_array_parts.append(imag); indicies.append(j); par_name_parts.append(par_names[i]+"_im")
-        j+=1
-    return np.array(par_array_parts), np.array(par_name_parts), np.array(indicies)
+    def unflatten_parameters(self, parameters, uniqueReal={}):
+        ''' Unflatten amplitude parameters forming complex values again.
+         Array to Dictionary
+        '''
+        uniqueAmps = {}
+        parameters = parameters.copy() # don't pop original list
+        if len(uniqueReal) == 0:
+            uniqueReal = self.uniqueReal
+        i=0
+        for k, real in uniqueReal.items():
+            real_part = parameters[i]; i += 1
+            imag_part = 0
+            if not real:
+                imag_part = parameters[i]; i+=1
+            uniqueAmps[k] = complex(real_part, imag_part)
+        return uniqueAmps
 
-def collect_amplitude_parts(par_array_parts, par_names, indicies):
-    '''
-    Reconstruct the complex amplitude values from the flattened array of real and imaginary parts
-
-    Args:
-        par_array_parts: np.array[float]: array of real and imaginary parts of the complex amplitude values
-        par_names: np.array[str]: array of amplitude names
-        indicies: np.array[int]: array of indicies of the real and imaginary parts of the complex amplitude values
-
-    Returns:
-        par_values: np.array[complex]: array of complex amplitude values
-    '''
-    par_values = []
-    for i in range(len(par_names)):
-        real = par_array_parts[np.argwhere(indicies==2*i  )] if 2*i in indicies else 0
-        imag = par_array_parts[np.argwhere(indicies==2*i+1)] if 2*i+1 in indicies else 0
-        par_values.append(complex(real, imag))
-    return np.array(par_values)
+    def get_naming_convention(self):
+        '''
+        amp_names: array of amplitude names.
+        amp_names_parts: array of amplitude names with real/imag parts separated, matches flattened_parameters
+        par_indices: array of ints corresponding to real/imag parts of amplitudes, reals are even, imags are odd
+        '''
+        amp_names = self.uniqueAmps.keys()
+        par_indices, amp_names_parts = [], []
+        for i, (amp, real) in enumerate(self.uniqueReal.items()):
+            par_indices.append(2*i)
+            amp_names_parts.append(f'{amp}_re')
+            if not real:
+                par_indices.append(2*i+1)
+                amp_names_parts.append(f'{amp}_im')
+        return np.array(amp_names), np.array(amp_names_parts), np.array(par_indices)

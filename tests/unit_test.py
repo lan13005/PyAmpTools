@@ -18,6 +18,14 @@ def test_parMgr():
     assert( par_real == 15 and par_imag == 0 )
     assert( post_nll != 1e6 and post_nll is not None )
 
+def test_AmpPars():
+    REPO_HOME = os.environ["REPO_HOME"]
+    base_dir = f'{REPO_HOME}/tests/test_files'
+    fit_results = f'{base_dir}/result.fit'
+    cmd = f'python {base_dir}/AmpPars.py {fit_results}'
+    print(cmd)
+    os.system(cmd)
+
 def test_extract_ff():
    REPO_HOME = os.environ["REPO_HOME"]
    fit_results = f'{REPO_HOME}/tests/test_files/result.fit'
@@ -52,7 +60,7 @@ def test_fit():
 def test_mcmc():
    REPO_HOME = os.environ['REPO_HOME']
    cfgfile = f'{REPO_HOME}/gen_amp/fit_res.cfg'
-   mle_fit = f'{REPO_HOME}/tests/test_files/MLE.fit'
+   mle_fit = f'{REPO_HOME}/tests/test_files/result.fit'
    ofolder = f'{REPO_HOME}/tests/mcmc'
    cmd=f"python {REPO_HOME}/EXAMPLES/python/mcmc.py {cfgfile} {mle_fit} -o {ofolder} -f 'mcmc.h5' -n 20 -b 10 -s 10 -overwrite"
    print(cmd)
