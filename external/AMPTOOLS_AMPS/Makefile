@@ -1,5 +1,11 @@
 SHELL = /bin/bash # Use bash syntax
 
+ifndef AMPTOOLS_HOME
+$(error Please set AMPTOOLS_HOME to point to the root of the AmpTools source tree. )
+endif
+
+include $(AMPTOOLS_HOME)/Makefile.settings
+######################################################################################
 Q := @
 
 ####### SET ENVIORNMENT VARIALBES ########
@@ -10,33 +16,34 @@ endif
 ifndef ROOTSYS
 $(error ROOTSYS is not set. Please load your root environment first)
 endif
-AMPTOOLS_AMPS_DATAIO := $(REPO_HOME)/src/GlueX
+AMPTOOLS_DATAIO := $(REPO_HOME)/external/AMPTOOLS_DATAIO
 ifndef AMPTOOLS_HOME
   AMPTOOLS_HOME := $($REPO_HOME)/external/AmpTools
 endif
 AMPTOOLS := $(AMPTOOLS_HOME)/AmpTools
-# $(info AMPTOOLS_AMPS_DATAIO: $(AMPTOOLS_AMPS_DATAIO))
+FSROOT := $(FSROOT)
+# $(info AMPTOOLS_DATAIO: $(AMPTOOLS_DATAIO))
 # $(info AMPTOOLS_HOME: $(AMPTOOLS_HOME))
 # $(info AMPTOOLS: $(AMPTOOLS))
 
 ######## SET COMPILER AND LIBRARY LOCATIONS ########
-include $(AMPTOOLS_HOME)/Makefile.settings
-CXX = gcc
-INC_DIR  = -I$(AMPTOOLS_AMPS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS)
-CXXFLAGS = -Wall -shared -fPIC -std=c++17 $(INC_DIR)
-ROOTLIBS   = $(shell root-config --libs)
-AMPTOOLS_HEADERS := $(shell find $(AMPTOOLS) -type f -name '*.h' -not -name '*GPU*' -not -name '*MPI*' -not -name '*LinkDef*')
+INC_DIR  := -I$(shell root-config --incdir) -I$(AMPTOOLS) -I$(FSROOT)
+CXX_FLAGS += -Wall -shared -fPIC -std=c++17 $(INC_DIR)
+ROOTLIBS  := $(shell root-config --libs)
+AMPTOOLS_HEADERS := $(shell find $(AMPTOOLS) -type f -name '*.h' -not -name '*GPU*' -not -name '*MPI*' -not -name '*LinkDef*' -not -name "MainPage.h")
+FSROOT_HEADERS := $(shell find $(FSROOT) -type f -name '*.h')
 
 ifdef GPU
 AMPTOOLS_HEADERS += $(shell find $(AMPTOOLS) -type f -name '*GPU*.h')
 INC_DIR += -I$(CUDA_INSTALL_PATH)/include
-CXXFLAGS += -DGPU_ACCELERATION
+CXX_FLAGS += -DGPU_ACCELERATION -I$(CUDA_INSTALL_PATH)/include
 SUFFIX := _GPU
+NVCC_FLAGS += --compiler-options '-fPIC' --shared $(INC_DIR)
 endif
 
 ifdef MPI
 CXX := $(MPICXX)
-CXXFLAGS += -DUSE_MPI
+CXX_FLAGS += -DUSE_MPI
 AMPTOOLS_HEADERS += $(shell find $(AMPTOOLS) -type f -name '*MPI*.h')
 MPI_SHOWME := $(shell $(CXX) -showme)
 MPI_INCLUDE := $(shell echo $(MPI_SHOWME) | cut -d ' ' -f 2)
@@ -45,13 +52,17 @@ AMPTOOLS_HEADERS += mpi.h
 SUFFIX := $(SUFFIX)_MPI
 endif
 
-AMPTOOLS_LIBS := -L$(AMPTOOLS)/lib -lAmpTools$(SUFFIX)
 AMPTOOLS_HEADERS := $(patsubst $(AMPTOOLS)/%,%,$(AMPTOOLS_HEADERS))
+FSROOT_HEADERS := $(patsubst $(FSROOT)/%,%,$(FSROOT_HEADERS))
+
+AMPTOOLS_LIBS := -L$(AMPTOOLS)/lib -lAmpTools$(SUFFIX)
+FSROOT_LIBS := -L$(FSROOT)/lib -lFSRoot
 
 ######## SET SOURCES AND HEADER FILES ########
 # Source Files, deriving object and header files from them
 SOURCES := $(wildcard *.cc)
-OBJECTS := $(SOURCES:.cc=.o)
+OBJECTS := $(SOURCES:.cc=$(SUFFIX).o)
+CUDA_OBJECTS := $(SOURCES:.cu=$(SUFFIX).o)
 HEADERS := $(SOURCES:.cc=.h)
 # $(info SOURCES: $(SOURCES))
 # $(info OBJECTS: $(OBJECTS))
@@ -68,9 +79,9 @@ TARGET_LINKDEF = AmpsDict$(SUFFIX)_Linkdef.h  # This file is need to create the 
 # Targets
 all: $(TARGET_LIBRARY)
 
-$(TARGET_LIBRARY): $(OBJECTS) $(TARGET_DICT)
+$(TARGET_LIBRARY): $(OBJECTS) $(CUDA_OBJECTS) $(TARGET_DICT)
 	@echo " ==== Creating final library $@ ==== "
-	$(Q)$(CXX) $(CXXFLAGS) -o $@ $^ $(ROOTLIBS) $(AMPTOOLS_LIBS)
+	$(Q)$(CXX) $(CXX_FLAGS) -o $@ $^ $(ROOTLIBS) $(AMPTOOLS_LIBS) $(FSROOT_LIBS)
 
 $(TARGET_DICT): $(HEADERS)
 	@echo " ==== Creating Dictionary $@ ==== "
@@ -82,14 +93,25 @@ $(TARGET_DICT): $(HEADERS)
 	@for header in $(AMPTOOLS_HEADERS); do \
 		echo "#pragma link C++ defined_in \"$$header\";" >> ${TARGET_LINKDEF}; \
 	done
-	@echo "#pragma link C++ defined_in \"mpi.h\";" >> ${TARGET_LINKDEF}
+	@for header in $(FSROOT_HEADERS); do \
+		echo "#pragma link C++ defined_in \"$$header\";" >> ${TARGET_LINKDEF}; \
+	done
 	@echo "#endif" >> ${TARGET_LINKDEF}
 
-	$(Q)rootcling -f $(INC_DIR) $@ $^ $(AMPTOOLS_HEADERS) ${TARGET_LINKDEF}
+	$(Q)rootcling -f $(INC_DIR) $@ $^ $(AMPTOOLS_HEADERS) $(FSROOT_HEADERS) ${TARGET_LINKDEF}
 
-%.o: %.cc
+%$(SUFFIX).o: %.cc .%$(SUFFIX).d
 	@echo " ==== Compiling $< ==== "
-	$(Q)$(CXX) $(CXXFLAGS) -o $@ -c $<
+	$(Q)$(CXX) $(CXX_FLAGS) -M -MP -MT $@ -o .$*$(SUFFIX).d $< $(INC_DIR)
+	$(Q)$(CXX) $(CXX_FLAGS) -o $@ $<
+
+%$(SUFFIX).o: %.cu .%$(SUFFIX).d
+	$(vecho) "-> Compiling $<"
+	$(Q)$(NVCC) $(NVCC_FLAGS) -M -MT $@ -o .$*$(SUFFIX).d $< $(INC_DIR)
+	$(Q)$(NVCC) $(NVCC_FLAGS) -o $@ $<
+
+DEPFILES := $(SOURCES:%.cc=.%$(SUFFIX).d) $(CUDA_OBJECTS:%.cu=.%$(SUFFIX).d)
+$(DEPFILES):
 
 clean:
-	rm -f *.o *.cxx* *.so *.pcm *dict*.h
+	$(Q)-rm -f *.o *.d *.so *.pcm *.cxx* *dict*.h *_Linkdef.h

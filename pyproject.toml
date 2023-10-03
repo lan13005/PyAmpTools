@@ -15,6 +15,7 @@ dependencies = [
     "corner",
     "h5py",
     "emcee",
+    "tbb", # for FSROOT, multiprocessing/threading
     ### CI
     "pytest",
     "pre-commit",

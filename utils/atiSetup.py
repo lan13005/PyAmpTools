@@ -11,18 +11,16 @@ SUFFIX += "_MPI" if USE_MPI else ""
 
 #################### LOAD LIBRARIES ###################
 ROOT.gSystem.Load(f'libAmpTools{SUFFIX}.so')
-ROOT.gSystem.Load(f'libDataIO{SUFFIX}.so')
-ROOT.gSystem.Load(f'libAmps{SUFFIX}.so')
+ROOT.gSystem.Load(f'libAmpsDataIO{SUFFIX}.so')
 ROOT.gSystem.Load('libAmpPlotter.so')
 
 if RANK_MPI == 0:
-    print(f'Loaded libraries: libAmpTools{SUFFIX}.so, libDataIO{SUFFIX}.so, libAmps{SUFFIX}.so libAmpPlotter.so')
+    print(f'Loaded libraries: libAmpTools{SUFFIX}.so, libAmpsDataIO{SUFFIX}.so libAmpPlotter.so')
 
 # Dummy functions that just prints "initialization"
 #  This is to make sure the libraries are loaded
 #  as python is interpreted.
-ROOT.initializeAmps(   RANK_MPI == 0 )
-ROOT.initializeDataIO( RANK_MPI == 0 )
+ROOT.initialize( RANK_MPI == 0 )
 
 ##################### SET ALIAS ########################
 ConfigFileParser            = ROOT.ConfigFileParser

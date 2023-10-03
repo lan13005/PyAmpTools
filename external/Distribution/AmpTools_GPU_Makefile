@@ -26,16 +26,16 @@ default: $(LIB)
 	$(vecho) " === Creating Shared Library $@ ==="
 	$(Q)$(CXX) $(CXX_FLAGS) $(INC_DIR) -o $@ $^ $(ROOTLIBS)
 
-$(TARGET_DICT): $(HEADERS)
-	@echo " === Creating Dictionary $@ === "
+# $(TARGET_DICT): $(HEADERS)
+# 	@echo " === Creating Dictionary $@ === "
 
-	@echo "#ifdef __CLING__" > ${TARGET_LINKDEF}
-	@for header in $^; do \
-		echo "#pragma link C++ defined_in \"$$header\";" >> ${TARGET_LINKDEF}; \
-	done
-	@echo "#endif" >> ${TARGET_LINKDEF}
+# 	@echo "#ifdef __CLING__" > ${TARGET_LINKDEF}
+# 	@for header in $^; do \
+# 		echo "#pragma link C++ defined_in \"$$header\";" >> ${TARGET_LINKDEF}; \
+# 	done
+# 	@echo "#endif" >> ${TARGET_LINKDEF}
 
-	$(Q)rootcling -f $(INC_DIR) $@ $^ ${TARGET_LINKDEF}
+# 	$(Q)rootcling -f $(INC_DIR) $@ $^ ${TARGET_LINKDEF}
 
 .%$(SUFFIX).o: %.cc .%$(SUFFIX).d
 	$(vecho) "-> Compiling $<"

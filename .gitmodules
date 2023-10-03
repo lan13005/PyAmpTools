@@ -1,3 +1,6 @@
 [submodule "external/AmpTools"]
 	path = external/AmpTools
 	url = https://github.com/mashephe/AmpTools
+[submodule "external/FSRoot"]
+	path = external/FSRoot
+	url = https://github.com/remitche66/FSRoot.git

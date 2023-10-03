@@ -14,8 +14,6 @@ os.environ['ATI_USE_GPU'] = "0"
 from atiSetup import *
 
 ################ SET ADDITIONAL ALIAS ###################
-TH1                  = ROOT.TH1
-TFile                = ROOT.TFile
 
 ############## PARSE COMMANDLINE ARGUMENTS ##############
 parser = argparse.ArgumentParser(description='Extract Fit Fractions from FitResults')

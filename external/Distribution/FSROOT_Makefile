@@ -1,0 +1,33 @@
+ROOT_CFLAGS   := $(shell root-config --cflags)
+ROOT_LIBFLAGS := $(shell root-config --libs) -lMinuit -lMathCore -lMathMore -lTreePlayer
+FSROOT_SRCDIRS := FSBasic FSMode FSData FSFit FSAnalysis
+FSROOT_LIBDIR := lib
+FSROOT_SHARED_LIBFILE := lib/libFSRoot.so
+FSROOT_STATIC_LIBFILE := lib/libFSRoot.a
+FSROOT_SRCFILES := $(foreach dir,$(FSROOT_SRCDIRS),$(wildcard $(dir)/*.C))
+FSROOT_INCFLAGS := -I$(FSROOT)
+FSROOT_OBJFILES := $(FSROOT_SRCFILES:%.C=%.o)
+
+Q :=
+CXX := g++
+CXX_FLAGS := $(ROOT_CFLAGS) -fPIC
+
+all: $(FSROOT_STATIC_LIBFILE) $(FSROOT_SHARED_LIBFILE)
+
+$(FSROOT_SHARED_LIBFILE): $(FSROOT_OBJFILES)
+	@echo " ==== Creating final library $@ ==== "
+	$(Q)$(CXX) $(CXX_FLAGS) -shared -o $@ $^ $(ROOT_LIBFLAGS)
+
+$(FSROOT_STATIC_LIBFILE): $(FSROOT_OBJFILES)
+	ar -rsv $@ $(FSROOT_OBJFILES) && ranlib $(FSROOT_STATIC_LIBFILE)
+
+$(FSROOT_OBJFILES): | $(FSROOT_LIBDIR)
+
+%.o: %.C %.h
+	$(Q)$(CXX) $(CXX_FLAGS) $(FSROOT_INCFLAGS) -c -o $@ $*.C
+
+$(FSROOT_LIBDIR):
+	mkdir $(FSROOT_LIBDIR)
+
+clean:
+	rm -rf $(FSROOT_LIBDIR) $(FSROOT_OBJFILES) */*.so */*.pcm */*.d

@@ -17,29 +17,28 @@ default: distribute_makefiles
 	@echo " === Running 'make' in the target directory... ==="
 	@cd AmpTools/AmpTools; make
 	@cd AmpTools/AmpPlotter; make
-	@cd AMPTOOLS_AMPS; make
-	@cd AMPTOOLS_DATAIO; make
+	@cd FSRoot; make
+	@cd FSRroot/Executables; make
+	@cd AMPTOOLS_AMPS_DATAIO; make
 
+# mpi and gpu both requiring default might double run things
 mpi: default
 	@echo " === Running 'make mpi' in the target directory... ==="
 	@cd AmpTools/AmpTools; make MPI=1
 	@cd AmpTools/AmpPlotter; make
-	@cd AMPTOOLS_AMPS; make MPI=1
-	@cd AMPTOOLS_DATAIO; make MPI=1
+	@cd AMPTOOLS_AMPS_DATAIO; make MPI=1
 
-gpu: default distribute_makefiles
+gpu: default
 	@echo " === Running 'make gpu' in the target directory... ==="
 	@cd AmpTools/AmpTools; make GPU=1
 	@cd AmpTools/AmpPlotter; make
-	@cd AMPTOOLS_AMPS; make GPU=1
-	@cd AMPTOOLS_DATAIO; make GPU=1
+	@cd AMPTOOLS_AMPS_DATAIO; make GPU=1
 
 mpigpu: gpu mpi
 	@echo " === Running 'make mpigpu' in the target directory... ==="
 	@cd AmpTools/AmpTools; make GPU=1 MPI=1
 	@cd AmpTools/AmpPlotter; make
-	@cd AMPTOOLS_AMPS; make GPU=1 MPI=1
-	@cd AMPTOOLS_DATAIO; make GPU=1 MPI=1
+	@cd AMPTOOLS_AMPS_DATAIO; make GPU=1 MPI=1
 
 gpumpi: mpigpu
 
@@ -55,12 +54,15 @@ distribute_makefiles:
 	done
 	cp $(SRC_DIRS)/AmpTools_Makefile AmpTools/AmpTools/Makefile
 	cp $(SRC_DIRS)/ParameterManager.* AmpTools/AmpTools/IUAmpTools
+	cp $(SRC_DIRS)/PlotGenerator.* AmpTools/AmpTools/IUAmpTools
 	cp $(SRC_DIRS)/DataReaderMPI.h AmpTools/AmpTools/IUAmpToolsMPI
+	cp $(SRC_DIRS)/FSROOT_Makefile FSRoot/Makefile
 
 .PHONY: distribute_makefiles default mpi gpu mpigpu gpumpi clean
 
 clean:
 	@echo " === Cleaning up target directory === "
 	@cd AmpTools; make clean
-	@cd AMPTOOLS_AMPS; make clean
-	@cd AMPTOOLS_DATAIO; make clean
+	@cd AMPTOOLS_AMPS_DATAIO; make clean
+	@cd FSRoot; make clean
+	@cd FSRroot/Executables; make clean

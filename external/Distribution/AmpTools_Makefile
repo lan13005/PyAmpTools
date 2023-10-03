@@ -22,7 +22,6 @@ INC_DIR :=  -I.. -I$(shell root-config --incdir)
 # INC_DIR += -I$(SCOREP_INC)
 # endif
 
-
 CXX_FLAGS += $(shell root-config --cflags) -shared -fPIC
 
 SRCDIRS := UpRootMinuit MinuitInterface IUAmpTools
