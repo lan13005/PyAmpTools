@@ -93,8 +93,8 @@ public:
   Histogram* projection( unsigned int projectionIndex, string reactName,
                         unsigned int type );
 
-  // keep projection weights to use use in other plotting programs (i.e. FSROOT)
-  vector<double> projection_weights( string reactName, unsigned int type );
+  // n_particles includes the beam and proton, i.e. for gamma p -> eta pi0 p there are 4 particles (target is fixed)
+  map<string, vector<double>> projected_values( string reactName, unsigned int type, int n_particles );
 
   void disableReaction( const string& reactName );
   void enableReaction( const string& reactName );

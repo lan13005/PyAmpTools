@@ -333,19 +333,36 @@ Histogram* PlotGenerator::projection( unsigned int projectionIndex, string react
   return (*cachePtr)[config][reactName][projectionIndex];
 }
 
-vector<double> PlotGenerator::projection_weights( string reactName, unsigned int type ) {
-    vector<double> weights;
-
+map<string, vector<double>> PlotGenerator::projected_values( string reactName, unsigned int type, int n_particles ) {
     // return a NULL histogram if final state is not enabled
-    if( !m_reactEnabled[reactName] ) return weights;
+    if( !m_reactEnabled[reactName] ) return NULL;
 
     // return a NULL histogram if someone asks for generated
     // MC and it is not enabled
-    if( ( type == kGenMC ) && ( m_option == kNoGenMC ) ) return weights;
+    if( ( type == kGenMC ) && ( m_option == kNoGenMC ) ) return NULL;
 
     bool isDataOrBkgnd = ( ( type == kData ) || ( type == kBkgnd ) ? true : false );
     int dataIndex = m_reactIndex[reactName] * kNumTypes + type;
     if( !isDataOrBkgnd && m_weightMCByIntensity ) m_ati.processEvents( reactName, dataIndex );
+
+    // renormalize MC  in the case it is intensity-weighted - the cache contains
+    // one set of plots for each reaction, so we need to normalized by the
+    // generated events for that reaction
+    double scaleFactor;
+    if( ( ( type == kAccMC ) || ( type == kGenMC ) ) && m_weightMCByIntensity  ){
+        #ifdef USE_LEGACY_LN_LIK_SCALING
+            scaleFactor = 1.;
+        #else
+            int dataIndex = m_reactIndex[reactName] * kNumTypes + type;
+            scaleFactor = m_ati.numEvents( dataIndex );
+        #endif
+        for ( unsigned int i = 0; i < weights.size(); ++i )
+            scaleFactor /= m_normIntMap[reactName]->numGenEvents();
+    }
+
+    map<string, vector<double>> weighted_values = { {"weight", vector<double>()} };
+    for (auto i_particle=0; i_particle<n_particles; ++i_particle)
+        weighted_values["P"+std::to_string(i_particle)] = vector<double>();
 
     // loop over ampVecs and fill histograms
     for( unsigned int i = 0; i < m_ati.numEvents( dataIndex ); ++i ){
@@ -358,25 +375,37 @@ vector<double> PlotGenerator::projection_weights( string reactName, unsigned int
         if( !isDataOrBkgnd && m_weightMCByIntensity )
             m_currentEventWeight = m_ati.intensity( i, dataIndex );
 
-        weights.push_back( m_currentEventWeight );
+        weighted_values['weight'].push_back(m_currentEventWeight * scaleFactor);
+        for (auto i_particle=0; i_particle<n_particles; ++i_particle)
+            weighted_values["P"+std::to_string(i_particle)].push_back(kin->particle(i_particle));
         delete kin; // cleanup
     }
 
-    // renormalize MC  in the case it is intensity-weighted - the cache contains
-    // one set of plots for each reaction, so we need to normalized by the
-    // generated events for that reaction
-    if( ( ( type == kAccMC ) || ( type == kGenMC ) ) && m_weightMCByIntensity  ){
-        #ifdef USE_LEGACY_LN_LIK_SCALING
-            double scaleFactor = 1.;
-        #else
-            int dataIndex = m_reactIndex[reactName] * kNumTypes + type;
-            double scaleFactor = m_ati.numEvents( dataIndex );
-        #endif
-        for ( unsigned int i = 0; i < weights.size(); ++i )
-            weights[i] *= scaleFactor / m_normIntMap[reactName]->numGenEvents();
-    }
+    return weighted_values;
 
-    return weights;
+    // RDataFrame rdf( m_ati.numEvents( dataIndex) );
+    // auto get4Vectors = [&i](AmpToolsInterface m_ati, int dataIndex, int i_particle){
+    //   Kinematics* kin = m_ati.kinematics(i, dataIndex);
+    //   delete kin; //cleanup
+    //   return kin->particle(i_particle);
+    // }; // lambda function to acces 4-vector
+    // auto getWeight = [&](AmpToolsInterface m_ati, int dataIndex){
+    //   double weight;
+    //   Kinematics* kin = m_ati.kinematics(i, dataIndex);
+    //   weight = kin->weight();
+    //   // m_ati.intensity already contains a possible MC-event weight
+    //   if( !isDataOrBkgnd && m_weightMCByIntensity )
+    //       weight = m_ati.intensity( i, dataIndex );
+    //   delete kin;
+    //   return weight * scaleFactor;
+    // };
+
+    // auto updatedRDF = std::make_unique<RNode>(rdf); // Very clunky to reassign RDF
+    // for (auto i_particle=0; i_particle<n_particles; ++i_particle)
+    //   updatedRDF = std::make_unique<RNode>( updatedRDF.Define( "p"+std::to_string(i), get4Vectors(m_ati, dataIndex, i_particle) ) );
+    // updatedRDF = std::make_unique<RNode>( updatedRDF.Define( "weight", getWeight(m_ati, dataIndex) ) );
+
+    // return updatedRDF;
 }
 
 

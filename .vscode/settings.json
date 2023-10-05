@@ -152,6 +152,8 @@
     "span": "cpp",
     "stack": "cpp",
     "string_view": "cpp",
-    "variant": "cpp"
+    "variant": "cpp",
+    "test.C": "cpp",
+    "hash_map": "cpp"
   }
 }
