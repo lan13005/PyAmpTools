@@ -30,11 +30,11 @@ void EtaPiPlotGenerator::createHistograms() {
   bookHistogram( kPi0ProtonMass,  new Histogram1D( 90, 1.0, 3.5, "Mpip", "Invariant Mass of #pi #p") );
 
   bookHistogram( kEtaCosTheta, new Histogram1D( 50, -1., 1., "cosTheta", "cos( #theta ) of Resonance Production") );
-  bookHistogram( kPhiPi,  new Histogram1D( 50, -1*AMPTOOLS_PI, AMPTOOLS_PI, "PhiPi",  "#Phi_{#pi}" ) );
-  bookHistogram( kPhiEta, new Histogram1D( 50, -1*AMPTOOLS_PI, AMPTOOLS_PI, "PhiPiEta", "#Phi_{#eta}" ) );
-  bookHistogram( kPhi, new Histogram1D( 50, -1*AMPTOOLS_PI, AMPTOOLS_PI, "Phi", "#Phi" ) );
-  bookHistogram( kphi, new Histogram1D( 50, -1*AMPTOOLS_PI, AMPTOOLS_PI, "phi", "#phi" ) );
-  bookHistogram( kPsi, new Histogram1D( 50, -1*AMPTOOLS_PI, AMPTOOLS_PI, "psi", "#psi" ) );
+  bookHistogram( kPhiPi,  new Histogram1D( 50, -1*A_PI, A_PI, "PhiPi",  "#Phi_{#pi}" ) );
+  bookHistogram( kPhiEta, new Histogram1D( 50, -1*A_PI, A_PI, "PhiPiEta", "#Phi_{#eta}" ) );
+  bookHistogram( kPhi, new Histogram1D( 50, -1*A_PI, A_PI, "Phi", "#Phi" ) );
+  bookHistogram( kphi, new Histogram1D( 50, -1*A_PI, A_PI, "phi", "#phi" ) );
+  bookHistogram( kPsi, new Histogram1D( 50, -1*A_PI, A_PI, "psi", "#psi" ) );
   bookHistogram( kt, new Histogram1D( 100, 0, 1.0, "t", "-t" ) );
 }
 
@@ -116,8 +116,8 @@ EtaPiPlotGenerator::projectEvent( Kinematics* kin, const string& reactionName ){
   GDouble Phi = atan2(y.Dot(eps), beam.Vect().Unit().Dot(eps.Cross(y)));
 
   GDouble psi = phi - Phi;
-  if(psi < -1*AMPTOOLS_PI) psi += 2*AMPTOOLS_PI;
-  if(psi > AMPTOOLS_PI) psi -= 2*AMPTOOLS_PI;
+  if(psi < -1*A_PI) psi += 2*A_PI;
+  if(psi > A_PI) psi -= 2*A_PI;
 
   // compute invariant t
   GDouble t = - 2* recoil.M() * (recoil.E()-recoil.M());

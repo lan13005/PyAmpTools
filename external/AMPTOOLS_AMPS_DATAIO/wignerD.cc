@@ -121,7 +121,7 @@ GDouble wignerDSmall(GDouble aj, GDouble am, GDouble an, GDouble beta) {
 
 complex<GDouble> wignerD(int l, int m, int n, GDouble cosTheta, GDouble phi) {
 
-  double dtheta = acos(cosTheta) * 180.0 / AMPTOOLS_PI;
+  double dtheta = acos(cosTheta) * 180.0 / A_PI;
 
   GDouble dpart = wignerDSmall(l, m, n, dtheta);
 
@@ -131,6 +131,6 @@ complex<GDouble> wignerD(int l, int m, int n, GDouble cosTheta, GDouble phi) {
 
 complex<GDouble> Y(int l, int m, GDouble cosTheta, GDouble phi) {
 
-  return ((GDouble)sqrt((2 * l + 1) / (4 * AMPTOOLS_PI))) *
+  return ((GDouble)sqrt((2 * l + 1) / (4 * A_PI))) *
          conj(wignerD(l, m, 0, cosTheta, phi));
 }

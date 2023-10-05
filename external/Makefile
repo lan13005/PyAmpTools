@@ -18,7 +18,7 @@ default: distribute_makefiles
 	@cd AmpTools/AmpTools; make
 	@cd AmpTools/AmpPlotter; make
 	@cd FSRoot; make
-	@cd FSRroot/Executables; make
+	@cd FSRoot/Executables; make
 	@cd AMPTOOLS_AMPS_DATAIO; make
 
 # mpi and gpu both requiring default might double run things
@@ -53,10 +53,17 @@ distribute_makefiles:
 		echo "Copied $(SRC_DIRS)/AmpTools_GPU_Makefile to AmpTools/AmpTools/$$dir/Makefile"; \
 	done
 	cp $(SRC_DIRS)/AmpTools_Makefile AmpTools/AmpTools/Makefile
+	cp $(SRC_DIRS)/FSROOT_Makefile FSRoot/Makefile
+
+### UPDATE FUNCTIONALITY
 	cp $(SRC_DIRS)/ParameterManager.* AmpTools/AmpTools/IUAmpTools
 	cp $(SRC_DIRS)/PlotGenerator.* AmpTools/AmpTools/IUAmpTools
+### kDRModule cannot be found (template). Replace with char
 	cp $(SRC_DIRS)/DataReaderMPI.h AmpTools/AmpTools/IUAmpToolsMPI
-	cp $(SRC_DIRS)/FSROOT_Makefile FSRoot/Makefile
+### "DEFINE PI..." of GPUCustomTypes.h CLASHING WITH A FSROOT DEPENDENCY
+	cp $(SRC_DIRS)/GPUCustomTypes.h AmpTools/AmpTools/GPUManager
+	cp $(SRC_DIRS)/AmpToolsInterface.cc AmpTools/AmpTools/IUAmpTools
+	cp $(SRC_DIRS)/wignerD.cuh AmpTools/AmpTools/GPUManager
 
 .PHONY: distribute_makefiles default mpi gpu mpigpu gpumpi clean
 
@@ -65,4 +72,4 @@ clean:
 	@cd AmpTools; make clean
 	@cd AMPTOOLS_AMPS_DATAIO; make clean
 	@cd FSRoot; make clean
-	@cd FSRroot/Executables; make clean
+	@cd FSRoot/Executables; make clean

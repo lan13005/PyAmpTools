@@ -23,6 +23,7 @@ if RANK_MPI == 0:
 ROOT.initialize( RANK_MPI == 0 )
 
 ##################### SET ALIAS ########################
+gInterpreter                = ROOT.gInterpreter
 ConfigFileParser            = ROOT.ConfigFileParser
 ConfigurationInfo           = ROOT.ConfigurationInfo
 if USE_MPI:

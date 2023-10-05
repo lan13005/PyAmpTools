@@ -34,3 +34,7 @@ def check_nvidia_devices():
         return True, "NVIDIA devices exist on your system."
     except Exception:
         return False, "No NVIDIA devices found."
+
+def remove_all_whitespace(string):
+    ''' Removes all whitespace from a string '''
+    return string.replace(" ", "")
