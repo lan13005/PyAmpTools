@@ -333,55 +333,75 @@ Histogram* PlotGenerator::projection( unsigned int projectionIndex, string react
   return (*cachePtr)[config][reactName][projectionIndex];
 }
 
-map<string, vector<double>> PlotGenerator::projected_values( string reactName, unsigned int type, int n_particles ) {
+map< string, map< int, map<string, vector<float> > > > PlotGenerator::projected_values( string reactName, int type, int n_particles ) {
     // return a NULL histogram if final state is not enabled
-    if( !m_reactEnabled[reactName] ) return NULL;
+    if( !m_reactEnabled[reactName] ) return {};
 
     // return a NULL histogram if someone asks for generated
     // MC and it is not enabled
-    if( ( type == kGenMC ) && ( m_option == kNoGenMC ) ) return NULL;
+    if( ( type == kGenMC ) && ( m_option == kNoGenMC ) ) return {};
 
     bool isDataOrBkgnd = ( ( type == kData ) || ( type == kBkgnd ) ? true : false );
     int dataIndex = m_reactIndex[reactName] * kNumTypes + type;
     if( !isDataOrBkgnd && m_weightMCByIntensity ) m_ati.processEvents( reactName, dataIndex );
 
+    int nEvents = m_ati.numEvents( dataIndex );
+
     // renormalize MC  in the case it is intensity-weighted - the cache contains
     // one set of plots for each reaction, so we need to normalized by the
     // generated events for that reaction
-    double scaleFactor;
+    float scaleFactor = 1;
     if( ( ( type == kAccMC ) || ( type == kGenMC ) ) && m_weightMCByIntensity  ){
-        #ifdef USE_LEGACY_LN_LIK_SCALING
-            scaleFactor = 1.;
-        #else
-            int dataIndex = m_reactIndex[reactName] * kNumTypes + type;
-            scaleFactor = m_ati.numEvents( dataIndex );
-        #endif
-        for ( unsigned int i = 0; i < weights.size(); ++i )
-            scaleFactor /= m_normIntMap[reactName]->numGenEvents();
+      #ifdef USE_LEGACY_LN_LIK_SCALING
+        scaleFactor = 1.;
+      #else
+        int dataIndex = m_reactIndex[reactName] * kNumTypes + type;
+        scaleFactor = nEvents;
+      #endif
+      scaleFactor /= m_normIntMap[reactName]->numGenEvents();
     }
 
-    map<string, vector<double>> weighted_values = { {"weight", vector<double>()} };
-    for (auto i_particle=0; i_particle<n_particles; ++i_particle)
-        weighted_values["P"+std::to_string(i_particle)] = vector<double>();
+    // Initialze new map if reaction has not been scanned over yet
+    //   Data is the same for each data source. Weights can change depending
+    //   on what waves/sums you turn on
+    bool reactionExists = ( m_weighted_values.find(reactName) != m_weighted_values.end() );
+    bool typeExists = ( m_weighted_values[reactName].find(type) != m_weighted_values[reactName].end() );
+    if ( !reactionExists || !typeExists){
+      m_weighted_values[reactName][type] = { {"weight", vector<float>(nEvents)} };
+      for (auto i_particle=0; i_particle<n_particles; ++i_particle){
+        m_weighted_values[reactName][type]["PxP"+std::to_string(i_particle)] = vector<float>(nEvents);
+        m_weighted_values[reactName][type]["PyP"+std::to_string(i_particle)] = vector<float>(nEvents);
+        m_weighted_values[reactName][type]["PzP"+std::to_string(i_particle)] = vector<float>(nEvents);
+        m_weighted_values[reactName][type]["EnP"+std::to_string(i_particle)] = vector<float>(nEvents);
+      }
+    }
+    else{ m_weighted_values[reactName][type]["weight"].clear(); }
 
     // loop over ampVecs and fill histograms
-    for( unsigned int i = 0; i < m_ati.numEvents( dataIndex ); ++i ){
-        // the subsequent calls here allocate new memory for
-        // the Kinematics object
-        Kinematics* kin = m_ati.kinematics(i, dataIndex);
-        m_currentEventWeight = kin->weight();
+    for( int i = 0; i < nEvents; ++i ){
+      // the subsequent calls here allocate new memory for
+      // the Kinematics object
+      Kinematics* kin = m_ati.kinematics(i, dataIndex);
+      m_currentEventWeight = kin->weight();
 
-        // m_ati.intensity already contains a possible MC-event weight
-        if( !isDataOrBkgnd && m_weightMCByIntensity )
-            m_currentEventWeight = m_ati.intensity( i, dataIndex );
+      // m_ati.intensity already contains a possible MC-event weight
+      if( !isDataOrBkgnd && m_weightMCByIntensity )
+        m_currentEventWeight = m_ati.intensity( i, dataIndex );
 
-        weighted_values['weight'].push_back(m_currentEventWeight * scaleFactor);
-        for (auto i_particle=0; i_particle<n_particles; ++i_particle)
-            weighted_values["P"+std::to_string(i_particle)].push_back(kin->particle(i_particle));
-        delete kin; // cleanup
+      m_weighted_values[reactName][type]["weight"][i] = m_currentEventWeight * scaleFactor;
+
+      if ( (!reactionExists || !typeExists) and m_currentEventWeight > 0){
+        for (auto i_particle=0; i_particle<n_particles; ++i_particle){
+          m_weighted_values[reactName][type]["PxP"+std::to_string(i_particle)][i] = kin->particle(i_particle).Px();
+          m_weighted_values[reactName][type]["PyP"+std::to_string(i_particle)][i] = kin->particle(i_particle).Py();
+          m_weighted_values[reactName][type]["PzP"+std::to_string(i_particle)][i] = kin->particle(i_particle).Pz();
+          m_weighted_values[reactName][type]["EnP"+std::to_string(i_particle)][i] = kin->particle(i_particle).E();
+        }
+      }
+      delete kin; // cleanup
     }
 
-    return weighted_values;
+    return m_weighted_values;
 
     // RDataFrame rdf( m_ati.numEvents( dataIndex) );
     // auto get4Vectors = [&i](AmpToolsInterface m_ati, int dataIndex, int i_particle){
