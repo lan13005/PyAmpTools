@@ -26,7 +26,7 @@ Environment setup. `conda` can be very slow to resolve dependencies for ROOT. I 
 ```shell
 conda env create  # Creates environment specified by environment.yml and pyproject.toml
 conda activate PyAmpTools # activate the environment
-pip install mpi4py # MPI, mamba will link it against the wrong executables
+pip install mpi4py # MPI (if available), mamba will link it against the wrong executables
 mamba install -c conda-forge root=6.26 # ifarm nvcc requires gcc<11. 6.28 ships with 12
 pre-commit install --install-hooks # (Optional) commit hooks to perform loose formatting
 ```

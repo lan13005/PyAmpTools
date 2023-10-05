@@ -375,7 +375,17 @@ map< string, map< int, map<string, vector<float> > > > PlotGenerator::projected_
         m_weighted_values[reactName][type]["EnP"+std::to_string(i_particle)] = vector<float>(nEvents);
       }
     }
-    else{ m_weighted_values[reactName][type]["weight"].clear(); }
+
+    else{ fill(m_weighted_values[reactName][type]["weight"].begin(), m_weighted_values[reactName][type]["weight"].end(), 0); } // keep the space, just zero it
+
+    // if (m_weighted_values[reactName][type].find("weight") != m_weighted_values[reactName][type].end()){
+    // cout << "Size of weight: " << m_weighted_values[reactName][type]["weight"].size() << endl;
+    // }
+    // else{ cout << "Size of weight: 0" << endl; }
+    // if (m_weighted_values[reactName][type].find("PxP0") != m_weighted_values[reactName][type].end()){
+    //   cout << "Size of PxP0: " << m_weighted_values[reactName][type]["PxP0"].size() << endl;
+    // }
+    // else{ cout << "Size of PxP0: 0" << endl; }
 
     // loop over ampVecs and fill histograms
     for( int i = 0; i < nEvents; ++i ){

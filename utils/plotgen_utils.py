@@ -86,7 +86,8 @@ def turn_on_specifc_waveset(plotGen, results, waveset, verbose=True):
     amp_map = {}
     if verbose: print(f' >> Plotting waveset: {waveset}')
     waves = waveset.split('_')
-    for wave in waves:
+    _waves = amps if keepAllAmps else waves
+    for wave in _waves:
         amp_map[wave] = -1 # Placeholder
 
     # Re-enable all amplitudes in all reactions
@@ -107,5 +108,5 @@ def turn_on_specifc_waveset(plotGen, results, waveset, verbose=True):
     if not keepAllAmps:
         for i in range(len(amps)):
             plotGen.disableAmp(i)
-        for i in amp_map.values:
+        for i in amp_map.values():
             plotGen.enableAmp(i)

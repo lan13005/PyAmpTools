@@ -5,7 +5,7 @@ TStyle* gluex_style() {
     gluex_style->SetPadBorderMode(0);
     gluex_style->SetPadColor(0);
     gluex_style->SetCanvasColor(0);
-    gluex_style->SetTitleColor(0);
+    // gluex_style->SetTitleColor(0); # was hiding my xlabel!
     gluex_style->SetStatColor(0);
 
 	// some default window sizes

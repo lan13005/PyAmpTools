@@ -6,7 +6,7 @@ from typing import List
 import argparse
 import numpy as np
 from utils import remove_all_whitespace
-from plotgen_utils import book_histogram
+from plotgen_utils import book_histogram, turn_on_specifc_waveset
 
 
 ############## SET ENVIRONMENT VARIABLES ##############
@@ -26,15 +26,19 @@ gluex_style.cd()
 THStack = ROOT.THStack
 TCanvas = ROOT.TCanvas
 RDataFrame = ROOT.RDataFrame
-ROOT.ROOT.EnableImplicitMT()
+ROOT.ROOT.EnableImplicitMT() # REMOVE THIS WHEN DEBUGGING
 
 ############## PARSE COMMAND LINE ARGS ##############
-fitName = f'{REPO_HOME}/gen_amp/result.fit'
-hist_output_name = "histograms"; # -> histograms.pdf
+parser = argparse.ArgumentParser(description='PlotGenerator fit results with RDataFrames')
+parser.add_argument('fit_results', type=str, help='Path to fit results file')
+parser.add_argument('-o', '--output', type=str, help='Output file name, do not include file type', default='plotgenrdf_result')
+args = parser.parse_args()
+fit_results = args.fit_results
+hist_output_name = args.output
 
-results = FitResults( fitName )
+results = FitResults( fit_results )
 if not results.valid():
-    print(f'Invalid fit result in file: {fitName}')
+    print(f'Invalid fit result in file: {fit_results}')
     exit()
 
 ############## REGISTER OBJECTS FOR AMPTOOLS ##############
@@ -47,10 +51,12 @@ AmpToolsInterface.registerDataReader( DataReader() )
 HISTS_TO_BOOK = {
     # 1D Hists
     # HistName: [ xname, Function, title, n_bins, x-min, x-max, drawOptions]
-    "Metapi": [ "Metapi", "MASS(ETA,PI0)", "M(#eta#pi)", 50, 1.04, 1.72, "" ],
-    "Meta":   [ "Meta", "MASS(ETA)", "M(#eta)", 50, 0.49, 0.61, "" ],
-    "Mpi0":   [ "Mpi0", "MASS(PI0)", "M(#pi^{0})", 50, 0.1, 0.18, "" ],
-    "cosHel": [ "cosHel", "GJCOSTHETA(ETA,PI0,GLUEXBEAM)", "cos(#theta_{hel})", 50, -1, 1, "" ],
+    "Metapi": [ "Metapi", "MASS(ETA,PI0)", ";M(#eta#pi);Events", 50, 1.04, 1.72, "" ],
+    "Meta":   [ "Meta", "MASS(ETA)", ";M(#eta);Events", 50, 0.49, 0.61, "" ],
+    "Mpi0":   [ "Mpi0", "MASS(PI0)", ";M(#pi^{0});Events", 50, 0.1, 0.18, "" ],
+    "cosGJ":  [ "cosGJ", "GJCOSTHETA(ETA,PI0,RECOIL)", ";cos(#theta_{GJ});Events", 50, -1, 1, "" ],
+    "cosHel": [ "cosHel","HELCOSTHETA(ETA,PI0,RECOIL)", ";cos(#theta_{HEL});Events", 50, -1, 1, "" ],
+    "phiHel": [ "phiHel","HELPHI(ETA,PI0,RECOIL,GLUEXBEAM)", ";#phi_{HEL};Events", 50, -1, 1, "" ],
 
     # 2D Hists
     # HistName:     [ xname, xfunction, title, nx_bins, x_min, x_max, yname, yfunction, ny_bins, y_min, y_max, drawOptions]
@@ -60,7 +66,7 @@ N_BOOKED_HISTS = len(HISTS_TO_BOOK)
 
 ############## SETUP ##############
 N_PARTICLES = 4
-particles = ['GLUEXBEAM','PROTON','ETA','PI0']
+particles = ['GLUEXBEAM','RECOIL','ETA','PI0']
 kData, kBkgnd, kAccMC, kGenMC, kNumTypes = 0, 1, 2, 3, 4
 kColors = {
     kData: ROOT.kBlack,
@@ -70,54 +76,68 @@ kColors = {
 plotGen = PlotGenerator( results )
 reactionName =  results.reactionList()[0]
 
-HISTOGRAM_STORAGE = {} # {type: [hist1, hist2, ...]}
-DRAW_OPT_STORAGE = {}
-for type in [kData, kBkgnd, kAccMC, kGenMC]:
+### FOR EACH WAVESET, PLOT THE HISTOGRAMS ###
+for amp in ['all', 'resAmp1', 'resAmp2', 'resAmp3', 'resAmp1_resAmp2']:
+    turn_on_specifc_waveset(plotGen, results, amp)
 
-    ########### LOAD THE DATA ###########
-    # Reaction: { Variable: [Values] } }
-    value_map = plotGen.projected_values(reactionName, type, N_PARTICLES)
-    value_map = value_map[reactionName][type]
-    value_map = {k: np.array(v) for k,v in value_map}
-    df = ROOT.RDF.MakeNumpyDataFrame(value_map)
-    columns = df.GetColumnNames()
+    HISTOGRAM_STORAGE = {} # {type: [hist1, hist2, ...]}
+    DRAW_OPT_STORAGE = {}
+    for type in [kData, kBkgnd, kAccMC, kGenMC]:
 
-    ######### RESTRUCTURE DATA FOR NICER CALCULATIONS #########
-    df.Define("GLUEXTARGET", "std::vector<float> p{0.938272, 0.0, 0.0, 0.0}; return p;")
-    for i, particle in enumerate(particles):
-        cmd = f"std::vector<float> p{{ PxP{i}, PyP{i}, PzP{i}, EnP{i} }}; return p;"
-        df = df.Define(f"{particle}", cmd)
-    # print(df.Describe())
+        ########### LOAD THE DATA ###########
+        # Reaction: { Variable: [Values] } }
+        value_map = plotGen.projected_values(reactionName, type, N_PARTICLES)
+        value_map = value_map[reactionName][type]
+        value_map = {k: np.array(v) for k,v in value_map}
+        df = ROOT.RDF.MakeNumpyDataFrame(value_map)
+        columns = df.GetColumnNames()
 
-    ######### BOOK HISTOGRAMS #########
-    BOOKED_HISTOGRAMS, DRAW_OPTIONS = book_histogram(df, HISTS_TO_BOOK, columns)
-    HISTOGRAM_STORAGE[type] = BOOKED_HISTOGRAMS
-    DRAW_OPT_STORAGE[type] = DRAW_OPTIONS
+        ######### RESTRUCTURE DATA FOR NICER CALCULATIONS #########
+        df.Define("GLUEXTARGET", "std::vector<float> p{0.938272, 0.0, 0.0, 0.0}; return p;")
+        for i, particle in enumerate(particles):
+            cmd = f"std::vector<float> p{{ PxP{i}, PyP{i}, PzP{i}, EnP{i} }}; return p;"
+            df = df.Define(f"{particle}", cmd)
+        # print(df.Describe())
 
+        ######### BOOK HISTOGRAMS #########
+        BOOKED_HISTOGRAMS, DRAW_OPTIONS = book_histogram(df, HISTS_TO_BOOK, columns)
+        HISTOGRAM_STORAGE[type] = BOOKED_HISTOGRAMS
+        DRAW_OPT_STORAGE[type] = DRAW_OPTIONS
 
-###########################################################
-### NOW CONFIGURE HOW YOU WANT TO DRAW THE HISTOGRAMS ####
-### HERE IS AN EXAMPLE... BUT IMPOSSIBLE TO MAKE GENERIC #
+    ###########################################################
+    ### NOW CONFIGURE HOW YOU WANT TO DRAW THE HISTOGRAMS ####
+    ### HERE IS AN EXAMPLE... BUT IMPOSSIBLE TO MAKE GENERIC #
 
-ncols = int(np.floor(np.sqrt(len(HISTS_TO_BOOK))))
-nrows = int(np.ceil(len(HISTS_TO_BOOK)/ncols))
+    ncols = int(np.floor(np.sqrt(len(HISTS_TO_BOOK))))
+    nrows = int(np.ceil(len(HISTS_TO_BOOK)/ncols))
 
-canvas = TCanvas("canvas", "canvas", 1440, 1080)
-canvas.Clear()
-canvas.Divide(ncols, nrows)
+    canvas = TCanvas("canvas", "canvas", 1440, 1080)
+    canvas.Clear()
+    canvas.Divide(ncols, nrows)
 
-canvas.Print(f"{hist_output_name}.pdf[")
-stacked = [] # need to store them otherwise they get garbage collected
-for ihist in range(N_BOOKED_HISTS):
-    stacked.append(THStack("stack",""))
-    for type in [kBkgnd, kAccMC]:
-        booked_hist = HISTOGRAM_STORAGE[type][ihist]
-        drawOptions = DRAW_OPT_STORAGE[type][ihist]
-        booked_hist.SetFillColorAlpha(kColors[type],0.8)
-        booked_hist.SetLineColor(0)
-        stacked[ihist].Add(booked_hist.GetPtr())
-    canvas.cd(ihist+1)
-    stacked[ihist].Draw('HIST')
-    HISTOGRAM_STORAGE[kData][ihist].Draw('E SAME')
-canvas.Print(f"{hist_output_name}.pdf")
-canvas.Print(f"{hist_output_name}.pdf]")
+    output_name = hist_output_name + f"_{amp}"
+    canvas.Print(f"{output_name}.pdf[")
+    stacks = []
+    for ihist in range(N_BOOKED_HISTS):
+        canvas.cd(ihist+1)
+        data_hist = HISTOGRAM_STORAGE[kData][ihist]
+        data_hist.SetMinimum(0)
+        data_hist.Draw('E')
+        stacks.append(THStack("stack",""))
+        for type in [kBkgnd, kAccMC]:
+            booked_hist = HISTOGRAM_STORAGE[type][ihist]
+            drawOptions = DRAW_OPT_STORAGE[type][ihist]
+            booked_hist.SetFillColorAlpha(kColors[type],0.8)
+            booked_hist.SetLineColor(0)
+            hist_ptr = booked_hist.GetPtr()
+            stacks[-1].Add(hist_ptr)
+        stacks[-1].Draw('HIST SAME')
+
+    canvas.Print(f"{output_name}.pdf")
+    canvas.Print(f"{output_name}.pdf]")
+
+    # THStack is drawn on TCanvas. Deleting TCanvas (which normally happens when it goes out of scope)
+    #   before THStack will lead to improper deallocation. Also deleting elements of stacks in a for loop
+    #   does not work. The entire object needs to be deleted
+    del stacks
+    del canvas
