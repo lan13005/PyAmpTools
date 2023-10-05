@@ -1,0 +1,14 @@
+import os
+import subprocess
+
+def test_mcmc():
+   REPO_HOME = os.environ['REPO_HOME']
+   cfgfile = f'{REPO_HOME}/gen_amp/fit_res.cfg'
+   mle_fit = f'{REPO_HOME}/tests/test_files/result.fit'
+   ofolder = f'{REPO_HOME}/tests/mcmc'
+   cmd=f"python {REPO_HOME}/EXAMPLES/python/mcmc.py {cfgfile} {mle_fit} -o {ofolder} -f 'mcmc.h5' -n 20 -b 10 -s 10 -overwrite"
+   print(cmd)
+   return_code = subprocess.call(cmd, shell=True)
+   print(return_code)
+   assert return_code == 0, f"Command '{cmd}' returned a non-zero exit code: {return_code}"
+   os.system(r'rm -rf {ofolder}') # clean up
