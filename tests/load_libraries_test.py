@@ -2,7 +2,9 @@ import ROOT
 import os
 import glob
 from termcolor import colored
+import pytest
 
+@pytest.mark.environment
 def test_check_root_found_functions():
     include_dirs = [
         f'{os.environ["REPO_HOME"]}/external/AMPTOOLS_AMPS',
@@ -20,12 +22,11 @@ def test_check_root_found_functions():
         src_files += srcs
 
     ############## LOAD LIBRARIES ##############
-    ROOT.gSystem.Load('libAmps.so')
-    ROOT.gSystem.Load('libDataIO.so')
+    ROOT.gSystem.Load('libAmpsDataIO.so')
     ROOT.gSystem.Load('libAmpTools.so')
+    ROOT.gSystem.Load('libFSRoot.so')
 
-    ROOT.initializeAmps(False)
-    ROOT.initializeDataIO(False)
+    ROOT.initialize(False)
 
     for src in src_files:
         has_attribute = hasattr(ROOT, src)

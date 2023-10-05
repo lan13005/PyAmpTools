@@ -81,7 +81,7 @@ class AmplitudeParameters:
         amp_names_parts: array of amplitude names with real/imag parts separated, matches flattened_parameters
         par_indices: array of ints corresponding to real/imag parts of amplitudes, reals are even, imags are odd
         '''
-        amp_names = self.uniqueAmps.keys()
+        amp_names = list(self.uniqueAmps.keys())
         par_indices, amp_names_parts = [], []
         for i, (amp, real) in enumerate(self.uniqueReal.items()):
             par_indices.append(2*i)

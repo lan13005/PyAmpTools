@@ -83,6 +83,9 @@ PARS_COMPLEX_VALS, PARS_REAL = amplitudeParameters.uniqueAmps, amplitudeParamete
 MLE_VALUES = amplitudeParameters.flatten_parameters()
 NDIM = len(MLE_VALUES)
 PAR_NAMES, PAR_NAMES_PARTS, PAR_INDICES = amplitudeParameters.get_naming_convention()
+print(f'PAR_NAMES: {PAR_NAMES}')
+print(f'PAR_NAMES_PARTS: {PAR_NAMES_PARTS}')
+print(f'PAR_INDICES: {PAR_INDICES}')
 
 ############## RUN MCMC IF RESULTS DOES NOT ALREADY EXIST ##############
 if not os.path.exists(f'{ofolder}/{ofile}') or os.path.getsize(f'{ofolder}/{ofile}') < 20000:

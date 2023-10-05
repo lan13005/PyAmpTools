@@ -1,5 +1,7 @@
 import os
+import pytest
 
+@pytest.mark.extract_ff
 def test_extract_ff():
    REPO_HOME = os.environ["REPO_HOME"]
    fit_results = f'{REPO_HOME}/tests/test_files/result.fit'

@@ -1,5 +1,7 @@
 from test_files import parMgr
+import pytest
 
+@pytest.mark.parmgr
 def test_parMgr():
     nProdPars, prefit_nll, par_real, par_imag, post_nll = parMgr.runTest()
     assert( nProdPars == 6 )
