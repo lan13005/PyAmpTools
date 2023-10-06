@@ -48,6 +48,6 @@ make [mpi/gpu/mpigpu/gpumpi] # distributes modified Makefiles and makes AmpTools
 Simple Unit tests
 
 ```shell
-sed -i "s~REPLACE_FOLDER_LOCATION~$REPO_HOME/tests~" $REPO_HOME/tests/samples/fit_res.cfg # update path
+sed -i "s~REPLACE_FOLDER_LOCATION~$REPO_HOME/tests/samples/SIMPLE_EXAMPLE~" $REPO_HOME/tests/samples/SIMPLE_EXAMPLE/fit.cfg # update path
 pytest -v
 ```
