@@ -67,28 +67,33 @@ N_BOOKED_HISTS = len(HISTS_TO_BOOK)
 ############## SETUP ##############
 N_PARTICLES = 4
 particles = ['GLUEXBEAM','RECOIL','ETA','PI0']
-kData, kBkgnd, kAccMC, kGenMC, kNumTypes = 0, 1, 2, 3, 4
+
+plotGen = PlotGenerator( results )
+kData, kBkgnd, kGenMC, kAccMC, kNumTypes = plotGen.kData, plotGen.kBkgnd, plotGen.kGenMC, plotGen.kAccMC, plotGen.kNumTypes
 kColors = {
     kData: ROOT.kBlack,
     kBkgnd: ROOT.kRed-9,
     kAccMC: ROOT.kGreen-8,
-    kGenMC: ROOT.kAzure-4}  # for the 4 data sources
-plotGen = PlotGenerator( results )
-reactionName =  results.reactionList()[0]
+    kGenMC: ROOT.kAzure-4} # for the 4 data sources
+
+reactionNames =  list(results.reactionList())
 
 ### FOR EACH WAVESET, PLOT THE HISTOGRAMS ###
-for amp in ['all', 'resAmp1', 'resAmp2', 'resAmp3', 'resAmp1_resAmp2']:
+for amp in ['all']:#, 'resAmp1', 'resAmp2', 'resAmp3', 'resAmp1_resAmp2']:
     turn_on_specifc_waveset(plotGen, results, amp)
 
     HISTOGRAM_STORAGE = {} # {type: [hist1, hist2, ...]}
     DRAW_OPT_STORAGE = {}
-    for type in [kData, kBkgnd, kAccMC, kGenMC]:
+    for type in [kData, kBkgnd, kGenMC, kAccMC]:
 
         ########### LOAD THE DATA ###########
         # Reaction: { Variable: [Values] } }
-        value_map = plotGen.projected_values(reactionName, type, N_PARTICLES)
-        value_map = value_map[reactionName][type]
+        value_map = plotGen.projected_values(reactionNames, type, N_PARTICLES)
+        value_map = value_map[type]
         value_map = {k: np.array(v) for k,v in value_map}
+
+        print(type, sum(value_map['weight']))
+
         df = ROOT.RDF.MakeNumpyDataFrame(value_map)
         columns = df.GetColumnNames()
 
@@ -108,8 +113,8 @@ for amp in ['all', 'resAmp1', 'resAmp2', 'resAmp3', 'resAmp1_resAmp2']:
     ### NOW CONFIGURE HOW YOU WANT TO DRAW THE HISTOGRAMS ####
     ### HERE IS AN EXAMPLE... BUT IMPOSSIBLE TO MAKE GENERIC #
 
-    ncols = int(np.floor(np.sqrt(len(HISTS_TO_BOOK))))
-    nrows = int(np.ceil(len(HISTS_TO_BOOK)/ncols))
+    nrows = int(np.floor(np.sqrt(len(HISTS_TO_BOOK))))
+    ncols = int(np.ceil(len(HISTS_TO_BOOK)/nrows))
 
     canvas = TCanvas("canvas", "canvas", 1440, 1080)
     canvas.Clear()
@@ -121,17 +126,21 @@ for amp in ['all', 'resAmp1', 'resAmp2', 'resAmp3', 'resAmp1_resAmp2']:
     for ihist in range(N_BOOKED_HISTS):
         canvas.cd(ihist+1)
         data_hist = HISTOGRAM_STORAGE[kData][ihist]
+        data_hist.SetMarkerStyle(ROOT.kFullCircle)
         data_hist.SetMinimum(0)
-        data_hist.Draw('E')
+        data_hist.SetMarkerSize(1.0)
+        data_hist.Draw('E') # Draw first to set labels and y-limits
         stacks.append(THStack("stack",""))
         for type in [kBkgnd, kAccMC]:
             booked_hist = HISTOGRAM_STORAGE[type][ihist]
             drawOptions = DRAW_OPT_STORAGE[type][ihist]
-            booked_hist.SetFillColorAlpha(kColors[type],0.8)
+            booked_hist.SetFillColorAlpha(kColors[type],1.0)
             booked_hist.SetLineColor(0)
+            booked_hist
             hist_ptr = booked_hist.GetPtr()
             stacks[-1].Add(hist_ptr)
         stacks[-1].Draw('HIST SAME')
+        data_hist.Draw('E SAME') # Redraw data
 
     canvas.Print(f"{output_name}.pdf")
     canvas.Print(f"{output_name}.pdf]")

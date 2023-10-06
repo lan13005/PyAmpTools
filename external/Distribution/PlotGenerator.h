@@ -93,8 +93,7 @@ public:
   Histogram* projection( unsigned int projectionIndex, string reactName,
                         unsigned int type );
 
-  // n_particles includes the beam and proton, i.e. for gamma p -> eta pi0 p there are 4 particles (target is fixed)
-  map< string, map< int, map<string, vector<float> > > > projected_values( string reactName, int type, int n_particles );
+  map< int, map<string, vector<float> > > projected_values( vector<string> reactNames, int type, int n_particles );
 
   void disableReaction( const string& reactName );
   void enableReaction( const string& reactName );
@@ -163,9 +162,9 @@ private:
   map< string, const NormIntInterface* > m_normIntMap;
   map< string, IntensityManager* > m_intenManagerMap;
 
-  // {Reaction: { Variable: [Value] } }
+  // {Data Source, { Variable: [Value] } }
   //   This is just for histogram plotting, there should be need for DBL precision
-  map<string, map< int, map<string, vector<float> > > > m_weighted_values;
+  map< int, map<string, vector<float> > > m_weighted_values;
 
   // dimension of these vectors is the number of amplitudes (constrained + free)
   vector< complex< double > > m_fitProdAmps;

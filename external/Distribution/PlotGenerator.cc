@@ -333,15 +333,18 @@ Histogram* PlotGenerator::projection( unsigned int projectionIndex, string react
   return (*cachePtr)[config][reactName][projectionIndex];
 }
 
-map< string, map< int, map<string, vector<float> > > > PlotGenerator::projected_values( string reactName, int type, int n_particles ) {
-    // return a NULL histogram if final state is not enabled
+map< int, map<string, vector<float> > > PlotGenerator::projected_values( vector<string> reactNames, int type, int n_particles ) {
+
+  // return a NULL histogram if someone asks for generated
+  // MC and it is not enabled
+  if( ( type == kGenMC ) && ( m_option == kNoGenMC ) ) return {};
+
+  bool isDataOrBkgnd = ( ( type == kData ) || ( type == kBkgnd ) ? true : false );
+
+  // return a NULL histogram if final state is not enabled
+  int nReactions = reactNames.size();
+  for (auto reactName : reactNames){
     if( !m_reactEnabled[reactName] ) return {};
-
-    // return a NULL histogram if someone asks for generated
-    // MC and it is not enabled
-    if( ( type == kGenMC ) && ( m_option == kNoGenMC ) ) return {};
-
-    bool isDataOrBkgnd = ( ( type == kData ) || ( type == kBkgnd ) ? true : false );
     int dataIndex = m_reactIndex[reactName] * kNumTypes + type;
     if( !isDataOrBkgnd && m_weightMCByIntensity ) m_ati.processEvents( reactName, dataIndex );
 
@@ -364,26 +367,31 @@ map< string, map< int, map<string, vector<float> > > > PlotGenerator::projected_
     // Initialze new map if reaction has not been scanned over yet
     //   Data is the same for each data source. Weights can change depending
     //   on what waves/sums you turn on
-    bool reactionExists = ( m_weighted_values.find(reactName) != m_weighted_values.end() );
-    bool typeExists = ( m_weighted_values[reactName].find(type) != m_weighted_values[reactName].end() );
-    if ( !reactionExists || !typeExists){
-      m_weighted_values[reactName][type] = { {"weight", vector<float>(nEvents)} };
+    bool typeExists = ( m_weighted_values.find(type) != m_weighted_values.end() );
+    if ( !typeExists){
+      m_weighted_values[type] = { {"weight", vector<float>{} } };
+      m_weighted_values[type]["weight"].reserve((nReactions+1)*nEvents);
       for (auto i_particle=0; i_particle<n_particles; ++i_particle){
-        m_weighted_values[reactName][type]["PxP"+std::to_string(i_particle)] = vector<float>(nEvents);
-        m_weighted_values[reactName][type]["PyP"+std::to_string(i_particle)] = vector<float>(nEvents);
-        m_weighted_values[reactName][type]["PzP"+std::to_string(i_particle)] = vector<float>(nEvents);
-        m_weighted_values[reactName][type]["EnP"+std::to_string(i_particle)] = vector<float>(nEvents);
+        m_weighted_values[type]["PxP"+std::to_string(i_particle)] = vector<float>{};
+        m_weighted_values[type]["PyP"+std::to_string(i_particle)] = vector<float>{};
+        m_weighted_values[type]["PzP"+std::to_string(i_particle)] = vector<float>{};
+        m_weighted_values[type]["EnP"+std::to_string(i_particle)] = vector<float>{};
+        m_weighted_values[type]["PxP"+std::to_string(i_particle)].reserve((nReactions+1)*nEvents);
+        m_weighted_values[type]["PyP"+std::to_string(i_particle)].reserve((nReactions+1)*nEvents);
+        m_weighted_values[type]["PzP"+std::to_string(i_particle)].reserve((nReactions+1)*nEvents);
+        m_weighted_values[type]["EnP"+std::to_string(i_particle)].reserve((nReactions+1)*nEvents);
       }
     }
 
-    else{ fill(m_weighted_values[reactName][type]["weight"].begin(), m_weighted_values[reactName][type]["weight"].end(), 0); } // keep the space, just zero it
+    else{ fill(m_weighted_values[type]["weight"].begin(), m_weighted_values[type]["weight"].end(), 0); } // keep the space, just zero it
 
-    // if (m_weighted_values[reactName][type].find("weight") != m_weighted_values[reactName][type].end()){
-    // cout << "Size of weight: " << m_weighted_values[reactName][type]["weight"].size() << endl;
+    // cout << "Number of events in " << reactName << " " << nEvents << endl;
+    // if (m_weighted_values[type].find("weight") != m_weighted_values[type].end()){
+    //   cout << "Size of weight: " << m_weighted_values[type]["weight"].size() << endl;
     // }
     // else{ cout << "Size of weight: 0" << endl; }
-    // if (m_weighted_values[reactName][type].find("PxP0") != m_weighted_values[reactName][type].end()){
-    //   cout << "Size of PxP0: " << m_weighted_values[reactName][type]["PxP0"].size() << endl;
+    // if (m_weighted_values[type].find("PxP0") != m_weighted_values[type].end()){
+    //   cout << "Size of PxP0: " << m_weighted_values[type]["PxP0"].size() << endl;
     // }
     // else{ cout << "Size of PxP0: 0" << endl; }
 
@@ -398,44 +406,18 @@ map< string, map< int, map<string, vector<float> > > > PlotGenerator::projected_
       if( !isDataOrBkgnd && m_weightMCByIntensity )
         m_currentEventWeight = m_ati.intensity( i, dataIndex );
 
-      m_weighted_values[reactName][type]["weight"][i] = m_currentEventWeight * scaleFactor;
+      m_weighted_values[type]["weight"].push_back(m_currentEventWeight * scaleFactor);
 
-      if ( (!reactionExists || !typeExists) and m_currentEventWeight > 0){
-        for (auto i_particle=0; i_particle<n_particles; ++i_particle){
-          m_weighted_values[reactName][type]["PxP"+std::to_string(i_particle)][i] = kin->particle(i_particle).Px();
-          m_weighted_values[reactName][type]["PyP"+std::to_string(i_particle)][i] = kin->particle(i_particle).Py();
-          m_weighted_values[reactName][type]["PzP"+std::to_string(i_particle)][i] = kin->particle(i_particle).Pz();
-          m_weighted_values[reactName][type]["EnP"+std::to_string(i_particle)][i] = kin->particle(i_particle).E();
-        }
+      for (auto i_particle=0; i_particle<n_particles; ++i_particle){
+        m_weighted_values[type]["PxP"+std::to_string(i_particle)].push_back(kin->particle(i_particle).Px());
+        m_weighted_values[type]["PyP"+std::to_string(i_particle)].push_back(kin->particle(i_particle).Py());
+        m_weighted_values[type]["PzP"+std::to_string(i_particle)].push_back(kin->particle(i_particle).Pz());
+        m_weighted_values[type]["EnP"+std::to_string(i_particle)].push_back(kin->particle(i_particle).E());
       }
       delete kin; // cleanup
     }
-
-    return m_weighted_values;
-
-    // RDataFrame rdf( m_ati.numEvents( dataIndex) );
-    // auto get4Vectors = [&i](AmpToolsInterface m_ati, int dataIndex, int i_particle){
-    //   Kinematics* kin = m_ati.kinematics(i, dataIndex);
-    //   delete kin; //cleanup
-    //   return kin->particle(i_particle);
-    // }; // lambda function to acces 4-vector
-    // auto getWeight = [&](AmpToolsInterface m_ati, int dataIndex){
-    //   double weight;
-    //   Kinematics* kin = m_ati.kinematics(i, dataIndex);
-    //   weight = kin->weight();
-    //   // m_ati.intensity already contains a possible MC-event weight
-    //   if( !isDataOrBkgnd && m_weightMCByIntensity )
-    //       weight = m_ati.intensity( i, dataIndex );
-    //   delete kin;
-    //   return weight * scaleFactor;
-    // };
-
-    // auto updatedRDF = std::make_unique<RNode>(rdf); // Very clunky to reassign RDF
-    // for (auto i_particle=0; i_particle<n_particles; ++i_particle)
-    //   updatedRDF = std::make_unique<RNode>( updatedRDF.Define( "p"+std::to_string(i), get4Vectors(m_ati, dataIndex, i_particle) ) );
-    // updatedRDF = std::make_unique<RNode>( updatedRDF.Define( "weight", getWeight(m_ati, dataIndex) ) );
-
-    // return updatedRDF;
+  }
+  return m_weighted_values;
 }
 
 

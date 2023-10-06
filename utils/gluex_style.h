@@ -13,10 +13,10 @@ TStyle* gluex_style() {
 	gluex_style->SetCanvasDefH(600);
 
 	// let's change the default margins
-	gluex_style->SetPadBottomMargin(0.15);
-	gluex_style->SetPadLeftMargin(0.15);
+	gluex_style->SetPadBottomMargin(0.14);
+	gluex_style->SetPadLeftMargin(0.14);
 	gluex_style->SetPadTopMargin(0.05);
-	gluex_style->SetPadRightMargin(0.08);
+	gluex_style->SetPadRightMargin(0.07);
 
 	// axis labels and settings
     gluex_style->SetStripDecimals(0);
@@ -30,11 +30,11 @@ TStyle* gluex_style() {
 	// histogram settings
 	gluex_style->SetOptStat(0);     // no stats box by default
 	gluex_style->SetOptTitle(0);    // no title by default
-	gluex_style->SetHistLineWidth(2);
+	gluex_style->SetHistLineWidth(1);
 
 	// various histogram fill colors
 	// various histogram fill colors
-	gluex_style->SetHistFillColor(920);   // grey
+	// gluex_style->SetHistFillColor(920);   // grey
 	//gluex_style->SetHistFillColor(5);  // yellow
 	//gluex_style->SetHistFillColor(38);   // pale blue
 	//gluex_style->SetHistFillColor(600-7);   // blue
