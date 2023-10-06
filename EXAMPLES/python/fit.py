@@ -86,16 +86,22 @@ def runFits( N: int = 0 ):
 ############## SET ENVIRONMENT VARIABLES ##############
 REPO_HOME = os.environ['REPO_HOME']
 # INITIALIZE MPI IF REQUESTED (Depends on if python or mpirun/mpiexec called this script)
-from mpi4py import rc as mpi4pyrc
-mpi4pyrc.threads = False
-from mpi4py import MPI
-RANK_MPI = MPI.COMM_WORLD.Get_rank()
-SIZE_MPI = MPI.COMM_WORLD.Get_size()
 caller, parent = get_pid_family()
 USE_MPI = "mpi" in parent
-assert( (USE_MPI and (SIZE_MPI > 1)) or not USE_MPI )
+print(f'parent process:{parent} -> means we use {"MPI" if USE_MPI else "No MPI"}')
 if USE_MPI:
+    from mpi4py import rc as mpi4pyrc
+    mpi4pyrc.threads = False
+    mpi4pyrc.initialize = False
+    from mpi4py import MPI
+    RANK_MPI = MPI.COMM_WORLD.Get_rank()
+    SIZE_MPI = MPI.COMM_WORLD.Get_size()
     print(f'Rank: {RANK_MPI} of {SIZE_MPI}')
+    assert( (USE_MPI and (SIZE_MPI > 1)) )
+else:
+    RANK_MPI = 0
+    SIZE_MPI = 1
+
 os.environ['ATI_USE_MPI'] = '1' if USE_MPI else '0'
 os.environ['ATI_USE_GPU'] = '1' if check_nvidia_devices()[0] else '0'
 os.environ['ATI_RANK'] = str(RANK_MPI)
