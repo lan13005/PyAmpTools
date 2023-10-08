@@ -41,5 +41,4 @@ recursive_link_if_not_exist(source_folders, destination_folder, '*.py')
 #   which gives the include directory for PyROOT
 cmd = "root-config --incdir"
 incdir = subprocess.check_output(cmd, shell=True).decode("utf-8").strip()
-
 recursive_link_if_not_exist(source_folders, incdir, '*.h')

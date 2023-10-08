@@ -92,8 +92,6 @@ for amp in ['all']:#, 'resAmp1', 'resAmp2', 'resAmp3', 'resAmp1_resAmp2']:
         value_map = value_map[type]
         value_map = {k: np.array(v) for k,v in value_map}
 
-        print(type, sum(value_map['weight']))
-
         df = ROOT.RDF.MakeNumpyDataFrame(value_map)
         columns = df.GetColumnNames()
 

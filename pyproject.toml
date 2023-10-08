@@ -31,7 +31,7 @@ dependencies = [
     # "pygtc",
 ]
 name = "PyAmpTools"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 version = "0.0.0"
 
 [tool.isort]

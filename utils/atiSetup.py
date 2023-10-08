@@ -4,12 +4,13 @@ import os
 
 USE_MPI = os.environ['ATI_USE_MPI'] == "1" if 'ATI_USE_MPI' in os.environ else False
 USE_GPU = os.environ['ATI_USE_GPU'] == "1" if 'ATI_USE_GPU' in os.environ else False
-RANK_MPI = int(os.environ['ATI_RANK']) if 'ATI_RANK' in os.environ else None
+RANK_MPI = int(os.environ['ATI_RANK']) if 'ATI_RANK' in os.environ else 0
 SUFFIX  = "_GPU" if USE_GPU else ""
 SUFFIX += "_MPI" if USE_MPI else ""
 
 
-#################### LOAD LIBRARIES ###################
+#################### LOAD LIBRARIES (ORDER MATTERS!) ###################
+print("Loading libraries...")
 ROOT.gSystem.Load(f'libAmpTools{SUFFIX}.so')
 ROOT.gSystem.Load(f'libAmpsDataIO{SUFFIX}.so')
 ROOT.gSystem.Load('libAmpPlotter.so')
