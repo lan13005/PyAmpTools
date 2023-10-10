@@ -34,11 +34,11 @@ destination_folder = expandvars(destination_folder)
 
 recursive_link_if_not_exist(source_folders, destination_folder, '*.py')
 
-###################################
-# Link additional C hearders to PyROOTs include directory
-###################################
-# Retrieve the output of this bash command "root-config --incdir"
-#   which gives the include directory for PyROOT
-cmd = "root-config --incdir"
-incdir = subprocess.check_output(cmd, shell=True).decode("utf-8").strip()
-recursive_link_if_not_exist(source_folders, incdir, '*.h')
+####################################
+## Link additional C hearders to PyROOTs include directory
+####################################
+## Retrieve the output of this bash command "root-config --incdir"
+##   which gives the include directory for PyROOT
+#cmd = "root-config --incdir"
+#incdir = subprocess.check_output(cmd, shell=True).decode("utf-8").strip()
+#recursive_link_if_not_exist(source_folders, incdir, '*.h')

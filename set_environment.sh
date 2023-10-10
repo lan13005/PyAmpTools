@@ -1,11 +1,6 @@
 # launched automatically by conda activate.d
 echo "Sourcing additional enviornment variables"
 
-### IF ON IFARM ###
-module add cuda
-export CUDA_INSTALL_PATH=/apps/cuda/11.4.2/
-export GPU_ARCH=sm_75
-####################
 
 if [ -z "$REPO_HOME" ]; then
     export REPO_HOME=$( dirname "$( readlink -f "${BASH_SOURCE[0]}" )" ) # location of this script
@@ -26,3 +21,12 @@ export LD_LIBRARY_PATH=$FSROOT/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$REPO_HOME/external/AMPTOOLS_AMPS_DATAIO:$LD_LIBRARY_PATH
 
 python $REPO_HOME/utils/link_modules.py # symlink files into conda environment
+
+####################
+### IF ON JLAB IFARM ###
+module add cuda
+export CUDA_INSTALL_PATH=/apps/cuda/11.4.2/
+export GPU_ARCH=sm_75
+####################
+
+#source $REPO_HOME/root/root_install/bin/thisroot.sh
