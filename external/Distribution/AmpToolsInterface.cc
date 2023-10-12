@@ -57,14 +57,16 @@ vector<Neg2LnLikContrib*> AmpToolsInterface::m_userNeg2LnLikContribs;
 vector<DataReader*> AmpToolsInterface::m_userDataReaders;
 unsigned int AmpToolsInterface::m_randomSeed = 0;
 
-AmpToolsInterface::AmpToolsInterface( FunctionalityFlag flag ) :
+AmpToolsInterface::AmpToolsInterface( FunctionalityFlag flag ):
 m_functionality( flag ),
 m_configurationInfo( NULL ),
 m_minuitMinimizationManager(NULL),
 m_parameterManager(NULL),
 m_fitResults(NULL)
 {
+  report( DEBUG, kModule ) << "AmpToolsInterface constructor without cfgInfo" << endl;
   srand( m_randomSeed );
+  report( DEBUG, kModule ) << "AmpToolsInterface constructor without cfgInfo done" << endl;
 }
 
 
@@ -73,10 +75,14 @@ m_functionality( flag ),
 m_configurationInfo(configurationInfo),
 m_minuitMinimizationManager(NULL),
 m_parameterManager(NULL),
-m_fitResults(NULL){
-
+m_fitResults(NULL)
+{
+  report (DEBUG, kModule ) << "MAXAMPVECS: " << MAXAMPVECS << endl;
+  report (DEBUG, kModule ) << "AmpToolsInterface constructor" << endl;
   resetConfigurationInfo(configurationInfo);
+  report (DEBUG, kModule ) << "AmpToolsInterface constructor almost done, seeding" << endl;
   srand( m_randomSeed );
+  report (DEBUG, kModule ) << "AmpToolsInterface constructor done" << endl;
 }
 
 
@@ -84,6 +90,14 @@ void
 AmpToolsInterface::resetConfigurationInfo(ConfigurationInfo* configurationInfo){
 
   m_configurationInfo = configurationInfo;
+
+  // check sizeof(GDouble)
+  if (sizeof(GDouble) != sizeof(double)){
+    report( ERROR, kModule ) << "GDouble and double are not the same size!" << endl;
+    assert(false);
+  }
+  else
+    report( DEBUG, kModule ) << "GDouble and double are the same size" << endl;
 
   clear();
 
@@ -94,8 +108,9 @@ AmpToolsInterface::resetConfigurationInfo(ConfigurationInfo* configurationInfo){
     // ************************
     // create a MinuitMinimizationManager
     // ************************
-
+    report( DEBUG, kModule ) << "creating a MinuitMinimizationManager" << endl;
     m_minuitMinimizationManager = new MinuitMinimizationManager(500);
+    report( DEBUG, kModule ) << "  + created a MinuitMinimizationManager" << endl;
   }
 
   // ************************
@@ -106,25 +121,32 @@ AmpToolsInterface::resetConfigurationInfo(ConfigurationInfo* configurationInfo){
 
     ReactionInfo* reaction = m_configurationInfo->reactionList()[irct];
     string reactionName(reaction->reactionName());
+    report( DEBUG, kModule ) << "creating an AmplitudeManager for reaction " << reactionName << endl;
 
     AmplitudeManager* ampMan = new AmplitudeManager(reaction->particleList(),reactionName);
+    report( DEBUG, kModule ) << "  + created an AmplitudeManager for reaction " << reactionName << endl;
     for (unsigned int i = 0; i < m_userAmplitudes.size(); i++){
       ampMan->registerAmplitudeFactor( *m_userAmplitudes[i] );
+      report( DEBUG, kModule ) << "  + registered an AmplitudeFactor for reaction " << reactionName << endl;
     }
     ampMan->setupFromConfigurationInfo( m_configurationInfo );
+    report( DEBUG, kModule ) << "  + setup AmplitudeManager for reaction " << reactionName << endl;
 
     if( m_functionality == kFull ){
       ampMan->setOptimizeParIteration( true );
       ampMan->setFlushFourVecsIfPossible( true );
+      report( DEBUG, kModule ) << "  + set kFull functionality options for reaction " << reactionName << endl;
     }
 
     if( m_functionality == kMCGeneration ){
       ampMan->setOptimizeParIteration( false );
       ampMan->setFlushFourVecsIfPossible( false );
       ampMan->setForceUserVarRecalculation( true );
+      report( DEBUG, kModule ) << "  + set kMCGeneration functionality options for reaction " << reactionName << endl;
     }
 
     m_intensityManagers.push_back(ampMan);
+    report (DEBUG, kModule ) << "  + added AmplitudeManager to intensity manager list" << endl;
   }
 
   Neg2LnLikContribManager* lhcontMan = new Neg2LnLikContribManager();
@@ -511,7 +533,7 @@ AmpToolsInterface::registerDataReader( const DataReader& dataReader){
 
 void
 AmpToolsInterface::clear(){
-
+  report( DEBUG, kModule ) << "AmpToolsInterface::clear() called likely from destructor" << endl;
   if( m_configurationInfo != NULL ){
 
     for (unsigned int irct = 0; irct < m_configurationInfo->reactionList().size(); irct++){
@@ -546,6 +568,7 @@ AmpToolsInterface::clear(){
   m_normIntMap.clear();
   m_likCalcMap.clear();
 
+  report( DEBUG, kModule ) << "Deallocating ampvecs 1:" << endl;
   for (unsigned int i = 0; i < MAXAMPVECS; i++){
     m_ampVecs[i].deallocAmpVecs();
     m_ampVecsReactionName[i] = "";
@@ -566,6 +589,7 @@ AmpToolsInterface::clearEvents(unsigned int iDataSet){
     assert(false);
   }
 
+  report( DEBUG, kModule ) << "Deallocating ampvecs 2:" << endl;
   m_ampVecsReactionName[iDataSet] = "";
   m_ampVecs[iDataSet].deallocAmpVecs();
 
@@ -587,6 +611,7 @@ AmpToolsInterface::loadEvents(DataReader* dataReader,
   // object in a state where it contains no data, which is consistent
   // with no data reader available (some DataReaders, like those for
   // background) are optional
+  report( DEBUG, kModule ) << "loading events from data reader " << dataReader->name() << endl;
   if( dataReader != NULL ) m_ampVecs[iDataSet].loadData(dataReader);
 }
 
@@ -600,6 +625,7 @@ AmpToolsInterface::loadEvent(Kinematics* kin, int iEvent, int nEventsTotal,
     assert(false);
   }
 
+  report( DEBUG, kModule ) << "loading events from Kinematics object" << endl;
   m_ampVecs[iDataSet].loadEvent(kin, iEvent, nEventsTotal);
 
 }
@@ -868,6 +894,7 @@ AmpToolsInterface::printAmplitudes(string reactionName, Kinematics* kin) const {
   }
 
   // Deallocate memory and return
+  report( DEBUG, kModule ) << "Deallocating ampvecs 3:" << endl;
   aVecs.deallocAmpVecs();
 }
 

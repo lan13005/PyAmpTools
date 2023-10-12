@@ -1,3 +1,5 @@
+#!/sur/bin/env python
+
 import ROOT
 import os
 import argparse
@@ -6,6 +8,8 @@ from datetime import datetime
 import random
 import sys
 from utils import get_pid_family, check_nvidia_devices
+import time
+time.sleep(10)
 
 def performFit(fitManager, seed_file_tag):
     ''' Performs a single fit '''
@@ -36,6 +40,7 @@ def runFits( N: int = 0 ):
     '''
     Performs N randomized fits, if N=0 then a single fit with no randomization is performed
     '''
+    print("Begin running fits...")
 
     if (RANK_MPI==0):
         print(f'LIKELIHOOD BEFORE MINIMIZATION: {ati.likelihood()}')
@@ -151,7 +156,7 @@ AmpToolsInterface.registerDataReader( DataReader() )
 
 ati = AmpToolsInterface( cfgInfo )
 
-parMgr: ParameterManager = ati.parameterManager()
+
 
 AmpToolsInterface.setRandomSeed(args.randomSeed)
 runFits(args.numRnd)

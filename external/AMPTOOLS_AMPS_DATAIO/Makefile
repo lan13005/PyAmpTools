@@ -28,8 +28,8 @@ AMPPLOTTER := $(AMPTOOLS_HOME)/AmpPlotter
 # $(info AMPTOOLS: $(AMPTOOLS))
 
 ######## SET COMPILER AND LIBRARY LOCATIONS ########
-# INC_DIR  := -I$(AMPTOOLS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS) -I$(AMPPLOTTER)
-INC_DIR  := -I$(AMPTOOLS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS) -I$(AMPPLOTTER) -I$(FSROOT)
+INC_DIR  := -I$(AMPTOOLS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS) -I$(AMPPLOTTER)
+# INC_DIR  := -I$(AMPTOOLS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS) -I$(AMPPLOTTER) -I$(FSROOT)
 CXX_FLAGS += -Wall -shared -fPIC -std=c++11 $(INC_DIR)
 ROOTLIBS  := $(shell root-config --libs)
 AMPTOOLS_HEADERS := $(shell find $(AMPTOOLS) -type f -name '*.h' -not -name '*GPU*' -not -name '*MPI*' -not -name '*LinkDef*' -not -name "MainPage.h")
@@ -66,11 +66,10 @@ AMPPLOTTER_LIBS := -L$(AMPPLOTTER)/lib -lAmpPlotter
 ######## SET SOURCES AND HEADER FILES ########
 # Source Files, deriving object and header files from them
 SOURCES := $(wildcard *.cc)
+CUDA_SOURCES := $(wildcard *.cu)
 OBJECTS := $(SOURCES:.cc=$(SUFFIX).o)
+CUDA_OBJECTS := $(CUDA_SOURCES:.cu=$(SUFFIX).o)
 HEADERS := $(SOURCES:.cc=.h)
-# $(info SOURCES: $(SOURCES))
-# $(info OBJECTS: $(OBJECTS))
-# $(info HEADERS: $(HEADERS))
 
 ######## SET TARGET LIBRARY NAME AND DICTIONARY SOURCE FILE ########
 TARGET_LIBRARY = libAmpsDataIO$(SUFFIX).so # Output library name
@@ -83,7 +82,7 @@ TARGET_LINKDEF = AmpsDataIODict$(SUFFIX)_Linkdef.h  # This file is need to creat
 # Targets
 all: $(TARGET_LIBRARY)
 
-$(TARGET_LIBRARY): $(OBJECTS) $(TARGET_DICT)
+$(TARGET_LIBRARY): $(OBJECTS) $(CUDA_OBJECTS) $(TARGET_DICT)
 	@echo " ==== Creating final library $@ ==== "
 	$(Q)$(CXX) $(CXX_FLAGS) -o $@ $^ $(ROOTLIBS) $(AMPTOOLS_LIBS) $(AMPPLOTTER_LIBS)
 # $(Q)$(CXX) $(CXX_FLAGS) -o $@ $^ $(ROOTLIBS) $(AMPTOOLS_LIBS) $(AMPPLOTTER_LIBS) $(FSROOT_LIBS)
@@ -114,8 +113,13 @@ $(TARGET_DICT): $(HEADERS)
 	$(Q)$(CXX) $(CXX_FLAGS) -M -MP -MT $@ -o .$*$(SUFFIX).d $< $(INC_DIR)
 	$(Q)$(CXX) $(CXX_FLAGS) -o $@ $<
 
-DEPFILES := $(SOURCES:%.cc=.%$(SUFFIX).d)
+%$(SUFFIX).o: %.cu .%$(SUFFIX).d
+	$(vecho) "-> Compiling cuda $<"
+	$(Q)$(NVCC) $(NVCC_FLAGS) -M -MT $@ -o .$*$(SUFFIX).d $< $(INC_DIR)
+	$(Q)$(NVCC) $(NVCC_FLAGS) -c -o $@ $< $(INC_DIR)
+
+DEPFILES := $(SOURCES:%.cc=.%$(SUFFIX).d) $(CUDA_SOURCES:%.cu=.%$(SUFFIX).d)
 $(DEPFILES):
 
 clean:
-	$(Q)-rm -f *.o *.d *.so *.pcm *.cxx* *dict*.h *_Linkdef.h
+	$(Q)-rm -f *.o *.d *.so *.pcm *.cxx* *dict*.h *_Linkdef.h .nfs*

@@ -154,6 +154,9 @@
     "string_view": "cpp",
     "variant": "cpp",
     "test.C": "cpp",
-    "hash_map": "cpp"
-  }
+    "hash_map": "cpp",
+    "*.icc": "cpp",
+    "*.inc": "cpp"
+  },
+  "git.ignoreLimitWarning": true
 }

@@ -54,10 +54,11 @@ def _parMgr_returnPar_if_keyExists(self,key):
         raiseError(KeyError, f'Parameter {key} not found by ParameterManager')
     return self.findParameter(key)
 
-@pythonization("ParameterManager")
-def pythonize_parMgr(klass):
-    klass.__repr__ = lambda self: '\n'.join([f'{k}: {self.findParameter(k).value()}' for k in self.getProdParList()])
-    klass.__len__  = lambda self: self.getProdParList().size()
-    klass.__getitem__ = lambda self, key: _parMgr_returnPar_if_keyExists(self,key).value()
-    klass.__setitem__ = lambda self, key, value: _parMgr_returnPar_if_keyExists(self,key).setValue(value)
-    klass.__contains__ = lambda self, key: key in self.getProdParList()
+# Pythonize requires v6.26 or later
+# @pythonization("ParameterManager")
+# def pythonize_parMgr(klass):
+#     klass.__repr__ = lambda self: '\n'.join([f'{k}: {self.findParameter(k).value()}' for k in self.getProdParList()])
+#     klass.__len__  = lambda self: self.getProdParList().size()
+#     klass.__getitem__ = lambda self, key: _parMgr_returnPar_if_keyExists(self,key).value()
+#     klass.__setitem__ = lambda self, key, value: _parMgr_returnPar_if_keyExists(self,key).setValue(value)
+#     klass.__contains__ = lambda self, key: key in self.getProdParList()

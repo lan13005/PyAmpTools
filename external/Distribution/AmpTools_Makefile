@@ -5,6 +5,8 @@ endif
 
 include $(AMPTOOLS_HOME)/Makefile.settings
 
+Q := @
+
 ############################################################
 # Most things below here probably don't need to be changed
 #
@@ -68,7 +70,7 @@ $(DEFAULT): compiler_flags $(TARGET_LIBS)
 	$(vecho) "=== Build of $@ is complete. ==="
 
 # descend into the directory obtained by stripping lib and
-# $(SUFFIX).a and execute make with LIB set to the target
+# $(SUFFIX).so and execute make with LIB set to the target
 lib%$(SUFFIX).so:
 	@echo " === Building $@ in directory $* ==="
 	$(Q)$(MAKE) -C $* LIB=$@
