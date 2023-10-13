@@ -83,7 +83,9 @@ AmpVecs::AmpVecs(){
   m_hasMixedSignWeights = false;
   m_lastWeightSign = 0;
 
+#ifdef GPU_ACCELERATION
   report( DEBUG, kModule ) << "Address of m_gpuMan: " << &m_gpuMan << endl;
+#endif // GPU_ACCELERATION
   report( DEBUG, kModule ) << "Address of m_iNEvents: " << &m_iNEvents << endl;
   report( DEBUG, kModule ) << "Address of m_iNTrueEvents: " << &m_iNTrueEvents << endl;
   report( DEBUG, kModule ) << "Address of m_dSumWeights: " << &m_dSumWeights << endl;

@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 import random
 import sys
-from utils import get_pid_family, check_nvidia_devices
+from utils import get_pid_family, check_nvidia_devices, prepare_mpigpu
 import time
 time.sleep(10)
 
@@ -48,13 +48,13 @@ def runFits( N: int = 0 ):
         fitManager.setMaxIterations(args.maxIter)
 
         if N == 0: # No randomization
-            bFitFailed, NLL = performFit(fitManager, '0')
-            print(f'LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): {NLL}')
+            bFitFailed, minNLL = performFit(fitManager, '0')
+            print(f'LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): {minNLL}')
 
         else: # Randomized parameters
             fitName     = cfgInfo.fitName()
             maxFraction = 0.5
-            minLL       = sys.float_info.max
+            minNLL       = sys.float_info.max
             minFitTag   = -1
 
             parRangeKeywords = cfgInfo.userKeywordArguments("parRange")
@@ -70,8 +70,8 @@ def runFits( N: int = 0 ):
                     ati.randomizeParameter(parRangeKeywords[ipar][0], float(parRangeKeywords[ipar][1]), float(parRangeKeywords[ipar][2]))
 
                 bFitFailed, NLL = performFit(fitManager, f'{i}')
-                if not bFitFailed and NLL < minLL:
-                    minLL = NLL
+                if not bFitFailed and NLL < minNLL:
+                    minNLL = NLL
                     minFitTag = i
 
                 print(f'LIKELIHOOD AFTER MINIMIZATION: {NLL}\n')
@@ -79,7 +79,7 @@ def runFits( N: int = 0 ):
             if minFitTag < 0:
                 print("ALL FITS FAILED!")
             else:
-                print(f'MINIMUM LIKELHOOD FROM ITERATION {minFitTag} of {N} RANDOM PRODUCTION PARS = {minLL}')
+                print(f'MINIMUM LIKELHOOD FROM ITERATION {minFitTag} of {N} RANDOM PRODUCTION PARS = {minNLL}')
                 os.system(f'cp {fitName}_{minFitTag}.fit {fitName}.fit')
                 if args.seedfile is not None:
                     os.system(f'cp {args.seedfile}_{minFitTag}.txt {args.seedfile}.txt')
@@ -87,13 +87,37 @@ def runFits( N: int = 0 ):
     if USE_MPI:
        ati.exitMPI()
 
+    return minNLL
+
+############## PARSE COMMANDLINE ARGUMENTS #############
+parser = argparse.ArgumentParser(description="Perform MLE fits")
+rndSeed = random.seed(datetime.now().timestamp())
+parser.add_argument('cfgfile',             type=str,                  help='AmpTools Configuration file')
+parser.add_argument('-s', '--seedfile',    type=str, default=None,    help='Output file for seeding next fit based on this fit')
+parser.add_argument('-r', '--numRnd',      type=int, default=0,       help='Perform N fits each seeded with random parameters')
+parser.add_argument('-rs','--randomSeed',  type=int, default=rndSeed, help='Sets the random seed used by the random number generator for the fits with randomized initial parameters. If not set, will use the current time.')
+parser.add_argument('-m', '--maxIter',     type=int, default=10000,   help='Maximum number of fit iterations')
+parser.add_argument('-n', '--useMinos',    action='store_true',       help='Use MINOS instead of MIGRAD')
+parser.add_argument('-H', '--hesse',       action='store_true',       help='Evaluate HESSE matrix after minimization')
+parser.add_argument('-p', '--scanPar',     type=str, default=None,    help='Perform a scan of the given parameter. Stepsize, min, max are to be set in the config file')
+parser.add_argument('-a', '--accelerator', type=str, default='',      help='Force use of given "accelerator" ~ [gpu, mpi, mpigpu, gpumpi]')
+
+args = parser.parse_args()
+if args.randomSeed is None:
+    args.randomSeed = int(time.time())
+
+cfgfile = args.cfgfile
+assert( os.path.isfile(cfgfile) ), f'Config file does not exist at specified path'
+
 
 ############## SET ENVIRONMENT VARIABLES ##############
 REPO_HOME = os.environ['REPO_HOME']
-# INITIALIZE MPI IF REQUESTED (Depends on if python or mpirun/mpiexec called this script)
-caller, parent = get_pid_family()
-USE_MPI = "mpi" in parent
-print(f'parent process:{parent} -> means we use {"MPI" if USE_MPI else "No MPI"}')
+
+############### INITIALIZE MPI IF REQUESTED ###########
+# (Depends on if bash or mpirun/mpiexec called the python program)
+#######################################################
+USE_MPI, USE_GPU = prepare_mpigpu(args.accelerator) # use mpi/gpu if possible or you forced me to with -accelerator flag
+
 if USE_MPI:
     from mpi4py import rc as mpi4pyrc
     mpi4pyrc.threads = False
@@ -107,27 +131,11 @@ else:
     RANK_MPI = 0
     SIZE_MPI = 1
 
-os.environ['ATI_USE_MPI'] = '1' if USE_MPI else '0'
-os.environ['ATI_USE_GPU'] = '1' if check_nvidia_devices()[0] else '0'
+####### INITIALIZE GPU IF POSSIBLE/REQUESTED ###########
 os.environ['ATI_RANK'] = str(RANK_MPI)
+
+########## LOAD APPROPRIATE SHARED LIBRARIES ##########
 from atiSetup import *
-
-
-############## PARSE COMMANDLINE ARGUMENTS #############
-parser = argparse.ArgumentParser(description="Perform MLE fits")
-rndSeed = random.seed(datetime.now().timestamp())
-parser.add_argument('cfgfile',            type=str,                  help='AmpTools Configuration file')
-parser.add_argument('-s', '--seedfile',   type=str, default=None,    help='Output file for seeding next fit based on this fit')
-parser.add_argument('-r', '--numRnd',     type=int, default=0,       help='Perform N fits each seeded with random parameters')
-parser.add_argument('-rs','--randomSeed', type=int, default=rndSeed, help='Sets the random seed used by the random number generator for the fits with randomized initial parameters. If not set, will use the current time.')
-parser.add_argument('-m', '--maxIter',    type=int, default=10000,   help='Maximum number of fit iterations')
-parser.add_argument('-n', '--useMinos',   action='store_true',       help='Use MINOS instead of MIGRAD')
-parser.add_argument('-H', '--hesse',      action='store_true',       help='Evaluate HESSE matrix after minimization')
-parser.add_argument('-p', '--scanPar',    type=str, default=None,    help='Perform a scan of the given parameter. Stepsize, min, max are to be set in the config file')
-
-args = parser.parse_args()
-if args.randomSeed is None:
-    args.randomSeed = int(time.time())
 
 if RANK_MPI == 0:
     print("\n\n === COMMANDLINE ARGUMENTS === ")
@@ -141,9 +149,6 @@ if RANK_MPI == 0:
     print("Scanning Parameter:", args.scanPar)
     print(" ============================= \n\n")
 
-cfgfile = args.cfgfile
-assert( os.path.isfile(cfgfile) ), f'Config file does not exist at specified path'
-
 ############## LOAD CONFIGURATION FILE ##############
 parser = ConfigFileParser(cfgfile)
 cfgInfo: ConfigurationInfo = parser.getConfigurationInfo()
@@ -156,9 +161,9 @@ AmpToolsInterface.registerDataReader( DataReader() )
 
 ati = AmpToolsInterface( cfgInfo )
 
-
-
 AmpToolsInterface.setRandomSeed(args.randomSeed)
-runFits(args.numRnd)
+nll = runFits(args.numRnd)
 
 print("\nDone! MPI.Finalize() / MPI.Init() automatically called at script end / start\n") if USE_MPI else print("\nDone!")
+
+print(f"Final Likelihood: {nll}") # Need this for for unit-tests

@@ -17,24 +17,22 @@ default: distribute_makefiles
 	@echo " === Running 'make' in the target directory... ==="
 	@cd AmpTools/AmpTools; make
 	@cd AmpTools/AmpPlotter; make
-# @cd FSRoot; make
-# @cd FSRoot/Executables; make
+#	@cd FSRoot; make
+#	@cd FSRoot/Executables; make
 	@cd AMPTOOLS_AMPS_DATAIO; make
 
-# mpi and gpu both requiring default might double run things
 mpi: | default
 	@echo " === Running 'make mpi' in the target directory... ==="
 	@cd AmpTools/AmpTools; make MPI=1
 	@cd AmpTools/AmpPlotter; make
 	@cd AMPTOOLS_AMPS_DATAIO; make MPI=1
 
-#gpu: | default
-gpu:
+gpu: | default
 	@echo " === Running 'make gpu' in the target directory... ==="
 	@cd AmpTools/AmpTools; make GPU=1
 	@cd AmpTools/AmpPlotter; make
-	# @cd FSRoot; make
-	# @cd FSRoot/Executables; make
+#	@cd FSRoot; make
+#	@cd FSRoot/Executables; make
 	@cd AMPTOOLS_AMPS_DATAIO; make GPU=1
 
 mpigpu: gpu mpi
@@ -65,7 +63,12 @@ distribute_makefiles:
 	cp $(SRC_DIRS)/DataReaderMPI.h AmpTools/AmpTools/IUAmpToolsMPI
 ### "DEFINE PI..." of GPUCustomTypes.h CLASHING WITH A FSROOT DEPENDENCY
 	cp $(SRC_DIRS)/GPUCustomTypes.h AmpTools/AmpTools/GPUManager
-	cp $(SRC_DIRS)/AmpToolsInterface.cc AmpTools/AmpTools/IUAmpTools
+	cp $(SRC_DIRS)/GPUManager.* AmpTools/AmpTools/GPUManager
+	cp $(SRC_DIRS)/AmpToolsInterface.* AmpTools/AmpTools/IUAmpTools
+	cp $(SRC_DIRS)/AmplitudeManager.* AmpTools/AmpTools/IUAmpTools
+	cp $(SRC_DIRS)/MinuitMinimizationManager.* AmpTools/AmpTools/MinuitInterface
+	cp $(SRC_DIRS)/URMinuit.* AmpTools/AmpTools/UpRootMinuit
+	cp $(SRC_DIRS)/AmpVecs.* AmpTools/AmpTools/IUAmpTools
 	cp $(SRC_DIRS)/wignerD.cuh AmpTools/AmpTools/GPUManager
 
 .PHONY: distribute_makefiles default mpi gpu mpigpu gpumpi clean

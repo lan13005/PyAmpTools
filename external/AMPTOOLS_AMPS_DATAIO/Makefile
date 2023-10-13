@@ -30,7 +30,7 @@ AMPPLOTTER := $(AMPTOOLS_HOME)/AmpPlotter
 ######## SET COMPILER AND LIBRARY LOCATIONS ########
 INC_DIR  := -I$(AMPTOOLS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS) -I$(AMPPLOTTER)
 # INC_DIR  := -I$(AMPTOOLS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS) -I$(AMPPLOTTER) -I$(FSROOT)
-CXX_FLAGS += -Wall -shared -fPIC -std=c++11 $(INC_DIR)
+CXX_FLAGS += -Wall -shared -fPIC -std=c++17 $(INC_DIR)
 ROOTLIBS  := $(shell root-config --libs)
 AMPTOOLS_HEADERS := $(shell find $(AMPTOOLS) -type f -name '*.h' -not -name '*GPU*' -not -name '*MPI*' -not -name '*LinkDef*' -not -name "MainPage.h")
 # FSROOT_HEADERS := $(shell find $(FSROOT) -type f -name '*.h')
@@ -41,6 +41,8 @@ INC_DIR += -I$(CUDA_INSTALL_PATH)/include
 CXX_FLAGS += -DGPU_ACCELERATION -I$(CUDA_INSTALL_PATH)/include
 SUFFIX := _GPU
 NVCC_FLAGS += --compiler-options '-fPIC' --shared $(INC_DIR)
+CUDA_SOURCES := $(wildcard *.cu)
+CUDA_OBJECTS := $(CUDA_SOURCES:.cu=$(SUFFIX).o)
 endif
 
 ifdef MPI
@@ -66,9 +68,7 @@ AMPPLOTTER_LIBS := -L$(AMPPLOTTER)/lib -lAmpPlotter
 ######## SET SOURCES AND HEADER FILES ########
 # Source Files, deriving object and header files from them
 SOURCES := $(wildcard *.cc)
-CUDA_SOURCES := $(wildcard *.cu)
 OBJECTS := $(SOURCES:.cc=$(SUFFIX).o)
-CUDA_OBJECTS := $(CUDA_SOURCES:.cu=$(SUFFIX).o)
 HEADERS := $(SOURCES:.cc=.h)
 
 ######## SET TARGET LIBRARY NAME AND DICTIONARY SOURCE FILE ########
