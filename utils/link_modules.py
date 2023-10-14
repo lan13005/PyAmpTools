@@ -3,6 +3,7 @@ import os
 from os.path import expandvars, exists
 import glob
 import subprocess
+from shutil import which
 
 def recursive_link_if_not_exist(source_folders, destination_folder, ftype):
   for source_folder in source_folders:
@@ -37,8 +38,12 @@ recursive_link_if_not_exist(source_folders, destination_folder, '*.py')
 ####################################
 ## Link additional C hearders to PyROOTs include directory
 ####################################
-## Retrieve the output of this bash command "root-config --incdir"
-##   which gives the include directory for PyROOT
-#cmd = "root-config --incdir"
-#incdir = subprocess.check_output(cmd, shell=True).decode("utf-8").strip()
-#recursive_link_if_not_exist(source_folders, incdir, '*.h')
+# Retrieve the output of this bash command "root-config --incdir"
+#   which gives the include directory for PyROOT
+cmd = "root-config --incdir"
+# check if root-config in path
+if which("root-config"):
+  incdir = subprocess.check_output(cmd, shell=True).decode("utf-8").strip()
+  recursive_link_if_not_exist(source_folders, incdir, '*.h')
+else:
+  print("root-config not found in path. Not linking *.h files to root's include directory.")

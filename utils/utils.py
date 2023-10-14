@@ -45,21 +45,18 @@ def prepare_mpigpu(accelerator):
     #### MPI ####
     assert(accelerator in ['mpi', 'gpu', 'mpigpu', 'gpumpi', '']), f'Invalid accelerator flag: {accelerator}'
     caller, parent = get_pid_family()
-    if ("mpi" in parent or 'mpi' in accelerator) and accelerator!='':
-        os.environ['ATI_USE_MPI'] = '1'
-        USE_MPI = True
-    else:
-        os.environ['ATI_USE_MPI'] = '0'
-        USE_MPI = False
-    print(f'MPI is {"enabled" if USE_MPI else "disabled"}')
 
-    #### GPU ####
-    if (check_nvidia_devices()[0] or 'gpu' in accelerator) and accelerator!='' and accelerator!='mpi':
-        os.environ['ATI_USE_GPU'] = '1'
-        USE_GPU = True
-    else:
-        os.environ['ATI_USE_GPU'] = '0'
-        USE_GPU = False
-    print(f'GPU is {"enabled" if USE_GPU else "disabled"}')
+    os.environ['ATI_USE_MPI'] = '0'
+    USE_MPI = False
+    os.environ['ATI_USE_GPU'] = '0'
+    USE_GPU = False
+
+    if accelerator is not None:
+        if ("mpi" in parent):
+            os.environ['ATI_USE_MPI'] = '1'
+            USE_MPI = True
+        if (check_nvidia_devices()[0]):
+            os.environ['ATI_USE_GPU'] = '1'
+            USE_GPU = True
 
     return USE_MPI, USE_GPU
