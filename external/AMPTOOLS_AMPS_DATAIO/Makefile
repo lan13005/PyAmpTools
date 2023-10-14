@@ -22,15 +22,12 @@ ifndef AMPTOOLS_HOME
 endif
 AMPTOOLS := $(AMPTOOLS_HOME)/AmpTools
 AMPPLOTTER := $(AMPTOOLS_HOME)/AmpPlotter
-# FSROOT := $(FSROOT)
 
 ######## SET COMPILER AND LIBRARY LOCATIONS ########
 INC_DIR  := -I$(AMPTOOLS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS) -I$(AMPPLOTTER)
-# INC_DIR  := -I$(AMPTOOLS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS) -I$(AMPPLOTTER) -I$(FSROOT)
 CXX_FLAGS += -Wall -shared -fPIC -std=c++17
 ROOTLIBS  := $(shell root-config --libs)
 AMPTOOLS_HEADERS := $(shell find $(AMPTOOLS) -type f -name '*.h' -not -name '*GPU*' -not -name '*MPI*' -not -name '*LinkDef*' -not -name "MainPage.h")
-# FSROOT_HEADERS := $(shell find $(FSROOT) -type f -name '*.h')
 
 ifdef GPU
 AMPTOOLS_HEADERS += $(shell find $(AMPTOOLS) -type f -name '*GPU*.h')
@@ -59,11 +56,9 @@ NVCC_FLAGS += $(INC_DIR)
 AMPTOOLS_HEADERS := $(patsubst $(AMPTOOLS)/%,%,$(AMPTOOLS_HEADERS))
 AMPPLOTTER_HEADERS := $(shell find $(AMPPLOTTER) -type f -name '*.h')
 AMPPLOTTER_HEADERS := $(patsubst $(AMPPLOTTER)/%,%,$(AMPPLOTTER_HEADERS))
-# FSROOT_HEADERS := $(patsubst $(FSROOT)/%,%,$(FSROOT_HEADERS))
 
 AMPTOOLS_LIBS := -L$(AMPTOOLS)/lib -lAmpTools$(SUFFIX)
 AMPPLOTTER_LIBS := -L$(AMPPLOTTER)/lib -lAmpPlotter
-# FSROOT_LIBS := -L$(FSROOT)/lib -lFSRoot
 
 ######## SET SOURCES AND HEADER FILES ########
 # Source Files, deriving object and header files from them
@@ -85,7 +80,6 @@ all: $(TARGET_LIBRARY)
 $(TARGET_LIBRARY): $(OBJECTS) $(CUDA_OBJECTS) $(TARGET_DICT)
 	@echo " ==== Creating final library $@ ==== "
 	$(Q)$(CXX) $(CXX_FLAGS) -o $@ $^ $(ROOTLIBS) $(AMPTOOLS_LIBS) $(AMPPLOTTER_LIBS)
-# $(Q)$(CXX) $(CXX_FLAGS) -o $@ $^ $(ROOTLIBS) $(AMPTOOLS_LIBS) $(AMPPLOTTER_LIBS) $(FSROOT_LIBS)
 
 $(TARGET_DICT): $(HEADERS)
 	@echo " ==== Creating Dictionary $@ ==== "
@@ -100,13 +94,9 @@ $(TARGET_DICT): $(HEADERS)
 	@for header in $(AMPPLOTTER_HEADERS); do \
 		echo "#pragma link C++ defined_in \"$$header\";" >> ${TARGET_LINKDEF}; \
 	done
-	@for header in $(FSROOT_HEADERS); do \
-		echo "#pragma link C++ defined_in \"$$header\";" >> ${TARGET_LINKDEF}; \
-	done
 	@echo "#endif" >> ${TARGET_LINKDEF}
 
 	$(Q)rootcling -f $(INC_DIR) $@ $^ $(AMPTOOLS_HEADERS) $(AMPPLOTTER_HEADERS) ${TARGET_LINKDEF}
-# $(Q)rootcling -f $(INC_DIR) $@ $^ $(AMPTOOLS_HEADERS) $(AMPPLOTTER_HEADERS) $(FSROOT_HEADERS) ${TARGET_LINKDEF}
 
 %$(SUFFIX).o: %.cc .%$(SUFFIX).d
 	@echo " ==== Compiling $< ==== "

@@ -17,8 +17,8 @@ default: distribute_makefiles
 	@echo " === Running 'make' in the target directory... ==="
 	@cd AmpTools/AmpTools; make
 	@cd AmpTools/AmpPlotter; make
-#	@cd FSRoot; make
-#	@cd FSRoot/Executables; make
+	@cd FSRoot; make
+	@cd FSRoot/Executables; make
 	@cd AMPTOOLS_AMPS_DATAIO; make
 
 mpi: | default
@@ -31,8 +31,6 @@ gpu: | default
 	@echo " === Running 'make gpu' in the target directory... ==="
 	@cd AmpTools/AmpTools; make GPU=1
 	@cd AmpTools/AmpPlotter; make
-#	@cd FSRoot; make
-#	@cd FSRoot/Executables; make
 	@cd AMPTOOLS_AMPS_DATAIO; make GPU=1
 
 mpigpu: gpu mpi
@@ -77,5 +75,5 @@ clean:
 	@echo " === Cleaning up target directory === "
 	@cd AmpTools; make clean
 	@cd AMPTOOLS_AMPS_DATAIO; make clean
-# @cd FSRoot; make clean
-# @cd FSRoot/Executables; make clean
+	@cd FSRoot; make clean
+	@cd FSRoot/Executables; make clean

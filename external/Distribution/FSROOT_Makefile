@@ -3,10 +3,15 @@ ROOT_LIBFLAGS := $(shell root-config --libs) -lMinuit -lMathCore -lMathMore -lTr
 FSROOT_SRCDIRS := FSBasic FSMode FSData FSFit FSAnalysis
 FSROOT_LIBDIR := lib
 FSROOT_SHARED_LIBFILE := lib/libFSRoot.so
+FSROOT_SHARED_DICT = lib/FSRootDict.cxx  # Dictionary for PyROOT to locate library objects
+FSROOT_SHARED_LINKDEF = lib/FSRootDict_Linkdef.h  # This file is need to create the dictionary
+FSROOT_SHARED_PCM = lib/FSRootDict_rdict.pcm  # This file is need to create the dictionary
 FSROOT_STATIC_LIBFILE := lib/libFSRoot.a
 FSROOT_SRCFILES := $(foreach dir,$(FSROOT_SRCDIRS),$(wildcard $(dir)/*.C))
 FSROOT_INCFLAGS := -I$(FSROOT)
-FSROOT_OBJFILES := $(FSROOT_SRCFILES:%.C=%.o)
+FSROOT_OBJFILES := $(FSROOT_SRCFILES:%.C=%.o) initialize_fsroot.o
+FSROOT_HEADERS := $(shell find $(FSROOT) -type f -name "*.h" -not -path "$(FSROOT)/Examples/**/*.h")
+FSROOT_HEADERS := $(patsubst $(FSROOT)/%,%,$(FSROOT_HEADERS)) initialize_fsroot.h
 
 Q :=
 CXX := g++
@@ -14,14 +19,25 @@ CXX_FLAGS := $(ROOT_CFLAGS) -fPIC
 
 all: $(FSROOT_STATIC_LIBFILE) $(FSROOT_SHARED_LIBFILE)
 
-$(FSROOT_SHARED_LIBFILE): $(FSROOT_OBJFILES)
+$(FSROOT_SHARED_LIBFILE): $(FSROOT_OBJFILES) $(FSROOT_SHARED_DICT)
 	@echo " ==== Creating final library $@ ==== "
-	$(Q)$(CXX) $(CXX_FLAGS) -shared -o $@ $^ $(ROOT_LIBFLAGS)
+	$(Q)$(CXX) $(CXX_FLAGS) -shared -o $@ $^ $(ROOT_LIBFLAGS) $(FSROOT_INCFLAGS)
 
 $(FSROOT_STATIC_LIBFILE): $(FSROOT_OBJFILES)
 	ar -rsv $@ $(FSROOT_OBJFILES) && ranlib $(FSROOT_STATIC_LIBFILE)
 
 $(FSROOT_OBJFILES): | $(FSROOT_LIBDIR)
+
+$(FSROOT_SHARED_DICT): $(FSROOT_HEADERS)
+	@echo " ==== Creating Dictionary $@ ==== "
+
+	@echo "#ifdef __CLING__" > ${FSROOT_SHARED_LINKDEF}
+	@for header in $^; do \
+		echo "#pragma link C++ defined_in \"$$header\";" >> ${FSROOT_SHARED_LINKDEF}; \
+	done
+	@echo "#endif" >> ${FSROOT_SHARED_LINKDEF}
+
+	$(Q)rootcling -f $(FSROOT_INCFLAGS) $@ $^ ${FSROOT_SHARED_LINKDEF}
 
 %.o: %.C %.h
 	$(Q)$(CXX) $(CXX_FLAGS) $(FSROOT_INCFLAGS) -c -o $@ $*.C
@@ -30,4 +46,4 @@ $(FSROOT_LIBDIR):
 	mkdir $(FSROOT_LIBDIR)
 
 clean:
-	rm -rf $(FSROOT_LIBDIR) $(FSROOT_OBJFILES) */*.so */*.pcm */*.d
+	rm -rf $(FSROOT_LIBDIR) $(FSROOT_OBJFILES) */*.so */*.pcm */*.d */*Linkdef.h */*Dict.cxx
