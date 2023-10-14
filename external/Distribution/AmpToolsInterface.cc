@@ -533,7 +533,7 @@ AmpToolsInterface::registerDataReader( const DataReader& dataReader){
 
 void
 AmpToolsInterface::clear(){
-  report( DEBUG, kModule ) << "AmpToolsInterface::clear() called likely from destructor" << endl;
+  report( DEBUG, kModule ) << "AmpToolsInterface::clear() called by destructor or resetConfigurationInfo" << endl;
   if( m_configurationInfo != NULL ){
 
     for (unsigned int irct = 0; irct < m_configurationInfo->reactionList().size(); irct++){
@@ -568,7 +568,7 @@ AmpToolsInterface::clear(){
   m_normIntMap.clear();
   m_likCalcMap.clear();
 
-  report( DEBUG, kModule ) << "Deallocating ampvecs 1:" << endl;
+  report( DEBUG, kModule ) << "Deallocating ampvecs by clear():" << endl;
   for (unsigned int i = 0; i < MAXAMPVECS; i++){
     m_ampVecs[i].deallocAmpVecs();
     m_ampVecsReactionName[i] = "";
@@ -589,7 +589,7 @@ AmpToolsInterface::clearEvents(unsigned int iDataSet){
     assert(false);
   }
 
-  report( DEBUG, kModule ) << "Deallocating ampvecs 2:" << endl;
+  report( DEBUG, kModule ) << "Deallocating ampvecs by clearEvents():" << endl;
   m_ampVecsReactionName[iDataSet] = "";
   m_ampVecs[iDataSet].deallocAmpVecs();
 
@@ -611,8 +611,10 @@ AmpToolsInterface::loadEvents(DataReader* dataReader,
   // object in a state where it contains no data, which is consistent
   // with no data reader available (some DataReaders, like those for
   // background) are optional
-  report( DEBUG, kModule ) << "loading events from data reader " << dataReader->name() << endl;
-  if( dataReader != NULL ) m_ampVecs[iDataSet].loadData(dataReader);
+  if( dataReader != NULL ){
+    report( DEBUG, kModule ) << "loading events from data reader " << dataReader->name() << "Dataset Index: " << iDataSet << endl;
+    m_ampVecs[iDataSet].loadData(dataReader);
+  }
 }
 
 

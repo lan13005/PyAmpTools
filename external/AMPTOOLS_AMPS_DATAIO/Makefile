@@ -6,7 +6,7 @@ endif
 
 include $(AMPTOOLS_HOME)/Makefile.settings
 ######################################################################################
-Q :=
+Q := @
 
 ####### SET ENVIORNMENT VARIALBES ########
 REPO_HOME := $(shell echo $$REPO_HOME)

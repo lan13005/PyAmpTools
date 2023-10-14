@@ -234,11 +234,13 @@ AmpVecs::clearFourVecs(){
 void
 AmpVecs::loadEvent( const Kinematics* pKinematics, unsigned long long iEvent,
                     unsigned long long iNTrueEvents ){
-  report( DEBUG, kModule ) << "AmpVecs::loadEvent() loading event " << iEvent << endl;
   // allocate memory and set variables
   //  if this is the first call to this method
 
   if (m_pdData == NULL){
+    // if every other 2000 events, print a message
+    if( iEvent % 2500 == 0 )
+      report( DEBUG, kModule ) << "AmpVecs::loadEvent() loading event " << iEvent << endl;
 
     m_iNTrueEvents = iNTrueEvents;
     m_iNEvents = iNTrueEvents;
