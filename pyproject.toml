@@ -15,6 +15,7 @@ dependencies = [
     "corner",
     "h5py",
     "emcee",
+	"tqdm",
     "tbb", # for FSROOT, multiprocessing/threading
     "psutil", # check process information
     ### CI
@@ -31,7 +32,7 @@ dependencies = [
 	# matplotlib removed function needed by pygtc (corner plot alternative), install 3.7.0 if you want
     # "pygtc",
 ]
-name = "PyAmpToolsGPU"
+name = "PyAmpTools"
 requires-python = ">=3.9"
 version = "0.0.0"
 

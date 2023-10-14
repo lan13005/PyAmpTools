@@ -1,4 +1,4 @@
-name: PyAmpToolsGPU
+name: PyAmpTools
 channels:
   - anaconda
   - defaults
