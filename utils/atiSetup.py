@@ -4,19 +4,24 @@ import os
 
 USE_MPI = os.environ['ATI_USE_MPI'] == "1" if 'ATI_USE_MPI' in os.environ else False
 USE_GPU = os.environ['ATI_USE_GPU'] == "1" if 'ATI_USE_GPU' in os.environ else False
+USE_GPU = False
 RANK_MPI = int(os.environ['ATI_RANK']) if 'ATI_RANK' in os.environ else 0
 SUFFIX  = "_GPU" if USE_GPU else ""
 SUFFIX += "_MPI" if USE_MPI else ""
+print("\n------------------------------------------------")
+print(f'MPI is {"enabled" if USE_MPI else "disabled"}')
+print(f'GPU is {"enabled" if USE_GPU else "disabled"}')
 
 
 #################### LOAD LIBRARIES (ORDER MATTERS!) ###################
-print("Loading libraries...")
+if RANK_MPI == 0: print(f'Loading library libAmpTools{SUFFIX}.so.....', end='')
 ROOT.gSystem.Load(f'libAmpTools{SUFFIX}.so')
-ROOT.gSystem.Load(f'libAmpsDataIO{SUFFIX}.so')
+if RANK_MPI == 0: print(f'  *** Loaded\nLoading library libAmpPlotter.so...', end='')
 ROOT.gSystem.Load('libAmpPlotter.so')
-
-if RANK_MPI == 0:
-    print(f'Loaded libraries: libAmpTools{SUFFIX}.so, libAmpsDataIO{SUFFIX}.so libAmpPlotter.so')
+if RANK_MPI == 0: print(f'  *** Loaded\nLoading library libAmpsDataIO{SUFFIX}.so...', end='')
+ROOT.gSystem.Load(f'libAmpsDataIO{SUFFIX}.so')
+if RANK_MPI == 0: print(f'  *** Loaded')
+print("------------------------------------------------\n")
 
 # Dummy functions that just prints "initialization"
 #  This is to make sure the libraries are loaded
@@ -55,10 +60,10 @@ def _parMgr_returnPar_if_keyExists(self,key):
     return self.findParameter(key)
 
 # Pythonize requires v6.26 or later
-# @pythonization("ParameterManager")
-# def pythonize_parMgr(klass):
-#     klass.__repr__ = lambda self: '\n'.join([f'{k}: {self.findParameter(k).value()}' for k in self.getProdParList()])
-#     klass.__len__  = lambda self: self.getProdParList().size()
-#     klass.__getitem__ = lambda self, key: _parMgr_returnPar_if_keyExists(self,key).value()
-#     klass.__setitem__ = lambda self, key, value: _parMgr_returnPar_if_keyExists(self,key).setValue(value)
-#     klass.__contains__ = lambda self, key: key in self.getProdParList()
+@pythonization("ParameterManager")
+def pythonize_parMgr(klass):
+    klass.__repr__ = lambda self: '\n'.join([f'{k}: {self.findParameter(k).value()}' for k in self.getProdParList()])
+    klass.__len__  = lambda self: self.getProdParList().size()
+    klass.__getitem__ = lambda self, key: _parMgr_returnPar_if_keyExists(self,key).value()
+    klass.__setitem__ = lambda self, key, value: _parMgr_returnPar_if_keyExists(self,key).setValue(value)
+    klass.__contains__ = lambda self, key: key in self.getProdParList()

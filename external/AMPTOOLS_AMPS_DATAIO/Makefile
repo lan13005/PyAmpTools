@@ -6,7 +6,7 @@ endif
 
 include $(AMPTOOLS_HOME)/Makefile.settings
 ######################################################################################
-Q := @
+Q :=
 
 ####### SET ENVIORNMENT VARIALBES ########
 REPO_HOME := $(shell echo $$REPO_HOME)
@@ -16,21 +16,18 @@ endif
 ifndef ROOTSYS
 $(error ROOTSYS is not set. Please load your root environment first)
 endif
-AMPTOOLS_DATAIO := $(REPO_HOME)/external/AMPTOOLS_DATAIO
+AMPTOOLS_DATAIO := $(REPO_HOME)/external/AMPTOOLS_AMPS_DATAIO
 ifndef AMPTOOLS_HOME
   AMPTOOLS_HOME := $($REPO_HOME)/external/AmpTools
 endif
 AMPTOOLS := $(AMPTOOLS_HOME)/AmpTools
 AMPPLOTTER := $(AMPTOOLS_HOME)/AmpPlotter
 # FSROOT := $(FSROOT)
-# $(info AMPTOOLS_DATAIO: $(AMPTOOLS_DATAIO))
-# $(info AMPTOOLS_HOME: $(AMPTOOLS_HOME))
-# $(info AMPTOOLS: $(AMPTOOLS))
 
 ######## SET COMPILER AND LIBRARY LOCATIONS ########
 INC_DIR  := -I$(AMPTOOLS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS) -I$(AMPPLOTTER)
 # INC_DIR  := -I$(AMPTOOLS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS) -I$(AMPPLOTTER) -I$(FSROOT)
-CXX_FLAGS += -Wall -shared -fPIC -std=c++17 $(INC_DIR)
+CXX_FLAGS += -Wall -shared -fPIC -std=c++17
 ROOTLIBS  := $(shell root-config --libs)
 AMPTOOLS_HEADERS := $(shell find $(AMPTOOLS) -type f -name '*.h' -not -name '*GPU*' -not -name '*MPI*' -not -name '*LinkDef*' -not -name "MainPage.h")
 # FSROOT_HEADERS := $(shell find $(FSROOT) -type f -name '*.h')
@@ -40,7 +37,7 @@ AMPTOOLS_HEADERS += $(shell find $(AMPTOOLS) -type f -name '*GPU*.h')
 INC_DIR += -I$(CUDA_INSTALL_PATH)/include
 CXX_FLAGS += -DGPU_ACCELERATION -I$(CUDA_INSTALL_PATH)/include
 SUFFIX := _GPU
-NVCC_FLAGS += --compiler-options '-fPIC' --shared $(INC_DIR)
+NVCC_FLAGS += --compiler-options '-fPIC' --shared
 CUDA_SOURCES := $(wildcard *.cu)
 CUDA_OBJECTS := $(CUDA_SOURCES:.cu=$(SUFFIX).o)
 endif
@@ -55,6 +52,9 @@ INC_DIR += $(MPI_INCLUDE)
 AMPTOOLS_HEADERS += mpi.h
 SUFFIX := $(SUFFIX)_MPI
 endif
+
+CXX_FLAGS += $(INC_DIR)
+NVCC_FLAGS += $(INC_DIR)
 
 AMPTOOLS_HEADERS := $(patsubst $(AMPTOOLS)/%,%,$(AMPTOOLS_HEADERS))
 AMPPLOTTER_HEADERS := $(shell find $(AMPPLOTTER) -type f -name '*.h')
@@ -110,13 +110,13 @@ $(TARGET_DICT): $(HEADERS)
 
 %$(SUFFIX).o: %.cc .%$(SUFFIX).d
 	@echo " ==== Compiling $< ==== "
-	$(Q)$(CXX) $(CXX_FLAGS) -M -MP -MT $@ -o .$*$(SUFFIX).d $< $(INC_DIR)
+	$(Q)$(CXX) $(CXX_FLAGS) -M -MP -MT $@ -o .$*$(SUFFIX).d $<
 	$(Q)$(CXX) $(CXX_FLAGS) -o $@ $<
 
 %$(SUFFIX).o: %.cu .%$(SUFFIX).d
 	$(vecho) "-> Compiling cuda $<"
-	$(Q)$(NVCC) $(NVCC_FLAGS) -M -MT $@ -o .$*$(SUFFIX).d $< $(INC_DIR)
-	$(Q)$(NVCC) $(NVCC_FLAGS) -c -o $@ $< $(INC_DIR)
+	$(Q)$(NVCC) $(NVCC_FLAGS) -M -MT $@ -o .$*$(SUFFIX).d $<
+	$(Q)$(NVCC) $(NVCC_FLAGS) -c -o $@ $<
 
 DEPFILES := $(SOURCES:%.cc=.%$(SUFFIX).d) $(CUDA_SOURCES:%.cu=.%$(SUFFIX).d)
 $(DEPFILES):

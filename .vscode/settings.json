@@ -156,7 +156,8 @@
     "test.C": "cpp",
     "hash_map": "cpp",
     "*.icc": "cpp",
-    "*.inc": "cpp"
+    "*.inc": "cpp",
+    "algorithm": "cpp"
   },
   "git.ignoreLimitWarning": true
 }
