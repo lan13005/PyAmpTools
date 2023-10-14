@@ -8,12 +8,14 @@ import numpy as np
 from utils import remove_all_whitespace
 from plotgen_utils import book_histogram, turn_on_specifc_waveset
 
-
 ############## SET ENVIRONMENT VARIABLES ##############
 REPO_HOME     = os.environ['REPO_HOME']
-os.environ['ATI_USE_MPI'] = "0" # set to 1 to use MPI libraries
-os.environ['ATI_USE_GPU'] = "0"
+os.environ['ATI_USE_MPI']        = "0" # set to 1 to use MPI libraries
+os.environ['ATI_USE_GPU']        = "0" # set to 1 to use GPU libraries
+os.environ['ATI_USE_AMPPLOTTER'] = "1" # off by default
+os.environ['ATI_USE_FSROOT']     = "1" # off by default
 from atiSetup import *
+
 from RDFmacros import loadMacros
 loadMacros()
 ### IF USING ROOT TO PLOT - CAN SET GLUEX STYLE HERE ###
@@ -92,7 +94,7 @@ for amp in ['all']:#, 'resAmp1', 'resAmp2', 'resAmp3', 'resAmp1_resAmp2']:
         value_map = value_map[type]
         value_map = {k: np.array(v) for k,v in value_map}
 
-        df = ROOT.RDF.MakeNumpyDataFrame(value_map)
+        df = ROOT.RDF.FromNumpy(value_map)
         columns = df.GetColumnNames()
 
         ######### RESTRUCTURE DATA FOR NICER CALCULATIONS #########

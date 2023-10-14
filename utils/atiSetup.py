@@ -2,30 +2,41 @@ import ROOT
 from ROOT import pythonization
 import os
 
-USE_MPI = os.environ['ATI_USE_MPI'] == "1" if 'ATI_USE_MPI' in os.environ else False
-USE_GPU = os.environ['ATI_USE_GPU'] == "1" if 'ATI_USE_GPU' in os.environ else False
+def checkEnvironment(variable):
+    ''' Check if environment variable is set to 1 '''
+    return os.environ[variable] == "1" if variable in os.environ else False
+
+def loadLibrary(libName, RANK_MPI, availability=True):
+    ''' Load shared library and print availability '''
+    statement = f'Loading library {libName} '
+    if RANK_MPI == 0: print(f'{statement:.<35}', end='')
+    ROOT.gSystem.Load(libName)
+    status = "ON" if availability else "OFF"
+    if RANK_MPI == 0: print(f' {status}')
+
+USE_MPI = checkEnvironment('ATI_USE_MPI')
+USE_GPU = checkEnvironment('ATI_USE_GPU')
 USE_GPU = False
 RANK_MPI = int(os.environ['ATI_RANK']) if 'ATI_RANK' in os.environ else 0
 SUFFIX  = "_GPU" if USE_GPU else ""
 SUFFIX += "_MPI" if USE_MPI else ""
+
 print("\n------------------------------------------------")
 print(f'MPI is {"enabled" if USE_MPI else "disabled"}')
 print(f'GPU is {"enabled" if USE_GPU else "disabled"}')
-
-
 #################### LOAD LIBRARIES (ORDER MATTERS!) ###################
-if RANK_MPI == 0: print(f'Loading library libAmpTools{SUFFIX}.so.....', end='')
-ROOT.gSystem.Load(f'libAmpTools{SUFFIX}.so')
-if RANK_MPI == 0: print(f'  *** Loaded\nLoading library libAmpPlotter.so...', end='')
-ROOT.gSystem.Load('libAmpPlotter.so')
-if RANK_MPI == 0: print(f'  *** Loaded\nLoading library libAmpsDataIO{SUFFIX}.so...', end='')
-ROOT.gSystem.Load(f'libAmpsDataIO{SUFFIX}.so')
-if RANK_MPI == 0: print(f'  *** Loaded')
+USE_AMPPLOTTER = checkEnvironment('ATI_USE_AMPPLOTTER')
+USE_FSROOT     = checkEnvironment('ATI_USE_FSROOT')
+loadLibrary(f'libAmpTools{SUFFIX}.so',   RANK_MPI)
+loadLibrary('libAmpPlotter.so', RANK_MPI, USE_AMPPLOTTER)
+loadLibrary(f'libAmpsDataIO{SUFFIX}.so', RANK_MPI) # Depends on AmpPlotter!
+loadLibrary(f'libFSRoot.so',    RANK_MPI, USE_FSROOT)
 print("------------------------------------------------\n")
 
 # Dummy functions that just prints "initialization"
 #  This is to make sure the libraries are loaded
 #  as python is interpreted.
+ROOT.initialize_fsroot( RANK_MPI == 0 )
 ROOT.initialize( RANK_MPI == 0 )
 
 ##################### SET ALIAS ########################

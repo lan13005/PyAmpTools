@@ -2,15 +2,9 @@
   "[git-commit]": {
     "rewrap.wrappingColumn": 72
   },
-  "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[markdown]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/root/root-6.28.06-gcc9.3.0/lib"
+  ],
   "[python]": {
     "editor.codeActionsOnSave": {
       "source.organizeImports": true
@@ -157,7 +151,14 @@
     "hash_map": "cpp",
     "*.icc": "cpp",
     "*.inc": "cpp",
-    "algorithm": "cpp"
+    "algorithm": "cpp",
+    "csetjmp": "cpp",
+    "csignal": "cpp",
+    "cstdatomic": "cpp",
+    "regex": "cpp",
+    "valarray": "cpp",
+    "future": "cpp",
+    "scoped_allocator": "cpp"
   },
   "git.ignoreLimitWarning": true
 }
