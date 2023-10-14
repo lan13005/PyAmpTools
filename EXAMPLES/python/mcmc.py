@@ -28,6 +28,18 @@ overwrite_ofile = args.overwrite
 NWALKERS = args.n
 BURN_IN = args.b
 NSAMPLES = args.s
+
+print("\n ===================")
+print(f" cfgfile: {cfgfile}")
+print(f" mle_fit: {mle_fit}")
+print(f" ofolder: {ofolder}")
+print(f" ofile: {ofile}")
+print(f" NWALKERS: {NWALKERS}")
+print(f" BURN_IN: {BURN_IN}")
+print(f" NSAMPLES: {NSAMPLES}")
+print(f" overwrite_ofile: {overwrite_ofile}")
+print(" ===================\n")
+
 assert( os.path.exists(cfgfile) and os.path.exists(mle_fit) ), 'Config file or seed file does not exist at specified path'
 if os.path.isfile(f'{ofolder}/{ofile}') and overwrite_ofile:
     os.system(f'rm {ofolder}/{ofile}')

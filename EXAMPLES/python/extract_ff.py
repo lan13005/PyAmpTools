@@ -18,7 +18,7 @@ from atiSetup import *
 ############## PARSE COMMANDLINE ARGUMENTS ##############
 parser = argparse.ArgumentParser(description='Extract Fit Fractions from FitResults')
 parser.add_argument('fitName', type=str, default='', help='Fit file name')
-parser.add_argument('ofileName', type=str, default='', help='Output file name')
+parser.add_argument('outputfileName', type=str, default='', help='Output file name')
 parser.add_argument('-a', type=bool, default=True, help='Acceptance correct values')
 parser.add_argument('-fmt', type=str, default='.5f', help='Format string for printing')
 parser.add_argument('-regex_merge', type=str, nargs='+', help='Merge amplitudes: Regex pair (pattern, replace) separated by ~>')
@@ -26,7 +26,7 @@ args = parser.parse_args()
 
 ############## LOAD FIT RESULTS ##############
 fitName = args.fitName
-outfilename = args.ofileName
+outfilename = args.outputfileName
 acceptance = args.a
 fmt=args.fmt
 regex_merge = args.regex_merge
