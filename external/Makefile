@@ -67,7 +67,7 @@ distribute_makefiles:
 	cp $(SRC_DIRS)/MinuitMinimizationManager.* AmpTools/AmpTools/MinuitInterface
 	cp $(SRC_DIRS)/URMinuit.* AmpTools/AmpTools/UpRootMinuit
 	cp $(SRC_DIRS)/AmpVecs.* AmpTools/AmpTools/IUAmpTools
-	cp $(SRC_DIRS)/wignerD.cuh AmpTools/AmpTools/GPUManager
+	cp $(SRC_DIRS)/wignerD.cuh AmpTools/AmpTools/GPUUtils
 
 .PHONY: distribute_makefiles default mpi gpu mpigpu gpumpi clean
 

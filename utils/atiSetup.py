@@ -16,7 +16,6 @@ def loadLibrary(libName, RANK_MPI, availability=True):
 
 USE_MPI = checkEnvironment('ATI_USE_MPI')
 USE_GPU = checkEnvironment('ATI_USE_GPU')
-USE_GPU = False
 RANK_MPI = int(os.environ['ATI_RANK']) if 'ATI_RANK' in os.environ else 0
 SUFFIX  = "_GPU" if USE_GPU else ""
 SUFFIX += "_MPI" if USE_MPI else ""
@@ -45,11 +44,16 @@ ConfigFileParser            = ROOT.ConfigFileParser
 ConfigurationInfo           = ROOT.ConfigurationInfo
 if USE_MPI:
     DataReader              = ROOT.DataReaderMPI['ROOTDataReader'] # DataReaderMPI is a template; use [] to specify the type
+    DataReaderFilter        = ROOT.DataReaderMPI['ROOTDataReaderFilter']
     AmpToolsInterface       = ROOT.AmpToolsInterfaceMPI
 else:
     DataReader              = ROOT.ROOTDataReader
+    DataReaderFilter        = ROOT.ROOTDataReaderFilter
     AmpToolsInterface       = ROOT.AmpToolsInterface
 Zlm                         = ROOT.Zlm
+BreitWigner                 = ROOT.BreitWigner
+Piecewise                   = ROOT.Piecewise
+PhaseOffset                 = ROOT.PhaseOffset
 ParameterManager            = ROOT.ParameterManager
 MinuitMinimizationManager   = ROOT.MinuitMinimizationManager
 ########### PLOTTER / RESULTS RELATED ###########

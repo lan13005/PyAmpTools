@@ -92,15 +92,15 @@ def runFits( N: int = 0 ):
 ############## PARSE COMMANDLINE ARGUMENTS #############
 parser = argparse.ArgumentParser(description="Perform MLE fits")
 rndSeed = random.seed(datetime.now().timestamp())
-parser.add_argument('cfgfile',             type=str,                  help='AmpTools Configuration file')
-parser.add_argument('-s', '--seedfile',    type=str, default=None,    help='Output file for seeding next fit based on this fit')
-parser.add_argument('-r', '--numRnd',      type=int, default=0,       help='Perform N fits each seeded with random parameters')
-parser.add_argument('-rs','--randomSeed',  type=int, default=rndSeed, help='Sets the random seed used by the random number generator for the fits with randomized initial parameters. If not set, will use the current time.')
-parser.add_argument('-m', '--maxIter',     type=int, default=10000,   help='Maximum number of fit iterations')
-parser.add_argument('-n', '--useMinos',    action='store_true',       help='Use MINOS instead of MIGRAD')
-parser.add_argument('-H', '--hesse',       action='store_true',       help='Evaluate HESSE matrix after minimization')
-parser.add_argument('-p', '--scanPar',     type=str, default=None,    help='Perform a scan of the given parameter. Stepsize, min, max are to be set in the config file')
-parser.add_argument('-a', '--accelerator', type=str, default='',      help='Force use of given "accelerator" ~ [gpu, mpi, mpigpu, gpumpi]')
+parser.add_argument('cfgfile',             type=str,            help='AmpTools Configuration file')
+parser.add_argument('--seedfile',    type=str, default=None,    help='Output file for seeding next fit based on this fit')
+parser.add_argument('--numRnd',      type=int, default=0,       help='Perform N fits each seeded with random parameters')
+parser.add_argument('--randomSeed',  type=int, default=rndSeed, help='Sets the random seed used by the random number generator for the fits with randomized initial parameters. If not set, will use the current time.')
+parser.add_argument('--maxIter',     type=int, default=10000,   help='Maximum number of fit iterations')
+parser.add_argument('--useMinos',    action='store_true',       help='Use MINOS instead of MIGRAD')
+parser.add_argument('--hesse',       action='store_true',       help='Evaluate HESSE matrix after minimization')
+parser.add_argument('--scanPar',     type=str, default=None,    help='Perform a scan of the given parameter. Stepsize, min, max are to be set in the config file')
+parser.add_argument('--accelerator', type=str, default='',      help='Force use of given "accelerator" ~ [gpu, mpi, mpigpu, gpumpi]')
 
 args = parser.parse_args()
 if args.randomSeed is None:
@@ -108,7 +108,6 @@ if args.randomSeed is None:
 
 cfgfile = args.cfgfile
 assert( os.path.isfile(cfgfile) ), f'Config file does not exist at specified path'
-
 
 ############## SET ENVIRONMENT VARIABLES ##############
 REPO_HOME = os.environ['REPO_HOME']
@@ -131,12 +130,10 @@ else:
     RANK_MPI = 0
     SIZE_MPI = 1
 
-####### INITIALIZE GPU IF POSSIBLE/REQUESTED ###########
-os.environ['ATI_RANK'] = str(RANK_MPI)
-
-########## LOAD APPROPRIATE SHARED LIBRARIES ##########
+################### LOAD LIBRARIES ##################
 from atiSetup import *
 
+############## LOAD CONFIGURATION FILE ##############
 if RANK_MPI == 0:
     print("\n\n === COMMANDLINE ARGUMENTS === ")
     print("Config file:", args.cfgfile)
@@ -149,7 +146,6 @@ if RANK_MPI == 0:
     print("Scanning Parameter:", args.scanPar)
     print(" ============================= \n\n")
 
-############## LOAD CONFIGURATION FILE ##############
 parser = ConfigFileParser(cfgfile)
 cfgInfo: ConfigurationInfo = parser.getConfigurationInfo()
 if RANK_MPI == 0:
@@ -157,7 +153,11 @@ if RANK_MPI == 0:
 
 # ############## REGISTER OBJECTS FOR AMPTOOLS ##############
 AmpToolsInterface.registerAmplitude( Zlm() )
+AmpToolsInterface.registerAmplitude( BreitWigner() )
+AmpToolsInterface.registerAmplitude( Piecewise() )
+AmpToolsInterface.registerAmplitude( PhaseOffset() )
 AmpToolsInterface.registerDataReader( DataReader() )
+AmpToolsInterface.registerDataReader( DataReaderFilter() )
 
 ati = AmpToolsInterface( cfgInfo )
 

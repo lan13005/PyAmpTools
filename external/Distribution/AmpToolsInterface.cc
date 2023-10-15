@@ -373,7 +373,7 @@ AmpToolsInterface::randomizeProductionPars( float maxFitFraction ){
     double fitFraction = random( maxFitFraction );
     double prodParMag = sqrt( ( numSignalEvents * fitFraction ) /
                               ( ampScale * ampScale * normInt ) );
-    double prodParPhase = ( (**ampItr).real() ? 0 : random( 2*A_PI ) );
+    double prodParPhase = ( (**ampItr).real() ? 0 : random( 2*PI ) );
 
     complex< double > prodPar( prodParMag*cos( prodParPhase ),
                               prodParMag*sin( prodParPhase ) );
