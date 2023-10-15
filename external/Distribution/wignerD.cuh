@@ -107,7 +107,7 @@ wignerDSmall( GDouble aj, GDouble am, GDouble an, GDouble beta ){
 static __device__ WCUComplex
 wignerD( int l, int m, int n, GDouble cosTheta, GDouble phi ){
 
-  GDouble dpart = wignerDSmall( l, m, n, G_ACOS( cosTheta ) * 180.0 / A_PI );
+  GDouble dpart = wignerDSmall( l, m, n, G_ACOS( cosTheta ) * 180.0 / PI );
 
   WCUComplex res = { G_COS( -1.0 * m * phi ) * dpart,
                      G_SIN( -1.0 * m * phi ) * dpart  };
@@ -118,7 +118,7 @@ wignerD( int l, int m, int n, GDouble cosTheta, GDouble phi ){
 static __device__ WCUComplex
 Y( int l, int m, GDouble cosTheta, GDouble phi ){
 
-  return G_SQRT( (2*l+1 ) / (4*A_PI) ) *
+  return G_SQRT( (2*l+1 ) / (4*PI) ) *
     Conjugate( wignerD( l, m, 0, cosTheta, phi ) );
 }
 

@@ -120,7 +120,7 @@ typedef double GDouble;
 #define G_EXP(a) exp(a)
 #define G_SQRT(a)	sqrt(a)
 
-#define A_PI 3.141592653589793
+#define PI 3.141592653589793
 #define D_EPS		1.e-10
 
 #endif // AMPTOOLS_GDOUBLE_FP32
