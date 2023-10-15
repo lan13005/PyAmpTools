@@ -12,7 +12,6 @@ from plotgen_utils import book_histogram, turn_on_specifc_waveset
 REPO_HOME     = os.environ['REPO_HOME']
 os.environ['ATI_USE_MPI']        = "0" # set to 1 to use MPI libraries
 os.environ['ATI_USE_GPU']        = "0" # set to 1 to use GPU libraries
-os.environ['ATI_USE_AMPPLOTTER'] = "1" # off by default
 os.environ['ATI_USE_FSROOT']     = "1" # off by default
 from atiSetup import *
 

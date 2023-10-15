@@ -10,7 +10,7 @@ def loadLibrary(libName, RANK_MPI, availability=True):
     ''' Load shared library and print availability '''
     statement = f'Loading library {libName} '
     if RANK_MPI == 0: print(f'{statement:.<35}', end='')
-    ROOT.gSystem.Load(libName)
+    if availability: ROOT.gSystem.Load(libName)
     status = "ON" if availability else "OFF"
     if RANK_MPI == 0: print(f' {status}')
 
@@ -24,19 +24,18 @@ print("\n------------------------------------------------")
 print(f'MPI is {"enabled" if USE_MPI else "disabled"}')
 print(f'GPU is {"enabled" if USE_GPU else "disabled"}')
 #################### LOAD LIBRARIES (ORDER MATTERS!) ###################
-USE_AMPPLOTTER = checkEnvironment('ATI_USE_AMPPLOTTER')
-USE_FSROOT     = checkEnvironment('ATI_USE_FSROOT')
-loadLibrary(f'libAmpTools{SUFFIX}.so',   RANK_MPI)
-loadLibrary('libAmpPlotter.so', RANK_MPI, USE_AMPPLOTTER)
+USE_FSROOT = checkEnvironment('ATI_USE_FSROOT')
+loadLibrary(f'libAmpTools{SUFFIX}.so', RANK_MPI)
+loadLibrary(f'libAmpPlotter.so', RANK_MPI)
 loadLibrary(f'libAmpsDataIO{SUFFIX}.so', RANK_MPI) # Depends on AmpPlotter!
-loadLibrary(f'libFSRoot.so',    RANK_MPI, USE_FSROOT)
+loadLibrary(f'libFSRoot.so', RANK_MPI, USE_FSROOT)
 print("------------------------------------------------\n")
 
 # Dummy functions that just prints "initialization"
 #  This is to make sure the libraries are loaded
 #  as python is interpreted.
-ROOT.initialize_fsroot( RANK_MPI == 0 )
 ROOT.initialize( RANK_MPI == 0 )
+if USE_FSROOT: ROOT.initialize_fsroot( RANK_MPI == 0 )
 
 ##################### SET ALIAS ########################
 gInterpreter                = ROOT.gInterpreter
