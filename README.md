@@ -1,10 +1,10 @@
 # Introduction
 
-This repository contains Python bindings for [AmpTools](https://github.com/mashephe/AmpTools). Under the hood, it uses PyROOT which is based on cppyy. These bindings will hopefully simplify the interaction with the AmpTools library while also providing access to the python ecosystem. There are no known features of AmpTools that is not currently supported and both GPU and MPI is supported. [FSRoot](https://github.com/remitche66/FSRoot) is also included as a submodule and can be integrated into analysis workflows.
+This repository contains Python bindings for [AmpTools](https://github.com/mashephe/AmpTools). Under the hood, it uses [PyROOT](https://root.cern/manual/python/) which is uses cppyy. These bindings will hopefully simplify the interaction with the AmpTools library while also providing access to the python ecosystem. There are no known features of AmpTools that is not currently supported and both GPU and MPI is working. [FSRoot](https://github.com/remitche66/FSRoot) is also included as a submodule and can be integrated into analysis workflows.
 
 Features:
 
-- Access to [PyROOT](https://root.cern/manual/python/) ecosystem
+- Access to PyROOT ecosystem
 - [Pythonization](https://root.cern/manual/python/#pythonizing-c-user-classes) of c++ objects: simplify interactions with c++ source code
 - Dynamically load appopriate libraries / (re)compilation of high level scripts (like fits and plotters) are time consuming and distracting
 - Python ecosystem:
@@ -29,7 +29,7 @@ pip install mpi4py # MPI (if available), mamba will link it against the wrong ex
 pre-commit install --install-hooks # (Optional) commit hooks to perform loose formatting
 ```
 
-[ROOT](https://root.cern/install/) is a required dependency. There is a known conflict between AmpTools' GPU usage and RooFit/TMVA which comes with the conda-forge binaries of ROOT. Therefore, it is unfortunate, that ROOT has to be built from source with roofit and tmva off. A build script is included to download ROOT from source with the appropriate cmake flags to achieve this
+[ROOT](https://root.cern/install/) is a required dependency. There is a known conflict between AmpTools' GPU usage and RooFit/TMVA which comes with the conda-forge binaries of ROOT. Currently, ROOT has to be built from source with roofit and tmva off. A build script is included to download ROOT from source with the appropriate cmake flags to achieve this
 
 ```shell
 cd root
