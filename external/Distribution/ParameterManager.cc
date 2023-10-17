@@ -46,6 +46,7 @@
 #include "IUAmpTools/ConfigurationInfo.h"
 #include "MinuitInterface/MinuitMinimizationManager.h"
 #include "MinuitInterface/MinuitParameterManager.h"
+#include "MinuitInterface/MISubject.h"
 #include "GPUManager/GPUCustomTypes.h"
 
 #include "IUAmpTools/report.h"
@@ -99,26 +100,38 @@ ParameterManager( const vector<IntensityManager*>& intenManagers ) :
 
 ParameterManager::~ParameterManager()
 {
+  report( DEBUG, kModule ) << "deleting prodPtrCache at address: " << &m_prodPtrCache << endl;
   for( vector< ComplexParameter* >::iterator parItr = m_prodPtrCache.begin();
       parItr != m_prodPtrCache.end();
       ++parItr ){
-
+    report( DEBUG, kModule ) << " deleting prodPtr at address: " << *parItr << endl;
     delete *parItr;
+    report( DEBUG, kModule ) << " ++ done deleting prodPtr at address: " << *parItr << endl;
   }
 
+  report( DEBUG, kModule ) << " deleting ampPtrCache at address: " << &m_ampPtrCache << endl;
   for( vector< MinuitParameter* >::iterator parItr = m_ampPtrCache.begin();
       parItr != m_ampPtrCache.end();
       ++parItr ){
-
+    report( DEBUG, kModule ) << " deleting ampPtr at address: " << *parItr << endl;
     delete *parItr;
+    report( DEBUG, kModule ) << " ++ done deleting ampPtr at address: " << *parItr << endl;
   }
 
-  for( vector< GaussianBound* >::iterator boundItr = m_boundPtrCache.begin();
-      boundItr != m_boundPtrCache.end();
-      ++boundItr ){
-
-    delete *boundItr;
+  report( DEBUG, kModule ) << " deleting boundPtrCache at address: " << &m_boundPtrCache << endl;
+  for ( GaussianBound* ptr: m_boundPtrCache ) {
+    report( DEBUG, kModule ) << " deleting boundPtr at address: " << ptr << endl;
+    delete ptr;
+    report( DEBUG, kModule ) << " ++ done deleting boundPtr at address: " << ptr << endl;
   }
+  m_boundPtrCache.clear();
+  // for( vector< GaussianBound* >::iterator boundItr = m_boundPtrCache.begin();
+  //     boundItr != m_boundPtrCache.end();
+  //     ++boundItr ){
+  //   report( DEBUG, kModule ) << " deleting boundItr at address: " << *boundItr << endl;
+  //   delete *boundItr;
+  //   report( DEBUG, kModule ) << " ++ done deleting boundItr at address: " << *boundItr << endl;
+  // }
 }
 
 void
@@ -228,13 +241,15 @@ ParameterManager::addAmplitudeParameter( const string& termName, const Parameter
     parPtr->attach( this );
 
     if( parInfo->fixed() ){
-
+      report( DEBUG, kModule ) << "[addAmplitudeParameter] fixing parameter " << parName << endl;
       parPtr->fix();
+      report( DEBUG, kModule ) << " ++ fixed parameter " << parName << endl;
     }
 
     if( parInfo->bounded() ){
-
+      report( DEBUG, kModule ) << "[addAmplitudeParameter] adding bound for " << parName << endl;
       parPtr->bound( parInfo->lowerBound(), parInfo->upperBound() );
+      report( DEBUG, kModule ) << " ++ added bound for " << parName << endl;
     }
 
     if( parInfo->gaussianBounded() ){
@@ -243,7 +258,17 @@ ParameterManager::addAmplitudeParameter( const string& termName, const Parameter
       new GaussianBound( m_minuitManager, parPtr, parInfo->centralValue(),
                         parInfo->gaussianError() );
 
+      report( DEBUG, kModule ) << "[addAmplitudeParameter] adding gaussian bound for " << parName << endl;
       m_boundPtrCache.push_back( boundPtr );
+      report( DEBUG, kModule ) << " ++ added gaussian bound for " << parName <<
+                " with central value " << parInfo->centralValue() << " and error " << parInfo->gaussianError() <<
+                " where boundPtr address is " << boundPtr << endl;
+      for ( GaussianBound* ptr: m_boundPtrCache ) {
+        report( DEBUG, kModule ) << " ++ m_boundPtrCache contains address: " << ptr << endl;
+      }
+      // for (vector<GaussianBound*>::iterator it = m_boundPtrCache.begin(); it != m_boundPtrCache.end(); ++it) {
+      //   report( DEBUG, kModule ) << " ++ m_boundPtrCache address: " << *it << endl;
+      // }
     }
 
     // keep track of new objects that are being allocated
@@ -291,11 +316,15 @@ void ParameterManager::addNeg2LnLikContribParameter( const string& lhcontName, c
     parPtr->attach( this );
 
     if( parInfo->fixed() ){
+      report( DEBUG, kModule ) << "[addNeg2LnLikContribParameter] fixing parameter " << parName << endl;
       parPtr->fix();
+      report( DEBUG, kModule ) << " ++ fixed parameter " << parName << endl;
     }
 
     if( parInfo->bounded() ){
+      report( DEBUG, kModule ) << "[addNeg2LnLikContribParameter] adding bound for " << parName << endl;
       parPtr->bound( parInfo->lowerBound(), parInfo->upperBound() );
+      report( DEBUG, kModule ) << " ++ added bound for " << parName << endl;
     }
 
     if( parInfo->gaussianBounded() ){
@@ -303,8 +332,17 @@ void ParameterManager::addNeg2LnLikContribParameter( const string& lhcontName, c
       GaussianBound* boundPtr =
       new GaussianBound( m_minuitManager, parPtr, parInfo->centralValue(),
                         parInfo->gaussianError() );
-
+      report( DEBUG, kModule ) << "[addNeg2LnLikContribParameter] adding gaussian bound for " << parName << endl;
       m_boundPtrCache.push_back( boundPtr );
+      report( DEBUG, kModule ) << " ++ added gaussian bound for " << parName <<
+                " with central value " << parInfo->centralValue() << " and error " << parInfo->gaussianError() <<
+                " where boundPtr address is " << boundPtr << endl;
+      for ( GaussianBound* ptr: m_boundPtrCache ) {
+        report( DEBUG, kModule ) << " ++ m_boundPtrCache contains address: " << ptr << endl;
+      }
+      // for (vector<GaussianBound*>::iterator it = m_boundPtrCache.begin(); it != m_boundPtrCache.end(); ++it) {
+      //   report( DEBUG, kModule ) << " ++ m_boundPtrCache contains address: " << *it << endl;
+      // }
     }
 
     // keep track of new objects that are being allocated
@@ -450,13 +488,31 @@ ParameterManager::findParameter( const string& termName) const{
   return NULL;
 }
 
-vector<string>
-ParameterManager::getProdParList() const{
-    vector<string> parList;
+MinuitParameter*
+ParameterManager::findAmpParameter( const string& parName) const{
 
+  // return the amplitude parameter associated with this parameter name if it is already defined
+  map<string, MinuitParameter*>::const_iterator pItr = m_ampParams.find(parName);
+  if (pItr != m_ampParams.end()) return pItr->second;
+
+  return NULL;
+}
+
+vector<string>
+ParameterManager::getParametersList() const{
+    vector<string> parList;
+    report( DEBUG, kModule ) << "m_prodParams size: " << m_prodParams.size() << endl;
     for (map<string, ComplexParameter*>::const_iterator pItr = m_prodParams.begin();
-        pItr != m_prodParams.end(); pItr++){
-      parList.push_back(pItr->first);
+      pItr != m_prodParams.end(); pItr++){
+      if (!pItr->second->isFixed())
+        parList.push_back(pItr->first);
+    }
+
+    report( DEBUG, kModule ) << "m_ampParams size: " << m_ampParams.size() << endl;
+    for (map<string, MinuitParameter*>::const_iterator pItr = m_ampParams.begin();
+      pItr != m_ampParams.end(); pItr++){
+      if (pItr->second->floating())
+        parList.push_back(pItr->first);
     }
 
     return parList;
@@ -464,7 +520,7 @@ ParameterManager::getProdParList() const{
 
 
 void
-ParameterManager::update( const MISubject* parPtr ){
+ParameterManager::update( const MISubject* parPtr, bool skipCovarianceUpdate){
 
   // this method is called whenever any parameter changes
   // if it is an amplitude parameter, we want to notify the
@@ -486,7 +542,11 @@ ParameterManager::update( const MISubject* parPtr ){
     }
   }
 
-  updateParCovariance();
+  // For external minimizers we will not have access to the parameter covariance
+  //   matrix which comes during Minuit minimization.
+  //   See MinuitParameterManager::covarianceMatrix() which uses Minuit mnemat() method
+  if (!skipCovarianceUpdate)
+    updateParCovariance();
 }
 
 void

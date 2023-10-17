@@ -75,8 +75,10 @@ public:
 
   void setProductionParameter( const string& termName,
                                complex< double > prodPar );
-  ComplexParameter* findParameter(const string& ampName) const;
-  vector<string> getProdParList() const;
+
+  ComplexParameter* findParameter(const string& ampName) const; // production parameters
+  MinuitParameter* findAmpParameter(const string& parName) const; // amplitude parameters
+  vector<string> getParametersList() const; // production and amplitude
 
   void setAmpParameter( const string& parName, double value );
 
@@ -97,7 +99,7 @@ public:
   bool hasParameter(const string& ampName) const;
 
   // this gets called whenever an amplitude parameter changes
-  void update( const MISubject* parPtr );
+  void update( const MISubject* parPtr, bool skipCovarianceUpdate = false );
 
 protected:
 

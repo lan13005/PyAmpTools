@@ -28,6 +28,7 @@ mpi: | default
 	@cd AMPTOOLS_AMPS_DATAIO; make MPI=1
 
 gpu: | default
+#gpu: distribute_makefiles
 	@echo " === Running 'make gpu' in the target directory... ==="
 	@cd AmpTools/AmpTools; make GPU=1
 	@cd AmpTools/AmpPlotter; make
@@ -63,8 +64,9 @@ distribute_makefiles:
 	cp $(SRC_DIRS)/GPUCustomTypes.h AmpTools/AmpTools/GPUManager
 	cp $(SRC_DIRS)/GPUManager.* AmpTools/AmpTools/GPUManager
 	cp $(SRC_DIRS)/AmpToolsInterface.* AmpTools/AmpTools/IUAmpTools
-	cp $(SRC_DIRS)/AmplitudeManager.* AmpTools/AmpTools/IUAmpTools
 	cp $(SRC_DIRS)/MinuitMinimizationManager.* AmpTools/AmpTools/MinuitInterface
+	cp $(SRC_DIRS)/MISubject.* AmpTools/AmpTools/MinuitInterface
+	cp $(SRC_DIRS)/MIObserver.* AmpTools/AmpTools/MinuitInterface
 	cp $(SRC_DIRS)/URMinuit.* AmpTools/AmpTools/UpRootMinuit
 	cp $(SRC_DIRS)/AmpVecs.* AmpTools/AmpTools/IUAmpTools
 	cp $(SRC_DIRS)/wignerD.cuh AmpTools/AmpTools/GPUUtils
