@@ -1,8 +1,6 @@
 # launched automatically by conda activate.d
 echo "Sourcing additional enviornment variables"
 
-conda activate PyAmpTools
-
 ####################
 ### IF ON JLAB IFARM ###
 module add cuda

@@ -1,6 +1,7 @@
 import os
 import psutil
 import subprocess
+import unittest
 
 def get_function_by_pid(pid):
     ''' Returns the function or executable associated with a process ID '''
@@ -60,3 +61,25 @@ def prepare_mpigpu(accelerator):
             USE_GPU = True
 
     return USE_MPI, USE_GPU
+
+class testKnownFailure(unittest.TestCase):
+    '''
+    Function wrapper that tests for known failures.
+    Only accepts args
+    '''
+    def __init__(self, function):
+        super().__init__()
+        self.function = function
+
+    def __call__(self, *args):
+        str_args = ', '.join([str(arg) for arg in args])
+        str_func = f'{self.function.__name__}({str_args})'
+        statement = f"Testing known failure of function: \n   {str_func} "
+        print(f"{statement:.<100} ", end='')
+        with self.assertRaises(AssertionError) as context:
+            self.function(*args)
+        print('Passed!')
+
+def print_dict(d):
+    for k,v in d.items():
+        print(f'{k}: {v}')
