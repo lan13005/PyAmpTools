@@ -106,7 +106,7 @@ public:
   /** Destructor.
    */
 
-  virtual ~AmpToolsInterface() { clear(); }
+  virtual ~AmpToolsInterface() { clear_and_print(); }
 
   /** Static function to register a user Amplitude class.  For example,
    *  to register a user-defined BreitWigner amplitude, one would use:
@@ -442,6 +442,8 @@ public:
    */
   void forceUserVarRecalculation( bool state );
 
+  void print_boundPtrCache();
+
 protected:
 
   AmpToolsInterface( const AmpToolsInterface& ati );
@@ -450,6 +452,9 @@ protected:
   FunctionalityFlag m_functionality;
 
   void clear();
+  // has to be called by destructor, print_boundPtrCache will crash if called by clear in resetConfigurationInfo
+  //   probably because MinuitMinimizationManager isn't created yet
+  void clear_and_print();
 
   ConfigurationInfo*          m_configurationInfo;
   MinuitMinimizationManager*  m_minuitMinimizationManager;

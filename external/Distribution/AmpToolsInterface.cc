@@ -541,31 +541,41 @@ AmpToolsInterface::clear(){
       ReactionInfo* reaction = m_configurationInfo->reactionList()[irct];
       string reactionName(reaction->reactionName());
 
+      report( DEBUG, kModule ) << "Deleting m_likCalcMap for reaction " << reactionName << endl;
       if (likelihoodCalculator(reactionName)) delete m_likCalcMap[reactionName];
+      report( DEBUG, kModule ) << "Deleting normIntInterface for reaction " << reactionName << endl;
       if (normIntInterface(reactionName)) delete normIntInterface(reactionName);
     }
 
     // logic above won't work for these since the lookup function for each reaction
     // depends on the reaction itself
     for (unsigned int i = 0; i < m_intensityManagers.size(); i++){
+      report( DEBUG, kModule ) << "Deleting intensityManager for reaction " << m_intensityManagers[i]->reactionName() << endl;
       delete m_intensityManagers[i];
     }
 
     for( std::set<DataReader*>::iterator dataReader = m_uniqueDataSets.begin();
         dataReader != m_uniqueDataSets.end(); ++dataReader ){
-
+        report (DEBUG, kModule ) << "Deleting dataReader " << (*dataReader)->name() << endl;
       if( *dataReader ) delete *dataReader;
     }
   }
 
-
+  report (DEBUG, kModule ) << "Clearing m_intensityManagers" << endl;
   m_intensityManagers.clear();
+  report (DEBUG, kModule ) << "Clearing m_dataReaderMap" << endl;
   m_dataReaderMap.clear();
+  report (DEBUG, kModule ) << "Clearing m_genMCReaderMap" << endl;
   m_genMCReaderMap.clear();
+  report (DEBUG, kModule ) << "Clearing m_accMCReaderMap" << endl;
   m_accMCReaderMap.clear();
+  report (DEBUG, kModule ) << "Clearing m_bkgndReaderMap" << endl;
   m_bkgndReaderMap.clear();
+  report (DEBUG, kModule ) << "Clearing m_normIntMap" << endl;
   m_uniqueDataSets.clear();
+  report (DEBUG, kModule ) << "Clearing m_normIntMap" << endl;
   m_normIntMap.clear();
+  report (DEBUG, kModule ) << "Clearing m_likCalcMap" << endl;
   m_likCalcMap.clear();
 
   report( DEBUG, kModule ) << "Deallocating ampvecs by clear():" << endl;
@@ -574,11 +584,106 @@ AmpToolsInterface::clear(){
     m_ampVecsReactionName[i] = "";
   }
 
-  if (minuitMinimizationManager()) delete minuitMinimizationManager();
+  report (DEBUG, kModule ) << "Deleting parameterManager" << endl;
   if (parameterManager()) delete parameterManager();
+
+  report (DEBUG, kModule ) << "Deleting fitResults" << endl;
   if (fitResults()) delete fitResults();
+
+  report (DEBUG, kModule ) << "Deleting minuitMinimizationManager" << endl;
+  if (minuitMinimizationManager()) delete minuitMinimizationManager();
 }
 
+void
+AmpToolsInterface::clear_and_print(){
+  report( DEBUG, kModule ) << "AmpToolsInterface::clear() called by destructor or resetConfigurationInfo" << endl;
+  if( m_configurationInfo != NULL ){
+
+    for (unsigned int irct = 0; irct < m_configurationInfo->reactionList().size(); irct++){
+
+      ReactionInfo* reaction = m_configurationInfo->reactionList()[irct];
+      string reactionName(reaction->reactionName());
+
+      if (likelihoodCalculator(reactionName)){
+        print_boundPtrCache();
+        report( DEBUG, kModule ) << "Deleting m_likCalcMap for reaction " << reactionName << endl;
+        delete m_likCalcMap[reactionName];
+      }
+      if (normIntInterface(reactionName)){
+        print_boundPtrCache();
+        report( DEBUG, kModule ) << "Deleting normIntInterface for reaction " << reactionName << endl;
+        delete normIntInterface(reactionName);
+      }
+    }
+
+    // logic above won't work for these since the lookup function for each reaction
+    // depends on the reaction itself
+    for (unsigned int i = 0; i < m_intensityManagers.size(); i++){
+      print_boundPtrCache();
+      report( DEBUG, kModule ) << "Deleting intensityManager for reaction " << m_intensityManagers[i]->reactionName() << endl;
+      delete m_intensityManagers[i];
+    }
+
+    for( std::set<DataReader*>::iterator dataReader = m_uniqueDataSets.begin();
+        dataReader != m_uniqueDataSets.end(); ++dataReader ){
+      if( *dataReader ){
+        print_boundPtrCache();
+        report (DEBUG, kModule ) << "Deleting dataReader " << (*dataReader)->name() << endl;
+        delete *dataReader;
+      }
+    }
+  }
+
+  print_boundPtrCache();
+  report (DEBUG, kModule ) << "Clearing m_intensityManagers" << endl;
+  m_intensityManagers.clear();
+  print_boundPtrCache();
+  report (DEBUG, kModule ) << "Clearing m_dataReaderMap" << endl;
+  m_dataReaderMap.clear();
+  print_boundPtrCache();
+  report (DEBUG, kModule ) << "Clearing m_genMCReaderMap" << endl;
+  m_genMCReaderMap.clear();
+  print_boundPtrCache();
+  report (DEBUG, kModule ) << "Clearing m_accMCReaderMap" << endl;
+  m_accMCReaderMap.clear();
+  print_boundPtrCache();
+  report (DEBUG, kModule ) << "Clearing m_bkgndReaderMap" << endl;
+  m_bkgndReaderMap.clear();
+  print_boundPtrCache();
+  report (DEBUG, kModule ) << "Clearing m_normIntMap" << endl;
+  m_uniqueDataSets.clear();
+  print_boundPtrCache();
+  report (DEBUG, kModule ) << "Clearing m_normIntMap" << endl;
+  m_normIntMap.clear();
+  print_boundPtrCache();
+  report (DEBUG, kModule ) << "Clearing m_likCalcMap" << endl;
+  m_likCalcMap.clear();
+
+  print_boundPtrCache();
+  report( DEBUG, kModule ) << "Deallocating ampvecs by clear():" << endl;
+  for (unsigned int i = 0; i < MAXAMPVECS; i++){
+    m_ampVecs[i].deallocAmpVecs();
+    m_ampVecsReactionName[i] = "";
+  }
+
+  if (parameterManager()){
+    print_boundPtrCache();
+    report (DEBUG, kModule ) << "Deleting parameterManager" << endl;
+    delete parameterManager();
+  }
+
+  if (fitResults()) {
+    print_boundPtrCache();
+    report (DEBUG, kModule ) << "Deleting fitResults" << endl;
+    delete fitResults();
+  }
+
+  if (minuitMinimizationManager()){
+    print_boundPtrCache();
+    report (DEBUG, kModule ) << "Deleting minuitMinimizationManager" << endl;
+    delete minuitMinimizationManager();
+  }
+}
 
 
 void
@@ -964,4 +1069,12 @@ AmpToolsInterface::invalidateAmps(){
 
     (*mapItr).second->invalidateTerms();
   }
+}
+
+void AmpToolsInterface::print_boundPtrCache(){
+  MinuitMinimizationManager* man = minuitMinimizationManager();
+  std::list<MIObserver*> observers = man->m_observerList;
+  report( DEBUG, kModule ) << "There are " << observers.size() << " observers:" << std::endl;
+  std::list<MIObserver*>::iterator iter = observers.begin();
+  for ( ; iter != observers.end(); ++iter ) { report( DEBUG, kModule ) << *iter << std::endl; }
 }
