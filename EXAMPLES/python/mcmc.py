@@ -5,33 +5,35 @@ import ROOT
 import os
 from typing import List
 import matplotlib.pyplot as plt
-from amploader import AmplitudeParameters
+from LoadParameters import LoadParameters
 import corner
 import argparse
+import time
+from utils import prepare_mpigpu
+
+start_time = time.time()
 
 parser = argparse.ArgumentParser(description='emcee fitter')
 parser.add_argument('cfgfile', type=str, help='Config file name')
-parser.add_argument('mle', type=str, help='MLE fit results file to initialze walkers around an N-ball around the MLE estimate')
-parser.add_argument('-o', type=str, default='mcmc', help='Output folder name')
-parser.add_argument('-f', type=str, default='mcmc.h5', help='Output file name')
-parser.add_argument('-n', type=int, default=32, help='Number of walkers')
-parser.add_argument('-b', type=int, default=100, help='Number of burn-in steps')
-parser.add_argument('-s', type=int, default=1000, help='Number of samples')
-parser.add_argument('-overwrite', action='store_true', help='Overwrite existing output file if exists')
+parser.add_argument('--ofolder', type=str, default='mcmc', help='Output folder name. Default "mcmc"')
+parser.add_argument('--ofile', type=str, default='mcmc.h5', help='Output file name. Default "mcmc.h5"')
+parser.add_argument('--nwalkers', type=int, default=32, help='Number of walkers. Default 32')
+parser.add_argument('--burnin', type=int, default=100, help='Number of burn-in steps. Default 100')
+parser.add_argument('--nsamples', type=int, default=1000, help='Number of samples. Default 1000')
+parser.add_argument('--overwrite', action='store_true', help='Overwrite existing output file if exists')
+parser.add_argument('--accelerator', type=str, default='', help='Force use of given "accelerator" ~ [gpu, mpi, mpigpu, gpumpi]. Default "" = cpu')
 args = parser.parse_args()
 
 cfgfile = args.cfgfile
-mle_fit = args.mle
-ofolder = args.o
-ofile = args.f
+ofolder = args.ofolder
+ofile = args.ofile
 overwrite_ofile = args.overwrite
-NWALKERS = args.n
-BURN_IN = args.b
-NSAMPLES = args.s
+NWALKERS = args.nwalkers
+BURN_IN = args.burnin
+NSAMPLES = args.nsamples
 
 print("\n ===================")
 print(f" cfgfile: {cfgfile}")
-print(f" mle_fit: {mle_fit}")
 print(f" ofolder: {ofolder}")
 print(f" ofile: {ofile}")
 print(f" NWALKERS: {NWALKERS}")
@@ -40,7 +42,7 @@ print(f" NSAMPLES: {NSAMPLES}")
 print(f" overwrite_ofile: {overwrite_ofile}")
 print(" ===================\n")
 
-assert( os.path.exists(cfgfile) and os.path.exists(mle_fit) ), 'Config file or seed file does not exist at specified path'
+assert( os.path.exists(cfgfile) ), 'Config file does not exist at specified path'
 if os.path.isfile(f'{ofolder}/{ofile}') and overwrite_ofile:
     os.system(f'rm {ofolder}/{ofile}')
     print("Overwriting existing output file!")
@@ -48,8 +50,26 @@ os.system(f'mkdir -p {ofolder}')
 
 ############## SET ENVIRONMENT VARIABLES ##############
 REPO_HOME     = os.environ['REPO_HOME']
-os.environ['ATI_USE_MPI'] = "0" # set to 1 to use MPI libraries
-os.environ['ATI_USE_GPU'] = "0" # set to 1 to use MPI libraries
+
+############### INITIALIZE MPI IF REQUESTED ###########
+# (Depends on if bash or mpirun/mpiexec called the python program)
+#######################################################
+USE_MPI, USE_GPU = prepare_mpigpu(args.accelerator) # use mpi/gpu if possible or you forced me to with -accelerator flag
+
+if USE_MPI:
+    from mpi4py import rc as mpi4pyrc
+    mpi4pyrc.threads = False
+    mpi4pyrc.initialize = False
+    from mpi4py import MPI
+    RANK_MPI = MPI.COMM_WORLD.Get_rank()
+    SIZE_MPI = MPI.COMM_WORLD.Get_size()
+    print(f'Rank: {RANK_MPI} of {SIZE_MPI}')
+    assert( (USE_MPI and (SIZE_MPI > 1)) )
+else:
+    RANK_MPI = 0
+    SIZE_MPI = 1
+
+################### LOAD LIBRARIES ##################
 from atiSetup import *
 
 ############## LOAD CONFIGURATION FILE ##############
@@ -59,9 +79,12 @@ cfgInfo.display()
 
 ############## REGISTER OBJECTS FOR AMPTOOLS ##############
 AmpToolsInterface.registerAmplitude( Zlm() )
+AmpToolsInterface.registerAmplitude( BreitWigner() )
+AmpToolsInterface.registerAmplitude( Piecewise() )
+AmpToolsInterface.registerAmplitude( PhaseOffset() )
+AmpToolsInterface.registerAmplitude( TwoPiAngles() )
 AmpToolsInterface.registerDataReader( DataReader() )
-ati = AmpToolsInterface( cfgInfo )
-parMgr: ParameterManager = ati.parameterManager()
+AmpToolsInterface.registerDataReader( DataReaderFilter() )
 
 ############## UTILITY FUNCTIONS ##############
 def LogProb(
@@ -71,37 +94,46 @@ def LogProb(
 
     ## Calculate Log likelihood
     ll = -1e7
-    parameters = amplitudeParameters.unflatten_parameters(par_values, PARS_REAL)
-    for name, complex_value in parameters.items():
-        parMgr[name] = complex_value
+    parameters = LoadParameters.unflatten_parameters(par_values, KEY)
+    for name, value in parameters.items():
+        parMgr[name] = value
     ll = -ati.likelihood()
 
     ## Add lasso prior on parameter values we know are small
-    lasso = 0.1
-    prior = -lasso * np.sum(np.abs(par_values[PAR_INDICES >= 2]))
+    # lasso = 0.1
+    prior = 0 # -lasso * np.sum(np.abs(par_values[PAR_INDICES >= 2]))
 
     log_prob = ll + prior
     # print(f'LogProb: {log_prob} = {ll} + {prior}')
     return log_prob
 
+############### LOAD INTO MANAGER ###############
+LoadParameters = LoadParameters()
+LoadParameters.load_cfg( cfgInfo )
 
-############### LOAD MLE ESTIMATE ###############
-mle_fit = FitResults( mle_fit )
-if not mle_fit.valid():
-    print(f'Invalid fit result in file: {mle_fit}'); exit()
-amplitudeParameters = AmplitudeParameters()
-amplitudeParameters.load_cfg(mle_fit)
-PARS_COMPLEX_VALS, PARS_REAL = amplitudeParameters.uniqueAmps, amplitudeParameters.uniqueReal
-MLE_VALUES = amplitudeParameters.flatten_parameters()
+# SELECTED_VALUES = {'a2mass': 1.31790479736726, 'a2width': 0.130376506768682}
+# MLE_VALUES, KEY, PAR_NAMES_FLAT  = LoadParameters.flatten_parameters(SELECTED_VALUES)
+MLE_VALUES, KEY, PAR_NAMES_FLAT  = LoadParameters.flatten_parameters()
+
+if NWALKERS < 2*len(MLE_VALUES):
+    print("Number of walkers must be at least twice the number of parameters. Overwriting NWALKERS to 2*len(MLE_VALUES)\n")
+    NWALKERS = 2*len(MLE_VALUES)
+
+print(f'MLE_VALUES: {MLE_VALUES}')
+print(f'KEY: {KEY}')
+print(f'PAR_NAMES_FLAT: {PAR_NAMES_FLAT}')
 NDIM = len(MLE_VALUES)
-PAR_NAMES, PAR_NAMES_PARTS, PAR_INDICES = amplitudeParameters.get_naming_convention()
-print(f'PAR_NAMES: {PAR_NAMES}')
-print(f'PAR_NAMES_PARTS: {PAR_NAMES_PARTS}')
-print(f'PAR_INDICES: {PAR_INDICES}')
+
 
 ############## RUN MCMC IF RESULTS DOES NOT ALREADY EXIST ##############
-if not os.path.exists(f'{ofolder}/{ofile}') or os.path.getsize(f'{ofolder}/{ofile}') < 20000:
+fit_start_time = time.time()
+if not os.path.exists(f'{ofolder}/{ofile}'):
+    ############ INITIALIZE ATI ############
+    ati = AmpToolsInterface( cfgInfo )
+    parMgr: ParameterManager = ati.parameterManager()
+
     print(f' ================== RUNNING MCMC ================== ')
+    # Initialize walkers in an N-ball around the MLE estimate
     par_values = np.array(MLE_VALUES)
     par_values = np.repeat(par_values, NWALKERS).reshape(NDIM, NWALKERS).T
     par_values *= ( 1 + 0.01 * np.random.normal(0, 1, size=(NWALKERS, NDIM)) )
@@ -121,9 +153,10 @@ if not os.path.exists(f'{ofolder}/{ofile}') or os.path.getsize(f'{ofolder}/{ofil
 else:
     print(f' ================== LOADING MCMC ================== ')
     sampler = emcee.backends.HDFBackend(f'{ofolder}/{ofile}')
-
+fit_end_time = time.time()
 
 ################# CALCULATE AUTOCORR AND ACCEPTANCE FRAC #################
+analysis_start_time = time.time()
 samples = sampler.get_chain(flat=True) # returns (NSAMPLES*NWALKERS, 5) flattened array
 if isinstance(sampler, emcee.EnsembleSampler):
     acceptance_fraction = np.mean(sampler.acceptance_fraction)
@@ -140,34 +173,35 @@ print(f"Percent samples remaning after masking: {100*samples.shape[0]/(NSAMPLES*
 
 ################### COMPUTE MAP ESTIMATE ###################
 map_idx = np.argmax(sampler.get_log_prob(flat=True)) # maximum a posteriori (MAP) location
-map_estimate_ReIm = samples[map_idx,:]
-intensity = np.empty((samples.shape[0], len(PAR_NAMES)))
-for i in range(len(PAR_NAMES)):
-    real = samples[:, np.argwhere(PAR_INDICES==(2*i  ))[0][0]]   if 2*i in PAR_INDICES else np.zeros(samples.shape[0])
-    imag = samples[:, np.argwhere(PAR_INDICES==(2*i+1))[0][0]] if 2*i+1 in PAR_INDICES else np.zeros(samples.shape[0])
-    intensity[:, i] = real**2 + imag**2
-map_estimate = intensity[map_idx,:]
-
+map_estimate = samples[map_idx,:]
 
 ################### PLOT RESULTS ###################
-corner_kwargs = {"color": "royalblue", "truth_color": "orange", "show_titles": True }
-labels_ReIm = [f'{l.split("::")[-1]}' for l in PAR_NAMES_PARTS]
-fig = corner.corner(samples, labels=labels_ReIm, truths=map_estimate_ReIm, **corner_kwargs)
-plt.savefig(f"{ofolder}/mcmc_ReIm.png")
-labels = [f'{l.split("::")[-1]}' for l in PAR_NAMES]
-fig = corner.corner(intensity, labels=labels, truths=map_estimate, **corner_kwargs)
+def plot_axvh_fit_params(values, color='black'):
+    axes = np.array(fig.axes).reshape((NDIM, NDIM))
+    for yi in range(NDIM):
+        for xi in range(yi):
+            axes[yi, xi].axvline(values[xi], color=color, linewidth=4, alpha=0.8)
+            axes[yi, xi].axhline(values[yi], color=color, linewidth=4, alpha=0.8)
+        axes[yi, yi].axvline(values[yi], color=color, linewidth=4, alpha=0.8)
+corner_kwargs = {"color": "black", "show_titles": True }
+labels_ReIm = [f'{l.split("::")[-1]}' for l in PAR_NAMES_FLAT]
+fig = corner.corner(samples, labels=labels_ReIm, **corner_kwargs)
+plot_axvh_fit_params(map_estimate, color='royalblue')
+plot_axvh_fit_params(MLE_VALUES, color='tab:green')
 plt.savefig(f"{ofolder}/mcmc.png")
 
 
 print(' =================== RESULTS =================== ')
-print(f'MAP for ReIm parts: ')
-[print(f'   {l}= {v:0.3f}') for l, v in zip(PAR_NAMES_PARTS, map_estimate_ReIm)]
-print(f'MAP for Intensity: {map_estimate}')
-[print(f'   {l}= {v:0.3f}') for l, v in zip(PAR_NAMES, map_estimate)]
+print(f'MAP Estimates from {len(samples)} samples obtained over {NWALKERS} walkers:')
+[print(f'   {l:20} = {v:0.3f}') for l, v in zip(PAR_NAMES_FLAT, map_estimate)]
 print(' =============================================== ')
 
 # import pygtc
-# GTC_ReIM = pygtc.plotGTC(chains=[samples], paramNames=PAR_NAMES_PARTS,
+# GTC_ReIM = pygtc.plotGTC(chains=[samples], paramNames=PAR_NAMES_FLAT,
 #                     chainLabels=['MCMC samples'], legendMarker='Auto', figureSize='MNRAS_page', plotName=f'{ofolder}/mcmc_ReIm.pdf', nContourLevels=3)
 # GTC = pygtc.plotGTC(chains=[intensity], paramNames=PAR_NAMES,
 #                     chainLabels=['MCMC samples'], legendMarker='Auto', figureSize='MNRAS_page', plotName=f'{ofolder}/mcmc.pdf', nContourLevels=3)
+
+print(f"Fit time: {fit_end_time - fit_start_time} seconds")
+print(f"Analysis (calc autocorr, acceptance fractions, drawing results, ...) time: {time.time() - analysis_start_time} seconds")
+print(f"Total time: {time.time() - start_time} seconds")

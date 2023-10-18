@@ -51,10 +51,12 @@ class LoadParameters:
         self.uniqueProdIsReal = {k: cfg.amplitude(k).real() for k in uniqueProdPars} # check if amplitude is set to be real
 
         ####### GET AMPLITUDE PARAMETERS ########
-        ampPars = cfg.parameterList() # parameters associated with amplitudes (i.e. masses, widths, etc)
+        # parameters associated with amplitudes (i.e. masses, widths, etc)
+        ampPars = cfg.parameterList() # ParameterInfo*
         self.ampPars = {}
         for par in ampPars:
-            if not par.fixed(): self.ampPars[par.parName()] = par.value()
+            if not par.fixed():
+                self.ampPars[par.parName()] = results.ampParMap()[par.parName()] if ftype=="FitResults" else par.value()
         self.nAmpPars = len(ampPars)
 
         ####### MERGE DICTIONARIES ########
@@ -66,8 +68,15 @@ class LoadParameters:
         Flatten amplitude parameters (complex-> real, imag) skipping imaginary parts of real amplitudes.
         If no arguments are passed, use the uniqueProdPars and uniqueProdIsReal from the last call to load_cfg()
         Can also format any dictionary pair into flat format
+            Dictionary to List
 
-        Dictionary to List
+        Args:
+            params (dict): dictionary of parameters to flatten
+
+        Returns:
+            parameters (list): list of flattened parameters
+            key (list): list of keys (parameter names) corresponding to parameters
+            names (list): list of parameter names expanding complex parameters into Re[par] and Im[par]
         '''
         parameters = []
         key        = [] # lose information on flatten, use key to keep track of provenance
@@ -89,9 +98,16 @@ class LoadParameters:
 
     def unflatten_parameters(self, parameters, key):
         '''
-        Unflatten parameters forming complex values (for production parameters) when requested
+        Unflatten parameters forming complex values (for production parameters) when requested.
+            List to Dictionary
 
-        List to Dictionary
+        Args:
+            parameters (list): list of flattened parameters
+            key (list): list of keys (parameter names) corresponding to parameters
+
+        Returns:
+            paramDict (dict): dictionary of parameters
+
         '''
         paramDict = {}
         for k, param in zip(key,parameters):

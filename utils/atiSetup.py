@@ -44,15 +44,18 @@ ConfigurationInfo           = ROOT.ConfigurationInfo
 if USE_MPI:
     DataReader              = ROOT.DataReaderMPI['ROOTDataReader'] # DataReaderMPI is a template; use [] to specify the type
     DataReaderFilter        = ROOT.DataReaderMPI['ROOTDataReaderFilter']
+    DataReaderBootstrap     = ROOT.DataReaderMPI['ROOTDataReaderBootstrap']
     AmpToolsInterface       = ROOT.AmpToolsInterfaceMPI
 else:
     DataReader              = ROOT.ROOTDataReader
     DataReaderFilter        = ROOT.ROOTDataReaderFilter
+    DataReaderBootstrap     = ROOT.ROOTDataReaderBootstrap
     AmpToolsInterface       = ROOT.AmpToolsInterface
 Zlm                         = ROOT.Zlm
 BreitWigner                 = ROOT.BreitWigner
 Piecewise                   = ROOT.Piecewise
 PhaseOffset                 = ROOT.PhaseOffset
+TwoPiAngles                 = ROOT.TwoPiAngles
 ParameterManager            = ROOT.ParameterManager
 MinuitMinimizationManager   = ROOT.MinuitMinimizationManager
 ########### PLOTTER / RESULTS RELATED ###########

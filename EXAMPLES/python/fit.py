@@ -8,8 +8,8 @@ from datetime import datetime
 import random
 import sys
 from utils import get_pid_family, check_nvidia_devices, prepare_mpigpu
-import time
-time.sleep(10)
+
+start_time = time.time()
 
 def performFit(fitManager, seed_file_tag):
     ''' Performs a single fit '''
@@ -156,14 +156,19 @@ AmpToolsInterface.registerAmplitude( Zlm() )
 AmpToolsInterface.registerAmplitude( BreitWigner() )
 AmpToolsInterface.registerAmplitude( Piecewise() )
 AmpToolsInterface.registerAmplitude( PhaseOffset() )
+AmpToolsInterface.registerAmplitude( TwoPiAngles() )
 AmpToolsInterface.registerDataReader( DataReader() )
 AmpToolsInterface.registerDataReader( DataReaderFilter() )
+AmpToolsInterface.registerDataReader( DataReaderBootstrap() )
 
 ati = AmpToolsInterface( cfgInfo )
 
 AmpToolsInterface.setRandomSeed(args.randomSeed)
+
+fit_start_time = time.time()
 nll = runFits(args.numRnd)
 
 print("\nDone! MPI.Finalize() / MPI.Init() automatically called at script end / start\n") if USE_MPI else print("\nDone!")
-
+print(f"Fit time: {time.time() - fit_start_time} seconds")
+print(f"Total time: {time.time() - start_time} seconds")
 print(f"Final Likelihood: {nll}") # Need this for for unit-tests
