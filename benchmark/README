@@ -1,0 +1,3 @@
+This folder contains various scripts for benchmarking + other studies
+1. MCMC sample rate is compared to MLE bootstrap iteration rate
+2. MCMC for ambiguity studies
