@@ -8,10 +8,10 @@ def test_mcmc():
    cfgfile = f'{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/fit.cfg'
    mle_fit = f'{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/result.fit'
    ofolder = f'{REPO_HOME}/tests/mcmc'
-   cmd=f"python {REPO_HOME}/EXAMPLES/python/mcmc.py {cfgfile} {mle_fit} --ofolder {ofolder} --ofile 'mcmc.h5' \
+   cmd=f"python {REPO_HOME}/EXAMPLES/python/mcmc.py {cfgfile} --ofolder {ofolder} --ofile 'mcmc.h5' \
             --nwalkers 20 \
             --burnin 10 \
-            --samples 100 \
+            --nsamples 100 \
             --overwrite"
    print(cmd)
    return_code = subprocess.call(cmd, shell=True)
