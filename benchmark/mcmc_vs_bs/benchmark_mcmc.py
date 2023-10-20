@@ -150,8 +150,8 @@ if not os.path.exists(f'{ofolder}/{ofile}'):
     sampler.run_mcmc(state, NSAMPLES, progress=True);
     acceptance_fraction = np.mean(sampler.acceptance_fraction) # function implementation in github, acceptance_fraction not available from HDF5 backend
     autocorr_time = np.mean(sampler.get_autocorr_time(quiet=True))
-    print(f"Mean acceptance fraction: {0:.3f}".format(acceptance_fraction))
-    print(f"Autocorrelation time: {0:.3f} steps".format(autocorr_time))
+    print(f"Mean acceptance fraction: {acceptance_fraction:.3f}")
+    print(f"Autocorrelation time: {autocorr_time:.3f} steps")
 
 else:
     print(f' ================== LOADING MCMC ================== ')
@@ -166,8 +166,8 @@ if isinstance(sampler, emcee.EnsembleSampler):
 else: # HDF5 backend
     acceptance_fraction = np.mean(sampler.accepted / sampler.iteration) # function implementation in github, acceptance_fraction not available from HDF5 backend
 autocorr_time = np.mean(sampler.get_autocorr_time(quiet=True))
-print(f"Mean acceptance fraction: {0:.3f}".format(acceptance_fraction))
-print(f"Autocorrelation time: {0:.3f} steps".format(autocorr_time))
+print(f"Mean acceptance fraction: {acceptance_fraction:.3f}")
+print(f"Autocorrelation time: {autocorr_time:.3f} steps")
 MIN_VAL = -1e10
 MAX_VAL = 1e10
 mask = np.logical_and(samples > MIN_VAL, samples < MAX_VAL).all(axis=1)
