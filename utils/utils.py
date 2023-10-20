@@ -83,3 +83,25 @@ class testKnownFailure(unittest.TestCase):
 def print_dict(d):
     for k,v in d.items():
         print(f'{k}: {v}')
+
+###############################################################################################
+def setPlotStyle(
+    small_size: int = 14,
+    big_size: int = 16,
+) -> None:
+
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    import mplhep as hep
+
+    """Set the plotting style."""
+    mpl.rcParams.update(mpl.rcParamsDefault)
+    plt.style.use([hep.styles.ATLAS])
+    plt.rc("font", size=small_size)  # controls default text sizes
+    plt.rc("axes", titlesize=small_size)  # fontsize of the axes title
+    plt.rc("axes", labelsize=big_size)  # fontsize of the x and y labels
+    plt.rc("xtick", labelsize=small_size)  # fontsize of the tick labels
+    plt.rc("ytick", labelsize=small_size)  # fontsize of the tick labels
+    plt.rc("legend", fontsize=small_size)  # legend fontsize
+    plt.rc("figure", titlesize=big_size)  # fontsize of the figure title
+###############################################################################################
