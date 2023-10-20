@@ -16,11 +16,11 @@ repos:
       - id: trailing-whitespace
   - repo: local
     hooks:
-      - id: pytest-check
-        stages: [push]
-        name: pytest-check
+      - id: pytest
+        name: pytest
+        entry: pytest -v
+        language: python
+        language_version: python3
         types: [python]
-        entry: python -m pytest -v
-        language: system
-        pass_filenames: false
-        always_run: true
+        fail_fast: true
+        stages: [push]
