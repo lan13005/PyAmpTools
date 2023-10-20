@@ -1,4 +1,4 @@
-default_stages: [commit]
+default_stages: [pre-commit]
 repos:
   - repo: meta # this repo checks pre-commit itself
     hooks:
@@ -23,4 +23,4 @@ repos:
         language_version: python3
         types: [python]
         fail_fast: true
-        stages: [push]
+        stages: [pre-push]
