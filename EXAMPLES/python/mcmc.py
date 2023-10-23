@@ -41,33 +41,44 @@ def LogProb(
 
 
 def perform_mcmc(
-        ati,           # AmpToolsInterface class
-        cfgInfo,       # ConfigurationInfo class
-        ofolder:  str, # output folder name
-        ofile:    str, # output file name
-        nwalkers: int, # number of walkers
-        burnIn:   int, # number of burn-in steps
-        nsamples: int, # number of samples
+        ati,                        # AmpToolsInterface class
+        LoadParametersSampler,      # LoadParameters class
+        ofolder:   str = 'mcmc',    # output folder name
+        ofile:     str = 'mcmc.h5', # output file name
+        nwalkers:  int = 32,        # number of walkers
+        burnIn:    int = 100,       # number of burn-in steps
+        nsamples:  int = 1000,      # number of samples
+        ### Non-CLI arguments ###
+        ###  params_dict = {par: value} or {par: [value, min, max]} Sample from [min, max] for walker initialization
+        params_dict   = {}, # Dictionary of parameter to override values in cfgInfo if not empty
         moves_mixture = [ emcee.moves.StretchMove() ], # Move mixture for sampler
     ):
-    ''' Performs MCMC sampling '''
-    ############### LOAD INTO MANAGER ###############
-    LoadParametersSampler = LoadParameters()
-    LoadParametersSampler.load_cfg( cfgInfo )
 
-    #### USE PARAMETERS IN CFG TO INITIALIZE MCMC ############
-    #### (OR PASS IN DICT OF VALUES TO SAMPLE FROM) ##########
-    # SELECTED_VALUES = {'a2mass': 1.31790479736726, 'a2width': 0.130376506768682}
-    # mle_values, keys, par_names_flat  = LoadParameters.flatten_parameters(SELECTED_VALUES)
-    mle_values, keys, par_names_flat  = LoadParametersSampler.flatten_parameters()
+    ''' Performs MCMC sampling '''
+
+    ########## SETUP PARAMETERS ############
+    ## config files are assumed to contain the MLE values already
+    ##   this can be acheived by running fit.py with --seedfile
+    ##   and using the include directive in the config file to add the seed file
+    ##   to override values
+    ## doNotScatter = True  will initialize walkers in an N-ball around the MLE estimate
+    ## doNotScatter = False will uniformly sample (or scatter) on user-specified interval
+    params = {}
+    doNotScatter = True
+    if len(params_dict) != 0:
+        first_element = next(iter(params_dict.values()))
+        doNotScatter = type(first_element) != list or len(params_dict)==0
+        params = params_dict if doNotScatter else {k:v[0] for k,v in params_dict.items()}
+    mle_values, keys, par_names_flat  = LoadParametersSampler.flatten_parameters(params)
 
     if nwalkers < 2*len(mle_values):
-        print("[emcee req.] Number of walkers must be at least twice the number of parameters. Overwriting nwalkers to 2*len(mle_values)\n")
+        print(f"\n[emcee req.] Number of walkers must be at least twice the number of \
+              parameters. Overwriting nwalkers to 2*len(mle_values) = 2*{len(mle_values)}\n")
         nwalkers = 2*len(mle_values)
 
-    print(f'mle_values: {mle_values}')
-    print(f'keys: {keys}')
-    print(f'par_names_flat: {par_names_flat}')
+    # print(f'mle_values: {mle_values}')
+    # print(f'keys: {keys}')
+    # print(f'par_names_flat: {par_names_flat}')
     nDim = len(mle_values)
 
     ############## RUN MCMC IF RESULTS DOES NOT ALREADY EXIST ##############
@@ -75,11 +86,17 @@ def perform_mcmc(
     if not os.path.exists(f'{ofolder}/{ofile}'):
 
         print(f' ================== RUNNING MCMC ================== ')
-        # Initialize walkers in an N-ball around the MLE estimate
-        par_values = np.array(mle_values)
-        par_values = np.repeat(par_values, nwalkers).reshape(nDim, nwalkers).T
-        par_values[par_values==0] += 1e-2 # avoid 0 values, leads to large condition number for sampler
-        par_values *= ( 1 + 0.01 * np.random.normal(0, 1, size=(nwalkers, nDim)) )
+        if doNotScatter:
+            print("Initializing walkers in an N-ball around the MLE estimate")
+            par_values = np.array(mle_values)
+            par_values = np.repeat(par_values, nwalkers).reshape(nDim, nwalkers).T
+            par_values[par_values==0] += 1e-2 # avoid 0 values, leads to large condition number for sampler
+            par_values *= ( 1 + 0.01 * np.random.normal(0, 1, size=(nwalkers, nDim)) )
+        else:
+            print("Randomly sampling on user-specified interval")
+            par_values = np.empty((nwalkers, nDim))
+            for k, (_, mini, maxi) in params_dict.items():
+                par_values[:, keys.index(k)] = np.random.uniform(mini, maxi, size=nwalkers)
 
         backend = emcee.backends.HDFBackend(f'{ofolder}/{ofile}')
         backend.reset(nwalkers, nDim)
@@ -88,12 +105,16 @@ def perform_mcmc(
                                         moves=moves_mixture,
                                         backend=backend)
 
-        print(f'\n[Burn-in beginning\n')
+        print(f'Par values: {par_values}')
+
+        print(f'\n[Burn-in beginning]\n')
+        sampler.reset()
         state = sampler.run_mcmc(par_values, burnIn)
         sampler.reset()
         print(f'\n[Burn-in complete. Running sampler]\n')
         sampler.run_mcmc(state, nsamples, progress=True);
-        acceptance_fraction = np.mean(sampler.acceptance_fraction) # function implementation in github, acceptance_fraction not available from HDF5 backend
+        print(f'\n[Sampler complete]\n')
+        acceptance_fraction = np.mean(sampler.acceptance_fraction)
         autocorr_time = np.mean(sampler.get_autocorr_time(quiet=True))
         print(f"\nMean acceptance fraction: {acceptance_fraction:.3f}")
         print(f"Autocorrelation time: {autocorr_time:.3f} steps\n")
@@ -108,7 +129,8 @@ def perform_mcmc(
     if isinstance(sampler, emcee.EnsembleSampler):
         acceptance_fraction = np.mean(sampler.acceptance_fraction)
     else: # HDF5 backend
-        acceptance_fraction = np.mean(sampler.accepted / sampler.iteration) # function implementation in github, acceptance_fraction not available from HDF5 backend
+        # function implementation in github, acceptance_fraction not available from HDF5 backend
+        acceptance_fraction = np.mean(sampler.accepted / sampler.iteration)
     autocorr_time = np.mean(sampler.get_autocorr_time(quiet=True))
     print(f"Mean acceptance fraction: {acceptance_fraction:.3f}")
     print(f"Autocorrelation time: {autocorr_time:.3f} steps")
@@ -253,9 +275,16 @@ if __name__ == '__main__':
     AmpToolsInterface.registerDataReader( DataReaderFilter() )
 
     ati = AmpToolsInterface( cfgInfo )
+    LoadParametersSampler = LoadParameters()
+    LoadParametersSampler.load_cfg( cfgInfo )
 
     ############## RUN MCMC ##############
-    results = perform_mcmc(ati, cfgInfo, ofolder, ofile, nwalkers, burnIn, nsamples)
+    results = perform_mcmc(ati, LoadParametersSampler,
+                           ofolder   = ofolder,
+                           ofile     = ofile,
+                           nwalkers  = nwalkers,
+                           burnIn    = burnIn,
+                           nsamples  = nsamples)
     elapsed_fit_time = results['elapsed_fit_time']
     draw_corner(results, ofolder)
 
