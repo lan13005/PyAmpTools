@@ -7,7 +7,7 @@
 
 #include "TLorentzVector.h"
 
-#include "ROOTDataReaderBootstrap.h"
+#include "AMPTOOLS_DATAIO/ROOTDataReaderBootstrap.h"
 #include "IUAmpTools/Kinematics.h"
 
 #include "TH1.h"

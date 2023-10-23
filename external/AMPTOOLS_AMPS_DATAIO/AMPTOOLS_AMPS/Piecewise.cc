@@ -7,7 +7,7 @@
 #include "TLorentzVector.h"
 
 #include "IUAmpTools/Kinematics.h"
-#include "Piecewise.h"
+#include "AMPTOOLS_AMPS/Piecewise.h"
 
 Piecewise::Piecewise( const vector< string >& args ) :
 UserAmplitude< Piecewise >( args )

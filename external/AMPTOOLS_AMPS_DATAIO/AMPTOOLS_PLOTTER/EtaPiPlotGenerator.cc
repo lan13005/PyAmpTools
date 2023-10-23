@@ -3,7 +3,7 @@
 #include "TLorentzVector.h"
 #include "TLorentzRotation.h"
 
-#include "EtaPiPlotGenerator.h"
+#include "AMPTOOLS_PLOTTER/EtaPiPlotGenerator.h"
 #include "IUAmpTools/Histogram1D.h"
 #include "IUAmpTools/Kinematics.h"
 

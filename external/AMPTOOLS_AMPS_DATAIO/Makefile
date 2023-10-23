@@ -6,7 +6,7 @@ endif
 
 include $(AMPTOOLS_HOME)/Makefile.settings
 ######################################################################################
-Q := @
+Q :=
 
 ####### SET ENVIORNMENT VARIALBES ########
 REPO_HOME := $(shell echo $$REPO_HOME)
@@ -22,8 +22,13 @@ ifndef AMPTOOLS_HOME
 endif
 AMPTOOLS := $(AMPTOOLS_HOME)/AmpTools
 AMPPLOTTER := $(AMPTOOLS_HOME)/AmpPlotter
+# CCDB := $(REPO_HOME)/external/ccdb/include
+
+# Consider all subdirectories when searching for source files
+SRC_DIRS := $(shell find . -type d -not -path "./IN_PROGRESS/*")
 
 ######## SET COMPILER AND LIBRARY LOCATIONS ########
+# INC_DIR  := -I$(AMPTOOLS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS) -I$(AMPPLOTTER) -I$(CCDB)
 INC_DIR  := -I$(AMPTOOLS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS) -I$(AMPPLOTTER)
 CXX_FLAGS += -Wall -shared -fPIC -std=c++17
 ROOTLIBS  := $(shell root-config --libs)
@@ -35,8 +40,8 @@ INC_DIR += -I$(CUDA_INSTALL_PATH)/include
 CXX_FLAGS += -DGPU_ACCELERATION -I$(CUDA_INSTALL_PATH)/include
 SUFFIX := _GPU
 NVCC_FLAGS += --compiler-options '-fPIC' --shared
-CUDA_SOURCES := $(wildcard *.cu)
-CUDA_OBJECTS := $(CUDA_SOURCES:.cu=$(SUFFIX).o)
+CUDA_SOURCES = $(foreach dir,$(SRC_DIRS),$(wildcard $$dir/*.cu))
+CUDA_OBJECTS = $(CUDA_SOURCES:.cu=.o)
 endif
 
 ifdef MPI
@@ -56,20 +61,26 @@ NVCC_FLAGS += $(INC_DIR)
 AMPTOOLS_HEADERS := $(patsubst $(AMPTOOLS)/%,%,$(AMPTOOLS_HEADERS))
 AMPPLOTTER_HEADERS := $(shell find $(AMPPLOTTER) -type f -name '*.h')
 AMPPLOTTER_HEADERS := $(patsubst $(AMPPLOTTER)/%,%,$(AMPPLOTTER_HEADERS))
+# CCDB_HEADERS := $(shell find $(CCDB)/CCDB -type f -name '*.h')
 
 AMPTOOLS_LIBS := -L$(AMPTOOLS)/lib -lAmpTools$(SUFFIX)
 AMPPLOTTER_LIBS := -L$(AMPPLOTTER)/lib -lAmpPlotter
 
 ######## SET SOURCES AND HEADER FILES ########
 # Source Files, deriving object and header files from them
-SOURCES := $(wildcard *.cc)
-OBJECTS := $(SOURCES:.cc=$(SUFFIX).o)
-HEADERS := $(SOURCES:.cc=.h)
+SOURCES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cc))
+OBJECTS = $(SOURCES:.cc=.o)
+HEADERS = $(SOURCES:.cc=.h)
 
 ######## SET TARGET LIBRARY NAME AND DICTIONARY SOURCE FILE ########
 TARGET_LIBRARY = libAmpsDataIO$(SUFFIX).so # Output library name
 TARGET_DICT = AmpsDataIODict$(SUFFIX).cxx  # Dictionary for PyROOT to locate library objects
 TARGET_LINKDEF = AmpsDataIODict$(SUFFIX)_Linkdef.h  # This file is need to create the dictionary
+
+$(info SRC_DIRS is $(SRC_DIRS))
+$(info SOURCES is $(SOURCES))
+$(info OBJECTS is $(OBJECTS))
+$(info CUDA_OBJECTS is $(CUDA_OBJECTS))
 
 ######## MAKE RULES ########
 .PHONY: all clean
@@ -82,7 +93,7 @@ $(TARGET_LIBRARY): $(OBJECTS) $(CUDA_OBJECTS) $(TARGET_DICT)
 	$(Q)$(CXX) $(CXX_FLAGS) -o $@ $^ $(ROOTLIBS) $(AMPTOOLS_LIBS) $(AMPPLOTTER_LIBS)
 
 $(TARGET_DICT): $(HEADERS)
-	@echo " ==== Creating Dictionary $@ ==== "
+	@echo " ==== Creating Dictionary $@ ==== "ls
 
 	@echo "#ifdef __CLING__" > ${TARGET_LINKDEF}
 	@for header in $^; do \
@@ -94,22 +105,29 @@ $(TARGET_DICT): $(HEADERS)
 	@for header in $(AMPPLOTTER_HEADERS); do \
 		echo "#pragma link C++ defined_in \"$$header\";" >> ${TARGET_LINKDEF}; \
 	done
+# @for header in $(CCDB_HEADERS); do \
+# 	echo "#pragma link C++ defined_in \"$$header\";" >> ${TARGET_LINKDEF}; \
+# done
 	@echo "#endif" >> ${TARGET_LINKDEF}
 
+# $(Q)rootcling -f $(INC_DIR) $@ $^ $(AMPTOOLS_HEADERS) $(AMPPLOTTER_HEADERS) $(CCDB_HEADERS) ${TARGET_LINKDEF}
 	$(Q)rootcling -f $(INC_DIR) $@ $^ $(AMPTOOLS_HEADERS) $(AMPPLOTTER_HEADERS) ${TARGET_LINKDEF}
 
-%$(SUFFIX).o: %.cc .%$(SUFFIX).d
-	@echo " ==== Compiling $< ==== "
-	$(Q)$(CXX) $(CXX_FLAGS) -M -MP -MT $@ -o .$*$(SUFFIX).d $<
-	$(Q)$(CXX) $(CXX_FLAGS) -o $@ $<
+%.o: %.cc
+	echo "-> Compiling $<"
+	$(Q)$(CXX) $(CXX_FLAGS) -M -MP -MT $@ -o $(dir $*).$(notdir $*).d $<
+	$(Q)$(CXX) $(CXX_FLAGS) -c $< -o $@
 
-%$(SUFFIX).o: %.cu .%$(SUFFIX).d
+%$(SUFFIX).o: %.cu
 	$(vecho) "-> Compiling cuda $<"
-	$(Q)$(NVCC) $(NVCC_FLAGS) -M -MT $@ -o .$*$(SUFFIX).d $<
+	$(Q)$(NVCC) $(NVCC_FLAGS) -M -MT $@ -o $(dir $*).$(notdir $*).d$<
 	$(Q)$(NVCC) $(NVCC_FLAGS) -c -o $@ $<
 
-DEPFILES := $(SOURCES:%.cc=.%$(SUFFIX).d) $(CUDA_SOURCES:%.cu=.%$(SUFFIX).d)
+DEPFILES := $(SOURCES:%.cc=$(dir $*).$(notdir $*).d) $(CUDA_SOURCES:%.cu=$(dir $*).$(notdir $*).d)
 $(DEPFILES):
 
 clean:
-	$(Q)-rm -f *.o *.d *.so *.pcm *.cxx* *dict*.h *_Linkdef.h .nfs*
+	@echo " ==== Cleaning all subdirectories ==== "
+	$(Q)find . -name "*.o" -type f -delete
+	$(Q)find . -name ".*" -type f -delete
+	$(Q)rm -f *cxx* *.so *.pcm *Linkdef.h *dict*.h

@@ -7,7 +7,7 @@
 #include <cstdlib>
 
 #include "IUAmpTools/Kinematics.h"
-#include "PhaseOffset.h"
+#include "AMPTOOLS_AMPS/PhaseOffset.h"
 
 PhaseOffset::PhaseOffset( const vector< string >& args ) :
 UserAmplitude< PhaseOffset >( args )

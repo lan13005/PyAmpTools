@@ -10,9 +10,9 @@
 #include "TFile.h"
 
 #include "IUAmpTools/Kinematics.h"
-#include "TwoPiAngles.h"
-#include "clebschGordan.h"
-#include "wignerD.h"
+#include "AMPTOOLS_AMPS/TwoPiAngles.h"
+#include "AMPTOOLS_AMPS/clebschGordan.h"
+#include "AMPTOOLS_AMPS/wignerD.h"
 
 TwoPiAngles::TwoPiAngles( const vector< string >& args ) :
   UserAmplitude< TwoPiAngles >( args )

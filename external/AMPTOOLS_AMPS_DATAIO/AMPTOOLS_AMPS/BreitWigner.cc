@@ -12,7 +12,7 @@
 #include "breakupMomentum.h"
 
 #include "IUAmpTools/Kinematics.h"
-#include "BreitWigner.h"
+#include "AMPTOOLS_AMPS/BreitWigner.h"
 
 BreitWigner::BreitWigner( const vector< string >& args ) :
 UserAmplitude< BreitWigner >( args )
