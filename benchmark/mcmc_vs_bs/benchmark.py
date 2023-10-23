@@ -51,6 +51,8 @@ def clean_attempt():
 for cfg in cfgs:
     nPassed = 0
     for iBS in range( arrayID*10000, (arrayID+1)*10000 ):
+        if nPassed == nfits_converged:
+            break
         dest_folder = cfg.split("/")[0].lower()+"_mle"
         seeded_cfg = copyAndSeedCfg(f'{baseDir}{cfg}_bootstrap.cfg', str(iBS))
         fit_cmd = f'{baseCmd}/fit.py {seeded_cfg} {fit_extra_flags} > {dest_folder}.out 2> {dest_folder}.err'
@@ -70,8 +72,6 @@ for cfg in cfgs:
                 print(f"Fit {iBS} passed...")
                 move_files(dest_folder, f'{iBS}')
                 nPassed += 1
-                if nPassed == nfits_converged:
-                    break
             else:
                 clean_attempt()
             os.system(f'rm {seeded_cfg}')

@@ -218,7 +218,7 @@ files = sorted(files)
 assert( len(files) > 1 )
 loadBSparameters, names, statuses = loadBSparameters(files)
 print(f'Plotting {len(loadBSparameters)} bootstrap samples where {np.sum(statuses==0)} converged')
-corner.corner(loadBSparameters, fig=fig, color='tab:red', hist_kwargs={'density': True},
+corner.corner(loadBSparameters, color='tab:red', hist_kwargs={'density': True},
               contour_kwargs={'alpha':0.4}, no_fill_contours=True)
 plt.savefig(f"{ofolder}/mcmc.png")
 print(' ========================================================= ')
@@ -226,10 +226,18 @@ print(' ========================================================= ')
 
 ###############################################################
 
-print(' =================== RESULTS =================== ')
+print('\n =================== MAP RESULTS =================== ')
 print(f'MAP Estimates from {len(samples)} samples obtained over {NWALKERS} walkers:')
 [print(f'   {l:20} = {v:0.3f}') for l, v in zip(PAR_NAMES_FLAT, map_estimate)]
-print(' =============================================== ')
+print(' ==================================================== \n')
+
+print('\n =================== STDERR RESULTS =================== ')
+print(f'{"Parameter":20} = {"MCMC_ERR":9} {"BS_ERR":9} {"RATIO":9}')
+for i in range(NDIM):
+    mcmc_err = np.std(samples[:,i])
+    bs_err = np.std(loadBSparameters[:,i])
+    print(f'{PAR_NAMES_FLAT[i]:20} = {mcmc_err:<7.3f}   {bs_err:<7.3f}   {mcmc_err/bs_err:<7.3f}')
+print(' =======================================================\n')
 
 # import pygtc
 # GTC_ReIM = pygtc.plotGTC(chains=[samples], paramNames=PAR_NAMES_FLAT,
