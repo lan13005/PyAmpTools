@@ -3,8 +3,8 @@
 # The -l is for login shell and is required to get the full environment with modules
 
 #SBATCH --job-name=PyAmpTools
-#SBATCH --output=slurm/output.log
-#SBATCH --error=slurm/err.log
+#SBATCH --output=slurm/output%j.log
+#SBATCH --error=slurm/err%j.log
 
 #SBATCH --nodes=1                     # Needs to match --num_nodes passed to Trainer()
 #SBATCH --ntasks-per-node=2           # PER NODE: Needs to match --devices passed to Trainer(), which should be your choice in gres
@@ -19,6 +19,15 @@ source /w/halld-scshelf2101/lng/Mambaforge/etc/profile.d/conda.sh # conda init
 conda activate PyAmpTools
 echo "Running..."
 
-cd /w/halld-scshelf2101/lng/WORK/PyAmpTools/benchmark/mcmc_ambigs
+cd /w/halld-scshelf2101/lng/WORK/PyAmpTools/benchmark/emceeMoves
+
+
+################# PERFORM HYPERPARAMETER OPTIMIZATION #################
+# python $REPO_HOME/EXAMPLES/python/mcmcOptimalMoves.py $REPO_HOME/tests/samples/SDME_EXAMPLE/sdme.cfg \
+#         --ofolder studies --nwalkers 26 --burnin 500 --nsamples 10000 --ntrials 50
+
+################# RUN BEST FIT MODEL #################
+###### Requires modifying mcmcOptimalMoves.py to use the best fit
+###### parameters determined in first step
 python $REPO_HOME/EXAMPLES/python/mcmcOptimalMoves.py $REPO_HOME/tests/samples/SDME_EXAMPLE/sdme.cfg \
-        --ofolder studies --nwalkers 32 --burnin 1000 --nsamples 25000
+        --ofolder studies_best_fit --nwalkers 50 --burnin 1000 --nsamples 100000 --ntrials 1

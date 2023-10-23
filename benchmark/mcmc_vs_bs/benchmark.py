@@ -1,6 +1,20 @@
 import os
 import subprocess
 import re
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('arrayID', default=0, type=int, help='Job ID')
+parser.add_argument('nfits_converged', type=int, default=200, help='Number of fit to converge')
+args = parser.parse_args()
+
+## These arguments are provided as a means to run multiple instances of this script
+##    in parallel. This is needed for bootstrap fits as they can take a long time to
+##    run. A arrayID defines a block of 10000 seeds this program is allowed to run over
+#     Each instance tries to find nfits_converged fits that converges
+#       and dumps stdout and stderr to separate log files.
+arrayID = args.arrayID
+nfits_converged = args.nfits_converged
 
 REPO_HOME = os.environ['REPO_HOME']
 
@@ -34,10 +48,9 @@ def copyAndSeedCfg(src_cfg, seed):
 def clean_attempt():
     os.system(f'rm {dest_folder}.err {dest_folder}.out result_0.fit mle_0.txt')
 
-nBS = 200 # bootstrap iterations
 for cfg in cfgs:
     nPassed = 0
-    for iBS in range(5*nBS):
+    for iBS in range( arrayID*10000, (arrayID+1)*10000 ):
         dest_folder = cfg.split("/")[0].lower()+"_mle"
         seeded_cfg = copyAndSeedCfg(f'{baseDir}{cfg}_bootstrap.cfg', str(iBS))
         fit_cmd = f'{baseCmd}/fit.py {seeded_cfg} {fit_extra_flags} > {dest_folder}.out 2> {dest_folder}.err'
@@ -57,7 +70,7 @@ for cfg in cfgs:
                 print(f"Fit {iBS} passed...")
                 move_files(dest_folder, f'{iBS}')
                 nPassed += 1
-                if nPassed == nBS:
+                if nPassed == nfits_converged:
                     break
             else:
                 clean_attempt()
