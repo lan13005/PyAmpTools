@@ -10,6 +10,7 @@ import corner
 import argparse
 import time
 import sys
+import yaml
 from utils import prepare_mpigpu
 
 def LogProb(
@@ -39,6 +40,18 @@ def LogProb(
     # print(f'LogProb: {log_prob} = {ll} + {prior}')
     return log_prob
 
+def createMovesMixtureFromDict(moves_dict):
+    '''
+    Creates a mixture of moves for the sampler
+    moves_dict = { move: {kwargs: {}, probability} }
+    '''
+    moves_mixture = []
+    for move, moveDict in moves_dict.items():
+        move = eval(f'emcee.moves.{move}') # convert string to class
+        kwargs = moveDict['kwargs']
+        prob = moveDict['prob']
+        moves_mixture.append( (move(**kwargs), prob) )
+    return moves_mixture
 
 def perform_mcmc(
         ati,                        # AmpToolsInterface class
@@ -56,10 +69,20 @@ def perform_mcmc(
 
     ''' Performs MCMC sampling '''
 
+    print(f'\n ================== PERFORM_MCMC() KWARGS CONFIGURATION ================== ')
+    print(f'ofolder: {ofolder}')
+    print(f'ofile: {ofile}')
+    print(f'nwalkers: {nwalkers}')
+    print(f'burnIn: {burnIn}')
+    print(f'nsamples: {nsamples}')
+    print(f'params_dict: {params_dict}')
+    print(f'moves_mixture: {moves_mixture}')
+    print(f' =================================================================== \n')
+
     ########## SETUP PARAMETERS ############
-    ## config files are assumed to contain the MLE values already
+    ## AmpTools config files are assumed to contain the MLE values already
     ##   this can be acheived by running fit.py with --seedfile
-    ##   and using the include directive in the config file to add the seed file
+    ##   and using the include directive in the config file to add the seedfile
     ##   to override values
     ## doNotScatter = True  will initialize walkers in an N-ball around the MLE estimate
     ## doNotScatter = False will uniformly sample (or scatter) on user-specified interval
@@ -76,9 +99,6 @@ def perform_mcmc(
               parameters. Overwriting nwalkers to 2*len(mle_values) = 2*{len(mle_values)}\n")
         nwalkers = 2*len(mle_values)
 
-    # print(f'mle_values: {mle_values}')
-    # print(f'keys: {keys}')
-    # print(f'par_names_flat: {par_names_flat}')
     nDim = len(mle_values)
 
     ############## RUN MCMC IF RESULTS DOES NOT ALREADY EXIST ##############
@@ -107,12 +127,15 @@ def perform_mcmc(
 
         print(f'Par values: {par_values}')
 
-        print(f'\n[Burn-in beginning]\n')
-        sampler.reset()
-        state = sampler.run_mcmc(par_values, burnIn)
-        sampler.reset()
-        print(f'\n[Burn-in complete. Running sampler]\n')
-        sampler.run_mcmc(state, nsamples, progress=True);
+        if burnIn != 0:
+            print(f'\n[Burn-in beginning]\n')
+            state = sampler.run_mcmc(par_values, burnIn)
+            sampler.reset()
+            print(f'\n[Burn-in complete. Running sampler]\n')
+            sampler.run_mcmc(state, nsamples, progress=True);
+        else:
+            sampler.run_mcmc(par_values, nsamples, progress=True);
+
         print(f'\n[Sampler complete]\n')
         acceptance_fraction = np.mean(sampler.acceptance_fraction)
         autocorr_time = np.mean(sampler.get_autocorr_time(quiet=True))
@@ -137,8 +160,9 @@ def perform_mcmc(
     MIN_VAL = -1e10
     MAX_VAL =  1e10
     mask = np.logical_and(samples > MIN_VAL, samples < MAX_VAL).all(axis=1)
+    nsamples_before_mask = samples.shape[0]
     samples = samples[mask]
-    print(f"Percent samples remaning after masking: {100*samples.shape[0]/(nsamples*nwalkers):0.2f}%")
+    print(f"Percent samples remaning after masking: {100*samples.shape[0]/nsamples_before_mask:0.2f}%")
 
     ################### COMPUTE MAP ESTIMATE ###################
     map_idx = np.argmax(sampler.get_log_prob(flat=True)) # maximum a posteriori (MAP) location
@@ -171,6 +195,7 @@ def draw_corner(
     map_estimate   = results['map_estimate']
     mle_values     = results['mle_values']
     par_names_flat = results['par_names_flat']
+    nwalkers       = results['nwalkers']
 
     ####### DRAW CORNER PLOT #######
     corner_kwargs = {"color": "black", "show_titles": True }
@@ -200,7 +225,7 @@ if __name__ == '__main__':
     start_time = time.time()
 
     parser = argparse.ArgumentParser(description='emcee fitter')
-    parser.add_argument('cfgfile', type=str, help='Config file name')
+    parser.add_argument('--cfgfile', type=str, default='', help='Config file name')
     parser.add_argument('--ofolder', type=str, default='mcmc', help='Output folder name. Default "mcmc"')
     parser.add_argument('--ofile', type=str, default='mcmc.h5', help='Output file name. Default "mcmc.h5"')
     parser.add_argument('--nwalkers', type=int, default=32, help='Number of walkers. Default 32')
@@ -208,18 +233,30 @@ if __name__ == '__main__':
     parser.add_argument('--nsamples', type=int, default=1000, help='Number of samples. Default 1000')
     parser.add_argument('--overwrite', action='store_true', help='Overwrite existing output file if exists')
     parser.add_argument('--accelerator', type=str, default='', help='Force use of given "accelerator" ~ [gpu, mpi, mpigpu, gpumpi]. Default "" = cpu')
+    parser.add_argument('--seed', type=int, default=42, help='RNG seed for consistent walker random initialization. Default 42')
+    parser.add_argument('--yaml_override', type=str, default={}, help='Path to YAML file containing parameter overrides. Default "" = no override')
 
     args = parser.parse_args(sys.argv[1:])
 
-    cfgfile  = args.cfgfile
-    ofolder  = args.ofolder
-    ofile    = args.ofile
-    nwalkers = args.nwalkers
-    burnIn   = args.burnin
-    nsamples = args.nsamples
-    overwrite_ofile = args.overwrite
+    yaml_override = {}
+    if args.yaml_override != {}:
+        with open(args.yaml_override, 'r') as f:
+            yaml_override = yaml.safe_load(f)
 
-    print("\n ===================")
+    cfgfile  = args.cfgfile if 'cfgfile' not in yaml_override else yaml_override['cfgfile']
+    ofolder  = args.ofolder if 'ofolder' not in yaml_override else yaml_override['ofolder']
+    ofile    = args.ofile if 'ofile' not in yaml_override else yaml_override['ofile']
+    nwalkers = args.nwalkers if 'nwalkers' not in yaml_override else yaml_override['nwalkers']
+    burnIn   = args.burnin if 'burnin' not in yaml_override else yaml_override['burnin']
+    nsamples = args.nsamples if 'nsamples' not in yaml_override else yaml_override['nsamples']
+    overwrite_ofile = args.overwrite if 'overwrite' not in yaml_override else yaml_override['overwrite']
+    seed     = args.seed if 'seed' not in yaml_override else yaml_override['seed']
+    params_dict = {} if 'params_dict' not in yaml_override else yaml_override['params_dict']
+    moves_mixture = [ emcee.moves.StretchMove() ] if 'moves_mixture' not in yaml_override else createMovesMixtureFromDict(yaml_override['moves_mixture'])
+
+    assert( cfgfile != '' ), 'You must specify a config file'
+
+    print("\n ====================================================================================")
     print(f" cfgfile: {cfgfile}")
     print(f" ofolder: {ofolder}")
     print(f" ofile: {ofile}")
@@ -227,7 +264,10 @@ if __name__ == '__main__':
     print(f" burnIn: {burnIn}")
     print(f" nsamples: {nsamples}")
     print(f" overwrite_ofile: {overwrite_ofile}")
-    print(" ===================\n")
+    print(f" seed: {seed}")
+    print(f" params_dict: {params_dict}")
+    print(f" moves_mixture: {moves_mixture}")
+    print(" ====================================================================================\n")
 
     ############## PREPARE FOR SAMPLER ##############
     assert( os.path.exists(cfgfile) ), 'Config file does not exist at specified path'
@@ -279,12 +319,18 @@ if __name__ == '__main__':
     LoadParametersSampler.load_cfg( cfgInfo )
 
     ############## RUN MCMC ##############
-    results = perform_mcmc(ati, LoadParametersSampler,
+    np.random.seed(seed)
+
+    results = perform_mcmc(ati,
+                           LoadParametersSampler,
                            ofolder   = ofolder,
                            ofile     = ofile,
                            nwalkers  = nwalkers,
                            burnIn    = burnIn,
-                           nsamples  = nsamples)
+                           nsamples  = nsamples,
+                           params_dict   = params_dict,
+                           moves_mixture = moves_mixture,
+                           )
     elapsed_fit_time = results['elapsed_fit_time']
     draw_corner(results, ofolder)
 
