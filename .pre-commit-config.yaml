@@ -18,9 +18,8 @@ repos:
     hooks:
       - id: pytest
         name: pytest
-        entry: pytest -v
-        language: python
-        language_version: python3
+        entry: bash -c "source $CONDA_PREFIX/etc/profile.d/conda.sh && conda activate PyAmpTools && pytest -v"
+        language: system
         types: [python]
         fail_fast: true
         stages: [pre-push]
