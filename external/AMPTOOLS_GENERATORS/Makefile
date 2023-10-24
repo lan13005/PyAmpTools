@@ -120,5 +120,7 @@ clean:
 	@echo " ==== Cleaning all subdirectories ==== "
 	$(Q)find . -name "*.o" -type f -delete
 	$(Q)find . -name ".*" -type f -delete
+	$(Q)find . -name "*.d" -type f -delete
 	$(Q)rm -f *cxx* *.so *.pcm *Linkdef.h *dict*.h
 	$(Q)rm -rf ccdb
+	$(Q)rm __pycache__
