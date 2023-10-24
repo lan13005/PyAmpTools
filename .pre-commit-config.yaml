@@ -18,7 +18,7 @@ repos:
     hooks:
       - id: pytest
         name: pytest
-        entry: bash -c "conda deactivate && source $CONDA_PREFIX/etc/profile.d/conda.sh && conda activate PyAmpTools && pytest -v"
+        entry: bash -c "source $CONDA_PREFIX_1/etc/profile.d/conda.sh && conda activate PyAmpTools && pytest -v"
         language: system
         types: [python]
         fail_fast: true
