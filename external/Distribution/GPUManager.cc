@@ -145,16 +145,16 @@ GPUManager::GPUManager()
   int activeDevice;
   // report( DEBUG, kModule ) << "GPUManager activeDevice:" << activeDevice << endl;
   gpuErrChk( cudaGetDevice( &activeDevice ) );
-  report( DEBUG, kModule ) << "Active device vs thisDevice: " << activeDevice << " " << thisDevice << endl;
-  report( DEBUG, kModule ) << "GPUManager errcheck cudaSetDevice" << endl;
+  // report( DEBUG, kModule ) << "Active device vs thisDevice: " << activeDevice << " " << thisDevice << endl;
+  // report( DEBUG, kModule ) << "GPUManager errcheck cudaSetDevice" << endl;
   gpuErrChk( cudaSetDevice( thisDevice ) );
-  report( DEBUG, kModule ) << "GPUManager errcheck cudaGetDeviceProperties" << endl;
+  // report( DEBUG, kModule ) << "GPUManager errcheck cudaGetDeviceProperties" << endl;
   struct cudaDeviceProp devProp;
-  report( DEBUG, kModule ) << "GPUManager thisDevice:" << thisDevice << endl;
+  // report( DEBUG, kModule ) << "GPUManager thisDevice:" << thisDevice << endl;
   // report( DEBUG, kModule ) << "GPUManager cudaDeviceProp name:" << devProp.name << endl;
-  report( DEBUG, kModule ) << "GPUManager cudaDeviceProp address:" << &devProp << endl;
+  // report( DEBUG, kModule ) << "GPUManager cudaDeviceProp address:" << &devProp << endl;
   gpuErrChk( cudaGetDeviceProperties( &devProp, thisDevice ) );
-  report( DEBUG, kModule ) << "GPUManager errcheck cudaGetDeviceProperties done" << endl;
+  // report( DEBUG, kModule ) << "GPUManager errcheck cudaGetDeviceProperties done" << endl;
 
   m_devProp_major = devProp.major;
   m_devProp_minor = devProp.minor;
@@ -684,18 +684,18 @@ void GPUManager::clearAll()
 
   //Allocated pointers
 
-  report( DEBUG, kModule ) << "m_pfVVStar:" << m_pfVVStar << endl;
-  report( DEBUG, kModule ) << "m_pdRes:" << m_pdRes << endl;
-  report( DEBUG, kModule ) << "m_pfDevData:" << m_pfDevData << endl;
-  report( DEBUG, kModule ) << "m_pfDevUserVars:" << m_pfDevUserVars << endl;
-  report( DEBUG, kModule ) << "m_pcDevCalcAmp:" << m_pcDevCalcAmp << endl;
-  report( DEBUG, kModule ) << "m_piDevPerm:" << m_piDevPerm << endl;
-  report( DEBUG, kModule ) << "m_pfDevAmps:" << m_pfDevAmps << endl;
-  report( DEBUG, kModule ) << "m_pfDevVVStar:" << m_pfDevVVStar << endl;
-  report( DEBUG, kModule ) << "m_pdDevNICalc:" << m_pdDevNICalc << endl;
-  report( DEBUG, kModule ) << "m_pfDevWeights:" << m_pfDevWeights << endl;
-  report( DEBUG, kModule ) << "m_pdDevRes:" << m_pdDevRes << endl;
-  report( DEBUG, kModule ) << "m_pdDevREDUCE:" << m_pdDevREDUCE << endl;
+  // report( DEBUG, kModule ) << "m_pfVVStar:" << m_pfVVStar << endl;
+  // report( DEBUG, kModule ) << "m_pdRes:" << m_pdRes << endl;
+  // report( DEBUG, kModule ) << "m_pfDevData:" << m_pfDevData << endl;
+  // report( DEBUG, kModule ) << "m_pfDevUserVars:" << m_pfDevUserVars << endl;
+  // report( DEBUG, kModule ) << "m_pcDevCalcAmp:" << m_pcDevCalcAmp << endl;
+  // report( DEBUG, kModule ) << "m_piDevPerm:" << m_piDevPerm << endl;
+  // report( DEBUG, kModule ) << "m_pfDevAmps:" << m_pfDevAmps << endl;
+  // report( DEBUG, kModule ) << "m_pfDevVVStar:" << m_pfDevVVStar << endl;
+  // report( DEBUG, kModule ) << "m_pdDevNICalc:" << m_pdDevNICalc << endl;
+  // report( DEBUG, kModule ) << "m_pfDevWeights:" << m_pfDevWeights << endl;
+  // report( DEBUG, kModule ) << "m_pdDevRes:" << m_pdDevRes << endl;
+  // report( DEBUG, kModule ) << "m_pdDevREDUCE:" << m_pdDevREDUCE << endl;
 
   if(m_pfVVStar)
     cudaFreeHost(m_pfVVStar);

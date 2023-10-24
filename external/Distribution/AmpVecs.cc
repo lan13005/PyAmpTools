@@ -83,30 +83,30 @@ AmpVecs::AmpVecs(){
   m_hasMixedSignWeights = false;
   m_lastWeightSign = 0;
 
-#ifdef GPU_ACCELERATION
-  report( DEBUG, kModule ) << "Address of m_gpuMan: " << &m_gpuMan << endl;
-#endif // GPU_ACCELERATION
-  report( DEBUG, kModule ) << "Address of m_iNEvents: " << &m_iNEvents << endl;
-  report( DEBUG, kModule ) << "Address of m_iNTrueEvents: " << &m_iNTrueEvents << endl;
-  report( DEBUG, kModule ) << "Address of m_dSumWeights: " << &m_dSumWeights << endl;
-  report( DEBUG, kModule ) << "Address of m_iNParticles: " << &m_iNParticles << endl;
-  report( DEBUG, kModule ) << "Address of m_iNTerms: " << &m_iNTerms << endl;
-  report( DEBUG, kModule ) << "Address of m_maxFactPerEvent: " << &m_maxFactPerEvent << endl;
-  report( DEBUG, kModule ) << "Address of m_userVarsPerEvent: " << &m_userVarsPerEvent << endl;
-  report( DEBUG, kModule ) << "Address of m_pdData: " << &m_pdData << endl;
-  report( DEBUG, kModule ) << "Address of m_pdWeights: " << &m_pdWeights << endl;
-  report( DEBUG, kModule ) << "Address of m_pdAmps: " << &m_pdAmps << endl;
-  report( DEBUG, kModule ) << "Address of m_pdAmpFactors: " << &m_pdAmpFactors << endl;
-  report( DEBUG, kModule ) << "Address of m_pdUserVars: " << &m_pdUserVars << endl;
-  report( DEBUG, kModule ) << "Address of m_pdIntensity: " << &m_pdIntensity << endl;
-  report( DEBUG, kModule ) << "Address of m_pdIntegralMatrix: " << &m_pdIntegralMatrix << endl;
-  report( DEBUG, kModule ) << "Address of m_termsValid: " << &m_termsValid << endl;
-  report( DEBUG, kModule ) << "Address of m_integralValid: " << &m_integralValid << endl;
-  report( DEBUG, kModule ) << "Address of m_dataLoaded: " << &m_dataLoaded << endl;
-  report( DEBUG, kModule ) << "Address of m_usesSharedData: " << &m_usesSharedData << endl;
-  report( DEBUG, kModule ) << "Address of m_hasNonUnityWeights: " << &m_hasNonUnityWeights << endl;
-  report( DEBUG, kModule ) << "Address of m_hasMixedSignWeights: " << &m_hasMixedSignWeights << endl;
-  report( DEBUG, kModule ) << "Address of m_lastWeightSign: " << &m_lastWeightSign << endl;
+// #ifdef GPU_ACCELERATION
+//   report( DEBUG, kModule ) << "Address of m_gpuMan: " << &m_gpuMan << endl;
+// #endif // GPU_ACCELERATION
+//   report( DEBUG, kModule ) << "Address of m_iNEvents: " << &m_iNEvents << endl;
+//   report( DEBUG, kModule ) << "Address of m_iNTrueEvents: " << &m_iNTrueEvents << endl;
+//   report( DEBUG, kModule ) << "Address of m_dSumWeights: " << &m_dSumWeights << endl;
+//   report( DEBUG, kModule ) << "Address of m_iNParticles: " << &m_iNParticles << endl;
+//   report( DEBUG, kModule ) << "Address of m_iNTerms: " << &m_iNTerms << endl;
+//   report( DEBUG, kModule ) << "Address of m_maxFactPerEvent: " << &m_maxFactPerEvent << endl;
+//   report( DEBUG, kModule ) << "Address of m_userVarsPerEvent: " << &m_userVarsPerEvent << endl;
+//   report( DEBUG, kModule ) << "Address of m_pdData: " << &m_pdData << endl;
+//   report( DEBUG, kModule ) << "Address of m_pdWeights: " << &m_pdWeights << endl;
+//   report( DEBUG, kModule ) << "Address of m_pdAmps: " << &m_pdAmps << endl;
+//   report( DEBUG, kModule ) << "Address of m_pdAmpFactors: " << &m_pdAmpFactors << endl;
+//   report( DEBUG, kModule ) << "Address of m_pdUserVars: " << &m_pdUserVars << endl;
+//   report( DEBUG, kModule ) << "Address of m_pdIntensity: " << &m_pdIntensity << endl;
+//   report( DEBUG, kModule ) << "Address of m_pdIntegralMatrix: " << &m_pdIntegralMatrix << endl;
+//   report( DEBUG, kModule ) << "Address of m_termsValid: " << &m_termsValid << endl;
+//   report( DEBUG, kModule ) << "Address of m_integralValid: " << &m_integralValid << endl;
+//   report( DEBUG, kModule ) << "Address of m_dataLoaded: " << &m_dataLoaded << endl;
+//   report( DEBUG, kModule ) << "Address of m_usesSharedData: " << &m_usesSharedData << endl;
+//   report( DEBUG, kModule ) << "Address of m_hasNonUnityWeights: " << &m_hasNonUnityWeights << endl;
+//   report( DEBUG, kModule ) << "Address of m_hasMixedSignWeights: " << &m_hasMixedSignWeights << endl;
+//   report( DEBUG, kModule ) << "Address of m_lastWeightSign: " << &m_lastWeightSign << endl;
 
   report( DEBUG, kModule ) << "AmpVecs::AmpVecs() completed" << endl;
 }

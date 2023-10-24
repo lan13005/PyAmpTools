@@ -9,7 +9,7 @@ def checkEnvironment(variable):
 def loadLibrary(libName, RANK_MPI, availability=True):
     ''' Load shared library and print availability '''
     statement = f'Loading library {libName} '
-    if RANK_MPI == 0: print(f'{statement:.<35}', end='')
+    if RANK_MPI == 0: print(f'{statement:.<45}', end='')
     if availability: ROOT.gSystem.Load(libName)
     status = "ON" if availability else "OFF"
     if RANK_MPI == 0: print(f' {status}')
