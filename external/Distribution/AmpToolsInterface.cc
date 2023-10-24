@@ -541,23 +541,31 @@ AmpToolsInterface::clear(){
       ReactionInfo* reaction = m_configurationInfo->reactionList()[irct];
       string reactionName(reaction->reactionName());
 
-      report( DEBUG, kModule ) << "Deleting m_likCalcMap for reaction " << reactionName << endl;
-      if (likelihoodCalculator(reactionName)) delete m_likCalcMap[reactionName];
-      report( DEBUG, kModule ) << "Deleting normIntInterface for reaction " << reactionName << endl;
-      if (normIntInterface(reactionName)) delete normIntInterface(reactionName);
+      if (likelihoodCalculator(reactionName)){
+        report( DEBUG, kModule ) << "Deleting m_likCalcMap for reaction " << reactionName << endl;
+        delete m_likCalcMap[reactionName];
+      }
+      if (normIntInterface(reactionName)){
+        report( DEBUG, kModule ) << "Deleting normIntInterface for reaction " << reactionName << endl;
+        delete normIntInterface(reactionName);
+      }
     }
 
     // logic above won't work for these since the lookup function for each reaction
     // depends on the reaction itself
     for (unsigned int i = 0; i < m_intensityManagers.size(); i++){
-      report( DEBUG, kModule ) << "Deleting intensityManager for reaction " << m_intensityManagers[i]->reactionName() << endl;
-      delete m_intensityManagers[i];
+      if (m_intensityManagers[i]){
+        report( DEBUG, kModule ) << "Deleting intensityManager for reaction " << m_intensityManagers[i]->reactionName() << endl;
+        delete m_intensityManagers[i];
+      }
     }
 
     for( std::set<DataReader*>::iterator dataReader = m_uniqueDataSets.begin();
         dataReader != m_uniqueDataSets.end(); ++dataReader ){
-        report (DEBUG, kModule ) << "Deleting dataReader " << (*dataReader)->name() << endl;
-      if( *dataReader ) delete *dataReader;
+        if (*dataReader){
+          report (DEBUG, kModule ) << "Deleting dataReader " << (*dataReader)->name() << endl;
+          delete *dataReader;
+        }
     }
   }
 

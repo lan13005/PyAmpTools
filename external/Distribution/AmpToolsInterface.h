@@ -106,7 +106,7 @@ public:
   /** Destructor.
    */
 
-  virtual ~AmpToolsInterface() { clear_and_print(); }
+  virtual ~AmpToolsInterface() { clear(); }
 
   /** Static function to register a user Amplitude class.  For example,
    *  to register a user-defined BreitWigner amplitude, one would use:

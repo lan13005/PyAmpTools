@@ -79,6 +79,7 @@ TARGET_LINKDEF = AmpsDataIODict$(SUFFIX)_Linkdef.h  # This file is need to creat
 $(info SRC_DIRS is $(SRC_DIRS))
 $(info SOURCES is $(SOURCES))
 $(info OBJECTS is $(OBJECTS))
+$(info CUDA_SOURCES is $(CUDA_SOURCES))
 $(info CUDA_OBJECTS is $(CUDA_OBJECTS))
 $(info CXX_FLAGS is $(CXX_FLAGS))
 
