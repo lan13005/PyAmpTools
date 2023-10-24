@@ -8,8 +8,8 @@
 
 #include "TLorentzVector.h"
 
-#include "barrierFactor.h"
-#include "breakupMomentum.h"
+#include "AMPTOOLS_AMPS/barrierFactor.h"
+#include "AMPTOOLS_AMPS/breakupMomentum.h"
 
 #include "IUAmpTools/Kinematics.h"
 #include "AMPTOOLS_AMPS/BreitWigner.h"

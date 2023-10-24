@@ -22,13 +22,12 @@ ifndef AMPTOOLS_HOME
 endif
 AMPTOOLS := $(AMPTOOLS_HOME)/AmpTools
 AMPPLOTTER := $(AMPTOOLS_HOME)/AmpPlotter
-# CCDB := $(REPO_HOME)/external/ccdb/include
 
 # Consider all subdirectories when searching for source files
 SRC_DIRS := $(shell find . -type d -not -path "./IN_PROGRESS/*")
+SRC_DIRS := $(subst ./,,$(SRC_DIRS))
 
 ######## SET COMPILER AND LIBRARY LOCATIONS ########
-# INC_DIR  := -I$(AMPTOOLS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS) -I$(AMPPLOTTER) -I$(CCDB)
 INC_DIR  := -I$(AMPTOOLS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS) -I$(AMPPLOTTER)
 CXX_FLAGS += -Wall -shared -fPIC -std=c++17
 ROOTLIBS  := $(shell root-config --libs)
@@ -39,9 +38,9 @@ AMPTOOLS_HEADERS += $(shell find $(AMPTOOLS) -type f -name '*GPU*.h')
 INC_DIR += -I$(CUDA_INSTALL_PATH)/include
 CXX_FLAGS += -DGPU_ACCELERATION -I$(CUDA_INSTALL_PATH)/include
 SUFFIX := _GPU
-NVCC_FLAGS += --compiler-options '-fPIC' --shared
-CUDA_SOURCES = $(foreach dir,$(SRC_DIRS),$(wildcard $$dir/*.cu))
-CUDA_OBJECTS = $(CUDA_SOURCES:.cu=.o)
+NVCC_FLAGS += --compiler-options '-fPIC' --shared -std=c++17
+CUDA_SOURCES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cu))
+CUDA_OBJECTS := $(CUDA_SOURCES:.cu=$(SUFFIX).o)
 endif
 
 ifdef MPI
@@ -61,7 +60,6 @@ NVCC_FLAGS += $(INC_DIR)
 AMPTOOLS_HEADERS := $(patsubst $(AMPTOOLS)/%,%,$(AMPTOOLS_HEADERS))
 AMPPLOTTER_HEADERS := $(shell find $(AMPPLOTTER) -type f -name '*.h')
 AMPPLOTTER_HEADERS := $(patsubst $(AMPPLOTTER)/%,%,$(AMPPLOTTER_HEADERS))
-# CCDB_HEADERS := $(shell find $(CCDB)/CCDB -type f -name '*.h')
 
 AMPTOOLS_LIBS := -L$(AMPTOOLS)/lib -lAmpTools$(SUFFIX)
 AMPPLOTTER_LIBS := -L$(AMPPLOTTER)/lib -lAmpPlotter
@@ -69,7 +67,8 @@ AMPPLOTTER_LIBS := -L$(AMPPLOTTER)/lib -lAmpPlotter
 ######## SET SOURCES AND HEADER FILES ########
 # Source Files, deriving object and header files from them
 SOURCES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cc))
-OBJECTS = $(SOURCES:.cc=.o)
+SOURCES := $(subst ./,,$(SOURCES))
+OBJECTS = $(SOURCES:.cc=$(SUFFIX).o)
 HEADERS = $(SOURCES:.cc=.h)
 
 ######## SET TARGET LIBRARY NAME AND DICTIONARY SOURCE FILE ########
@@ -81,6 +80,7 @@ $(info SRC_DIRS is $(SRC_DIRS))
 $(info SOURCES is $(SOURCES))
 $(info OBJECTS is $(OBJECTS))
 $(info CUDA_OBJECTS is $(CUDA_OBJECTS))
+$(info CXX_FLAGS is $(CXX_FLAGS))
 
 ######## MAKE RULES ########
 .PHONY: all clean
@@ -105,26 +105,20 @@ $(TARGET_DICT): $(HEADERS)
 	@for header in $(AMPPLOTTER_HEADERS); do \
 		echo "#pragma link C++ defined_in \"$$header\";" >> ${TARGET_LINKDEF}; \
 	done
-# @for header in $(CCDB_HEADERS); do \
-# 	echo "#pragma link C++ defined_in \"$$header\";" >> ${TARGET_LINKDEF}; \
-# done
 	@echo "#endif" >> ${TARGET_LINKDEF}
 
-# $(Q)rootcling -f $(INC_DIR) $@ $^ $(AMPTOOLS_HEADERS) $(AMPPLOTTER_HEADERS) $(CCDB_HEADERS) ${TARGET_LINKDEF}
 	$(Q)rootcling -f $(INC_DIR) $@ $^ $(AMPTOOLS_HEADERS) $(AMPPLOTTER_HEADERS) ${TARGET_LINKDEF}
 
-%.o: %.cc
+%$(SUFFIX).o: %.cc
 	echo "-> Compiling $<"
-	$(Q)$(CXX) $(CXX_FLAGS) -M -MP -MT $@ -o $(dir $*).$(notdir $*).d $<
-	$(Q)$(CXX) $(CXX_FLAGS) -c $< -o $@
+	$(Q)$(CXX) $(CXX_FLAGS) -MMD -MP -c $< -o $@
 
 %$(SUFFIX).o: %.cu
 	$(vecho) "-> Compiling cuda $<"
-	$(Q)$(NVCC) $(NVCC_FLAGS) -M -MT $@ -o $(dir $*).$(notdir $*).d$<
-	$(Q)$(NVCC) $(NVCC_FLAGS) -c -o $@ $<
+	$(Q)nvcc $(NVCC_FLAGS) -MMD -MP -c $< -o $@
 
-DEPFILES := $(SOURCES:%.cc=$(dir $*).$(notdir $*).d) $(CUDA_SOURCES:%.cu=$(dir $*).$(notdir $*).d)
-$(DEPFILES):
+# Include the dependency files
+-include $(OBJECTS:.o=.d)
 
 clean:
 	@echo " ==== Cleaning all subdirectories ==== "

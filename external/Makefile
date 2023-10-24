@@ -27,8 +27,8 @@ mpi: | default
 	@cd AmpTools/AmpPlotter; make
 	@cd AMPTOOLS_AMPS_DATAIO; make MPI=1
 
-gpu: | default
-#gpu: distribute_makefiles
+#gpu: | default
+gpu: distribute_makefiles
 	@echo " === Running 'make gpu' in the target directory... ==="
 	@cd AmpTools/AmpTools; make GPU=1
 	@cd AmpTools/AmpPlotter; make

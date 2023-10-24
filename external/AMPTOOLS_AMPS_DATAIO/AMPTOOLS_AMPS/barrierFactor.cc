@@ -1,6 +1,6 @@
 #include <cmath>
-#include "breakupMomentum.h"
-#include "barrierFactor.h"
+#include "AMPTOOLS_AMPS/breakupMomentum.h"
+#include "AMPTOOLS_AMPS/barrierFactor.h"
 
 
 // mass0 = mass of parent

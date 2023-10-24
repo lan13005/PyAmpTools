@@ -3,6 +3,7 @@
 #include "GPUManager/GPUCustomTypes.h"
 #include "GPUManager/CUDA-Complex.cuh"
 #include "GPUUtils/wignerD.cuh"
+#include "AMPTOOLS_AMPS/Zlm.h"
 
 __global__ void
 Zlm_kernel( GPU_AMP_PROTO, int j, int m, int r, int s ){

@@ -1,5 +1,5 @@
 
-#include "clebschGordan.h"
+#include "AMPTOOLS_AMPS/clebschGordan.h"
 
 #include <math.h>
 

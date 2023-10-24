@@ -1,5 +1,5 @@
 #include <cmath>
-#include "breakupMomentum.h"
+#include "AMPTOOLS_AMPS/breakupMomentum.h"
 
 // mass0 = mass of parent
 // mass1 = mass of first daughter

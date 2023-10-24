@@ -4,8 +4,8 @@
 #include "GPUManager/GPUCustomTypes.h"
 #include "GPUManager/CUDA-Complex.cuh"
 
-#include "breakupMomentum.cuh"
-#include "barrierFactor.cuh"
+#include "AMPTOOLS_AMPS/breakupMomentum.cuh"
+#include "AMPTOOLS_AMPS/barrierFactor.cuh"
 
 __global__ void
 GPUBreitWigner_kernel( GPU_AMP_PROTO, GDouble mass0, GDouble width0,
