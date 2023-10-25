@@ -1,6 +1,7 @@
 import ROOT
 from ROOT import pythonization
 import os
+from utils import check_shared_lib_exists
 
 def checkEnvironment(variable):
     ''' Check if environment variable is set to 1 '''
@@ -9,9 +10,13 @@ def checkEnvironment(variable):
 def loadLibrary(libName, RANK_MPI, availability=True):
     ''' Load shared library and print availability '''
     statement = f'Loading library {libName} '
+    libExists = check_shared_lib_exists(libName)
     if RANK_MPI == 0: print(f'{statement:.<45}', end='')
-    if availability: ROOT.gSystem.Load(libName)
-    status = "ON" if availability else "OFF"
+    if not libExists:
+        status = 'NOT FOUND, SKIPPING'
+    else:
+        if availability: ROOT.gSystem.Load(libName)
+        status = "ON" if availability else "OFF"
     if RANK_MPI == 0: print(f' {status}')
 
 USE_MPI = checkEnvironment('ATI_USE_MPI')

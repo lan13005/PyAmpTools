@@ -29,7 +29,7 @@ pip install mpi4py # MPI (if available), mamba will link it against the wrong ex
 pre-commit install --install-hooks # (Optional) commit hooks to perform loose formatting
 ```
 
-[ROOT](https://root.cern/install/) is a required dependency. There is a known conflict between AmpTools' GPU usage and RooFit/TMVA which comes with the conda-forge binaries of ROOT. Currently, ROOT has to be built from source with roofit and tmva off. A build script is included to download ROOT from source with the appropriate cmake flags to achieve this
+[ROOT](https://root.cern/install/) >v6.26 is a required dependency. There is a known conflict between AmpTools' GPU usage and RooFit/TMVA which comes with the conda-forge binaries of ROOT. Currently, ROOT has to be built from source with roofit and tmva off. A build script is included to download ROOT from source with the appropriate cmake flags to achieve this
 
 ```shell
 cd root

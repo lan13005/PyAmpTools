@@ -84,6 +84,23 @@ def print_dict(d):
     for k,v in d.items():
         print(f'{k}: {v}')
 
+def check_shared_lib_exists(libName, verbose=False):
+    ''' Check if a shared library exists in the LD_LIBRARY_PATH '''
+    assert( '.' in libName ), "libName must include file extension"
+
+    ld_library_path = os.environ.get("LD_LIBRARY_PATH")
+    libExists = False
+    for path in ld_library_path.split(":"):
+        searchPath = os.path.join(path, f"{libName}")
+        if verbose: print(f"Searching for {libName} in {searchPath}", end='')
+        if os.path.exists(searchPath):
+            libExists = True
+            if verbose: print(" --- Found here!")
+            break
+        if verbose: print()
+        
+    return libExists
+
 ###############################################################################################
 def setPlotStyle(
     small_size: int = 14,

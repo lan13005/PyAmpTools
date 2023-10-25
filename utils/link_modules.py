@@ -6,13 +6,13 @@ import subprocess
 from shutil import which
 
 def recursive_link_if_not_exist(source_folders, destination_folder, ftype):
+  print(f"\n\nDestination Folder: {destination_folder}")
   for source_folder in source_folders:
     for source in glob.glob(source_folder+ftype):
       if source == sys.argv[0]: continue # do not add this linker itself...
       destination_file = destination_folder + '/' + source.split('/')[-1]
-      if os.path.islink(destination_file): continue # do not add if already linked
       cmd = f'ln -snfr {source} {destination_file}'
-      print(cmd)
+      print(f'Re-Linking:\n   SRC:  {source}\n   DEST: {destination_file}')
       os.system(cmd)
   print("-- Added above modules to conda environment... ---")
 
