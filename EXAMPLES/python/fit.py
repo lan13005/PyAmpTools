@@ -1,16 +1,28 @@
 #!/sur/bin/env python
 
-import ROOT
 import os
 import argparse
 import time
 from datetime import datetime
 import random
 import sys
-from utils import get_pid_family, check_nvidia_devices, prepare_mpigpu
+from utils import prepare_mpigpu
 
-def performFit(fitManager, seed_file_tag):
-    ''' Performs a single fit '''
+def performFit(
+        fitManager,
+        seed_file_tag
+    ):
+    '''
+    Performs a single fit
+
+    Args:
+        fitManager: MinuitMinimizationManager
+        seed_file_tag: Tag to append to output file names
+
+    Returns:
+        bFitFailed: Bool indicating if fit failed
+        NLL: Negative log likelihood
+    '''
     if args.useMinos:
         fitManager.minosMinimization(True)
     else:
@@ -37,6 +49,12 @@ def performFit(fitManager, seed_file_tag):
 def runFits( N: int = 0 ):
     '''
     Performs N randomized fits, if N=0 then a single fit with no randomization is performed
+
+    Args:
+        N: Number of randomized fits to perform
+
+    Returns:
+        minNLL: Minimum negative log likelihood
     '''
     print("Begin running fits...")
 
