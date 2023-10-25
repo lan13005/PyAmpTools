@@ -158,7 +158,8 @@
     "regex": "cpp",
     "valarray": "cpp",
     "future": "cpp",
-    "scoped_allocator": "cpp"
+    "scoped_allocator": "cpp",
+    "initialize_fsroot.C": "cpp"
   },
   "git.ignoreLimitWarning": true
 }

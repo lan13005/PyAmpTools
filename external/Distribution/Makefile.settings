@@ -1,0 +1,98 @@
+
+
+#########  DEFAULT COMPILER SETTINGS
+
+CXX := gcc
+CXX_FLAGS := -O3 -g
+
+# If the source tree is a git repository, this will use the git
+# functions to embed the AmpTools version into the splash screen.
+NO_GIT := $(shell git status >& /dev/null; echo $$?)
+ifeq ($(NO_GIT),0)
+GIT_VERSION := "$(shell git describe --abbrev=4 --dirty --always --tags)"
+else
+GIT_VERSION := "unknown"
+endif
+CXX_FLAGS += -DATVERSION=\"$(GIT_VERSION)\"
+#########  END DEFAULT COMPILER SETTINGS
+
+#########  USER BUILD SETTINGS
+# These can be used to control preprocessor definitons to control
+# the compilation of the code.
+
+# Default behavior is to build with double precision stoarge for
+# event-level data like amplitudes and kinematics -- speed and
+# memory use can be optimized by make FP32=1 but at a risk of
+# numerical issues in the minimization algorithm.
+
+ifdef FP32
+CXX_DEFINES := -DAMPTOOLS_GDOUBLE_FP32
+else
+CXX_DEFINES := -DAMPTOOLS_GDOUBLE_FP64
+endif
+
+# This option is here to so that likelihood values for the current
+# version can be compared with those from version 0.13.1 and prior.
+# At some point this build option will be deprecated.
+
+ifdef LEGACY_LN_LIK
+CXX_DEFINES += -DUSE_LEGACY_LN_LIK_SCALING
+endif
+
+CXX_FLAGS += $(CXX_DEFINES)
+#########  END USER BUILD SETTINGS
+
+#########  MPI COMPILER SETTINGS
+# to use MPI, an MPI compiler should be in the user path -- this will be used
+# to compile MPI executables.  In the project libraries (amplitudes, etc.)
+# there should be no MPI specific code.
+
+ifdef MPI
+MPICXX := mpicxx
+endif
+
+######### END MPI SETTINGS
+
+
+#########  GPU / CUDA COMPILER SETTINGS
+# to use CUDA the environment variable CUDA_INSTALL_PATH must be defined
+# and the proper architecture specified for the GPU.  In addition
+# the nvcc compiler (likely in $CUDA_INSTALL_PATH/bin) needs to be in
+# the user's path
+
+NVCC :=  nvcc
+NVCC_FLAGS := -m64 $(CXX_DEFINES)
+
+ifndef GPU_ARCH
+GPU_ARCH := sm_75
+endif
+
+NVCC_FLAGS += -arch=$(GPU_ARCH)
+
+ifdef GPU  # otherwise these variables will be empty to avoid problems
+
+ifndef CUDA_INSTALL_PATH
+$(error GPU build requested but CUDA_INSTALL_PATH is not defined.)
+endif
+
+# the path to cuda specific libraries can vary with architecture
+CUDA_LIBS := -L$(CUDA_INSTALL_PATH)/lib64
+CUDA_LINK := -lcudart
+
+CXX_FLAGS += -DGPU_ARCH=\"$(GPU_ARCH)\"
+
+endif
+
+######### END GPU / CUDA SETTINGS
+
+
+######### GENERAL CHECKS
+
+# check for verbose output
+ifdef VERBOSE
+  Q :=
+  vecho = @true
+else
+  Q := @
+  vecho = @echo
+endif

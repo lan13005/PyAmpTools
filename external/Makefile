@@ -45,6 +45,7 @@ gpumpi: mpigpu
 distribute_makefiles:
 	@echo " === Distributing Makefiles and modified source codes... === "
 ### Distribute AmpTools makefiles
+	cp $(SRC_DIRS)/Makefile.settings AmpTools
 	@for dir in $(SUB_DIRS); do \
 		cp $(SRC_DIRS)/AmpTools_X_Makefile AmpTools/AmpTools/$$dir/Makefile; \
 		echo "Copied $(SRC_DIRS)/AmpTools_X_Makefile to AmpTools/AmpTools/$$dir/Makefile"; \
