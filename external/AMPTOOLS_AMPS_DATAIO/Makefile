@@ -6,7 +6,7 @@ endif
 
 include $(AMPTOOLS_HOME)/Makefile.settings
 ######################################################################################
-Q :=
+Q := @
 
 ####### SET ENVIORNMENT VARIALBES ########
 REPO_HOME := $(shell echo $$REPO_HOME)
@@ -29,14 +29,17 @@ SRC_DIRS := $(subst ./,,$(SRC_DIRS))
 
 ######## SET COMPILER AND LIBRARY LOCATIONS ########
 INC_DIR  := -I$(AMPTOOLS_DATAIO) -I$(shell root-config --incdir) -I$(AMPTOOLS) -I$(AMPPLOTTER)
+
 CXX_FLAGS += -Wall -shared -fPIC -std=c++17
+GPU_ACCEL :=
 ROOTLIBS  := $(shell root-config --libs)
 AMPTOOLS_HEADERS := $(shell find $(AMPTOOLS) -type f -name '*.h' -not -name '*GPU*' -not -name '*MPI*' -not -name '*LinkDef*' -not -name "MainPage.h")
 
 ifdef GPU
 AMPTOOLS_HEADERS += $(shell find $(AMPTOOLS) -type f -name '*GPU*.h')
+GPU_ACCEL := -DGPU_ACCELERATION 
 INC_DIR += -I$(CUDA_INSTALL_PATH)/include
-CXX_FLAGS += -DGPU_ACCELERATION -I$(CUDA_INSTALL_PATH)/include
+CXX_FLAGS += $(GPU_ACCEL) -I$(CUDA_INSTALL_PATH)/include
 SUFFIX := _GPU
 NVCC_FLAGS += --compiler-options '-fPIC' --shared -std=c++17
 CUDA_SOURCES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cu))
@@ -94,7 +97,7 @@ $(TARGET_LIBRARY): $(OBJECTS) $(CUDA_OBJECTS) $(TARGET_DICT)
 	$(Q)$(CXX) $(CXX_FLAGS) -o $@ $^ $(ROOTLIBS) $(AMPTOOLS_LIBS) $(AMPPLOTTER_LIBS)
 
 $(TARGET_DICT): $(HEADERS)
-	@echo " ==== Creating Dictionary $@ ==== "ls
+	@echo " ==== Creating Dictionary $@ ==== "
 
 	@echo "#ifdef __CLING__" > ${TARGET_LINKDEF}
 	@for header in $^; do \
@@ -108,10 +111,10 @@ $(TARGET_DICT): $(HEADERS)
 	done
 	@echo "#endif" >> ${TARGET_LINKDEF}
 
-	$(Q)rootcling -f $(INC_DIR) $@ $^ $(AMPTOOLS_HEADERS) $(AMPPLOTTER_HEADERS) ${TARGET_LINKDEF}
+	$(Q)rootcling -f $(INC_DIR) $@ $^ $(AMPTOOLS_HEADERS) $(GPU_ACCEL) $(AMPPLOTTER_HEADERS) ${TARGET_LINKDEF}
 
 %$(SUFFIX).o: %.cc
-	echo "-> Compiling $<"
+	$(vecho) "-> Compiling $<"
 	$(Q)$(CXX) $(CXX_FLAGS) -MMD -MP -c $< -o $@
 
 %$(SUFFIX).o: %.cu

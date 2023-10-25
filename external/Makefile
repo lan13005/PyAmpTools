@@ -28,7 +28,7 @@ mpi: | default
 	@cd AMPTOOLS_AMPS_DATAIO; make MPI=1
 
 gpu: | default
-#gpu: distribute_makefiles
+# gpu: distribute_makefiles
 	@echo " === Running 'make gpu' in the target directory... ==="
 	@cd AmpTools/AmpTools; make GPU=1
 	@cd AmpTools/AmpPlotter; make
@@ -43,7 +43,8 @@ mpigpu: gpu mpi
 gpumpi: mpigpu
 
 distribute_makefiles:
-	@echo " === Distributing Makefiles... === "
+	@echo " === Distributing Makefiles and modified source codes... === "
+### Distribute AmpTools makefiles
 	@for dir in $(SUB_DIRS); do \
 		cp $(SRC_DIRS)/AmpTools_X_Makefile AmpTools/AmpTools/$$dir/Makefile; \
 		echo "Copied $(SRC_DIRS)/AmpTools_X_Makefile to AmpTools/AmpTools/$$dir/Makefile"; \
@@ -52,11 +53,13 @@ distribute_makefiles:
 		cp $(SRC_DIRS)/AmpTools_GPU_Makefile AmpTools/AmpTools/$$dir/Makefile; \
 		echo "Copied $(SRC_DIRS)/AmpTools_GPU_Makefile to AmpTools/AmpTools/$$dir/Makefile"; \
 	done
-
-### AmpTools base makefile
 	cp $(SRC_DIRS)/AmpTools_Makefile AmpTools/AmpTools/Makefile
-### UPDATE FUNCTIONALITY
+### Distribute AmpPlotter makefiles
+	cp $(SRC_DIRS)/AmpPlotter_Makefile AmpTools/AmpPlotter/Makefile
+	cp $(SRC_DIRS)/AmpPlotter_X_Makefile AmpTools/AmpPlotter/AmpPlotter/Makefile
+### Pythonization + ease of modifying parameters
 	cp $(SRC_DIRS)/ParameterManager.* AmpTools/AmpTools/IUAmpTools
+### Extract amplitude weights
 	cp $(SRC_DIRS)/PlotGenerator.* AmpTools/AmpTools/IUAmpTools
 ### kDRModule cannot be found (template). Replace with char
 	cp $(SRC_DIRS)/DataReaderMPI.h AmpTools/AmpTools/IUAmpToolsMPI
@@ -64,14 +67,15 @@ distribute_makefiles:
 	cp $(SRC_DIRS)/MIObserver.* AmpTools/AmpTools/MinuitInterface
 	cp $(SRC_DIRS)/MIFunctionContribution.* AmpTools/AmpTools/MinuitInterface
 	cp $(SRC_DIRS)/ComplexParameter.* AmpTools/AmpTools/IUAmpTools
-### Additional
+### Not freed m_pdDevNICalc and delete m_pcCalcAmp
 	cp $(SRC_DIRS)/GPUManager.* AmpTools/AmpTools/GPUManager
+### Add more report statements
 	cp $(SRC_DIRS)/AmpToolsInterface.* AmpTools/AmpTools/IUAmpTools
 	cp $(SRC_DIRS)/MinuitMinimizationManager.* AmpTools/AmpTools/MinuitInterface
 	cp $(SRC_DIRS)/MISubject.* AmpTools/AmpTools/MinuitInterface
 	cp $(SRC_DIRS)/URMinuit.* AmpTools/AmpTools/UpRootMinuit
 	cp $(SRC_DIRS)/AmpVecs.* AmpTools/AmpTools/IUAmpTools
-### For FSRoot	
+### Distribute FSRoot makefiles and src files
 	cp $(SRC_DIRS)/FSROOT_Makefile FSRoot/Makefile
 	cp $(SRC_DIRS)/initialize_fsroot.* FSRoot
 
@@ -79,7 +83,7 @@ distribute_makefiles:
 
 clean:
 	@echo " === Cleaning up target directory === "
-	@cd AmpTools; make clean
+	@cd AmpTools; git reset --hard; make clean
 	@cd AMPTOOLS_AMPS_DATAIO; make clean
-	@cd FSRoot; make clean
+	@cd FSRoot; git reset --hard; make clean
 	@cd FSRoot/Executables; make clean

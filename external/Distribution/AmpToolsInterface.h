@@ -485,12 +485,12 @@ protected:
   // must provide a place to load the data -- during normal
   // fitting the data are held by the likelihood calculator
 
-  // static const int MAXAMPVECS = 24;
-  // AmpVecs m_ampVecs[MAXAMPVECS];
-  // string  m_ampVecsReactionName[MAXAMPVECS];
   static const int MAXAMPVECS = 50;
-  vector<AmpVecs> m_ampVecs = vector<AmpVecs>(MAXAMPVECS);
-  vector<string>  m_ampVecsReactionName = vector<string>(MAXAMPVECS);
+  AmpVecs m_ampVecs[MAXAMPVECS];
+  string  m_ampVecsReactionName[MAXAMPVECS];
+  // static const int MAXAMPVECS = 50;
+  // vector<AmpVecs> m_ampVecs = vector<AmpVecs>(MAXAMPVECS);
+  // vector<string>  m_ampVecsReactionName = vector<string>(MAXAMPVECS);
 
   FitResults* m_fitResults;
 

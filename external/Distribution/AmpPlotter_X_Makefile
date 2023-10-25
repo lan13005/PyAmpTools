@@ -1,0 +1,25 @@
+SRCFILES := $(wildcard *.cc)
+
+.PHONY: default clean
+.PRECIOUS: .%.o
+
+default: $(LIB)
+
+$(info CXX_FLAGS: $(CXX_FLAGS))
+
+%.so:  $(SRCFILES:%.cc=.%.o)
+	$(vecho) " === Creating Shared Library $@ ==="
+	$(CXX) $(CXX_FLAGS) $(INC_DIR) -o $@ $^ $(ROOTLIBS)
+
+.%.o: %.cc .%.d
+	$(vecho) "-> Compiling $<"
+	$(Q)$(CXX) $(CXX_FLAGS) -M -MP -MT $@ -o .$*.d $< $(INC_DIR)
+	$(Q)$(CXX) $(CXX_FLAGS) -c -o $@ $< $(INC_DIR)
+
+DEPFILES := $(SRCFILES:%.cc=.%.d)
+$(DEPFILES):
+
+clean:
+	$(Q)-rm -f .*.o .*.d *.a
+
+-include $(SRCFILES:.cc=.dep)
