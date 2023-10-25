@@ -28,7 +28,7 @@ mpi: | default
 	@cd AMPTOOLS_AMPS_DATAIO; make MPI=1
 
 gpu: | default
-# gpu: distribute_makefiles
+#gpu: distribute_makefiles
 	@echo " === Running 'make gpu' in the target directory... ==="
 	@cd AmpTools/AmpTools; make GPU=1
 	@cd AmpTools/AmpPlotter; make
@@ -52,24 +52,28 @@ distribute_makefiles:
 		cp $(SRC_DIRS)/AmpTools_GPU_Makefile AmpTools/AmpTools/$$dir/Makefile; \
 		echo "Copied $(SRC_DIRS)/AmpTools_GPU_Makefile to AmpTools/AmpTools/$$dir/Makefile"; \
 	done
-	cp $(SRC_DIRS)/AmpTools_Makefile AmpTools/AmpTools/Makefile
-	cp $(SRC_DIRS)/FSROOT_Makefile FSRoot/Makefile
 
+### AmpTools base makefile
+	cp $(SRC_DIRS)/AmpTools_Makefile AmpTools/AmpTools/Makefile
 ### UPDATE FUNCTIONALITY
 	cp $(SRC_DIRS)/ParameterManager.* AmpTools/AmpTools/IUAmpTools
 	cp $(SRC_DIRS)/PlotGenerator.* AmpTools/AmpTools/IUAmpTools
 ### kDRModule cannot be found (template). Replace with char
 	cp $(SRC_DIRS)/DataReaderMPI.h AmpTools/AmpTools/IUAmpToolsMPI
-### "DEFINE PI..." of GPUCustomTypes.h CLASHING WITH A FSROOT DEPENDENCY
-	cp $(SRC_DIRS)/GPUCustomTypes.h AmpTools/AmpTools/GPUManager
+### allow skipping of covariance update in ParMgr's updateParCovariance()
+	cp $(SRC_DIRS)/MIObserver.* AmpTools/AmpTools/MinuitInterface
+	cp $(SRC_DIRS)/MIFunctionContribution.* AmpTools/AmpTools/MinuitInterface
+	cp $(SRC_DIRS)/ComplexParameter.* AmpTools/AmpTools/IUAmpTools
+### Additional
 	cp $(SRC_DIRS)/GPUManager.* AmpTools/AmpTools/GPUManager
 	cp $(SRC_DIRS)/AmpToolsInterface.* AmpTools/AmpTools/IUAmpTools
 	cp $(SRC_DIRS)/MinuitMinimizationManager.* AmpTools/AmpTools/MinuitInterface
 	cp $(SRC_DIRS)/MISubject.* AmpTools/AmpTools/MinuitInterface
-	cp $(SRC_DIRS)/MIObserver.* AmpTools/AmpTools/MinuitInterface
 	cp $(SRC_DIRS)/URMinuit.* AmpTools/AmpTools/UpRootMinuit
 	cp $(SRC_DIRS)/AmpVecs.* AmpTools/AmpTools/IUAmpTools
-	cp $(SRC_DIRS)/wignerD.cuh AmpTools/AmpTools/GPUUtils
+### For FSRoot	
+	cp $(SRC_DIRS)/FSROOT_Makefile FSRoot/Makefile
+	cp $(SRC_DIRS)/initialize_fsroot.* FSRoot
 
 .PHONY: distribute_makefiles default mpi gpu mpigpu gpumpi clean
 
