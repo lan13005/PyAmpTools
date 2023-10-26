@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Introduction &#8212; PyAmpTools</title>
+    <title>PyAmpTools &#8212; PyAmpTools</title>
   
   
   
@@ -65,7 +65,7 @@ const thebe_selector_output = ".output, .cell_output"
     <script>DOCUMENTATION_OPTIONS.pagename = 'intro';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Markdown Files" href="markdown.html" />
+    <link rel="next" title="Tutorial" href="analysis.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -162,20 +162,19 @@ const thebe_selector_output = ".output, .cell_output"
         <ul class="nav bd-sidenav bd-sidenav__home-link">
             <li class="toctree-l1 current active">
                 <a class="reference internal" href="#">
-                    Introduction
+                    PyAmpTools
                 </a>
             </li>
         </ul>
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorial</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown Files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks.html">Content with notebooks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="markdown-notebooks.html">Notebooks with MyST Markdown</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">Tutorial</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api/fit_api.html">fit API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/mcmc_api.html">mcmc API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/plotgen_api.html">PlotGen APIs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/extract_ff_api.html">extract_ff API</a></li>
 </ul>
 
@@ -358,7 +357,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Introduction</h1>
+    <h1>PyAmpTools</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -372,16 +371,14 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="introduction">
-<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading">#</a></h1>
-<p>Quantum Chromodynamics in the low energy regime is poorly understood. Gluon rich systems, like hybrid mesons, are predicted by theory but experimental idenficiation of these states have been difficult. The light meson spectrum contains many overlapping states that require partial wave (amplitude) analysis to disentangle. AmpTools is a library written in c++ that facilitates performing unbinned maximum likelihood fits of experimental data to a coherent sum of amplitudes.</p>
-<p>This repository contains Python bindings for <a class="reference external" href="https://github.com/mashephe/AmpTools">AmpTools</a>. Under the hood, it uses <a class="reference external" href="https://root.cern/manual/python/">PyROOT</a> which uses cppyy. These bindings will hopefully simplify the interaction with the AmpTools library while also providing access to the python ecosystem. <a class="reference external" href="https://github.com/remitche66/FSRoot">FSRoot</a> is also included as a submodule and can be integrated into analysis workflows.</p>
+  <section class="tex2jax_ignore mathjax_ignore" id="pyamptools">
+<h1>PyAmpTools<a class="headerlink" href="#pyamptools" title="Permalink to this heading">#</a></h1>
+<p>Quantum Chromodynamics in the low energy regime is poorly understood. Gluon rich systems, like hybrid mesons, are predicted by theory but experimental idenficiation of these states have been difficult. The light meson spectrum contains many overlapping states that require partial wave (amplitude) analysis to disentangle. <a class="reference external" href="https://github.com/mashephe/AmpTools">AmpTools</a> is a library written in c++ that facilitates performing unbinned maximum likelihood fits of experimental data to a coherent sum of amplitudes.</p>
+<p>This repository contains Python bindings for AmpTools. Under the hood, it uses <a class="reference external" href="https://root.cern/manual/python/">PyROOT</a> which uses cppyy. These bindings will hopefully simplify the interaction with the AmpTools library while also providing access to the python ecosystem. <a class="reference external" href="https://github.com/remitche66/FSRoot">FSRoot</a> is also included as a submodule and can be integrated into analysis workflows.</p>
 <div class="toctree-wrapper compound">
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorial</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown Files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks.html">Content with notebooks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="markdown-notebooks.html">Notebooks with MyST Markdown</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">Tutorial</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
@@ -389,6 +386,7 @@ document.write(`
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api/fit_api.html">fit API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/mcmc_api.html">mcmc API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/plotgen_api.html">PlotGen APIs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/extract_ff_api.html">extract_ff API</a></li>
 </ul>
 </div>
@@ -425,11 +423,11 @@ document.write(`
                   <!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="right-next"
-       href="markdown.html"
+       href="analysis.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Markdown Files</p>
+        <p class="prev-next-title">Tutorial</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
