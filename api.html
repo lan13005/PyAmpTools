@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>API documentation &#8212; PyAmpTools</title>
+    <title>Detailed API documentation &#8212; PyAmpTools</title>
   
   
   
@@ -65,7 +65,6 @@ const thebe_selector_output = ".output, .cell_output"
     <script>DOCUMENTATION_OPTIONS.pagename = 'api';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="extract_ff" href="_autosummary/extract_ff.html" />
     <link rel="prev" title="Notebooks with MyST Markdown" href="markdown-notebooks.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -171,15 +170,7 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks.html">Content with notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="markdown-notebooks.html">Notebooks with MyST Markdown</a></li>
-<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">API documentation</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="_autosummary/extract_ff.html">extract_ff</a></li>
-<li class="toctree-l2"><a class="reference internal" href="_autosummary/fit.html">fit</a></li>
-<li class="toctree-l2"><a class="reference internal" href="_autosummary/mcmc.html">mcmc</a></li>
-<li class="toctree-l2"><a class="reference internal" href="_autosummary/mcmcOptimalMoves.html">mcmcOptimalMoves</a></li>
-<li class="toctree-l2"><a class="reference internal" href="_autosummary/PlotGen.html">PlotGen</a></li>
-<li class="toctree-l2"><a class="reference internal" href="_autosummary/PlotGenRDF.html">PlotGenRDF</a></li>
-</ul>
-</li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Detailed API documentation</a></li>
 </ul>
 
     </div>
@@ -361,7 +352,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>API documentation</h1>
+    <h1>Detailed API documentation</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -375,30 +366,32 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section id="api-documentation">
-<h1>API documentation<a class="headerlink" href="#api-documentation" title="Permalink to this heading">#</a></h1>
-<table class="autosummary longtable table autosummary">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/extract_ff.html#module-extract_ff" title="extract_ff"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_ff</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/fit.html#module-fit" title="fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/mcmc.html#module-mcmc" title="mcmc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mcmc</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/mcmcOptimalMoves.html#module-mcmcOptimalMoves" title="mcmcOptimalMoves"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mcmcOptimalMoves</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/PlotGen.html#module-PlotGen" title="PlotGen"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PlotGen</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/PlotGenRDF.html#module-PlotGenRDF" title="PlotGenRDF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PlotGenRDF</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-</tbody>
-</table>
+  <section id="detailed-api-documentation">
+<h1>Detailed API documentation<a class="headerlink" href="#detailed-api-documentation" title="Permalink to this heading">#</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="extract_ff.extract_ff">
+<span class="sig-name descname"><span class="pre">extract_ff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfileName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acceptanceCorrect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.5f'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regex_merge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#extract_ff.extract_ff" title="Permalink to this definition">#</a></dt>
+<dd><p>Regex merge is a useful tool to merge amplitudes that are related to each other (user-specified)
+For example waveset: D-2- D-1- D0- D1- D2- D-2+ D-1+ D0+ D1+ D2+
+To remove the sign at the end (merge reflectivites)     use = r’[-+]$’
+To remove first sign and number (merge M-projections)   use = r’[-+]?(d+)’
+To remove numbers and signs to merge all D:             use = r’[-+]?(d+)[-+]’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>results</strong> – FitResults object</p></li>
+<li><p><strong>outfileName</strong> – Output root file name or dump to stdout if ‘’</p></li>
+<li><p><strong>acceptanceCorrect</strong> – Acceptance correct values</p></li>
+<li><p><strong>fmt</strong> – Format string for printing</p></li>
+<li><p><strong>regex_merge</strong> – Merge amplitudes: Regex pair (pattern, replace) separated by ~&gt;</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
     <script type="text/x-thebe-config">
@@ -439,15 +432,6 @@ document.write(`
         <p class="prev-next-subtitle">previous</p>
         <p class="prev-next-title">Notebooks with MyST Markdown</p>
       </div>
-    </a>
-    <a class="right-next"
-       href="_autosummary/extract_ff.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">extract_ff</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
                 </footer>
