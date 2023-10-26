@@ -5,6 +5,17 @@ title: PyAmpTools
 author: Lawrence Ng
 logo: gluex_logo.png
 
+sphinx:
+  extra_extensions:
+    - "sphinx.ext.autodoc"
+    - "sphinx.ext.autosummary"
+    - "sphinx.ext.napoleon"
+  config:
+    add_module_names: False
+
+autosummary_generate: True
+autosummary_imported_members: True
+
 # Force re-execution of notebooks on each build.
 # See https://jupyterbook.org/content/execute.html
 execute:

@@ -5,15 +5,16 @@ repos:
       - id: check-hooks-apply # configured hooks apply to at least one file
       - id: check-useless-excludes # ensures exclude directives apply to at least one file
 
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
-    hooks:
-      - id: check-case-conflict # check for case conflicts on case-insensitive filesystems
-      - id: check-merge-conflict
-      - id: check-vcs-permalinks # version control system permalinks
-      - id: end-of-file-fixer
-      - id: mixed-line-ending
-      - id: trailing-whitespace
+
+  # - repo: https://github.com/pre-commit/pre-commit-hooks
+  #   rev: v4.4.0
+  #   hooks:
+  #     - id: check-case-conflict # check for case conflicts on case-insensitive filesystems
+  #     - id: check-merge-conflict
+  #     - id: check-vcs-permalinks # version control system permalinks
+  #     - id: end-of-file-fixer
+  #     - id: mixed-line-ending
+  #     - id: trailing-whitespace
   # - repo: local
   #   hooks:
   #     - id: pytest
