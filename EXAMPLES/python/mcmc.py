@@ -1,7 +1,5 @@
 import numpy as np
-import numpy.typing as npt
 import emcee
-import ROOT
 import os
 from typing import List
 import matplotlib.pyplot as plt
@@ -14,14 +12,22 @@ import yaml
 from utils import prepare_mpigpu
 
 def LogProb(
-    par_values,           # [real1, imag1, real2, imag2, ...]
-    keys,                 # [amp1,  amp1,  amp2,  amp2, ...]
-    ati,                  # AmpToolsInterface
-    LoadParametersSampler # LoadParameters class
+    par_values,
+    keys,
+    ati,
+    LoadParametersSampler
     ):
     '''
-    Posterior distribution definition
-        Log probability function = Log Likelihood if no prior
+    Definition of the (Log) Posterior distribution
+
+    Args:
+        par_values: Flattened (complex-to-Real/Imag) Parameter values. ~ [real1, imag1, real2, imag2, ...]
+        keys: Flattened Parameter names. ~ [amp1,  amp1,  amp2,  amp2, ...]
+        ati: AmpToolsInterface
+        LoadParametersSampler: LoadParameters class to manage parameters
+
+    Returns:
+        log_prob: Log posterior probability
     '''
 
     ## Calculate Log likelihood
@@ -42,8 +48,13 @@ def LogProb(
 
 def createMovesMixtureFromDict(moves_dict):
     '''
-    Creates a mixture of moves for the sampler
-    moves_dict = { move: {kwargs: {}, probability} }
+    Creates a mixture of moves for the emcee sampler
+
+    Args:
+        moves_dict ~ { move: {kwargs: {}, probability} }
+
+    Returns:
+        moves_mixture ~ [ (emcee.moves.{move}(**kwargs), probability) ]
     '''
     moves_mixture = []
     for move, moveDict in moves_dict.items():
@@ -54,20 +65,35 @@ def createMovesMixtureFromDict(moves_dict):
     return moves_mixture
 
 def perform_mcmc(
-        ati,                        # AmpToolsInterface class
-        LoadParametersSampler,      # LoadParameters class
-        ofolder:   str = 'mcmc',    # output folder name
-        ofile:     str = 'mcmc.h5', # output file name
-        nwalkers:  int = 32,        # number of walkers
-        burnIn:    int = 100,       # number of burn-in steps
-        nsamples:  int = 1000,      # number of samples
-        ### Non-CLI arguments ###
-        ###  params_dict = {par: value} or {par: [value, min, max]} Sample from [min, max] for walker initialization
-        params_dict   = {}, # Dictionary of parameter to override values in cfgInfo if not empty
-        moves_mixture = [ emcee.moves.StretchMove() ], # Move mixture for sampler
+        ati,
+        LoadParametersSampler,
+        ofolder:   str = 'mcmc',
+        ofile:     str = 'mcmc.h5',
+        nwalkers:  int = 32,
+        burnIn:    int = 100,
+        nsamples:  int = 1000,
+        ### Non-CLI arguments Below ###
+        params_dict   = {},
+        moves_mixture = [ emcee.moves.StretchMove() ],
     ):
 
-    ''' Performs MCMC sampling '''
+    '''
+    Performs MCMC sampling
+
+    Args:
+        ati: AmpToolsInterface class
+        LoadParametersSampler: LoadParameters class
+        ofolder: output folder name
+        ofile: output file name
+        nwalkers: number of walkers
+        burnIn: number of burn-in steps
+        nsamples: number of samples
+        params_dict: ~ {par: value} or {par: [value, min, max]} Sample from [min, max] for walker initialization
+        moves_mixture: Move mixture for sampler
+
+    Returns:
+        results: Dictionary containing results of MCMC sampling (samples, MAP, acceptance fraction, autocorrelation time, etc.)
+    '''
 
     print(f'\n ================== PERFORM_MCMC() KWARGS CONFIGURATION ================== ')
     print(f'ofolder: {ofolder}')
@@ -174,10 +200,21 @@ def perform_mcmc(
 
 ################### PLOT RESULTS ###################
 def draw_corner(
-    results,    # results dictionary from perform_mcmc()
-    ofolder,    # output folder name
+    results,
+    ofolder,
+    save=True,
 ):
-    ''' Draws a corner plot to visualize sampling and parameter correlations '''
+    '''
+    Draws a corner plot to visualize sampling and parameter correlations
+
+    Args:
+        results: Dictionary containing results of MCMC sampling (samples, MAP, acceptance fraction, autocorrelation time, etc.)
+        ofolder: output folder name
+        save: Save the figure to a file or return figure. Default True = Save
+
+    Returns:
+        fig: Figure object (or None)
+    '''
 
     def plot_axvh_fit_params( # Yes, some function inception going on
             values,  # [real1, imag1, real2, imag2, ...]
@@ -205,7 +242,6 @@ def draw_corner(
     axes = np.array(fig.axes).reshape((nDim, nDim))
     plot_axvh_fit_params(map_estimate, color='royalblue')
     plot_axvh_fit_params(mle_values, color='tab:green')
-    plt.savefig(f"{ofolder}/mcmc.png")
 
     print(' =================== RESULTS =================== ')
     print(f'MAP Estimates from {len(samples)} samples obtained over {nwalkers} walkers:')
@@ -220,6 +256,10 @@ def draw_corner(
     #                     chainLabels=['MCMC samples'], legendMarker='Auto', figureSize='MNRAS_page',
     #                     plotName=f'{ofolder}/mcmc.pdf', nContourLevels=3)
 
+    if save:
+        plt.savefig(f"{ofolder}/mcmc.png")
+    else:
+        return fig
 
 if __name__ == '__main__':
     start_time = time.time()

@@ -3,6 +3,15 @@ from ROOT import pythonization
 import os
 from utils import check_shared_lib_exists
 
+default_print = print
+def print(*args, **kwargs):
+    '''
+    Override print to always flush. Mixing c++ and python code
+    can cause reordering of stdout
+    '''
+    kwargs['flush'] = kwargs.get('flush', True)
+    default_print(*args, **kwargs)
+
 def checkEnvironment(variable):
     ''' Check if environment variable is set to 1 '''
     return os.environ[variable] == "1" if variable in os.environ else False

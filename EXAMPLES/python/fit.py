@@ -56,7 +56,6 @@ def runFits( N: int = 0 ):
     Returns:
         minNLL: Minimum negative log likelihood
     '''
-    print("Begin running fits...")
 
     if (RANK_MPI==0):
         print(f'LIKELIHOOD BEFORE MINIMIZATION: {ati.likelihood()}')
@@ -76,9 +75,9 @@ def runFits( N: int = 0 ):
             parRangeKeywords = cfgInfo.userKeywordArguments("parRange")
 
             for i in range(N):
-                print("###############################################")
+                print("\n###############################################")
                 print(f'#############   FIT {i} OF {N} ###############')
-                print("###############################################")
+                print("###############################################\n")
 
                 ati.reinitializePars()
                 ati.randomizeProductionPars(maxFraction)
@@ -111,11 +110,11 @@ if __name__ == '__main__':
     ############## PARSE COMMANDLINE ARGUMENTS #############
     parser = argparse.ArgumentParser(description="Perform MLE fits")
     rndSeed = random.seed(datetime.now().timestamp())
-    parser.add_argument('cfgfile',             type=str,            help='AmpTools Configuration file')
-    parser.add_argument('--seedfile',    type=str, default=None,    help='Output file for seeding next fit based on this fit')
+    parser.add_argument('cfgfile',       type=str,                  help='AmpTools Configuration file')
+    parser.add_argument('--seedfile',    type=str, default=None,    help='Output file for seeding next fit based on this fit. Do not include extension')
     parser.add_argument('--numRnd',      type=int, default=0,       help='Perform N fits each seeded with random parameters')
     parser.add_argument('--randomSeed',  type=int, default=rndSeed, help='Sets the random seed used by the random number generator for the fits with randomized initial parameters. If not set, will use the current time.')
-    parser.add_argument('--maxIter',     type=int, default=100000,   help='Maximum number of fit iterations')
+    parser.add_argument('--maxIter',     type=int, default=100000,  help='Maximum number of fit iterations')
     parser.add_argument('--useMinos',    action='store_true',       help='Use MINOS instead of MIGRAD')
     parser.add_argument('--hesse',       action='store_true',       help='Evaluate HESSE matrix after minimization')
     parser.add_argument('--scanPar',     type=str, default=None,    help='Perform a scan of the given parameter. Stepsize, min, max are to be set in the config file')
