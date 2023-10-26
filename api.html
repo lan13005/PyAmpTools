@@ -65,6 +65,7 @@ const thebe_selector_output = ".output, .cell_output"
     <script>DOCUMENTATION_OPTIONS.pagename = 'api';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="extract_ff" href="_autosummary/extract_ff.html" />
     <link rel="prev" title="Notebooks with MyST Markdown" href="markdown-notebooks.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -170,7 +171,14 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks.html">Content with notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="markdown-notebooks.html">Notebooks with MyST Markdown</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Detailed API documentation</a></li>
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">Detailed API documentation</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/extract_ff.html">extract_ff</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/mcmc.html">mcmc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/mcmcOptimalMoves.html">mcmcOptimalMoves</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/PlotGen.html">PlotGen</a></li>
+</ul>
+</li>
 </ul>
 
     </div>
@@ -341,9 +349,7 @@ document.write(`
   </button>
 `);
 </script>
-<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="fa-solid fa-list"></span>
-</label>
+
 </div></div>
       
     </div>
@@ -359,18 +365,6 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
-            <div>
-                <h2> Contents </h2>
-            </div>
-            <nav aria-label="Page">
-                <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fit">fit</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mcmc">mcmc</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#extract-ff">extract_ff</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plotgen">PlotGen</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plotgenrdf">PlotGenRDF</a></li>
-</ul>
-            </nav>
         </div>
     </div>
 </div>
@@ -380,217 +374,27 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <table class="autosummary longtable table autosummary">
+  <section id="detailed-api-documentation">
+<h1>Detailed API documentation<a class="headerlink" href="#detailed-api-documentation" title="Permalink to this heading">#</a></h1>
+<table class="autosummary longtable table autosummary">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/extract_ff.html#module-extract_ff" title="extract_ff"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_ff</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/fit.html#module-fit" title="fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/mcmc.html#module-mcmc" title="mcmc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mcmc</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/mcmcOptimalMoves.html#module-mcmcOptimalMoves" title="mcmcOptimalMoves"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mcmcOptimalMoves</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/PlotGen.html#module-PlotGen" title="PlotGen"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PlotGen</span></code></a></p></td>
+<td><p></p></td>
+</tr>
 </tbody>
 </table>
-<section id="detailed-api-documentation">
-<h1>Detailed API documentation<a class="headerlink" href="#detailed-api-documentation" title="Permalink to this heading">#</a></h1>
-<section id="fit">
-<h2>fit<a class="headerlink" href="#fit" title="Permalink to this heading">#</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="fit.performFit">
-<span class="sig-name descname"><span class="pre">performFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fitManager</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed_file_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">always_save_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fit.performFit" title="Permalink to this definition">#</a></dt>
-<dd><p>Performs a single fit</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>fitManager</strong> – MinuitMinimizationManager</p></li>
-<li><p><strong>seed_file_tag</strong> – Tag to append to output file names</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Bool indicating if fit failed
-NLL: Negative log likelihood</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bFitFailed</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fit.runFits">
-<span class="sig-name descname"><span class="pre">runFits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ati</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">always_save_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fit.runFits" title="Permalink to this definition">#</a></dt>
-<dd><p>Performs N randomized fits, if N=0 then a single fit with no randomization is performed</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>N</strong> – Number of randomized fits to perform</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Minimum negative log likelihood</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>minNLL</p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
-<section id="mcmc">
-<h2>mcmc<a class="headerlink" href="#mcmc" title="Permalink to this heading">#</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="mcmc.LogProb">
-<span class="sig-name descname"><span class="pre">LogProb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ati</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LoadParametersSampler</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mcmc.LogProb" title="Permalink to this definition">#</a></dt>
-<dd><p>Definition of the (Log) Posterior distribution</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>par_values</strong> – Flattened (complex-to-Real/Imag) Parameter values. ~ [real1, imag1, real2, imag2, …]</p></li>
-<li><p><strong>keys</strong> – Flattened Parameter names. ~ [amp1,  amp1,  amp2,  amp2, …]</p></li>
-<li><p><strong>ati</strong> – AmpToolsInterface</p></li>
-<li><p><strong>LoadParametersSampler</strong> – LoadParameters class to manage parameters</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Log posterior probability</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>log_prob</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="mcmc.createMovesMixtureFromDict">
-<span class="sig-name descname"><span class="pre">createMovesMixtureFromDict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">moves_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mcmc.createMovesMixtureFromDict" title="Permalink to this definition">#</a></dt>
-<dd><p>Creates a mixture of moves for the emcee sampler</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>moves_dict</strong> – { move: {kwargs: {}, probability} }</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>[ (emcee.moves.{move}(kwargs), probability) ]</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>moves_mixture</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="mcmc.perform_mcmc">
-<span class="sig-name descname"><span class="pre">perform_mcmc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ati,</span> <span class="pre">LoadParametersSampler,</span> <span class="pre">ofolder:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'mcmc',</span> <span class="pre">ofile:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'mcmc.h5',</span> <span class="pre">nwalkers:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">32,</span> <span class="pre">burnIn:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">100,</span> <span class="pre">nsamples:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1000,</span> <span class="pre">params_dict={},</span> <span class="pre">moves_mixture=[&lt;emcee.moves.stretch.StretchMove</span> <span class="pre">object&gt;]</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mcmc.perform_mcmc" title="Permalink to this definition">#</a></dt>
-<dd><p>Performs MCMC sampling</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ati</strong> – AmpToolsInterface class</p></li>
-<li><p><strong>LoadParametersSampler</strong> – LoadParameters class</p></li>
-<li><p><strong>ofolder</strong> – output folder name</p></li>
-<li><p><strong>ofile</strong> – output file name</p></li>
-<li><p><strong>nwalkers</strong> – number of walkers</p></li>
-<li><p><strong>burnIn</strong> – number of burn-in steps</p></li>
-<li><p><strong>nsamples</strong> – number of samples</p></li>
-<li><p><strong>params_dict</strong> – ~ {par: value} or {par: [value, min, max]} Sample from [min, max] for walker initialization</p></li>
-<li><p><strong>moves_mixture</strong> – Move mixture for sampler</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Dictionary containing results of MCMC sampling (samples, MAP, acceptance fraction, autocorrelation time, etc.)</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>results</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="mcmc.draw_corner">
-<span class="sig-name descname"><span class="pre">draw_corner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ofolder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corner_ofile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'corner.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mcmc.draw_corner" title="Permalink to this definition">#</a></dt>
-<dd><p>Draws a corner plot to visualize sampling and parameter correlations</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>results</strong> – Dictionary containing results of MCMC sampling (samples, MAP, acceptance fraction, autocorrelation time, etc.)</p></li>
-<li><p><strong>ofolder</strong> – output folder name</p></li>
-<li><p><strong>save</strong> – Save the figure to a file or return figure. Default True = Save</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Figure object (or None)</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>fig</p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
-<section id="extract-ff">
-<h2>extract_ff<a class="headerlink" href="#extract-ff" title="Permalink to this heading">#</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="extract_ff.extract_ff">
-<span class="sig-name descname"><span class="pre">extract_ff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfileName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acceptanceCorrect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.5f'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regex_merge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#extract_ff.extract_ff" title="Permalink to this definition">#</a></dt>
-<dd><p>Regex merge is a useful tool to merge amplitudes that are related to each other (user-specified)
-For example waveset: D-2- D-1- D0- D1- D2- D-2+ D-1+ D0+ D1+ D2+
-To remove the sign at the end (merge reflectivites)     use = r’[-+]$’
-To remove first sign and number (merge M-projections)   use = r’[-+]?(d+)’
-To remove numbers and signs to merge all D:             use = r’[-+]?(d+)[-+]’</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>results</strong> – FitResults object</p></li>
-<li><p><strong>outfileName</strong> – Output root file name or dump to stdout if ‘’</p></li>
-<li><p><strong>acceptanceCorrect</strong> – Acceptance correct values</p></li>
-<li><p><strong>fmt</strong> – Format string for printing</p></li>
-<li><p><strong>regex_merge</strong> – Merge amplitudes: Regex pair (pattern, replace) separated by ~&gt;</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
-<section id="plotgen">
-<h2>PlotGen<a class="headerlink" href="#plotgen" title="Permalink to this heading">#</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="PlotGen.PlotGen">
-<span class="sig-name descname"><span class="pre">PlotGen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plotGen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ofile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ampString</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keepAllAmps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotAllVars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotGenHists</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doAccCorr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PlotGen.PlotGen" title="Permalink to this definition">#</a></dt>
-<dd><p>Generates plots from a fit result file. The plots are saved to a root file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>plotGen</strong> – Sub-classed PlotGenerator instance.</p></li>
-<li><p><strong>plotfile</strong> – name of output root file.</p></li>
-<li><p><strong>ampString</strong> – Semicolon separated list of coherent sums to plot. Sums are underscore separated amplitudes. Empty string will plot sum of all waves.</p></li>
-<li><p><strong>keepAllAmps</strong> – If True, all amplitudes are summed and plotted. If False, only the amplitudes specified in ampString will be plotted.</p></li>
-<li><p><strong>plotAllVars</strong> – If True, all variables will be plotted.</p></li>
-<li><p><strong>plotGenHists</strong> – If True, generated histograms will be plotted.</p></li>
-<li><p><strong>doAccCorr</strong> – If True, acceptance correction will be applied to the histograms.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
-<section id="plotgenrdf">
-<h2>PlotGenRDF<a class="headerlink" href="#plotgenrdf" title="Permalink to this heading">#</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="PlotGenRDF.draw_histograms">
-<span class="sig-name descname"><span class="pre">draw_histograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HISTS_TO_BOOK</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PlotGenRDF.draw_histograms" title="Permalink to this definition">#</a></dt>
-<dd><p>Draw booked histograms from RDataFrame</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>results</strong> (<em>FitResults</em>) – FitResults object</p></li>
-<li><p><strong>hist_output_name</strong> (<em>str</em>) – Output file name, do not include file type</p></li>
-<li><p><strong>particles</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of particles in reaction</p></li>
-<li><p><strong>HISTS_TO_BOOK</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>List</em><em>]</em>) – Dictionary of histograms to book. See book_histogram() for details</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
 </section>
 
     <script type="text/x-thebe-config">
@@ -632,30 +436,21 @@ To remove numbers and signs to merge all D:             use = r’[-+]?(d+)[-+]�
         <p class="prev-next-title">Notebooks with MyST Markdown</p>
       </div>
     </a>
+    <a class="right-next"
+       href="_autosummary/extract_ff.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">extract_ff</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
             </div>
             
             
-              
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
-
-  <div class="sidebar-secondary-item">
-  <div class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> Contents
-  </div>
-  <nav class="bd-toc-nav page-toc">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fit">fit</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mcmc">mcmc</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#extract-ff">extract_ff</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plotgen">PlotGen</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plotgenrdf">PlotGenRDF</a></li>
-</ul>
-  </nav></div>
-
-</div></div>
               
             
           </div>
