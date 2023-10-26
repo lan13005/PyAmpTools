@@ -1,4 +1,13 @@
-Detailed API documentation
-==========================
+API documentation
+=================
 
-.. autofunction:: extract_ff.extract_ff
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   extract_ff
+   fit
+   mcmc
+   mcmcOptimalMoves
+   PlotGen
+   PlotGenRDF
