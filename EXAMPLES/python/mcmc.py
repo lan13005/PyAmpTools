@@ -183,6 +183,10 @@ def perform_mcmc(
     autocorr_time = np.mean(sampler.get_autocorr_time(quiet=True))
     print(f"Mean acceptance fraction: {acceptance_fraction:.3f}")
     print(f"Autocorrelation time: {autocorr_time:.3f} steps")
+
+    ####################
+    ## MASK OUT BAD SAMPLES. This is likely a sign of something bad but lets ignore it for now
+    ####################
     MIN_VAL = -1e10
     MAX_VAL =  1e10
     mask = np.logical_and(samples > MIN_VAL, samples < MAX_VAL).all(axis=1)
@@ -202,7 +206,9 @@ def perform_mcmc(
 def draw_corner(
     results,
     ofolder,
+    corner_ofile = 'corner.png',
     save=True,
+    kwargs = {},
 ):
     '''
     Draws a corner plot to visualize sampling and parameter correlations
@@ -236,6 +242,8 @@ def draw_corner(
 
     ####### DRAW CORNER PLOT #######
     corner_kwargs = {"color": "black", "show_titles": True }
+    corner_kwargs.update(kwargs)
+    print(f'Corner kwargs: {corner_kwargs}')
     labels_ReIm = [f'{l.split("::")[-1]}' for l in par_names_flat]
     fig = corner.corner(samples, labels=labels_ReIm, **corner_kwargs)
     nDim = samples.shape[1]
@@ -257,7 +265,7 @@ def draw_corner(
     #                     plotName=f'{ofolder}/mcmc.pdf', nContourLevels=3)
 
     if save:
-        plt.savefig(f"{ofolder}/mcmc.png")
+        plt.savefig(f"{ofolder}/{corner_ofile}")
     else:
         return fig
 
@@ -266,13 +274,14 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='emcee fitter')
     parser.add_argument('--cfgfile', type=str, default='', help='Config file name')
-    parser.add_argument('--ofolder', type=str, default='mcmc', help='Output folder name. Default "mcmc"')
-    parser.add_argument('--ofile', type=str, default='mcmc.h5', help='Output file name. Default "mcmc.h5"')
     parser.add_argument('--nwalkers', type=int, default=32, help='Number of walkers. Default 32')
     parser.add_argument('--burnin', type=int, default=100, help='Number of burn-in steps. Default 100')
     parser.add_argument('--nsamples', type=int, default=1000, help='Number of samples. Default 1000')
     parser.add_argument('--overwrite', action='store_true', help='Overwrite existing output file if exists')
     parser.add_argument('--accelerator', type=str, default='', help='Force use of given "accelerator" ~ [gpu, mpi, mpigpu, gpumpi]. Default "" = cpu')
+    parser.add_argument('--ofolder', type=str, default='mcmc', help='Output folder name. Default "mcmc"')
+    parser.add_argument('--ofile', type=str, default='mcmc.h5', help='Output file name. Default "mcmc.h5"')
+    parser.add_argument('--corner_ofile', type=str, default='corner.png', help='Corner plot output file name. Default "corner.png"')
     parser.add_argument('--seed', type=int, default=42, help='RNG seed for consistent walker random initialization. Default 42')
     parser.add_argument('--yaml_override', type=str, default={}, help='Path to YAML file containing parameter overrides. Default "" = no override')
 
@@ -286,6 +295,7 @@ if __name__ == '__main__':
     cfgfile  = args.cfgfile if 'cfgfile' not in yaml_override else yaml_override['cfgfile']
     ofolder  = args.ofolder if 'ofolder' not in yaml_override else yaml_override['ofolder']
     ofile    = args.ofile if 'ofile' not in yaml_override else yaml_override['ofile']
+    corner_ofile = args.corner_ofile if 'corner_ofile' not in yaml_override else yaml_override['corner_ofile']
     nwalkers = args.nwalkers if 'nwalkers' not in yaml_override else yaml_override['nwalkers']
     burnIn   = args.burnin if 'burnin' not in yaml_override else yaml_override['burnin']
     nsamples = args.nsamples if 'nsamples' not in yaml_override else yaml_override['nsamples']
@@ -300,6 +310,7 @@ if __name__ == '__main__':
     print(f" cfgfile: {cfgfile}")
     print(f" ofolder: {ofolder}")
     print(f" ofile: {ofile}")
+    print(f" corner_ofile: {corner_ofile}")
     print(f" nwalkers: {nwalkers}")
     print(f" burnIn: {burnIn}")
     print(f" nsamples: {nsamples}")
@@ -372,7 +383,7 @@ if __name__ == '__main__':
                            moves_mixture = moves_mixture,
                            )
     elapsed_fit_time = results['elapsed_fit_time']
-    draw_corner(results, ofolder)
+    draw_corner(results, ofolder, corner_ofile)
 
     print(f"Fit time: {elapsed_fit_time} seconds")
     print(f"Total time: {time.time() - start_time} seconds")

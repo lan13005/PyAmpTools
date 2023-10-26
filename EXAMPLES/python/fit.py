@@ -10,7 +10,8 @@ from utils import prepare_mpigpu
 
 def performFit(
         fitManager,
-        seed_file_tag
+        seed_file_tag,
+        always_save_seed: bool = False,
     ):
     '''
     Performs a single fit
@@ -40,13 +41,17 @@ def performFit(
 
     ati.finalizeFit(seed_file_tag)
 
-    if args.seedfile is not None and not bFitFailed:
+    if ( args.seedfile is not None and not bFitFailed ) or always_save_seed:
         ati.fitResults().writeSeed(f'{args.seedfile}_{seed_file_tag}.txt')
 
     return bFitFailed, NLL
 
 ############### PERFORM FIT #############
-def runFits( N: int = 0 ):
+def runFits(
+        ati,
+        N: int = 0,
+        always_save_seed: bool = False,
+    ):
     '''
     Performs N randomized fits, if N=0 then a single fit with no randomization is performed
 
@@ -63,7 +68,7 @@ def runFits( N: int = 0 ):
         fitManager.setMaxIterations(args.maxIter)
 
         if N == 0: # No randomization
-            bFitFailed, minNLL = performFit(fitManager, '0')
+            bFitFailed, minNLL = performFit(fitManager, '0', always_save_seed)
             print(f'LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): {minNLL}')
 
         else: # Randomized parameters
@@ -84,7 +89,7 @@ def runFits( N: int = 0 ):
                 for ipar in range(len(parRangeKeywords)):
                     ati.randomizeParameter(parRangeKeywords[ipar][0], float(parRangeKeywords[ipar][1]), float(parRangeKeywords[ipar][2]))
 
-                bFitFailed, NLL = performFit(fitManager, f'{i}')
+                bFitFailed, NLL = performFit(fitManager, f'{i}', always_save_seed)
                 if not bFitFailed and NLL < minNLL:
                     minNLL = NLL
                     minFitTag = i
@@ -112,6 +117,7 @@ if __name__ == '__main__':
     rndSeed = random.seed(datetime.now().timestamp())
     parser.add_argument('cfgfile',       type=str,                  help='AmpTools Configuration file')
     parser.add_argument('--seedfile',    type=str, default=None,    help='Output file for seeding next fit based on this fit. Do not include extension')
+    parser.add_argument('--always_save_seed', action='store_true',  help='Always save the seed file, even if the fit fails')
     parser.add_argument('--numRnd',      type=int, default=0,       help='Perform N fits each seeded with random parameters')
     parser.add_argument('--randomSeed',  type=int, default=rndSeed, help='Sets the random seed used by the random number generator for the fits with randomized initial parameters. If not set, will use the current time.')
     parser.add_argument('--maxIter',     type=int, default=100000,  help='Maximum number of fit iterations')
@@ -156,6 +162,7 @@ if __name__ == '__main__':
         print("\n\n === COMMANDLINE ARGUMENTS === ")
         print("Config file:", args.cfgfile)
         print("Seed file:", args.seedfile)
+        print("Always save seed:", args.always_save_seed)
         print("Number of random fits:", args.numRnd)
         print("Random seed:", args.randomSeed)
         print("Maximum iterations:", args.maxIter)
@@ -184,7 +191,7 @@ if __name__ == '__main__':
     AmpToolsInterface.setRandomSeed(args.randomSeed)
 
     fit_start_time = time.time()
-    nll = runFits(args.numRnd)
+    nll = runFits(ati, args.numRnd, args.always_save_seed)
 
     print("\nDone! MPI.Finalize() / MPI.Init() automatically called at script end / start\n") if USE_MPI else print("\nDone!")
     print(f"Fit time: {time.time() - fit_start_time} seconds")
