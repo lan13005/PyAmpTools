@@ -371,6 +371,7 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">PyAmpTools</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a><ul class="visible nav section-nav flex-column">
 </ul>
 </li>
@@ -391,9 +392,45 @@ document.write(`
 <p>Quantum Chromodynamics in the low energy regime is poorly understood. Gluon rich systems, like hybrid mesons, are predicted by theory but experimental idenficiation of these states have been difficult. The light meson spectrum contains many overlapping states that require partial wave (amplitude) analysis to disentangle. <a class="reference external" href="https://github.com/mashephe/AmpTools">AmpTools</a> is a library written in c++ that facilitates performing unbinned maximum likelihood fits of experimental data to a coherent sum of amplitudes.</p>
 <p>This repository contains Python bindings for AmpTools. Under the hood, it uses <a class="reference external" href="https://root.cern/manual/python/">PyROOT</a> which uses cppyy. These bindings will hopefully simplify the interaction with the AmpTools library while also providing access to the python ecosystem. <a class="reference external" href="https://github.com/remitche66/FSRoot">FSRoot</a> is also included as a submodule and can be integrated into analysis workflows.</p>
 </section>
+<section class="tex2jax_ignore mathjax_ignore" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">#</a></h1>
+<p>To install AmpTools and FSRoot as a submodule:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/lan13005/PyAmpTools<span class="w"> </span>--recurse-submodules
+</pre></div>
+</div>
+<p>Environment setup. <code class="docutils literal notranslate"><span class="pre">conda</span></code> can be very slow to resolve dependencies for ROOT. I recommend <a class="reference external" href="https://github.com/conda-forge/miniforge#mambaforge">Mamba</a></p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w">  </span><span class="c1"># Creates environment specified by environment.yml and pyproject.toml</span>
+conda<span class="w"> </span>activate<span class="w"> </span>PyAmpTools<span class="w"> </span><span class="c1"># activate the environment</span>
+pip<span class="w"> </span>install<span class="w"> </span>mpi4py<span class="w"> </span><span class="c1"># MPI (if available), mamba will link it against the wrong executables</span>
+pre-commit<span class="w"> </span>install<span class="w"> </span>--install-hooks<span class="w"> </span><span class="c1"># (Optional) commit hooks to perform loose formatting</span>
+</pre></div>
+</div>
+<p><a class="reference external" href="https://root.cern/install/">ROOT</a> &gt;v6.26 is a required dependency. There is a known conflict between AmpTools’ GPU usage and RooFit/TMVA which comes with the conda-forge binaries of ROOT. Currently, ROOT has to be built from source with roofit and tmva off. A build script is included to download ROOT from source with the appropriate cmake flags to achieve this</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>root
+<span class="c1"># Modify build_root.sh to match your environment (gcc versions, etc))</span>
+<span class="nb">source</span><span class="w"> </span>build_root.sh
+</pre></div>
+</div>
+<p>Modify <code class="docutils literal notranslate"><span class="pre">set_environment.sh</span></code> to match you GPU environment (default: setup for JLab ifarm)</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>ln<span class="w"> </span>-snfr<span class="w"> </span>set_environment.sh<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d<span class="w"> </span><span class="c1"># load environment variables on conda activation</span>
+</pre></div>
+</div>
+<p>Build required libraries</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Options in brackets are optional</span>
+<span class="nb">cd</span><span class="w"> </span>external
+make<span class="w"> </span><span class="o">[</span>mpi/gpu/mpigpu/gpumpi<span class="o">]</span><span class="w"> </span><span class="c1"># distributes modified Makefiles and makes AmpTools + AMPS_DATAIO into a shared libraries</span>
+</pre></div>
+</div>
+<p>Simple Unit tests</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;s~REPLACE_FOLDER_LOCATION~</span><span class="nv">$REPO_HOME</span><span class="s2">/tests/samples/SIMPLE_EXAMPLE~&quot;</span><span class="w"> </span><span class="nv">$REPO_HOME</span>/tests/samples/SIMPLE_EXAMPLE/fit.cfg<span class="w"> </span><span class="c1"># update path</span>
+pytest<span class="w"> </span>-v
+pytest<span class="w"> </span>-k<span class="w"> </span><span class="o">[</span>marked-test<span class="o">]</span><span class="w"> </span><span class="c1"># to run a specific marked test defined in pytest.ini</span>
+</pre></div>
+</div>
+</section>
 <section class="tex2jax_ignore mathjax_ignore" id="usage-design">
 <h1>Usage / Design<a class="headerlink" href="#usage-design" title="Permalink to this heading">#</a></h1>
-<p>AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in <code class="docutils literal notranslate"><span class="pre">external</span></code> directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_AMPS_DATAIO</span></code>. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code>, a program to produce simulations with AmpTools, is provied in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_GENERATORS</span></code> but is not built by the main makefile, a separate makefile is included with that directory.</p>
+<p>AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in <code class="docutils literal notranslate"><span class="pre">external</span></code> directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_AMPS_DATAIO</span></code>. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code>, a program to produce simulations with AmpTools, is provided in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_GENERATORS</span></code> but is not built by the main makefile, a separate makefile is included with that directory.</p>
 <p>Currently, the main scripts that perform an analysis, from simulation to fitting to plotting results, is located in <code class="docutils literal notranslate"><span class="pre">EXAMPLES/python</span></code> folder. These scripts can also be run from the commandline but its main functionality can be imported into another script (or Jupyter). Utility functions used by these scripts are located in the <code class="docutils literal notranslate"><span class="pre">utils</span></code> folder.</p>
 <div class="toctree-wrapper compound">
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorial</span></p>
@@ -467,6 +504,7 @@ document.write(`
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">PyAmpTools</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a><ul class="visible nav section-nav flex-column">
 </ul>
 </li>
