@@ -343,7 +343,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -359,6 +361,15 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-file">Configuration File</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generating-events">Generating Events</a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -370,80 +381,505 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="generating-data">
 <h1>Generating Data<a class="headerlink" href="#generating-data" title="Permalink to this heading">#</a></h1>
-<p>In PyAmpTools, <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code> is a class that uses <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> to generate events based on some set of amplitudes. A few specifications are neeed</p>
+<p>In PyAmpTools, <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code> is a class that uses <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> to generate events based on some set of amplitudes. AmpTools uses a configuration file to specify the model and dataset to be fitted.</p>
+<p>In order to use <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code> within PyAmpTools you must first build the library. Simply go to <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_GENERATORS</span></code> and run <code class="docutils literal notranslate"><span class="pre">make</span></code></p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>    <span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
-    <span class="n">REPO_HOME</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;ATI_USE_MPI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span> <span class="c1"># set to 1 to use MPI libraries</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;ATI_USE_GPU&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span>
-    <span class="kn">from</span> <span class="nn">atiSetup</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">ROOT</span>
+<span class="kn">import</span> <span class="nn">os</span>
 
-    <span class="c1">################ SET ADDITIONAL ALIAS ###################</span>
-    <span class="n">AmplitudeInfo</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">AmplitudeInfo</span>
-    <span class="n">ParameterInfo</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ParameterInfo</span>
+<span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
+<span class="n">REPO_HOME</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
+<span class="kn">import</span> <span class="nn">atiSetup</span>
+<span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># RANK_MPI defaults to 0 even if not using MPI</span>
 
-    <span class="c1">############### USER-SPECIFIED VARIABLES ###############</span>
-    <span class="n">fitName</span> <span class="o">=</span> <span class="s1">&#39;EtaPi&#39;</span>
-    <span class="n">cfgFileOutputName</span> <span class="o">=</span> <span class="s1">&#39;EtaPi.cfg&#39;</span>
-    <span class="n">basereactName</span> <span class="o">=</span> <span class="s1">&#39;EtaPi&#39;</span>
-    <span class="n">particles</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Beam&#39;</span><span class="p">,</span> <span class="s1">&#39;Proton&#39;</span><span class="p">,</span> <span class="s1">&#39;Eta&#39;</span><span class="p">,</span> <span class="s1">&#39;Pi0&#39;</span><span class="p">]</span>
+<span class="kn">from</span> <span class="nn">cfgGenerator</span> <span class="kn">import</span> <span class="n">generate_zlm_cfg</span>
+<span class="n">gen_amp</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">gen_amp</span>
 
-    <span class="c1">### User-specified waveset ###</span>
-    <span class="n">EJMs</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="p">[</span> <span class="mi">1</span><span class="p">,</span>  <span class="mi">2</span><span class="p">,</span>  <span class="mi">2</span><span class="p">],</span>
-        <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span>  <span class="mi">2</span><span class="p">,</span>  <span class="mi">2</span><span class="p">],</span>
-        <span class="c1"># [ 1,  0,  0],</span>
-        <span class="c1"># [-1,  0,  0],</span>
-    <span class="p">]</span>
-    <span class="n">realAmps</span>  <span class="o">=</span> <span class="nb">set</span><span class="p">(</span> <span class="p">[</span><span class="s1">&#39;p00&#39;</span><span class="p">,</span> <span class="s1">&#39;m00&#39;</span><span class="p">]</span> <span class="p">)</span>
-    <span class="n">fixedAmps</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="c1">## Load datasets</span>
-    <span class="n">baseFolder</span> <span class="o">=</span> <span class="s2">&quot;/w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/REAL_MI_EXAMPLE/samples&quot;</span>
-
-    <span class="c1">## Polarization related, reactNames are scaled by the scales parameters</span>
-    <span class="c1">##   Default: parScale0 is fixed to 1.0</span>
-    <span class="n">angles</span>    <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;0&#39;</span>        <span class="p">,</span> <span class="s1">&#39;45&#39;</span>        <span class="p">,</span> <span class="s1">&#39;90&#39;</span>        <span class="p">,</span> <span class="s1">&#39;135&#39;</span>        <span class="p">]</span>
-    <span class="n">fractions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;0.3519&#39;</span>   <span class="p">,</span> <span class="s1">&#39;0.3374&#39;</span>    <span class="p">,</span> <span class="s1">&#39;0.3303&#39;</span>    <span class="p">,</span> <span class="s1">&#39;0.3375&#39;</span>     <span class="p">]</span>
-
-    <span class="n">datas</span>  <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">baseFolder</span><span class="si">}</span><span class="s1">/data_</span><span class="si">{</span><span class="n">angle</span><span class="si">:</span><span class="s1">0&gt;3</span><span class="si">}</span><span class="s1">.root&#39;</span>  <span class="k">for</span> <span class="n">angle</span> <span class="ow">in</span> <span class="n">angles</span><span class="p">]</span>
-    <span class="n">gens</span>   <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">baseFolder</span><span class="si">}</span><span class="s1">/gen_</span><span class="si">{</span><span class="n">angle</span><span class="si">:</span><span class="s1">0&gt;3</span><span class="si">}</span><span class="s1">.root&#39;</span>   <span class="k">for</span> <span class="n">angle</span> <span class="ow">in</span> <span class="n">angles</span><span class="p">]</span>
-    <span class="n">accs</span>   <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">baseFolder</span><span class="si">}</span><span class="s1">/acc_</span><span class="si">{</span><span class="n">angle</span><span class="si">:</span><span class="s1">0&gt;3</span><span class="si">}</span><span class="s1">.root&#39;</span>   <span class="k">for</span> <span class="n">angle</span> <span class="ow">in</span> <span class="n">angles</span><span class="p">]</span>
-    <span class="n">bkgnds</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">baseFolder</span><span class="si">}</span><span class="s1">/bkgnd_</span><span class="si">{</span><span class="n">angle</span><span class="si">:</span><span class="s1">0&gt;3</span><span class="si">}</span><span class="s1">.root&#39;</span> <span class="k">for</span> <span class="n">angle</span> <span class="ow">in</span> <span class="n">angles</span><span class="p">]</span>
-
-    <span class="n">generate_zlm_cfg</span><span class="p">(</span>
-        <span class="n">EJMs</span><span class="p">,</span>
-        <span class="n">angles</span><span class="p">,</span>
-        <span class="n">fractions</span><span class="p">,</span>
-        <span class="n">datas</span><span class="p">,</span>
-        <span class="n">gens</span><span class="p">,</span>
-        <span class="n">accs</span><span class="p">,</span>
-        <span class="n">bkgnds</span><span class="p">,</span>
-        <span class="n">realAmps</span><span class="p">,</span>
-        <span class="n">fixedAmps</span><span class="p">,</span>
-        <span class="n">fitName</span><span class="p">,</span>
-        <span class="n">cfgFileOutputName</span><span class="p">,</span>
-        <span class="n">basereactName</span><span class="p">,</span>
-        <span class="n">particles</span><span class="p">,</span>
-    <span class="p">)</span>
+<span class="n">TFile</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TFile</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">NameError</span><span class="g g-Whitespace">                                 </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">line</span> <span class="mi">2</span>
-<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
-<span class="ne">----&gt; </span><span class="mi">2</span> <span class="n">REPO_HOME</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
-<span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;ATI_USE_MPI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span> <span class="c1"># set to 1 to use MPI libraries</span>
-<span class="g g-Whitespace">      </span><span class="mi">4</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;ATI_USE_GPU&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Welcome to JupyROOT 6.28/06
 
-<span class="ne">NameError</span>: name &#39;os&#39; is not defined
+------------------------------------------------
+MPI is disabled
+GPU is disabled
+Loading library libAmpTools.so .............. ON
+Loading library libAmpPlotter.so ............ ON
+Loading library libAmpsDataIO.so ............ ON
+Loading library libFSRoot.so ................ OFF
+Loading library libAmpsGen.so ............... ON
+------------------------------------------------
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 </pre></div>
 </div>
 </div>
 </div>
+<section id="configuration-file">
+<h2>Configuration File<a class="headerlink" href="#configuration-file" title="Permalink to this heading">#</a></h2>
+<p>A configuration file contains the specifications of the model (and data) and contains all the information needed by <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> to generate Monte Carlo data and to perform fits.</p>
+<p>In AmpTools, an amplitude belongs in a coherent sum which itself belongs in to reaction. A unique name for an amplitude follows the format ~ <code class="docutils literal notranslate"><span class="pre">reactionName::sumName::ampName</span></code> where double colons are used to separate the terms.</p>
+<p>If the construction of the amplitudes is complicated with many repeating formats, then a configuration file generator could be used. An example is given in <code class="docutils literal notranslate"><span class="pre">EXAMPLES/python/cfgGenerator</span></code>.</p>
+<p>For now, we can use this generated cfg file</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cfgfile</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">REPO_HOME</span><span class="si">}</span><span class="s1">/tests/samples/SIMPLE_EXAMPLE/fit.cfg&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">cat</span> $cfgfile
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>#####################################
+####    THIS IS A CONFIG FILE    ####
+#####################################
+##
+##  Blank lines or lines beginning with a &quot;#&quot; are ignored.
+##
+##  Double colons (::) are treated like a space.
+##     This is sometimes useful for grouping (for example,
+##     grouping strings like &quot;reaction::sum::amplitudeName&quot;)
+##
+##  All non-comment lines must begin with one of the following keywords.
+##
+##  (note:  &lt;word&gt; means necessary
+##          (word) means optional)
+##
+##  include       &lt;file&gt;
+##  define        &lt;word&gt; (defn1) (defn2) (defn3) ...
+##  fit           &lt;fitname&gt;
+##  keyword       &lt;keyword&gt; &lt;min arguments&gt; &lt;max arguments&gt;
+##  reaction      &lt;reaction&gt; &lt;particle1&gt; &lt;particle2&gt; (particle3) ...
+##  data          &lt;reaction&gt; &lt;class&gt; (arg1) (arg2) (arg3) ...
+##  genmc         &lt;reaction&gt; &lt;class&gt; (arg1) (arg2) (arg3) ...
+##  accmc         &lt;reaction&gt; &lt;class&gt; (arg1) (arg2) (arg3) ...
+##  normintfile   &lt;reaction&gt; &lt;file&gt;
+##  sum           &lt;reaction&gt; &lt;sum&gt; (sum2) (sum3) ...
+##  amplitude     &lt;reaction&gt; &lt;sum&gt; &lt;amp&gt; &lt;class&gt; (arg1) (arg2) ([par]) ...
+##  initialize    &lt;reaction&gt; &lt;sum&gt; &lt;amp&gt; &lt;&quot;events&quot;/&quot;polar&quot;/&quot;cartesian&quot;&gt;
+##                  &lt;value1&gt; &lt;value2&gt; (&quot;fixed&quot;/&quot;real&quot;)
+##  scale         &lt;reaction&gt; &lt;sum&gt; &lt;amp&gt; &lt;value or [parameter]&gt;
+##  constrain     &lt;reaction1&gt; &lt;sum1&gt; &lt;amp1&gt; &lt;reaction2&gt; &lt;sum2&gt; &lt;amp2&gt; ...
+##  permute       &lt;reaction&gt; &lt;sum&gt; &lt;amp&gt; &lt;index1&gt; &lt;index2&gt; ...
+##  parameter     &lt;par&gt; &lt;value&gt; (&quot;fixed&quot;/&quot;bounded&quot;/&quot;gaussian&quot;)
+##                  (lower/central) (upper/error)
+##    DEPRECATED:
+##  datafile      &lt;reaction&gt; &lt;file&gt; (file2) (file3) ...
+##  genmcfile     &lt;reaction&gt; &lt;file&gt; (file2) (file3) ...
+##  accmcfile     &lt;reaction&gt; &lt;file&gt; (file2) (file3) ...
+##
+#####################################
+
+reaction etapi  Beam Proton Eta Pi0
+
+############# FOR FITTING #############
+fit result
+normintfile etapi normint
+genmc etapi ROOTDataReader /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
+accmc etapi ROOTDataReader /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
+data  etapi ROOTDataReader /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
+#######################################
+
+# polarization information -- use 100% polarization to enhance visual effect
+define polVal 1.0
+define polAngleDeg 0.0
+
+# a string that can be used in amplitude arguments
+define polInfo polAngleDeg polVal
+
+define wave1 2 0
+define wave2 2 2
+define wave3 0 0
+
+# create two sums needed in the amplitude -- as long as we use
+# a single reflectivity, then two sums are sufficient
+sum etapi reZ
+sum etapi imZ
+
+# kinematic/angular dependence given by Zlm (GlueX-doc 4094)
+# (choose one of the two pairs below and comment out the other)
+
+# this pair is for positive reflectivity
+amplitude etapi::reZ::resAmp1 Zlm wave1 +1 +1 polInfo
+amplitude etapi::imZ::resAmp1 Zlm wave1 -1 -1 polInfo
+amplitude etapi::reZ::resAmp2 Zlm wave2 +1 +1 polInfo
+amplitude etapi::imZ::resAmp2 Zlm wave2 -1 -1 polInfo
+amplitude etapi::reZ::resAmp3 Zlm wave3 +1 +1 polInfo
+amplitude etapi::imZ::resAmp3 Zlm wave3 -1 -1 polInfo
+
+# Initialize and constrain
+initialize etapi::reZ::resAmp1 cartesian 10 0 real
+constrain etapi::reZ::resAmp1 etapi::imZ::resAmp1
+initialize etapi::reZ::resAmp2 cartesian 10 0
+constrain etapi::reZ::resAmp2 etapi::imZ::resAmp2
+initialize etapi::reZ::resAmp3 cartesian 10 0
+constrain etapi::reZ::resAmp3 etapi::imZ::resAmp3
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="generating-events">
+<h2>Generating Events<a class="headerlink" href="#generating-events" title="Permalink to this heading">#</a></h2>
+<p>With the configuration file we can request <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code> to make some simulations.  Not all lines in the above cfg file is needed for generation, for instance the dataset locations, but will be used during fitting.</p>
+<p>Here, <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code> is class</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">generator</span> <span class="o">=</span> <span class="n">gen_amp</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">gen_amp</span></code> contains many variables to condition the generator. We can see these attribute below</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">generator</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Simulation attributes:
+
+----- General -----
+configfile:    Configuration file
+outname:       Output file name
+nEvents:       Number of events to generate
+----- Kinematics -----
+genFlat:       Generate flat in M(X) (no physics)
+lowMass:       Lower edge of mass range (GeV)
+highMass:      Upper edge of mass range (GeV)
+beamMaxE:      Electron beam energy (or photon energy endpoint)
+beamPeakE:     Coherent peak photon energy
+beamLowE:      Minimum photon energy to simulate events
+beamHighE:     Maximum photon energy to simulate events
+slope:         Momentum transfer slope
+lowT:          Minimum momentum transfer
+highT:         Maximum momentum transfer
+----- Output and Conditioning -----
+runNum:        Run number assigned to generated events
+seed:          Random number seed initialization
+diag:          Plot only diagnostic histograms
+fsRootFormat:  Enable output in FSRoot format
+</pre></div>
+</div>
+</div>
+</div>
+<p>A good way to set these data members is to create a dictionary to store our specifications (and save if we wish for reproducibility/referencing) and condition our generator as follows.</p>
+<p>These data members requires modification</p>
+<ol class="arabic simple">
+<li><p>configfile</p></li>
+<li><p>outname</p></li>
+</ol>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">outfile</span> <span class="o">=</span> <span class="s1">&#39;test.root&#39;</span>
+
+<span class="n">conditions</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;configfile&#39;</span><span class="p">:</span> <span class="n">cfgfile</span><span class="p">,</span>
+    <span class="s1">&#39;outname&#39;</span><span class="p">:</span> <span class="n">outfile</span><span class="p">,</span>
+    <span class="s1">&#39;nEvents&#39;</span><span class="p">:</span> <span class="mi">15000</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">conditions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">generator</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>To see the values of the datamembers:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">generator</span><span class="o">.</span><span class="n">data_members</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">member</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">generator</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">member</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>centeredVertex 1
+diag 0
+genFlat 0
+fsRootFormat 0
+lowMass 0.2
+highMass 2.0
+beamMaxE 12.0
+beamPeakE 9.0
+beamLowE 3.0
+beamHighE 12.0
+runNum 30731
+seed 0
+lowT 0.0
+highT 12.0
+slope 6.0
+nEvents 15000
+batchSize 10000
+configfile /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/fit.cfg
+outname test.root
+hddmname 
+</pre></div>
+</div>
+</div>
+</div>
+<p>After conditioning the generator, simulations can be performed!</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">generator</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   =================================================================
+   |        ^                                                      |
+   |       / \             Version:  v0.15.1-dirty                 |
+   |      /---\                                                    |
+   |     /     \           GDouble:  8 bytes                       |
+   |    /       \ MP           MPI:  NO                            |
+   |     -------               GPU:  NO                            |
+   |        |                                                      |
+   |        |              doi.org/10.5281/zenodo.5039377          |
+   |        | OOLS                                                 |
+   =================================================================
+ConfigFileParser WARNING:  no known resonance found, seed with mass = width = 1GeV
+TRandom3 Seed : 2072252832
+
+[ AmplitudeManager ]:
+
+	Creating AmplitudeManager for the reaction:  etapi
+		 particle index assignment:  Beam -&gt; 0
+		 particle index assignment:  Proton -&gt; 1
+		 particle index assignment:  Eta -&gt; 2
+		 particle index assignment:  Pi0 -&gt; 3
+WARNING: Couldn&#39;t find beam configuration file -- write local version
+
+BeamProperties: Parsing config file local_beam.conf
+BeamProperties WARNING:  generateCombrems parameter Emittance missing: using default = 2.5e-09
+BeamProperties WARNING:  generateCombrems parameter RadiatorThickness missing: using default = 5e-05
+BeamProperties WARNING:  generateCombrems parameter CollimatorDiameter missing: using default = 0.005
+BeamProperties WARNING:  generateCombrems parameter CollimatorDistance missing: using default = 76
+
+Initialization for coherent bremsstralung calculation
+ electron beam energy: 12 GeV
+ primary coherent edge: 9 GeV
+ConfigFileParser WARNING:  Minimum photon energy not high enough to guarantee flat mass distribution!
+Generating four-vectors...
+Processing events...
+324 events were processed.
+Generating four-vectors...
+Processing events...
+625 events were processed.
+Generating four-vectors...
+Processing events...
+985 events were processed.
+Generating four-vectors...
+Processing events...
+1337 events were processed.
+Generating four-vectors...
+Processing events...
+1660 events were processed.
+Generating four-vectors...
+Processing events...
+2093 events were processed.
+Generating four-vectors...
+Processing events...
+2363 events were processed.
+Generating four-vectors...
+Processing events...
+2659 events were processed.
+Generating four-vectors...
+Processing events...
+3019 events were processed.
+Generating four-vectors...
+Processing events...
+3419 events were processed.
+Generating four-vectors...
+Processing events...
+3743 events were processed.
+Generating four-vectors...
+Processing events...
+4121 events were processed.
+Generating four-vectors...
+Processing events...
+4447 events were processed.
+Generating four-vectors...
+Processing events...
+4799 events were processed.
+Generating four-vectors...
+Processing events...
+5131 events were processed.
+Generating four-vectors...
+Processing events...
+5451 events were processed.
+Generating four-vectors...
+Processing events...
+5850 events were processed.
+Generating four-vectors...
+Processing events...
+6165 events were processed.
+Generating four-vectors...
+Processing events...
+6443 events were processed.
+Generating four-vectors...
+Processing events...
+6793 events were processed.
+Generating four-vectors...
+Processing events...
+7110 events were processed.
+Generating four-vectors...
+Processing events...
+7426 events were processed.
+Generating four-vectors...
+Processing events...
+7742 events were processed.
+Generating four-vectors...
+Processing events...
+8021 events were processed.
+Generating four-vectors...
+Processing events...
+8349 events were processed.
+Generating four-vectors...
+Processing events...
+8713 events were processed.
+Generating four-vectors...
+Processing events...
+9046 events were processed.
+Generating four-vectors...
+Processing events...
+9429 events were processed.
+Generating four-vectors...
+Processing events...
+9738 events were processed.
+Generating four-vectors...
+Processing events...
+10124 events were processed.
+Generating four-vectors...
+Processing events...
+10445 events were processed.
+Generating four-vectors...
+Processing events...
+10776 events were processed.
+Generating four-vectors...
+Processing events...
+11153 events were processed.
+Generating four-vectors...
+Processing events...
+11558 events were processed.
+Generating four-vectors...
+Processing events...
+11942 events were processed.
+Generating four-vectors...
+Processing events...
+12280 events were processed.
+Generating four-vectors...
+Processing events...
+12699 events were processed.
+Generating four-vectors...
+Processing events...
+13029 events were processed.
+Generating four-vectors...
+Processing events...
+13388 events were processed.
+Generating four-vectors...
+Processing events...
+13710 events were processed.
+Generating four-vectors...
+Processing events...
+14027 events were processed.
+Generating four-vectors...
+Processing events...
+14355 events were processed.
+Generating four-vectors...
+Processing events...
+14732 events were processed.
+Generating four-vectors...
+Processing events...
+15000 events were processed.
+</pre></div>
+</div>
+</div>
+</div>
+<p>A <code class="docutils literal notranslate"><span class="pre">*diagnostic.root</span></code> is also created containing a variety of mass and angular histograms. A file called <code class="docutils literal notranslate"><span class="pre">test.root</span></code> should have been created containing the 4-momentum components for all particles.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">file</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TFile</span><span class="p">(</span><span class="n">outfile</span><span class="p">)</span>
+<span class="n">tree</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">kin</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tree</span><span class="o">.</span><span class="n">Print</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>******************************************************************************
+*Tree    :kin       : Kinematics                                             *
+*Entries :    15000 : Total =         1269353 bytes  File  Size =     869886 *
+*        :          : Tree compression factor =   1.46                       *
+******************************************************************************
+*Br    0 :NumFinalState : NumFinalState/I                                    *
+*Entries :    15000 : Total  Size=      60675 bytes  File Size  =        521 *
+*Baskets :        2 : Basket Size=      32000 bytes  Compression= 115.47     *
+*............................................................................*
+*Br    1 :E_FinalState : E_FinalState[NumFinalState]/F                       *
+*Entries :    15000 : Total  Size=     241516 bytes  File Size  =     185866 *
+*Baskets :       10 : Basket Size=      32000 bytes  Compression=   1.30     *
+*............................................................................*
+*Br    2 :Px_FinalState : Px_FinalState[NumFinalState]/F                     *
+*Entries :    15000 : Total  Size=     241530 bytes  File Size  =     191939 *
+*Baskets :       10 : Basket Size=      32000 bytes  Compression=   1.25     *
+*............................................................................*
+*Br    3 :Py_FinalState : Py_FinalState[NumFinalState]/F                     *
+*Entries :    15000 : Total  Size=     241530 bytes  File Size  =     192996 *
+*Baskets :       10 : Basket Size=      32000 bytes  Compression=   1.25     *
+*............................................................................*
+*Br    4 :Pz_FinalState : Pz_FinalState[NumFinalState]/F                     *
+*Entries :    15000 : Total  Size=     241530 bytes  File Size  =     189698 *
+*Baskets :       10 : Basket Size=      32000 bytes  Compression=   1.27     *
+*............................................................................*
+*Br    5 :E_Beam    : E_Beam/F                                               *
+*Entries :    15000 : Total  Size=      60633 bytes  File Size  =      53289 *
+*Baskets :        2 : Basket Size=      32000 bytes  Compression=   1.13     *
+*............................................................................*
+*Br    6 :Px_Beam   : Px_Beam/F                                              *
+*Entries :    15000 : Total  Size=      60639 bytes  File Size  =        472 *
+*Baskets :        2 : Basket Size=      32000 bytes  Compression= 127.43     *
+*............................................................................*
+*Br    7 :Py_Beam   : Py_Beam/F                                              *
+*Entries :    15000 : Total  Size=      60639 bytes  File Size  =        472 *
+*Baskets :        2 : Basket Size=      32000 bytes  Compression= 127.43     *
+*............................................................................*
+*Br    8 :Pz_Beam   : Pz_Beam/F                                              *
+*Entries :    15000 : Total  Size=      60639 bytes  File Size  =      53291 *
+*Baskets :        2 : Basket Size=      32000 bytes  Compression=   1.13     *
+*............................................................................*
+</pre></div>
+</div>
+</div>
+</div>
+<p>Lets clean up these generated files as we do not actually need them</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Free the file handle first so we can clean up</span>
+<span class="k">del</span> <span class="n">tree</span>
+<span class="k">del</span> <span class="n">file</span>
+
+<span class="o">!</span>rm<span class="w"> </span>gen_amp_diagnostic.root
+<span class="o">!</span>rm<span class="w"> </span>test.root
+</pre></div>
+</div>
+</div>
+</div>
+</section>
 </section>
 
     <script type="text/x-thebe-config">
@@ -500,6 +936,21 @@ document.write(`
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-file">Configuration File</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generating-events">Generating Events</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>
