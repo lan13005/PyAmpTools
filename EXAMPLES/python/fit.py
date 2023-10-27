@@ -6,7 +6,7 @@ import time
 from datetime import datetime
 import random
 import sys
-from utils import prepare_mpigpu
+from atiSetup import atiSetup
 
 def performFit(
         fitManager,
@@ -136,26 +136,8 @@ if __name__ == '__main__':
     ############## SET ENVIRONMENT VARIABLES ##############
     REPO_HOME = os.environ['REPO_HOME']
 
-    ############### INITIALIZE MPI IF REQUESTED ###########
-    # (Depends on if bash or mpirun/mpiexec called the python program)
-    #######################################################
-    USE_MPI, USE_GPU = prepare_mpigpu(args.accelerator) # use mpi/gpu if possible or you forced me to with -accelerator flag
-
-    if USE_MPI:
-        from mpi4py import rc as mpi4pyrc
-        mpi4pyrc.threads = False
-        mpi4pyrc.initialize = False
-        from mpi4py import MPI
-        RANK_MPI = MPI.COMM_WORLD.Get_rank()
-        SIZE_MPI = MPI.COMM_WORLD.Get_size()
-        print(f'Rank: {RANK_MPI} of {SIZE_MPI}')
-        assert( (USE_MPI and (SIZE_MPI > 1)) )
-    else:
-        RANK_MPI = 0
-        SIZE_MPI = 1
-
     ################### LOAD LIBRARIES ##################
-    from atiSetup import *
+    USE_MPI, USE_GPU, RANK_MPI = atiSetup(globals(), args.accelerator)
 
     ############## LOAD CONFIGURATION FILE ##############
     if RANK_MPI == 0:

@@ -4,6 +4,7 @@ import ROOT
 import os
 from typing import List
 import argparse
+from atiSetup import atiSetup
 
 def PlotGen(
         plotGen,
@@ -138,9 +139,9 @@ if __name__ == '__main__':
 
     ############## SET ENVIRONMENT VARIABLES ##############
     REPO_HOME     = os.environ['REPO_HOME']
-    os.environ['ATI_USE_MPI'] = "0" # set to 1 to use MPI libraries
-    os.environ['ATI_USE_GPU'] = "0"
-    from atiSetup import *
+
+    ################### LOAD LIBRARIES ##################
+    atiSetup(globals())
 
     ############## PARSE COMMANDLINE ARGUMENTS ##############
     parser = argparse.ArgumentParser(description='Plotter')

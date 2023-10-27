@@ -7,6 +7,7 @@ import argparse
 import numpy as np
 from utils import remove_all_whitespace
 from plotgen_utils import book_histogram, turn_on_specifc_waveset
+from atiSetup import atiSetup
 
 def draw_histograms(
     results,
@@ -116,10 +117,9 @@ def draw_histograms(
 if __name__ == '__main__':
     ############## SET ENVIRONMENT VARIABLES ##############
     REPO_HOME     = os.environ['REPO_HOME']
-    os.environ['ATI_USE_MPI']        = "0" # set to 1 to use MPI libraries
-    os.environ['ATI_USE_GPU']        = "0" # set to 1 to use GPU libraries
-    os.environ['ATI_USE_FSROOT']     = "1" # off by default
-    from atiSetup import *
+
+    ################### LOAD LIBRARIES ##################
+    atiSetup(globals(), use_fsroot=True)
 
     from RDFmacros import loadMacros
     loadMacros()

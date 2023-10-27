@@ -1,13 +1,14 @@
 import ROOT
 import os
 from typing import List
-from atiSetup import *
+from atiSetup import atiSetup
 import pytest
 
 @pytest.mark.parmgr
 def test_parMgr():
     ############## SET ENVIRONMENT VARIABLES ##############
     REPO_HOME     = os.environ['REPO_HOME']
+    atiSetup(globals())
 
     ############## LOAD CONFIGURATION FILE ##############
     cfgfile = f'{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/fit.cfg'

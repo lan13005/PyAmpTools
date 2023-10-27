@@ -40,28 +40,6 @@ def remove_all_whitespace(string):
     ''' Removes all whitespace from a string '''
     return string.replace(" ", "")
 
-
-def prepare_mpigpu(accelerator):
-    ''' Sets variables to use MPI and/or GPU if requested'''
-    #### MPI ####
-    assert(accelerator in ['mpi', 'gpu', 'mpigpu', 'gpumpi', '']), f'Invalid accelerator flag: {accelerator}'
-    caller, parent = get_pid_family()
-
-    os.environ['ATI_USE_MPI'] = '0'
-    USE_MPI = False
-    os.environ['ATI_USE_GPU'] = '0'
-    USE_GPU = False
-
-    if accelerator is not None:
-        if ("mpi" in parent):
-            os.environ['ATI_USE_MPI'] = '1'
-            USE_MPI = True
-        if (check_nvidia_devices()[0]):
-            os.environ['ATI_USE_GPU'] = '1'
-            USE_GPU = True
-
-    return USE_MPI, USE_GPU
-
 class testKnownFailure(unittest.TestCase):
     '''
     Function wrapper that tests for known failures.
@@ -98,8 +76,12 @@ def check_shared_lib_exists(libName, verbose=False):
             if verbose: print(" --- Found here!")
             break
         if verbose: print()
-        
+
     return libExists
+
+def raiseError(errorType, msg):
+    ''' Raise an error of type errorType with message msg '''
+    raise errorType(msg)
 
 ###############################################################################################
 def setPlotStyle(

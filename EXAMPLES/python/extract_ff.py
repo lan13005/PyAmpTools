@@ -4,6 +4,7 @@ import os
 import argparse
 import re
 import sys
+from atiSetup import atiSetup
 
 def extract_ff(results, outfileName='', acceptanceCorrect=True, fmt='.5f', regex_merge=None):
     '''
@@ -83,9 +84,9 @@ if __name__ == '__main__':
 
     ############## SET ENVIRONMENT VARIABLES ##############
     REPO_HOME     = os.environ['REPO_HOME']
-    os.environ['ATI_USE_MPI'] = "0" # set to 1 to use MPI libraries
-    os.environ['ATI_USE_GPU'] = "0"
-    from atiSetup import *
+
+    ################### LOAD LIBRARIES ##################
+    atiSetup(globals())
 
     ############## PARSE COMMANDLINE ARGUMENTS ##############
     parser = argparse.ArgumentParser(description='Extract Fit Fractions from FitResults')

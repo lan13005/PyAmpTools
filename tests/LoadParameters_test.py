@@ -1,12 +1,13 @@
 import ROOT
 import os
-from atiSetup import *
+from atiSetup import atiSetup
 import pytest
 from LoadParameters import LoadParameters
 from utils import testKnownFailure
 
 ############## SET ENVIRONMENT VARIABLES ##############
 REPO_HOME     = os.environ['REPO_HOME']
+atiSetup(globals())
 
 def performCheck(input, truths):
     true_params, true_paramsIsReal, true_flat_params, true_names = truths
