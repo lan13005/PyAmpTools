@@ -65,7 +65,7 @@ const thebe_selector_output = ".output, .cell_output"
     <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/libraryLoading';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="cfgGenerator" href="../api/cfgGenerator.html" />
+    <link rel="next" title="Generating Data" href="generation.html" />
     <link rel="prev" title="PyAmpTools" href="../intro.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -164,6 +164,7 @@ const thebe_selector_output = ".output, .cell_output"
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorial</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Loading Libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generation.html">Generating Data</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
@@ -373,12 +374,14 @@ document.write(`
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">atiSetup</span> <span class="kn">import</span> <span class="n">atiSetup</span>
+<span class="kn">import</span> <span class="nn">ROOT</span>
 
 <span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
 <span class="n">REPO_HOME</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
 <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;ATI_USE_MPI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span> <span class="c1"># set to 1 to use MPI libraries</span>
-<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;ATI_USE_GPU&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span>
-<span class="kn">from</span> <span class="nn">atiSetup</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;ATI_USE_GPU&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span> <span class="c1"># set to 1 to use GPU libraries</span>
+<span class="n">atiSetup</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -478,11 +481,11 @@ document.write(`
       </div>
     </a>
     <a class="right-next"
-       href="../api/cfgGenerator.html"
+       href="generation.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">cfgGenerator</p>
+        <p class="prev-next-title">Generating Data</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
