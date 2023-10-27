@@ -9,11 +9,11 @@ class gen_amp
 {
 
 public:
-    gen_amp(string configfile, string outname);
+    gen_amp();
     ~gen_amp();
 
-    void print_help();
-    void generate();
+	void print_help();
+	void generate();
 
 	bool centeredVertex = true;
 	bool diag = false;
@@ -39,10 +39,33 @@ public:
 	int nEvents = 10000;
 	int batchSize = 10000;
 
-private:
-    string configfile;
-    string outname;
+    string configfile="";
+    string outname="";
     string hddmname="";
+
+	vector<string> data_members = {
+		"centeredVertex",
+		"diag",
+		"genFlat",
+		"fsRootFormat",
+		"lowMass",
+		"highMass",
+		"beamMaxE",
+		"beamPeakE",
+		"beamLowE",
+		"beamHighE",
+		"runNum",
+		"seed",
+		"lowT",
+		"highT",
+		"slope",
+		"nEvents",
+		"batchSize",
+		"configfile",
+		"outname",
+		"hddmname"
+	};
+
 };
 
 #endif // GEN_AMP_H

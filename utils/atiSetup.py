@@ -11,14 +11,14 @@ from pythonization import pythonize_parMgr
 #  functions are called.                               #
 ########################################################
 
-def setup(calling_globals, accelerator='', use_fsroot=False):
+def setup(calling_globals, accelerator='', use_fsroot=False, use_genamp=False):
     ''' Performs entire setup '''
-    USE_MPI, USE_GPU, RANK_MPI = loadLibraries(accelerator, use_fsroot)
+    USE_MPI, USE_GPU, RANK_MPI = loadLibraries(accelerator, use_fsroot, use_genamp)
     set_aliases(calling_globals, USE_MPI)
 
     return USE_MPI, USE_GPU, RANK_MPI
 
-def loadLibraries(accelerator, use_fsroot=False):
+def loadLibraries(accelerator, use_fsroot=False, use_genamp=False):
     ''' Load all libraries and print availability '''
     USE_MPI, USE_GPU, RANK_MPI = prepare_mpigpu(accelerator)
     SUFFIX  = "_GPU" if USE_GPU else ""
@@ -32,6 +32,7 @@ def loadLibraries(accelerator, use_fsroot=False):
     loadLibrary(f'libAmpPlotter.so', RANK_MPI)
     loadLibrary(f'libAmpsDataIO{SUFFIX}.so', RANK_MPI) # Depends on AmpPlotter!
     loadLibrary(f'libFSRoot.so', RANK_MPI, use_fsroot)
+    loadLibrary(f'libAmpsGen.so', RANK_MPI, use_genamp)
     print("------------------------------------------------\n")
 
     # Dummy functions that just prints "initialization"
@@ -42,7 +43,7 @@ def loadLibraries(accelerator, use_fsroot=False):
 
     return USE_MPI, USE_GPU, RANK_MPI
 
-def loadLibrary(libName, RANK_MPI, availability=True):
+def loadLibrary(libName, RANK_MPI=0, availability=True):
     ''' Load a shared library and print availability '''
     statement = f'Loading library {libName} '
     libExists = check_shared_lib_exists(libName)

@@ -22,8 +22,8 @@ export FSROOT=$REPO_HOME/external/FSRoot
 
 ## Load Generator library if external/AMPTOOLS_GENERATORS was built
 if [ -d "$REPO_HOME/external/AMPTOOLS_GENERATORS/ccdb" ]; then
-    export CCDB_HOME=$REPO_HOME/external/AMPTOOLS_GENERATORS/ccdb
-    source $CCDB_HOME/environment.bash
+    # export CCDB_HOME=$REPO_HOME/external/AMPTOOLS_GENERATORS/ccdb
+    # source $CCDB_HOME/environment.bash
     export LD_LIBRARY_PATH=$REPO_HOME/external/AMPTOOLS_GENERATORS:$LD_LIBRARY_PATH
 fi
 

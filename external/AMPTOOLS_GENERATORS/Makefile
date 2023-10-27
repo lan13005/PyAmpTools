@@ -121,6 +121,6 @@ clean:
 	$(Q)find . -name "*.o" -type f -delete
 	$(Q)find . -name ".*" -type f -delete
 	$(Q)find . -name "*.d" -type f -delete
-	$(Q)rm -f *cxx* *.so *.pcm *Linkdef.h *dict*.h
-	$(Q)rm -rf ccdb
-	$(Q)rm __pycache__
+	$(Q)-rm -f *cxx* *.so *.pcm *Linkdef.h *dict*.h
+	$(Q)-rm -rf ccdb
+	$(Q)-rm -rf __pycache__

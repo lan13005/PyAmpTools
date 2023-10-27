@@ -46,14 +46,8 @@
 using std::complex;
 using namespace std;
 
-gen_amp::gen_amp( string _configfile, string _outname ) :
-	configfile( _configfile ),
-	outname( _outname )
+gen_amp::gen_amp()
 {
-	if( configfile.size() == 0 || outname.size() == 0 ){
-		cout << "No config file or output specificed:  run gen_amp -h for help" << endl;
-		exit(1);
-	}
 }
 
 gen_amp::~gen_amp()
@@ -62,30 +56,37 @@ gen_amp::~gen_amp()
 
 void
 gen_amp::print_help(){
-	cout << endl << " Usage for gen_amp" << endl << endl;
-	cout << "\t -c    <file>\t Config file" << endl;
-	cout << "\t -o    <name>\t ROOT file output name" << endl;
-	cout << "\t -fsroot \t Enable output in FSRoot format" << endl;
-	cout << "\t -hd   <name>\t HDDM file output name [optional]" << endl;
-	cout << "\t -l    <value>\t Low edge of mass range (GeV) [optional]" << endl;
-	cout << "\t -u    <value>\t Upper edge of mass range (GeV) [optional]" << endl;
-	cout << "\t -n    <value>\t Minimum number of events to generate [optional]" << endl;
-	cout << "\t -m  <value>\t Electron beam energy (or photon energy endpoint) [optional]" << endl;
-    cout << "\t -p  <value>\t Coherent peak photon energy [optional]" << endl;
-    cout << "\t -a  <value>\t Minimum photon energy to simulate events [optional]" << endl;
-    cout << "\t -b  <value>\t Maximum photon energy to simulate events [optional]" << endl;
-	cout << "\t -r    <value>\t Run number assigned to generated events [optional]" << endl;
-	cout << "\t -s    <value>\t Random number seed initialization [optional]" << endl;
-	cout << "\t -t    <value>\t Momentum transfer slope [optional]" << endl;
-	cout << "\t -tmin <value>\t Minimum momentum transfer [optional]" << endl;
-	cout << "\t -tmax <value>\t Maximum momentum transfer [optional]" << endl;
-	cout << "\t -v \t\t Throw vertex distribution in gen_amp, not in hdgeant(4) [not recommended]" << endl;
-	cout << "\t -f \t\t Generate flat in M(X) (no physics) [optional]" << endl;
-	cout << "\t -d \t\t Plot only diagnostic histograms [optional]" << endl << endl;
+	cout << endl << "Simulation attributes:" << endl << endl;
+	cout << "----- General -----" << endl;
+	cout << "configfile:    Configuration file" << endl;
+	cout << "outname:       Output file name" << endl;
+	cout << "nEvents:       Number of events to generate" << endl;
+	cout << "----- Kinematics -----" << endl;
+	cout << "genFlat:       Generate flat in M(X) (no physics)" << endl;
+	cout << "lowMass:       Lower edge of mass range (GeV)" << endl;
+	cout << "highMass:      Upper edge of mass range (GeV)" << endl;
+	cout << "beamMaxE:      Electron beam energy (or photon energy endpoint)" << endl;
+	cout << "beamPeakE:     Coherent peak photon energy" << endl;
+	cout << "beamLowE:      Minimum photon energy to simulate events" << endl;
+	cout << "beamHighE:     Maximum photon energy to simulate events" << endl;
+	cout << "slope:         Momentum transfer slope" << endl;
+	cout << "lowT:          Minimum momentum transfer" << endl;
+	cout << "highT:         Maximum momentum transfer" << endl;
+	cout << "----- Output and Conditioning -----" << endl;
+	cout << "runNum:        Run number assigned to generated events" << endl;
+	cout << "seed:          Random number seed initialization" << endl;
+	cout << "diag:          Plot only diagnostic histograms" << endl;
+	cout << "fsRootFormat:  Enable output in FSRoot format" << endl;
 }
 
 void
 gen_amp::generate(){
+
+	if( configfile.size() == 0 || outname.size() == 0 ){
+		cout << "No config file or output specificed:  run gen_amp -h for help" << endl;
+		exit(1);
+	}
+
 	// open config file and be sure only one reaction is specified
 	ConfigFileParser parser( configfile );
 	ConfigurationInfo* cfgInfo = parser.getConfigurationInfo();
