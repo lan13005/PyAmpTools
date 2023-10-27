@@ -6,7 +6,7 @@ import time
 from datetime import datetime
 import random
 import sys
-from atiSetup import atiSetup
+import atiSetup
 
 def performFit(
         fitManager,
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     REPO_HOME = os.environ['REPO_HOME']
 
     ################### LOAD LIBRARIES ##################
-    USE_MPI, USE_GPU, RANK_MPI = atiSetup(globals(), args.accelerator)
+    USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals(), args.accelerator)
 
     ############## LOAD CONFIGURATION FILE ##############
     if RANK_MPI == 0:

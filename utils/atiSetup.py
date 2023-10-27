@@ -11,7 +11,7 @@ from pythonization import pythonize_parMgr
 #  functions are called.                               #
 ########################################################
 
-def atiSetup(calling_globals, accelerator='', use_fsroot=False):
+def setup(calling_globals, accelerator='', use_fsroot=False):
     ''' Performs entire setup '''
     USE_MPI, USE_GPU, RANK_MPI = loadLibraries(accelerator, use_fsroot)
     set_aliases(calling_globals, USE_MPI)

@@ -7,7 +7,7 @@ import argparse
 import numpy as np
 from utils import remove_all_whitespace
 from plotgen_utils import book_histogram, turn_on_specifc_waveset
-from atiSetup import atiSetup
+import atiSetup
 
 def draw_histograms(
     results,
@@ -119,7 +119,7 @@ if __name__ == '__main__':
     REPO_HOME     = os.environ['REPO_HOME']
 
     ################### LOAD LIBRARIES ##################
-    atiSetup(globals(), use_fsroot=True)
+    atiSetup.setup(globals(), use_fsroot=True)
 
     from RDFmacros import loadMacros
     loadMacros()

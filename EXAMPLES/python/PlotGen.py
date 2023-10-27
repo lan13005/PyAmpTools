@@ -4,7 +4,7 @@ import ROOT
 import os
 from typing import List
 import argparse
-from atiSetup import atiSetup
+import atiSetup
 
 def PlotGen(
         plotGen,
@@ -141,7 +141,7 @@ if __name__ == '__main__':
     REPO_HOME     = os.environ['REPO_HOME']
 
     ################### LOAD LIBRARIES ##################
-    atiSetup(globals())
+    atiSetup.setup(globals())
 
     ############## PARSE COMMANDLINE ARGUMENTS ##############
     parser = argparse.ArgumentParser(description='Plotter')

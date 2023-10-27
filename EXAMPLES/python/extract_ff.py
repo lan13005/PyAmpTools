@@ -4,7 +4,7 @@ import os
 import argparse
 import re
 import sys
-from atiSetup import atiSetup
+import atiSetup
 
 def extract_ff(results, outfileName='', acceptanceCorrect=True, fmt='.5f', regex_merge=None):
     '''
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     REPO_HOME     = os.environ['REPO_HOME']
 
     ################### LOAD LIBRARIES ##################
-    atiSetup(globals())
+    atiSetup.setup(globals())
 
     ############## PARSE COMMANDLINE ARGUMENTS ##############
     parser = argparse.ArgumentParser(description='Extract Fit Fractions from FitResults')

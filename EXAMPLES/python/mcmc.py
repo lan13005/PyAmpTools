@@ -9,7 +9,7 @@ import argparse
 import time
 import sys
 import yaml
-from atiSetup import atiSetup
+import atiSetup
 
 def LogProb(
     par_values,
@@ -331,7 +331,7 @@ if __name__ == '__main__':
     REPO_HOME     = os.environ['REPO_HOME']
 
     ################### LOAD LIBRARIES ##################
-    USE_MPI, USE_GPU, RANK_MPI = atiSetup(globals(), args.accelerator)
+    USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals(), args.accelerator)
 
     ############## LOAD CONFIGURATION FILE ##############
     parser = ConfigFileParser(cfgfile)
