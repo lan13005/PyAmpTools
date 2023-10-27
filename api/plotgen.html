@@ -401,31 +401,6 @@ document.write(`
 </dl>
 </dd></dl>
 
-</section>
-<section id="id1">
-<h2>PlotGen<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="PlotGen.PlotGen">
-<span class="sig-name descname"><span class="pre">PlotGen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plotGen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ofile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ampString</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keepAllAmps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotAllVars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotGenHists</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doAccCorr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PlotGen.PlotGen" title="Permalink to this definition">#</a></dt>
-<dd><p>Generates plots from a fit result file. The plots are saved to a root file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>plotGen</strong> – Sub-classed PlotGenerator instance.</p></li>
-<li><p><strong>plotfile</strong> – name of output root file.</p></li>
-<li><p><strong>ampString</strong> – Semicolon separated list of coherent sums to plot. Sums are underscore separated amplitudes. Empty string will plot sum of all waves.</p></li>
-<li><p><strong>keepAllAmps</strong> – If True, all amplitudes are summed and plotted. If False, only the amplitudes specified in ampString will be plotted.</p></li>
-<li><p><strong>plotAllVars</strong> – If True, all variables will be plotted.</p></li>
-<li><p><strong>plotGenHists</strong> – If True, generated histograms will be plotted.</p></li>
-<li><p><strong>doAccCorr</strong> – If True, acceptance correction will be applied to the histograms.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py function">
 <dt class="sig sig-object py" id="plotgen_utils.define_if_not_observed">
 <span class="sig-name descname"><span class="pre">define_if_not_observed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">OBSERVED_FORMULAE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#plotgen_utils.define_if_not_observed" title="Permalink to this definition">#</a></dt>
@@ -490,6 +465,31 @@ wavesets = ‘resAmp1_resAmp2’</p>
 <li><p><strong>waveset</strong> – string</p></li>
 <li><p><strong>verbose</strong> – bool</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="id1">
+<h2>PlotGen<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="PlotGen.PlotGen">
+<span class="sig-name descname"><span class="pre">PlotGen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plotGen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ofile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ampString</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keepAllAmps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotAllVars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotGenHists</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doAccCorr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PlotGen.PlotGen" title="Permalink to this definition">#</a></dt>
+<dd><p>Generates plots from a fit result file. The plots are saved to a root file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>plotGen</strong> – Sub-classed PlotGenerator instance.</p></li>
+<li><p><strong>plotfile</strong> – name of output root file.</p></li>
+<li><p><strong>ampString</strong> – Semicolon separated list of coherent sums to plot. Sums are underscore separated amplitudes. Empty string will plot sum of all waves.</p></li>
+<li><p><strong>keepAllAmps</strong> – If True, all amplitudes are summed and plotted. If False, only the amplitudes specified in ampString will be plotted.</p></li>
+<li><p><strong>plotAllVars</strong> – If True, all variables will be plotted.</p></li>
+<li><p><strong>plotGenHists</strong> – If True, generated histograms will be plotted.</p></li>
+<li><p><strong>doAccCorr</strong> – If True, acceptance correction will be applied to the histograms.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
