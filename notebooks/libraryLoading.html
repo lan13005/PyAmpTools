@@ -164,7 +164,11 @@ const thebe_selector_output = ".output, .cell_output"
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorial</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Loading Libraries</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generation.html">Generating Data</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="generation.html">Generating Data</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="mle.html">Maximum Likelihood Estimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mcmc.html">Markov Chain Monte Carlo</a></li>
+</ul>
+</li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
@@ -374,28 +378,33 @@ document.write(`
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">atiSetup</span> <span class="kn">import</span> <span class="n">atiSetup</span>
+<span class="kn">import</span> <span class="nn">atiSetup</span>
 <span class="kn">import</span> <span class="nn">ROOT</span>
 
 <span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
 <span class="n">REPO_HOME</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
-<span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span> <span class="c1"># RANK_MPI defaults to 0 even if not using MPI</span>
+<span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span> <span class="c1"># RANK_MPI defaults to 0 even if not using MPI</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Welcome to JupyROOT 6.28/06
+
+------------------------------------------------
+MPI is disabled
+GPU is disabled
+Loading library libAmpTools.so .............. ON
+Loading library libAmpPlotter.so ............
 </pre></div>
 </div>
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">ImportError</span><span class="g g-Whitespace">                               </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">line</span> <span class="mi">2</span>
-<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="kn">import</span> <span class="nn">os</span>
-<span class="ne">----&gt; </span><span class="mi">2</span> <span class="kn">from</span> <span class="nn">atiSetup</span> <span class="kn">import</span> <span class="n">atiSetup</span>
-<span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="kn">import</span> <span class="nn">ROOT</span>
-<span class="g g-Whitespace">      </span><span class="mi">5</span> <span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
-
-<span class="ne">ImportError</span>: cannot import name &#39;atiSetup&#39; from &#39;atiSetup&#39; (/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py)
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> ON
+Loading library libAmpsDataIO.so ............ ON
+Loading library libFSRoot.so ................ OFF
+Loading library libAmpsGen.so ............... OFF
+------------------------------------------------
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 </pre></div>
 </div>
 </div>
@@ -405,7 +414,7 @@ document.write(`
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">################ SET ADDITIONAL ALIAS ###################</span>
 <span class="n">AmplitudeInfo</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">AmplitudeInfo</span>
-<span class="n">ParameterInfo</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ParameterInfo</span>
+<span class="n">TH1</span>           <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TH1</span>
 </pre></div>
 </div>
 </div>

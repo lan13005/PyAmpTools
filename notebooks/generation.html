@@ -65,7 +65,7 @@ const thebe_selector_output = ".output, .cell_output"
     <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/generation';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="cfgGenerator" href="../api/cfgGenerator.html" />
+    <link rel="next" title="Maximum Likelihood Estimation" href="mle.html" />
     <link rel="prev" title="Loading Libraries" href="libraryLoading.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -164,7 +164,11 @@ const thebe_selector_output = ".output, .cell_output"
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorial</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="libraryLoading.html">Loading Libraries</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Generating Data</a></li>
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">Generating Data</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="mle.html">Maximum Likelihood Estimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mcmc.html">Markov Chain Monte Carlo</a></li>
+</ul>
+</li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
@@ -409,7 +413,9 @@ GPU is disabled
 Loading library libAmpTools.so .............. ON
 Loading library libAmpPlotter.so ............ ON
 Loading library libAmpsDataIO.so ............ ON
-Loading library libFSRoot.so ................ OFF
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Loading library libFSRoot.so ................ OFF
 Loading library libAmpsGen.so ............... ON
 ------------------------------------------------
 </pre></div>
@@ -492,10 +498,9 @@ data  etapi ROOTDataReader /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/sample
 # polarization information -- use 100% polarization to enhance visual effect
 define polVal 1.0
 define polAngleDeg 0.0
-
-# a string that can be used in amplitude arguments
 define polInfo polAngleDeg polVal
 
+### Amplitude LM projections
 define wave1 2 0
 define wave2 2 2
 define wave3 0 0
@@ -508,7 +513,7 @@ sum etapi imZ
 # kinematic/angular dependence given by Zlm (GlueX-doc 4094)
 # (choose one of the two pairs below and comment out the other)
 
-# this pair is for positive reflectivity
+### Define amplitudes
 amplitude etapi::reZ::resAmp1 Zlm wave1 +1 +1 polInfo
 amplitude etapi::imZ::resAmp1 Zlm wave1 -1 -1 polInfo
 amplitude etapi::reZ::resAmp2 Zlm wave2 +1 +1 polInfo
@@ -527,11 +532,12 @@ constrain etapi::reZ::resAmp3 etapi::imZ::resAmp3
 </div>
 </div>
 </div>
+<p>Some things to note. The head of the cfg file contains available keywords that provide some functionality. See <a class="reference external" href="https://github.com/mashephe/AmpTools/blob/master/AmpTools_User_Guide.pdf">AmpTools Documentation</a> for more information. The amplitudes used here are known as the Zlm amplitudes. See here for the <a class="reference external" href="https://halldweb.jlab.org/DocDB/0040/004094/003/amptools_polarization.pdf">Zlm amplitude implementation</a>.</p>
 </section>
 <section id="generating-events">
 <h2>Generating Events<a class="headerlink" href="#generating-events" title="Permalink to this heading">#</a></h2>
 <p>With the configuration file we can request <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code> to make some simulations.  Not all lines in the above cfg file is needed for generation, for instance the dataset locations, but will be used during fitting.</p>
-<p>Here, <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code> is class</p>
+<p>Here, <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code> is class, and requires instantiation</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">generator</span> <span class="o">=</span> <span class="n">gen_amp</span><span class="p">()</span>
@@ -595,35 +601,35 @@ fsRootFormat:  Enable output in FSRoot format
 </div>
 </div>
 </div>
-<p>To see the values of the datamembers:</p>
+<p>To see the values of all the datamembers (most contain some default values):</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">generator</span><span class="o">.</span><span class="n">data_members</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">member</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">generator</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">member</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">member</span><span class="si">}</span><span class="s1">:     </span><span class="si">{</span><span class="nb">getattr</span><span class="p">(</span><span class="n">generator</span><span class="p">,</span><span class="w"> </span><span class="nb">str</span><span class="p">(</span><span class="n">member</span><span class="p">)</span><span class="w"> </span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span> <span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>centeredVertex 1
-diag 0
-genFlat 0
-fsRootFormat 0
-lowMass 0.2
-highMass 2.0
-beamMaxE 12.0
-beamPeakE 9.0
-beamLowE 3.0
-beamHighE 12.0
-runNum 30731
-seed 0
-lowT 0.0
-highT 12.0
-slope 6.0
-nEvents 15000
-batchSize 10000
-configfile /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/fit.cfg
-outname test.root
-hddmname 
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>centeredVertex:     1
+diag:     0
+genFlat:     0
+fsRootFormat:     0
+lowMass:     0.2
+highMass:     2.0
+beamMaxE:     12.0
+beamPeakE:     9.0
+beamLowE:     3.0
+beamHighE:     12.0
+runNum:     30731
+seed:     0
+lowT:     0.0
+highT:     12.0
+slope:     6.0
+nEvents:     15000
+batchSize:     10000
+configfile:     /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/fit.cfg
+outname:     test.root
+hddmname:     
 </pre></div>
 </div>
 </div>
@@ -648,7 +654,7 @@ hddmname
    |        | OOLS                                                 |
    =================================================================
 ConfigFileParser WARNING:  no known resonance found, seed with mass = width = 1GeV
-TRandom3 Seed : 2072252832
+TRandom3 Seed : 1532415151
 
 [ AmplitudeManager ]:
 
@@ -671,133 +677,133 @@ Initialization for coherent bremsstralung calculation
 ConfigFileParser WARNING:  Minimum photon energy not high enough to guarantee flat mass distribution!
 Generating four-vectors...
 Processing events...
-324 events were processed.
+297 events were processed.
 Generating four-vectors...
 Processing events...
-625 events were processed.
+648 events were processed.
 Generating four-vectors...
 Processing events...
-985 events were processed.
+1003 events were processed.
 Generating four-vectors...
 Processing events...
-1337 events were processed.
+1368 events were processed.
 Generating four-vectors...
 Processing events...
-1660 events were processed.
+1690 events were processed.
 Generating four-vectors...
 Processing events...
-2093 events were processed.
+2042 events were processed.
 Generating four-vectors...
 Processing events...
-2363 events were processed.
+2328 events were processed.
 Generating four-vectors...
 Processing events...
-2659 events were processed.
+2683 events were processed.
 Generating four-vectors...
 Processing events...
-3019 events were processed.
+2976 events were processed.
 Generating four-vectors...
 Processing events...
-3419 events were processed.
+3339 events were processed.
 Generating four-vectors...
 Processing events...
-3743 events were processed.
+3661 events were processed.
 Generating four-vectors...
 Processing events...
-4121 events were processed.
+3981 events were processed.
 Generating four-vectors...
 Processing events...
-4447 events were processed.
+4387 events were processed.
 Generating four-vectors...
 Processing events...
-4799 events were processed.
+4694 events were processed.
 Generating four-vectors...
 Processing events...
-5131 events were processed.
+5091 events were processed.
 Generating four-vectors...
 Processing events...
-5451 events were processed.
+5435 events were processed.
 Generating four-vectors...
 Processing events...
-5850 events were processed.
+5762 events were processed.
 Generating four-vectors...
 Processing events...
-6165 events were processed.
+6099 events were processed.
 Generating four-vectors...
 Processing events...
-6443 events were processed.
+6419 events were processed.
 Generating four-vectors...
 Processing events...
-6793 events were processed.
+6701 events were processed.
 Generating four-vectors...
 Processing events...
-7110 events were processed.
+7028 events were processed.
 Generating four-vectors...
 Processing events...
-7426 events were processed.
+7440 events were processed.
 Generating four-vectors...
 Processing events...
-7742 events were processed.
+7833 events were processed.
 Generating four-vectors...
 Processing events...
-8021 events were processed.
+8154 events were processed.
 Generating four-vectors...
 Processing events...
-8349 events were processed.
+8542 events were processed.
 Generating four-vectors...
 Processing events...
-8713 events were processed.
+8926 events were processed.
 Generating four-vectors...
 Processing events...
-9046 events were processed.
+9285 events were processed.
 Generating four-vectors...
 Processing events...
-9429 events were processed.
+9665 events were processed.
 Generating four-vectors...
 Processing events...
-9738 events were processed.
+9961 events were processed.
 Generating four-vectors...
 Processing events...
-10124 events were processed.
+10324 events were processed.
 Generating four-vectors...
 Processing events...
-10445 events were processed.
+10609 events were processed.
 Generating four-vectors...
 Processing events...
-10776 events were processed.
+10958 events were processed.
 Generating four-vectors...
 Processing events...
-11153 events were processed.
+11384 events were processed.
 Generating four-vectors...
 Processing events...
-11558 events were processed.
+11739 events were processed.
 Generating four-vectors...
 Processing events...
-11942 events were processed.
+12128 events were processed.
 Generating four-vectors...
 Processing events...
-12280 events were processed.
+12429 events were processed.
 Generating four-vectors...
 Processing events...
-12699 events were processed.
+12773 events were processed.
 Generating four-vectors...
 Processing events...
-13029 events were processed.
+13157 events were processed.
 Generating four-vectors...
 Processing events...
-13388 events were processed.
+13486 events were processed.
 Generating four-vectors...
 Processing events...
-13710 events were processed.
+13829 events were processed.
 Generating four-vectors...
 Processing events...
-14027 events were processed.
+14186 events were processed.
 Generating four-vectors...
 Processing events...
-14355 events were processed.
+14552 events were processed.
 Generating four-vectors...
 Processing events...
-14732 events were processed.
+14905 events were processed.
 Generating four-vectors...
 Processing events...
 15000 events were processed.
@@ -823,7 +829,7 @@ Processing events...
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>******************************************************************************
 *Tree    :kin       : Kinematics                                             *
-*Entries :    15000 : Total =         1269353 bytes  File  Size =     869886 *
+*Entries :    15000 : Total =         1269353 bytes  File  Size =     869647 *
 *        :          : Tree compression factor =   1.46                       *
 ******************************************************************************
 *Br    0 :NumFinalState : NumFinalState/I                                    *
@@ -831,23 +837,23 @@ Processing events...
 *Baskets :        2 : Basket Size=      32000 bytes  Compression= 115.47     *
 *............................................................................*
 *Br    1 :E_FinalState : E_FinalState[NumFinalState]/F                       *
-*Entries :    15000 : Total  Size=     241516 bytes  File Size  =     185866 *
+*Entries :    15000 : Total  Size=     241516 bytes  File Size  =     185735 *
 *Baskets :       10 : Basket Size=      32000 bytes  Compression=   1.30     *
 *............................................................................*
 *Br    2 :Px_FinalState : Px_FinalState[NumFinalState]/F                     *
-*Entries :    15000 : Total  Size=     241530 bytes  File Size  =     191939 *
+*Entries :    15000 : Total  Size=     241530 bytes  File Size  =     191961 *
 *Baskets :       10 : Basket Size=      32000 bytes  Compression=   1.25     *
 *............................................................................*
 *Br    3 :Py_FinalState : Py_FinalState[NumFinalState]/F                     *
-*Entries :    15000 : Total  Size=     241530 bytes  File Size  =     192996 *
+*Entries :    15000 : Total  Size=     241530 bytes  File Size  =     192917 *
 *Baskets :       10 : Basket Size=      32000 bytes  Compression=   1.25     *
 *............................................................................*
 *Br    4 :Pz_FinalState : Pz_FinalState[NumFinalState]/F                     *
-*Entries :    15000 : Total  Size=     241530 bytes  File Size  =     189698 *
+*Entries :    15000 : Total  Size=     241530 bytes  File Size  =     189670 *
 *Baskets :       10 : Basket Size=      32000 bytes  Compression=   1.27     *
 *............................................................................*
 *Br    5 :E_Beam    : E_Beam/F                                               *
-*Entries :    15000 : Total  Size=      60633 bytes  File Size  =      53289 *
+*Entries :    15000 : Total  Size=      60633 bytes  File Size  =      53275 *
 *Baskets :        2 : Basket Size=      32000 bytes  Compression=   1.13     *
 *............................................................................*
 *Br    6 :Px_Beam   : Px_Beam/F                                              *
@@ -859,7 +865,7 @@ Processing events...
 *Baskets :        2 : Basket Size=      32000 bytes  Compression= 127.43     *
 *............................................................................*
 *Br    8 :Pz_Beam   : Pz_Beam/F                                              *
-*Entries :    15000 : Total  Size=      60639 bytes  File Size  =      53291 *
+*Entries :    15000 : Total  Size=      60639 bytes  File Size  =      53277 *
 *Baskets :        2 : Basket Size=      32000 bytes  Compression=   1.13     *
 *............................................................................*
 </pre></div>
@@ -875,11 +881,14 @@ Processing events...
 
 <span class="o">!</span>rm<span class="w"> </span>gen_amp_diagnostic.root
 <span class="o">!</span>rm<span class="w"> </span>test.root
+<span class="o">!</span>rm<span class="w"> </span>local_beam.conf
 </pre></div>
 </div>
 </div>
 </div>
 </section>
+<div class="toctree-wrapper compound">
+</div>
 </section>
 
     <script type="text/x-thebe-config">
@@ -922,11 +931,11 @@ Processing events...
       </div>
     </a>
     <a class="right-next"
-       href="../api/cfgGenerator.html"
+       href="mle.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">cfgGenerator</p>
+        <p class="prev-next-title">Maximum Likelihood Estimation</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
