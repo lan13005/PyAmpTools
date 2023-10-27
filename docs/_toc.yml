@@ -6,7 +6,8 @@ root: intro
 parts:
   - caption: Tutorial
     chapters:
-      - file: analysis
+      - file: notebooks/libraryLoading
+      - file: notebooks/generation
   - caption: API
     chapters:
       - file: api/cfgGenerator
