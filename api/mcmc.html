@@ -63,7 +63,6 @@ const thebe_selector_output = ".output, .cell_output"
 </script>
     <script async="async" src="../_static/sphinx-thebe.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/mcmc';</script>
-    <link rel="shortcut icon" href="../_static/gluex_logo.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="PlotGen" href="plotgen.html" />
@@ -148,14 +147,8 @@ const thebe_selector_output = ".output, .cell_output"
   
   
   
-    
-    
-      
-    
-    
-    <img src="../_static/gluex_logo.png" class="logo__image only-light" alt="PyAmpTools - Home"/>
-    <script>document.write(`<img src="../_static/gluex_logo.png" class="logo__image only-dark" alt="PyAmpTools - Home"/>`);</script>
   
+    <p class="title logo__title">PyAmpTools</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -174,6 +167,7 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="cfgGenerator.html">cfgGenerator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fit.html">fit</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">mcmc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plotgen.html">PlotGen</a></li>
@@ -467,6 +461,67 @@ document.write(`
 <span class="sig-name descname"><span class="pre">LoadParameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#LoadParameters.LoadParameters" title="Permalink to this definition">#</a></dt>
 <dd><dl class="simple">
 <dt>Class to extract amplitude parameters from an AmpTools FitResults or ConfigurationInfo object</dt><dd><p>Ability to format them (complex -&gt; real, imag) for input to other minimization algorithms</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="LoadParameters.LoadParameters.load_cfg">
+<span class="sig-name descname"><span class="pre">load_cfg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LoadParameters.LoadParameters.load_cfg" title="Permalink to this definition">#</a></dt>
+<dd><dl class="simple">
+<dt>Get a map of unique (parameter: value) pairs excluding additional constrained ones</dt><dd><p>These include production parameters and amplitude parameters</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cfg</strong> – If cfg is a FitResults object set values to fitted results. For a ConfigurationInfo object set values to initial values</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="LoadParameters.LoadParameters.flatten_parameters">
+<span class="sig-name descname"><span class="pre">flatten_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LoadParameters.LoadParameters.flatten_parameters" title="Permalink to this definition">#</a></dt>
+<dd><p>Flatten amplitude parameters (complex-&gt; real, imag) skipping imaginary parts of real amplitudes.
+If no arguments are passed, use the uniqueProdPars and uniqueProdIsReal from the last call to load_cfg()
+Can also format any dictionary pair into flat format</p>
+<blockquote>
+<div><p>Dictionary to List</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dict</em>) – dictionary of parameters to flatten</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of flattened parameters
+key (list): list of keys (parameter names) corresponding to parameters
+names (list): list of parameter names expanding complex parameters into Re[par] and Im[par]</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>parameters (list)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="LoadParameters.LoadParameters.unflatten_parameters">
+<span class="sig-name descname"><span class="pre">unflatten_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LoadParameters.LoadParameters.unflatten_parameters" title="Permalink to this definition">#</a></dt>
+<dd><dl class="simple">
+<dt>Unflatten parameters forming complex values (for production parameters) when requested.</dt><dd><p>List to Dictionary</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameters</strong> (<em>list</em>) – list of flattened parameters</p></li>
+<li><p><strong>key</strong> (<em>list</em>) – list of keys (parameter names) corresponding to parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dictionary of parameters</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>paramDict (dict)</p>
 </dd>
 </dl>
 </dd></dl>
