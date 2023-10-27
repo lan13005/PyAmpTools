@@ -1,4 +1,4 @@
 cfgGenerator
 ==========================
 
-.. autofunction:: cfgGenerator:generate_zlm_cfg
+.. autofunction:: cfgGenerator.generate_zlm_cfg
