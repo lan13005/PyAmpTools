@@ -51,10 +51,10 @@ def createMovesMixtureFromDict(moves_dict):
     Creates a mixture of moves for the emcee sampler
 
     Args:
-        moves_dict ~ { move: {kwargs: {}, probability} }
+        moves_dict: { move: {kwargs: {}, probability} }
 
     Returns:
-        moves_mixture ~ [ (emcee.moves.{move}(**kwargs), probability) ]
+        moves_mixture: [ (emcee.moves.{move}(kwargs), probability) ]
     '''
     moves_mixture = []
     for move, moveDict in moves_dict.items():

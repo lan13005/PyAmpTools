@@ -11,8 +11,6 @@ all: build
 # Build the Jupyter Book
 build:
 	@echo "Building Jupyter Book..."
-	mkdir -p $(AUTOSUM_DIR)
-	cp Distribution/module.rst $(AUTOSUM_DIR)
 	jupyter-book build $(BOOK_DIR)
 
 push:

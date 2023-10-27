@@ -7,7 +7,7 @@ import numpy as np
 
 class LoadParameters:
     '''
-    Class to extract amplitude parameters from a FitResults or ConfigurationInfo object
+    Class to extract amplitude parameters from an AmpTools FitResults or ConfigurationInfo object
        Ability to format them (complex -> real, imag) for input to other minimization algorithms
     '''
     def __init__(self):
@@ -18,8 +18,9 @@ class LoadParameters:
         '''
         Get a map of unique (parameter: value) pairs excluding additional constrained ones
             These include production parameters and amplitude parameters
-        For a FitResults object set values to fitted results
-        For a ConfigurationInfo object set values to initial values
+        
+        Args:
+            cfg: If cfg is a FitResults object set values to fitted results. For a ConfigurationInfo object set values to initial values
         '''
         ######## GET UNIQUE AMPLITUDES' PRODUCTION PARAMETERS ########
         results = None

@@ -60,7 +60,7 @@
       "name": "svg"
     }
   ],
-  "livePreview.defaultPreviewPath": "docs/_build/html",
+  "livePreview.defaultPreviewPath": "/docs/_build/html/api.html",
   "files.associations": {
     "iostream": "cpp",
     "ostream": "cpp",

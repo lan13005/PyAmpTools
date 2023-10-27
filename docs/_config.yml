@@ -3,7 +3,6 @@
 
 title: PyAmpTools
 author: Lawrence Ng
-logo: gluex_logo.png
 
 sphinx:
   extra_extensions:
@@ -25,6 +24,9 @@ execute:
 latex:
   latex_documents:
     targetname: book.tex
+    title: PyAmpTools
+    author: Lawrence Ng
+    documentclass: book
 
 # Add a bibtex file so that we can create citations
 bibtex_bibfiles:

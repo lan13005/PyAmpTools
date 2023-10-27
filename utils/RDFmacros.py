@@ -9,6 +9,10 @@ import ROOT
 #############################################
 
 def loadMacros():
+    '''
+    Load Macros that mirror FSRoot's FSMath
+    '''
+
     ROOT.gInterpreter.Declare("""
     #include "FSBasic/FSMath.h"
     using Vec_t = const ROOT::RVec<float>&;

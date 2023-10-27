@@ -3,8 +3,14 @@
 
 format: jb-book
 root: intro
-chapters:
-  - file: markdown
-  - file: notebooks
-  - file: markdown-notebooks
-  - file: api
+parts:
+  - caption: Tutorial
+    chapters:
+      - file: analysis
+  - caption: API
+    chapters:
+      - file: api/cfgGenerator
+      - file: api/fit
+      - file: api/mcmc
+      - file: api/plotgen
+      - file: api/extract_ff

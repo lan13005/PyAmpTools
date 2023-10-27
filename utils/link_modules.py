@@ -8,7 +8,7 @@ from shutil import which
 def recursive_link_if_not_exist(source_folders, destination_folder, ftype, verbose=False):
   if verbose: print(f"\n\nDestination Folder: {destination_folder}")
   for source_folder in source_folders:
-    for source in glob.glob(source_folder+ftype):
+    for source in glob.glob(source_folder+'/'+ftype):
       if source == sys.argv[0]: continue # do not add this linker itself...
       destination_file = destination_folder + '/' + source.split('/')[-1]
       cmd = f'ln -snfr {source} {destination_file}'
@@ -20,8 +20,8 @@ REPO_HOME = expandvars("$REPO_HOME")
 
 source_folders = [
         f"{REPO_HOME}/utils/",
+        f"{REPO_HOME}/EXAMPLES/python",
         ]
-
 
 ###################################
 # Manually adding some libraries to conda's virtual environment
