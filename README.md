@@ -14,4 +14,4 @@ Features:
 
 # Documentation
 
-Here is the [Documentation](https://lan13005.github.io/PyAmpTools/intro.html)
+Here is the [Documentation](https://lan13005.github.io/PyAmpTools/intro.html) for installation instructions / api / and tutorials.
