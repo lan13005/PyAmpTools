@@ -1,0 +1,84 @@
+Traceback (most recent call last):
+  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/jupyter_cache/executors/utils.py", line 58, in single_nb_execution
+    executenb(
+  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/nbclient/client.py", line 1305, in execute
+    return NotebookClient(nb=nb, resources=resources, km=km, **kwargs).execute()
+  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/jupyter_core/utils/__init__.py", line 173, in wrapped
+    return loop.run_until_complete(inner)
+  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/asyncio/base_events.py", line 647, in run_until_complete
+    return future.result()
+  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/nbclient/client.py", line 705, in async_execute
+    await self.async_execute_cell(
+  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/nbclient/client.py", line 1058, in async_execute_cell
+    await self._check_raise_for_error(cell, cell_index, exec_reply)
+  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/nbclient/client.py", line 914, in _check_raise_for_error
+    raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
+nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
+------------------
+    ############## SET ENVIRONMENT VARIABLES ##############
+    REPO_HOME     = os.environ['REPO_HOME']
+    os.environ['ATI_USE_MPI'] = "0" # set to 1 to use MPI libraries
+    os.environ['ATI_USE_GPU'] = "0"
+    from atiSetup import *
+
+    ################ SET ADDITIONAL ALIAS ###################
+    AmplitudeInfo = ROOT.AmplitudeInfo
+    ParameterInfo = ROOT.ParameterInfo
+
+    ############### USER-SPECIFIED VARIABLES ###############
+    fitName = 'EtaPi'
+    cfgFileOutputName = 'EtaPi.cfg'
+    basereactName = 'EtaPi'
+    particles = ['Beam', 'Proton', 'Eta', 'Pi0']
+
+    ### User-specified waveset ###
+    EJMs = [
+        [ 1,  2,  2],
+        [-1,  2,  2],
+        # [ 1,  0,  0],
+        # [-1,  0,  0],
+    ]
+    realAmps  = set( ['p00', 'm00'] )
+    fixedAmps = []
+
+    ## Load datasets
+    baseFolder = "/w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/REAL_MI_EXAMPLE/samples"
+
+    ## Polarization related, reactNames are scaled by the scales parameters
+    ##   Default: parScale0 is fixed to 1.0
+    angles    = ['0'        , '45'        , '90'        , '135'        ]
+    fractions = ['0.3519'   , '0.3374'    , '0.3303'    , '0.3375'     ]
+
+    datas  = [f'{baseFolder}/data_{angle:0>3}.root'  for angle in angles]
+    gens   = [f'{baseFolder}/gen_{angle:0>3}.root'   for angle in angles]
+    accs   = [f'{baseFolder}/acc_{angle:0>3}.root'   for angle in angles]
+    bkgnds = [f'{baseFolder}/bkgnd_{angle:0>3}.root' for angle in angles]
+
+    generate_zlm_cfg(
+        EJMs,
+        angles,
+        fractions,
+        datas,
+        gens,
+        accs,
+        bkgnds,
+        realAmps,
+        fixedAmps,
+        fitName,
+        cfgFileOutputName,
+        basereactName,
+        particles,
+    )
+------------------
+
+
+[0;31m---------------------------------------------------------------------------[0m
+[0;31mNameError[0m                                 Traceback (most recent call last)
+Cell [0;32mIn[1], line 2[0m
+[1;32m      1[0m [38;5;66;03m############## SET ENVIRONMENT VARIABLES ##############[39;00m
+[0;32m----> 2[0m REPO_HOME     [38;5;241m=[39m [43mos[49m[38;5;241m.[39menviron[[38;5;124m'[39m[38;5;124mREPO_HOME[39m[38;5;124m'[39m]
+[1;32m      3[0m os[38;5;241m.[39menviron[[38;5;124m'[39m[38;5;124mATI_USE_MPI[39m[38;5;124m'[39m] [38;5;241m=[39m [38;5;124m"[39m[38;5;124m0[39m[38;5;124m"[39m [38;5;66;03m# set to 1 to use MPI libraries[39;00m
+[1;32m      4[0m os[38;5;241m.[39menviron[[38;5;124m'[39m[38;5;124mATI_USE_GPU[39m[38;5;124m'[39m] [38;5;241m=[39m [38;5;124m"[39m[38;5;124m0[39m[38;5;124m"[39m
+
+[0;31mNameError[0m: name 'os' is not defined
+
