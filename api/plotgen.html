@@ -66,7 +66,7 @@ const thebe_selector_output = ".output, .cell_output"
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="extract_ff" href="extract_ff.html" />
-    <link rel="prev" title="mcmc" href="mcmc.html" />
+    <link rel="prev" title="LoadParameters" href="loadParameters.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -176,6 +176,7 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="cfgGenerator.html">cfgGenerator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fit.html">fit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcmc.html">mcmc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loadParameters.html">LoadParameters</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">PlotGen</a></li>
 <li class="toctree-l1"><a class="reference internal" href="extract_ff.html">extract_ff</a></li>
 </ul>
@@ -371,7 +372,7 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plotgenrdf">PlotGenRDF</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-PlotGenRDF">PlotGenRDF</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">PlotGen</a></li>
 </ul>
             </nav>
@@ -386,8 +387,8 @@ document.write(`
                   
   <section id="plotgen">
 <h1>PlotGen<a class="headerlink" href="#plotgen" title="Permalink to this heading">#</a></h1>
-<section id="plotgenrdf">
-<h2>PlotGenRDF<a class="headerlink" href="#plotgenrdf" title="Permalink to this heading">#</a></h2>
+<section id="module-PlotGenRDF">
+<span id="plotgenrdf"></span><h2>PlotGenRDF<a class="headerlink" href="#module-PlotGenRDF" title="Permalink to this heading">#</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="PlotGenRDF.draw_histograms">
 <span class="sig-name descname"><span class="pre">draw_histograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HISTS_TO_BOOK</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PlotGenRDF.draw_histograms" title="Permalink to this definition">#</a></dt>
@@ -403,6 +404,27 @@ document.write(`
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-plotgen_utils"></span><dl class="py function">
+<dt class="sig sig-object py" id="plotgen_utils.book_histogram">
+<span class="sig-name descname"><span class="pre">book_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HISTS_TO_BOOK</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#plotgen_utils.book_histogram" title="Permalink to this definition">#</a></dt>
+<dd><p>Book histograms for a given type (data, bkgnd, accMC, genMC)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>HISTS_TO_BOOK</strong> – dict of histograms to book, with associated function call, binning scheme, draw options</p></li>
+<li><p><strong>columns</strong> – list of column names in RDataFrame to check if we need to Redefine</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of booked Histos
+DRAW_OPTIONS: list of draw options</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>BOOKED_HISTOGRAMS</p>
 </dd>
 </dl>
 </dd></dl>
@@ -428,27 +450,6 @@ name: string</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>df</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="plotgen_utils.book_histogram">
-<span class="sig-name descname"><span class="pre">book_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HISTS_TO_BOOK</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#plotgen_utils.book_histogram" title="Permalink to this definition">#</a></dt>
-<dd><p>Book histograms for a given type (data, bkgnd, accMC, genMC)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>HISTS_TO_BOOK</strong> – dict of histograms to book, with associated function call, binning scheme, draw options</p></li>
-<li><p><strong>columns</strong> – list of column names in RDataFrame to check if we need to Redefine</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>list of booked Histos
-DRAW_OPTIONS: list of draw options</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>BOOKED_HISTOGRAMS</p>
 </dd>
 </dl>
 </dd></dl>
@@ -534,12 +535,12 @@ wavesets = ‘resAmp1_resAmp2’</p>
                   <!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
-       href="mcmc.html"
+       href="loadParameters.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">mcmc</p>
+        <p class="prev-next-title">LoadParameters</p>
       </div>
     </a>
     <a class="right-next"
@@ -566,7 +567,7 @@ wavesets = ‘resAmp1_resAmp2’</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plotgenrdf">PlotGenRDF</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-PlotGenRDF">PlotGenRDF</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">PlotGen</a></li>
 </ul>
   </nav></div>
