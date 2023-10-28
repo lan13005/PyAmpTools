@@ -164,7 +164,8 @@ const thebe_selector_output = ".output, .cell_output"
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorial</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Loading Libraries</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="generation.html">Generating Data</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1"><a class="reference internal" href="generation.html">Generating Data</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="fitting.html">Fitting</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="mle.html">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mcmc.html">Markov Chain Monte Carlo</a></li>
 </ul>
@@ -374,37 +375,89 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="loading-libraries">
 <h1>Loading Libraries<a class="headerlink" href="#loading-libraries" title="Permalink to this heading">#</a></h1>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">label_name</span><span class="p">)</span><span class="o">=</span>
+<span class="c1"># loading_libraries</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span>  <span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
+    <span class="p">(</span><span class="n">label_name</span><span class="p">)</span><span class="o">=</span>
+                 <span class="o">^</span>
+<span class="ne">SyntaxError</span>: invalid syntax
+</pre></div>
+</div>
+</div>
+</div>
 <p>The standard way to load libraries is through <code class="docutils literal notranslate"><span class="pre">atiSetup</span></code> module. Some environment variables can be set (like MPI/GPU) to specify which library should be loaded. Some aliasing and pythonization of the c++ wrapped class is performed to simplify syntax</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">atiSetup</span>
 <span class="kn">import</span> <span class="nn">ROOT</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The main module to load the necessary libraries is <code class="docutils literal notranslate"><span class="pre">atiSetup</span></code>, in particular its <code class="docutils literal notranslate"><span class="pre">setup</span></code> function. We can load mpi /gpu libraries by passing an accelerator string. We can also decide to load FSRoot or gen_amp (simulation program) now. We can print the docstring by doing the following.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>atiSetup.setup<span class="o">??</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span class=" -Color -Color-Red">Signature:</span>
+atiSetup<span class=" -Color -Color-Blue">.</span>setup<span class=" -Color -Color-Blue">(</span>
+    calling_globals<span class=" -Color -Color-Blue">,</span>
+    accelerator<span class=" -Color -Color-Blue">=&#39;&#39;,</span>
+    use_fsroot<span class=" -Color -Color-Blue">=</span><span class=" -Color -Color-Green">False</span><span class=" -Color -Color-Blue">,</span>
+    use_genamp<span class=" -Color -Color-Blue">=</span><span class=" -Color -Color-Green">False</span><span class=" -Color -Color-Blue">,</span>
+<span class=" -Color -Color-Blue">)</span>
+<span class=" -Color -Color-Red">Docstring:</span> Performs entire setup 
+<span class=" -Color -Color-Red">Source:</span>   
+<span class=" -Color -Color-Green">def</span> setup<span class=" -Color -Color-Blue">(</span>calling_globals<span class=" -Color -Color-Blue">,</span> accelerator<span class=" -Color -Color-Blue">=&#39;&#39;,</span> use_fsroot<span class=" -Color -Color-Blue">=</span><span class=" -Color -Color-Green">False</span><span class=" -Color -Color-Blue">,</span> use_genamp<span class=" -Color -Color-Blue">=</span><span class=" -Color -Color-Green">False</span><span class=" -Color -Color-Blue">):</span>
+    <span class=" -Color -Color-Blue">&#39;&#39;&#39; </span>
+<span class=" -Color -Color-Blue">    Performs entire setup</span>
+<span class=" -Color -Color-Blue">    </span>
+<span class=" -Color -Color-Blue">    Args:</span>
+<span class=" -Color -Color-Blue">        calling_globals (dict): globals() from the calling function</span>
+<span class=" -Color -Color-Blue">        accelerator (str): accelerator flag from argparse ~ [&#39;mpi&#39;, &#39;gpu&#39;, &#39;mpigpu&#39;, &#39;gpumpi&#39;, &#39;&#39;]</span>
+<span class=" -Color -Color-Blue">        use_fsroot (bool): True if FSRoot library should be loaded</span>
+<span class=" -Color -Color-Blue">        use_genamp (bool): True if GenAmp library should be loaded</span>
+<span class=" -Color -Color-Blue">    &#39;&#39;&#39;</span>
+    USE_MPI<span class=" -Color -Color-Blue">,</span> USE_GPU<span class=" -Color -Color-Blue">,</span> RANK_MPI <span class=" -Color -Color-Blue">=</span> loadLibraries<span class=" -Color -Color-Blue">(</span>accelerator<span class=" -Color -Color-Blue">,</span> use_fsroot<span class=" -Color -Color-Blue">,</span> use_genamp<span class=" -Color -Color-Blue">)</span>
+    set_aliases<span class=" -Color -Color-Blue">(</span>calling_globals<span class=" -Color -Color-Blue">,</span> USE_MPI<span class=" -Color -Color-Blue">)</span>
 
-<span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
+    <span class=" -Color -Color-Green">return</span> USE_MPI<span class=" -Color -Color-Blue">,</span> USE_GPU<span class=" -Color -Color-Blue">,</span> RANK_MPI
+<span class=" -Color -Color-Red">File:</span>      /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py
+<span class=" -Color -Color-Red">Type:</span>      function
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
 <span class="n">REPO_HOME</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
 <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span> <span class="c1"># RANK_MPI defaults to 0 even if not using MPI</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Welcome to JupyROOT 6.28/06
-
-------------------------------------------------
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
 MPI is disabled
 GPU is disabled
 Loading library libAmpTools.so .............. ON
-Loading library libAmpPlotter.so ............
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> ON
+Loading library libAmpPlotter.so ............ ON
 Loading library libAmpsDataIO.so ............ ON
 Loading library libFSRoot.so ................ OFF
 Loading library libAmpsGen.so ............... OFF
 ------------------------------------------------
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
+
+Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 </pre></div>
 </div>
 </div>

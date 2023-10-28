@@ -66,7 +66,7 @@ const thebe_selector_output = ".output, .cell_output"
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Markov Chain Monte Carlo" href="mcmc.html" />
-    <link rel="prev" title="Generating Data" href="generation.html" />
+    <link rel="prev" title="Fitting" href="fitting.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -164,7 +164,8 @@ const thebe_selector_output = ".output, .cell_output"
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorial</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="libraryLoading.html">Loading Libraries</a></li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="generation.html">Generating Data</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="generation.html">Generating Data</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="fitting.html">Fitting</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mcmc.html">Markov Chain Monte Carlo</a></li>
 </ul>
@@ -374,6 +375,357 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="maximum-likelihood-estimation">
 <h1>Maximum Likelihood Estimation<a class="headerlink" href="#maximum-likelihood-estimation" title="Permalink to this heading">#</a></h1>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">atiSetup</span>
+
+<span class="kn">from</span> <span class="nn">fit</span> <span class="kn">import</span> <span class="n">runFits</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Welcome to JupyROOT 6.28/06
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
+<span class="n">REPO_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
+<span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span>
+
+<span class="n">cfgfile</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">REPO_HOME</span><span class="si">}</span><span class="s1">/tests/samples/SIMPLE_EXAMPLE/fit.cfg&#39;</span>
+<span class="n">randomSeed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+<span class="n">seedfile</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;seed_file&#39;</span>
+<span class="n">numRnd</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2"> === COMMANDLINE ARGUMENTS === &quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Config file:&quot;</span><span class="p">,</span> <span class="n">cfgfile</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Seed file:&quot;</span><span class="p">,</span> <span class="n">seedfile</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of random fits:&quot;</span><span class="p">,</span> <span class="n">numRnd</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Random seed:&quot;</span><span class="p">,</span> <span class="n">randomSeed</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot; ============================= </span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
+MPI is disabled
+GPU is disabled
+Loading library libAmpTools.so .............. ON
+Loading library libAmpPlotter.so ............
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> ON
+Loading library libAmpsDataIO.so ............ ON
+Loading library libFSRoot.so ................ OFF
+Loading library libAmpsGen.so ............... OFF
+------------------------------------------------
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> === COMMANDLINE ARGUMENTS === 
+Config file: /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/fit.cfg
+Seed file: seed_file
+Number of random fits: 0
+Random seed: 1698455643
+ ============================= 
+
+
+Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
+</pre></div>
+</div>
+</div>
+</div>
+<p>We first load the configuration file by first passing it through a parser. We can display a detailed representation of its contents like so</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">parser</span> <span class="o">=</span> <span class="n">ConfigFileParser</span><span class="p">(</span><span class="n">cfgfile</span><span class="p">)</span>
+<span class="n">cfgInfo</span><span class="p">:</span> <span class="n">ConfigurationInfo</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getConfigurationInfo</span><span class="p">()</span>
+<span class="n">cfgInfo</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   =================================================================
+   |        ^                                                      |
+   |       / \             Version:  v0.15.1-dirty                 |
+   |      /---\                                                    |
+   |     /     \           GDouble:  8 bytes                       |
+   |    /       \ MP           MPI:  NO                            |
+   |     -------               GPU:  NO                            |
+   |        |                                                      |
+   |        |              doi.org/10.5281/zenodo.5039377          |
+   |        | OOLS                                                 |
+   =================================================================
+
+[ ConfigurationInfo ]:
+
+	## CONFIGURATION INFO DISPLAY ##
+	
+
+[ ReactionInfo ]:
+
+	############################################
+	#############   REACTION INFO  #############
+	############################################
+	      REACTION NAME:  etapi
+	      PARTICLE LIST:  4
+			1.  Beam
+			2.  Proton
+			3.  Eta
+			4.  Pi0
+	        DATA READER:  ROOTDataReader
+					/w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
+	      ACC MC READER:  ROOTDataReader
+					/w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
+	      GEN MC READER:  ROOTDataReader
+					/w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
+	  NORMALIZATION INTEGRAL FILE: 
+			    normint
+	      GPU DEVICE NUMBER:  -1
+
+[ CoherentSumInfo ]:
+
+	********************************************
+	***********  COHERENT SUM INFO  ************
+	********************************************
+	      REACTION NAME:  etapi
+	  COHERENT SUM NAME:  reZ
+
+[ AmplitudeInfo ]:
+
+	++++++++++++++++++++++++++++++++++++++++++++
+	+++++++++++++  AMPLITUDE INFO  +++++++++++++
+	++++++++++++++++++++++++++++++++++++++++++++
+	      REACTION NAME:  etapi
+	  COHERENT SUM NAME:  reZ
+	     AMPLITUDE NAME:  resAmp1
+	            FACTORS:  1
+			1.  	 Zlm	 2	 0	 +1	 +1	 0.0	 1.0	
+	 EXTRA PERMUTATIONS:  0
+	        CONSTRAINTS:  1
+			1.  etapi::imZ::resAmp1
+	         PARAMETERS:  0
+	      INITIAL VALUE:  (10,0)
+	               REAL?  1
+	              FIXED?  0
+	              SCALE:  1.0
+	++++++++++++++++++++++++++++++++++++++++++++
+	+++++++++++++  AMPLITUDE INFO  +++++++++++++
+	++++++++++++++++++++++++++++++++++++++++++++
+	      REACTION NAME:  etapi
+	  COHERENT SUM NAME:  reZ
+	     AMPLITUDE NAME:  resAmp2
+	            FACTORS:  1
+			1.  	 Zlm	 2	 2	 +1	 +1	 0.0	 1.0	
+	 EXTRA PERMUTATIONS:  0
+	        CONSTRAINTS:  1
+			1.  etapi::imZ::resAmp2
+	         PARAMETERS:  0
+	      INITIAL VALUE:  (10,0)
+	               REAL?  0
+	              FIXED?  0
+	              SCALE:  1.0
+	++++++++++++++++++++++++++++++++++++++++++++
+	+++++++++++++  AMPLITUDE INFO  +++++++++++++
+	++++++++++++++++++++++++++++++++++++++++++++
+	      REACTION NAME:  etapi
+	  COHERENT SUM NAME:  reZ
+	     AMPLITUDE NAME:  resAmp3
+	            FACTORS:  1
+			1.  	 Zlm	 0	 0	 +1	 +1	 0.0	 1.0	
+	 EXTRA PERMUTATIONS:  0
+	        CONSTRAINTS:  1
+			1.  etapi::imZ::resAmp3
+	         PARAMETERS:  0
+	      INITIAL VALUE:  (10,0)
+	               REAL?  0
+	              FIXED?  0
+	              SCALE:  1.0
+
+[ CoherentSumInfo ]:
+
+	********************************************
+	***********  COHERENT SUM INFO  ************
+	********************************************
+	      REACTION NAME:  etapi
+	  COHERENT SUM NAME:  imZ
+
+[ AmplitudeInfo ]:
+
+	++++++++++++++++++++++++++++++++++++++++++++
+	+++++++++++++  AMPLITUDE INFO  +++++++++++++
+	++++++++++++++++++++++++++++++++++++++++++++
+	      REACTION NAME:  etapi
+	  COHERENT SUM NAME:  imZ
+	     AMPLITUDE NAME:  resAmp1
+	            FACTORS:  1
+			1.  	 Zlm	 2	 0	 -1	 -1	 0.0	 1.0	
+	 EXTRA PERMUTATIONS:  0
+	        CONSTRAINTS:  1
+			1.  etapi::reZ::resAmp1
+	         PARAMETERS:  0
+	      INITIAL VALUE:  (10,0)
+	               REAL?  1
+	              FIXED?  0
+	              SCALE:  1.0
+	++++++++++++++++++++++++++++++++++++++++++++
+	+++++++++++++  AMPLITUDE INFO  +++++++++++++
+	++++++++++++++++++++++++++++++++++++++++++++
+	      REACTION NAME:  etapi
+	  COHERENT SUM NAME:  imZ
+	     AMPLITUDE NAME:  resAmp2
+	            FACTORS:  1
+			1.  	 Zlm	 2	 2	 -1	 -1	 0.0	 1.0	
+	 EXTRA PERMUTATIONS:  0
+	        CONSTRAINTS:  1
+			1.  etapi::reZ::resAmp2
+	         PARAMETERS:  0
+	      INITIAL VALUE:  (10,0)
+	               REAL?  0
+	              FIXED?  0
+	              SCALE:  1.0
+	++++++++++++++++++++++++++++++++++++++++++++
+	+++++++++++++  AMPLITUDE INFO  +++++++++++++
+	++++++++++++++++++++++++++++++++++++++++++++
+	      REACTION NAME:  etapi
+	  COHERENT SUM NAME:  imZ
+	     AMPLITUDE NAME:  resAmp3
+	            FACTORS:  1
+			1.  	 Zlm	 0	 0	 -1	 -1	 0.0	 1.0	
+	 EXTRA PERMUTATIONS:  0
+	        CONSTRAINTS:  1
+			1.  etapi::reZ::resAmp3
+	         PARAMETERS:  0
+	      INITIAL VALUE:  (10,0)
+	               REAL?  0
+	              FIXED?  0
+	              SCALE:  1.0
+</pre></div>
+</div>
+</div>
+</div>
+<p>The confirguation file specifies a datareader called <code class="docutils literal notranslate"><span class="pre">ROOTDataReader</span></code> and the amplitude called <code class="docutils literal notranslate"><span class="pre">Zlm</span></code>. There are many datareaders (i.e. for <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> and another for <code class="docutils literal notranslate"><span class="pre">Bootstrapping</span></code>) and amplitudes (i.e. <code class="docutils literal notranslate"><span class="pre">BreitWigner</span></code> and <code class="docutils literal notranslate"><span class="pre">Piecewise</span></code>). Below, <code class="docutils literal notranslate"><span class="pre">DataReader</span></code> is an alias for <code class="docutils literal notranslate"><span class="pre">ROOTDataReader</span></code> or its <code class="docutils literal notranslate"><span class="pre">MPI</span></code> implementation. These aliases are created by <code class="docutils literal notranslate"><span class="pre">atiSetup</span></code>, see <span class="xref myst">here</span> for more information.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">Zlm</span><span class="p">()</span> <span class="p">)</span>
+<span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReader</span><span class="p">()</span> <span class="p">)</span>
+<span class="c1"># AmpToolsInterface.registerAmplitude( BreitWigner() )</span>
+<span class="c1"># AmpToolsInterface.registerAmplitude( Piecewise() )</span>
+<span class="c1"># AmpToolsInterface.registerDataReader( DataReaderBootstrap() )</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">AmpToolsInterface</span></code> is the primary way to interact with the <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> minimization library. From this <code class="docutils literal notranslate"><span class="pre">object</span></code> we can access thingss like a <code class="docutils literal notranslate"><span class="pre">ParameterManager</span></code> and a <code class="docutils literal notranslate"><span class="pre">MinimizationManager</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ati</span> <span class="o">=</span> <span class="n">AmpToolsInterface</span><span class="p">(</span> <span class="n">cfgInfo</span> <span class="p">)</span>
+<span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">setRandomSeed</span><span class="p">(</span><span class="n">randomSeed</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[ Minuit ]:
+
+	**********
+	 **    1 **SET STRATEGY  1
+	**********
+	 NOW USING STRATEGY  1: TRY TO BALANCE SPEED AGAINST RELIABILITY
+
+[ AmplitudeManager ]:
+
+	Creating AmplitudeManager for the reaction:  etapi
+		 particle index assignment:  Beam -&gt; 0
+		 particle index assignment:  Proton -&gt; 1
+		 particle index assignment:  Eta -&gt; 2
+		 particle index assignment:  Pi0 -&gt; 3
+
+[ NormIntInterface ]:
+
+	Loading generated Monte Carlo from file...
+Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
+	Duplicated Monte Carlo set detected, using previously loaded version
+</pre></div>
+</div>
+</div>
+</div>
+<p>A <code class="docutils literal notranslate"><span class="pre">fit</span></code> module is defined in PyAmpTools to run the standard MLE fit. We simply pass the recently created <code class="docutils literal notranslate"><span class="pre">ati</span></code> instance and the number of fits with random initializations to perform as the optimizer could get stuck in unwanted local minima.</p>
+<p>A single fit is performed without randomization is performed if <code class="docutils literal notranslate"><span class="pre">numRnd=0</span></code></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">nll</span> <span class="o">=</span> <span class="n">runFits</span><span class="p">(</span><span class="n">ati</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="n">numRnd</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="o">=</span><span class="n">USE_MPI</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LIKELIHOOD BEFORE MINIMIZATION: 112356.11732090596
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): 14346.408126566832
+Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
+
+[ Minuit ]:
+
+	**********
+	 **    2 **MIGRAD 100000 0.1
+	**********
+	 FIRST CALL TO USER FUNCTION AT NEW START POINT, WITH IFLAG=4.
+	 START MIGRAD MINIMIZATION.  STRATEGY  1  CONVERGENCE WHEN EDM .LT. 1.00e-04
+	 FCN=26585.6 FROM MIGRAD     STATUS=INITIATE      162         163 TOTAL
+	                     EDM= unknown      STRATEGY= 1      NO ERROR MATRIX       
+	  EXT PARAMETER                         CURRENT GUESS       STEP         FIRST   
+	  NO.   NAME                  VALUE          ERROR          SIZE      DERIVATIVE 
+	    1 etapi::reZ::resAmp1_re  -8.24991e+01   1.00000e-01       -92.499        75.351
+	    2 etapi::reZ::resAmp2_re   9.26049e+01   1.00000e-01             0        2.0926
+	    3 etapi::reZ::resAmp2_im   2.78287e+02   1.00000e-02             0        44.689
+	    4 etapi::reZ::resAmp3_re   1.00000e+01   1.00000e-01             0        75.356
+	    5 etapi::reZ::resAmp3_im   1.50706e+02   1.00000e-02             0       -41.017
+	
+	 MIGRAD MINIMIZATION HAS CONVERGED.
+	 FCN=14346.4 FROM MIGRAD     STATUS=CONVERGED     300         301 TOTAL
+	                     EDM=2.08018e-06    STRATEGY= 1  ERROR MATRIX UNCERTAINTY 4.7e+00 per cent
+	  EXT PARAMETER                                             STEP         FIRST   
+	  NO.   NAME                  VALUE          ERROR          SIZE      DERIVATIVE 
+	    1 etapi::reZ::resAmp1_re  -1.39917e+02   2.44224e+00     -0.012835   -0.00050537
+	    2 etapi::reZ::resAmp2_re  -8.07646e+01   6.24080e+00      0.037625   -0.00063901
+	    3 etapi::reZ::resAmp2_im   1.34783e+02   4.87638e+00      0.050544   -0.00017916
+	    4 etapi::reZ::resAmp3_re  -1.93378e+02   4.03569e+00      0.042951    0.00066661
+	    5 etapi::reZ::resAmp3_im   1.06653e+02   4.59293e+00      0.021035   -0.00011554
+	
+	 EXTERNAL ERROR MATRIX.    NDIM= 500    NPAR=  5    ERR DEF=1.00000e+00
+	        5.96      -9.78      -7.67      -6.73      -5.68
+	       -9.78       38.9       25.2       21.3       22.5
+	       -7.67       25.2       23.8       15.5       13.4
+	       -6.73       21.3       15.5       16.3       14.6
+	       -5.68       22.5       13.4       14.6       21.1
+	 PARAMETER CORRELATION COEFFICIENTS
+	       NO.  GLOBAL      1      2      3      4      5
+	      1:     0.708  1.000 -0.641 -0.644 -0.683 -0.506
+	      2:     0.911 -0.641  1.000  0.828  0.847  0.786
+	      3:     0.862 -0.644  0.828  1.000  0.789  0.600
+	      4:     0.900 -0.683  0.847  0.789  1.000  0.787
+	      5:     0.837 -0.506  0.786  0.600  0.787  1.000
+
+[ MinuitMinimizationManager ]:
+
+	MIGRAD evaluation total wall time:  5.11533e-01 s.
+	   average time per function call:  1.69382e+00 ms.
+
+[ NormIntInterface ]:
+
+	Perfect acceptance -- generated and accepted MC are the same
+</pre></div>
+</div>
+</div>
+</div>
 </section>
 
     <script type="text/x-thebe-config">
@@ -385,16 +737,16 @@ document.write(`
         },
         codeMirrorConfig: {
             theme: "abcdef",
-            mode: "python"
+            mode: "pyamptools"
         },
         kernelOptions: {
-            name: "python3",
+            name: "pyamptools",
             path: "./notebooks"
         },
         predefinedOutput: true
     }
     </script>
-    <script>kernelName = 'python3'</script>
+    <script>kernelName = 'pyamptools'</script>
 
                 </article>
               
@@ -407,12 +759,12 @@ document.write(`
                   <!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
-       href="generation.html"
+       href="fitting.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Generating Data</p>
+        <p class="prev-next-title">Fitting</p>
       </div>
     </a>
     <a class="right-next"
