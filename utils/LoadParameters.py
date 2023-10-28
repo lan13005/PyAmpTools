@@ -8,7 +8,7 @@ import numpy as np
 class LoadParameters:
     '''
     Class to extract amplitude parameters from an AmpTools FitResults or ConfigurationInfo object
-       Ability to format them (complex -> real, imag) for input to other minimization algorithms
+       Parameters (like production coefficients) can then be formatted (complex -> real, imag) for input to other minimization algorithms
     '''
     def __init__(self):
         self.uniqueProdPars = {}
@@ -16,9 +16,9 @@ class LoadParameters:
 
     def load_cfg(self, cfg): # cfg: [FitResults, ConfigurationInfo]
         '''
-        Get a map of unique (parameter: value) pairs excluding additional constrained ones
+        Get a map of unique (parameter: value) pairs excluding redundant constrained ones
             These include production parameters and amplitude parameters
-        
+
         Args:
             cfg: If cfg is a FitResults object set values to fitted results. For a ConfigurationInfo object set values to initial values
         '''
@@ -68,9 +68,7 @@ class LoadParameters:
 
     def flatten_parameters(self, params={}):
         '''
-        Flatten amplitude parameters (complex-> real, imag) skipping imaginary parts of real amplitudes.
-        If no arguments are passed, use the uniqueProdPars and uniqueProdIsReal from the last call to load_cfg()
-        Can also format any dictionary pair into flat format
+        Flatten amplitude parameters (complex-> real, imag) skipping imaginary parts of amplitudes fixed to be real. If no arguments are passed, use the uniqueProdPars and uniqueProdIsReal from the last call to load_cfg(). Can also format any dictionary pair into flat format.
             Dictionary to List
 
         Args:

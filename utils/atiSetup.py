@@ -12,7 +12,15 @@ from pythonization import pythonize_parMgr
 ########################################################
 
 def setup(calling_globals, accelerator='', use_fsroot=False, use_genamp=False):
-    ''' Performs entire setup '''
+    '''
+    Performs setup: Load libraries and set aliases
+
+    Args:
+        calling_globals (dict): globals() from the calling function
+        accelerator (str): accelerator flag from argparse ~ ['mpi', 'gpu', 'mpigpu', 'gpumpi', '']
+        use_fsroot (bool): True if FSRoot library should be loaded
+        use_genamp (bool): True if GenAmp library should be loaded
+    '''
     USE_MPI, USE_GPU, RANK_MPI = loadLibraries(accelerator, use_fsroot, use_genamp)
     set_aliases(calling_globals, USE_MPI)
 
