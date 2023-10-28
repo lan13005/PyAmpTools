@@ -375,53 +375,6 @@ document.write(`
                   
   <section id="fit">
 <h1>fit<a class="headerlink" href="#fit" title="Permalink to this heading">#</a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="fit.performFit">
-<span class="sig-name descname"><span class="pre">performFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ati</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed_file_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seedfile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'seed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useMinos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hesse</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fit.performFit" title="Permalink to this definition">#</a></dt>
-<dd><p>Performs a single fit</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ati</strong> – AmpToolsInterface object</p></li>
-<li><p><strong>seed_file_tag</strong> – Tag to append to output file names to distinguish multiple runs</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Bool indicating if fit failed
-NLL: Negative log likelihood</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bFitFailed</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fit.runFits">
-<span class="sig-name descname"><span class="pre">runFits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ati</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">RANK_MPI</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxIter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">USE_MPI</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seedfile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'seed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useMinos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hesse</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fit.runFits" title="Permalink to this definition">#</a></dt>
-<dd><p>Performs N randomized fits, if N=0 then a single fit with no randomization is performed</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ati</strong> – AmpToolsInterface object</p></li>
-<li><p><strong>N</strong> – Number of randomized fits to perform</p></li>
-<li><p><strong>RANK_MPI</strong> – MPI rank. Default to 0 for non-MPI.</p></li>
-<li><p><strong>maxIter</strong> – Maximum number of iterations. Default to 100000.</p></li>
-<li><p><strong>USE_MPI</strong> – Use MPI. Default to False.</p></li>
-<li><p><strong>seedfile</strong> – Output file for seeding next fit based on this fit. Default to “seed” name prefix.</p></li>
-<li><p><strong>useMinos</strong> – Use MINOS instead of MIGRAD. Default to False.</p></li>
-<li><p><strong>hesse</strong> – Evaluate HESSE matrix after minimization. Default to False.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Minimum negative log likelihood</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>minNLL</p>
-</dd>
-</dl>
-</dd></dl>
-
 </section>
 
     <script type="text/x-thebe-config">

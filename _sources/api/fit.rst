@@ -1,10 +1,7 @@
 fit
 ==========================
 
-.. autofunction:: fit.performFit
-.. autofunction:: fit.runFits
-
-.. automodule:: cfgGenerator
+.. automodule:: fit
    :members:
    :undoc-members:
    :show-inheritance:
