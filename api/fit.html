@@ -373,32 +373,30 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section id="module-cfgGenerator">
-<span id="fit"></span><h1>fit<a class="headerlink" href="#module-cfgGenerator" title="Permalink to this heading">#</a></h1>
+  <section id="module-fit">
+<span id="fit"></span><h1>fit<a class="headerlink" href="#module-fit" title="Permalink to this heading">#</a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="cfgGenerator.generate_zlm_cfg">
-<span class="sig-name descname"><span class="pre">generate_zlm_cfg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">EJMs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fractions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bkgnds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">realAmps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixedAmps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fitName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfgFileOutputName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basereactName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">particles</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cfgGenerator.generate_zlm_cfg" title="Permalink to this definition">#</a></dt>
-<dd><p>Generate an AmpTools configuration file for a Zlm fit</p>
+<dt class="sig sig-object py" id="fit.runFits">
+<span class="sig-name descname"><span class="pre">runFits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ati</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">RANK_MPI</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxIter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">USE_MPI</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seedfile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'seed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useMinos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hesse</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fit.runFits" title="Permalink to this definition">#</a></dt>
+<dd><p>Performs N randomized fits, if N=0 then a single fit with no randomization is performed</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>EJMs</strong> (<em>list</em>) – List of lists of [E,J,M] quantum numbers</p></li>
-<li><p><strong>angles</strong> (<em>list</em>) – List of angles in degrees</p></li>
-<li><p><strong>fractions</strong> (<em>list</em>) – List of polarization fractions</p></li>
-<li><p><strong>datas</strong> (<em>list</em>) – List of data files</p></li>
-<li><p><strong>gens</strong> (<em>list</em>) – List of gen files</p></li>
-<li><p><strong>accs</strong> (<em>list</em>) – List of acc files</p></li>
-<li><p><strong>bkgnds</strong> (<em>list</em>) – List of bkgnd files</p></li>
-<li><p><strong>realAmps</strong> (<em>list</em>) – List of amplitude names that are real</p></li>
-<li><p><strong>fixedAmps</strong> (<em>list</em>) – List of amplitude names that are fixed</p></li>
-<li><p><strong>fitName</strong> (<em>str</em>) – Name of fit</p></li>
-<li><p><strong>cfgFileOutputName</strong> (<em>str</em>) – Name of output configuration file</p></li>
-<li><p><strong>basereactName</strong> (<em>str</em>) – Base name of reaction</p></li>
-<li><p><strong>particles</strong> (<em>list</em>) – List of particles in reaction</p></li>
+<li><p><strong>ati</strong> (<em>AmpToolsInterface</em>) – AmpToolsInterface instance</p></li>
+<li><p><strong>N</strong> – Number of randomized fits to perform</p></li>
+<li><p><strong>RANK_MPI</strong> – MPI rank. Default to 0 for non-MPI.</p></li>
+<li><p><strong>maxIter</strong> – Maximum number of iterations. Default to 100000.</p></li>
+<li><p><strong>USE_MPI</strong> – Use MPI. Default to False.</p></li>
+<li><p><strong>seedfile</strong> – Output file for seeding next fit based on this fit. Default to “seed” name prefix.</p></li>
+<li><p><strong>useMinos</strong> – Use MINOS instead of MIGRAD. Default to False.</p></li>
+<li><p><strong>hesse</strong> – Evaluate HESSE matrix after minimization. Default to False.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None, writes a file to cfgFileOutputName</p>
+<dd class="field-even"><p>Minimum negative log likelihood</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>minNLL</p>
 </dd>
 </dl>
 </dd></dl>

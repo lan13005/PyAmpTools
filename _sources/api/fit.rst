@@ -1,7 +1,7 @@
 fit
 ==========================
 
-.. automodule:: cfgGenerator
+.. automodule:: fit
    :members:
    :undoc-members:
    :show-inheritance:
