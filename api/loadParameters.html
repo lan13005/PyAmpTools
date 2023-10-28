@@ -173,6 +173,7 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="cfgGenerator.html">cfgGenerator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fit.html">fit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcmc.html">mcmc</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">LoadParameters</a></li>
@@ -386,12 +387,10 @@ document.write(`
 <dl class="py method">
 <dt class="sig sig-object py" id="LoadParameters.LoadParameters.flatten_parameters">
 <span class="sig-name descname"><span class="pre">flatten_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/LoadParameters.html#LoadParameters.flatten_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#LoadParameters.LoadParameters.flatten_parameters" title="Permalink to this definition">#</a></dt>
-<dd><p>Flatten amplitude parameters (complex-&gt; real, imag) skipping imaginary parts of amplitudes fixed to be real.
-If no arguments are passed, use the uniqueProdPars and uniqueProdIsReal from the last call to load_cfg()
-Can also format any dictionary pair into flat format</p>
-<blockquote>
-<div><p>Dictionary to List</p>
-</div></blockquote>
+<dd><dl class="simple">
+<dt>Flatten amplitude parameters (complex-&gt; real, imag) skipping imaginary parts of amplitudes fixed to be real. If no arguments are passed, use the uniqueProdPars and uniqueProdIsReal from the last call to load_cfg(). Can also format any dictionary pair into flat format.</dt><dd><p>Dictionary to List</p>
+</dd>
+</dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>params</strong> (<em>dict</em>) – dictionary of parameters to flatten</p>

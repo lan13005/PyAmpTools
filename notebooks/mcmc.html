@@ -65,7 +65,7 @@ const thebe_selector_output = ".output, .cell_output"
     <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/mcmc';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="&lt;no title&gt;" href="../api/cfgGenerator.html" />
+    <link rel="next" title="cfgGenerator" href="../api/cfgGenerator.html" />
     <link rel="prev" title="Maximum Likelihood Estimation" href="mle.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -173,6 +173,7 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../api/cfgGenerator.html">cfgGenerator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/fit.html">fit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/mcmc.html">mcmc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/loadParameters.html">LoadParameters</a></li>
@@ -375,7 +376,7 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="markov-chain-monte-carlo">
 <h1>Markov Chain Monte Carlo<a class="headerlink" href="#markov-chain-monte-carlo" title="Permalink to this heading">#</a></h1>
-<p>Markov Chain Monte Carlo (MCMC) is another class of techniques to perform interence by sampling directly from the posterior distribution. In this tutorial we will showcase how to use <a class="reference external" href="https://emcee.readthedocs.io/en/stable/">emcee</a>, an <em>ensemble sampler</em>. Ensemble samplers uses a set of walkers that move around the parameter space generally spending more time in high probablity regions. Several types of moves are implemented in <code class="docutils literal notranslate"><span class="pre">emcee</span></code> and can be mixed together to form a probabilistic mixture, see <a class="reference external" href="https://emcee.readthedocs.io/en/stable/user/moves/">emcee moves documentation</a>. The <a class="reference external" href="https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm">metropolis criterion</a> is used accept or reject the move.</p>
+<p>Markov Chain Monte Carlo (MCMC) is another class of techniques to perform interence by sampling directly from the posterior distribution. In this tutorial we will showcase how to use <a class="reference external" href="https://emcee.readthedocs.io/en/stable/">emcee</a>, an <em>ensemble sampler</em>. Ensemble samplers uses a set of walkers that move around the parameter space generally spending more time in high probablity regions. Several types of moves are implemented in <code class="docutils literal notranslate"><span class="pre">emcee</span></code> and can be mixed together to form a probabilistic mixture, see <a class="reference external" href="https://emcee.readthedocs.io/en/stable/user/moves/">emcee moves documentation</a>. Accepting or rejecting the move is based on the <a class="reference external" href="https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm">Metropolis algorithm</a>.</p>
 </section>
 
     <script type="text/x-thebe-config">
@@ -422,7 +423,7 @@ document.write(`
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">&lt;no title&gt;</p>
+        <p class="prev-next-title">cfgGenerator</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
