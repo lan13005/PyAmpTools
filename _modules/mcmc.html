@@ -158,7 +158,7 @@ const thebe_selector_output = ".output, .cell_output"
                 </a>
             </li>
         </ul>
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorial</span></p>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/libraryLoading.html">Loading Libraries</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/generation.html">Generating Data</a></li>
@@ -402,6 +402,7 @@ document.write(`
         <span class="c1">### Non-CLI arguments Below ###</span>
         <span class="n">params_dict</span>   <span class="o">=</span> <span class="p">{},</span>
         <span class="n">moves_mixture</span> <span class="o">=</span> <span class="p">[</span> <span class="n">emcee</span><span class="o">.</span><span class="n">moves</span><span class="o">.</span><span class="n">StretchMove</span><span class="p">()</span> <span class="p">],</span>
+        <span class="n">sampler_kwargs</span> <span class="o">=</span> <span class="p">{},</span>
     <span class="p">):</span>
 
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
@@ -417,6 +418,7 @@ document.write(`
 <span class="sd">        nsamples (int): number of samples</span>
 <span class="sd">        params_dict (dict): {par: value} or {par: [value, min, max]} where sample from [min, max] for walker initialization</span>
 <span class="sd">        moves_mixture [ (emcee.moves.{move}(kwargs), probability) ]: List of tuples of moves (with kwargs pluggin in) and their probability</span>
+<span class="sd">        sampler_kwargs (dict): Additional keyword arguments to pass to emcee.EnsembleSampler()</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        results (dict): Dictionary containing results of MCMC sampling (samples, MAP, acceptance fraction, autocorrelation time, etc.)</span>
@@ -480,14 +482,16 @@ document.write(`
 
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Par values: </span><span class="si">{</span><span class="n">par_values</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
+        <span class="n">_sampler_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+        <span class="n">_sampler_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">sampler_kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">burnIn</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">[Burn-in beginning]</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="n">state</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">par_values</span><span class="p">,</span> <span class="n">burnIn</span><span class="p">)</span>
             <span class="n">sampler</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">[Burn-in complete. Running sampler]</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">);</span>
+            <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="o">**</span><span class="n">_sampler_kwargs</span><span class="p">);</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">par_values</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">);</span>
+            <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">par_values</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="o">**</span><span class="n">_sampler_kwargs</span><span class="p">);</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">[Sampler complete]</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">acceptance_fraction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">acceptance_fraction</span><span class="p">)</span>

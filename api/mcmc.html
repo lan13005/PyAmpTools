@@ -161,7 +161,7 @@ const thebe_selector_output = ".output, .cell_output"
                 </a>
             </li>
         </ul>
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorial</span></p>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/libraryLoading.html">Loading Libraries</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/generation.html">Generating Data</a></li>
@@ -440,7 +440,7 @@ document.write(`
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mcmc.perform_mcmc">
-<span class="sig-name descname"><span class="pre">perform_mcmc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ati,</span> <span class="pre">LoadParametersSampler,</span> <span class="pre">ofolder:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'mcmc',</span> <span class="pre">ofile:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'mcmc.h5',</span> <span class="pre">nwalkers:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">32,</span> <span class="pre">burnIn:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">100,</span> <span class="pre">nsamples:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1000,</span> <span class="pre">params_dict={},</span> <span class="pre">moves_mixture=[&lt;emcee.moves.stretch.StretchMove</span> <span class="pre">object&gt;]</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#perform_mcmc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.perform_mcmc" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">perform_mcmc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ati,</span> <span class="pre">LoadParametersSampler,</span> <span class="pre">ofolder:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'mcmc',</span> <span class="pre">ofile:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'mcmc.h5',</span> <span class="pre">nwalkers:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">32,</span> <span class="pre">burnIn:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">100,</span> <span class="pre">nsamples:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1000,</span> <span class="pre">params_dict={},</span> <span class="pre">moves_mixture=[&lt;emcee.moves.stretch.StretchMove</span> <span class="pre">object&gt;],</span> <span class="pre">sampler_kwargs={}</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#perform_mcmc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.perform_mcmc" title="Permalink to this definition">#</a></dt>
 <dd><p>Performs MCMC sampling</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -454,6 +454,7 @@ document.write(`
 <li><p><strong>nsamples</strong> (<em>int</em>) – number of samples</p></li>
 <li><p><strong>params_dict</strong> (<em>dict</em>) – {par: value} or {par: [value, min, max]} where sample from [min, max] for walker initialization</p></li>
 <li><p><strong>[</strong> (<em>moves_mixture</em>) – List of tuples of moves (with kwargs pluggin in) and their probability</p></li>
+<li><p><strong>sampler_kwargs</strong> (<em>dict</em>) – Additional keyword arguments to pass to emcee.EnsembleSampler()</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>

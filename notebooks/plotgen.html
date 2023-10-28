@@ -161,7 +161,7 @@ const thebe_selector_output = ".output, .cell_output"
                 </a>
             </li>
         </ul>
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorial</span></p>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="libraryLoading.html">Loading Libraries</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generation.html">Generating Data</a></li>
@@ -418,8 +418,8 @@ Initializing FSRoot for PyROOT...
 </div>
 </div>
 </div>
-<p>After performing a MLE fit a <code class="docutils literal notranslate"><span class="pre">FitResults</span></code> object is created with a <code class="docutils literal notranslate"><span class="pre">.fit</span></code> extension. This file can be read in using the <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> <a class="reference external" href="https://github.com/mashephe/AmpTools/blob/master/AmpTools/IUAmpTools/PlotGenerator.h">PlotGenerator</a> class. In this class, Amplitudes can be turned on/off and amplitude weights can be extracted for this particular amplitude combination. These weights can then be used for plotting purposes.</p>
-<p>This tutorial will go over how we can use <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> and <code class="docutils literal notranslate"><span class="pre">RDataFrames</span></code> to produce fit results. The <code class="docutils literal notranslate"><span class="pre">draw_histograms</span></code> method of the <code class="docutils literal notranslate"><span class="pre">PlotGenRDF</span></code> module shows an example implementation. See <a class="reference external" href="https://lan13005.github.io/PyAmpTools/api/plotgen.html#PlotGenRDF.draw_histograms">here</a> for the API and source code.</p>
+<p>After performing a MLE fit a <code class="docutils literal notranslate"><span class="pre">FitResults</span></code> object is created with a <code class="docutils literal notranslate"><span class="pre">.fit</span></code> extension. This file can be read in using the <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> <a class="reference external" href="https://github.com/mashephe/AmpTools/blob/master/AmpTools/IUAmpTools/PlotGenerator.h">PlotGenerator</a> class. In this class, Amplitudes can be turned on/off and amplitude weights can be extracted for a particular amplitude combination. These weights can then be used for plotting purposes.</p>
+<p>This tutorial will go over how we can use <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> and <code class="docutils literal notranslate"><span class="pre">RDataFrames</span></code> to produce fit results. The <code class="docutils literal notranslate"><span class="pre">draw_histograms</span></code> method of the <code class="docutils literal notranslate"><span class="pre">PlotGenRDF</span></code> module shows an example implementation. See <a class="reference external" href="https://lan13005.github.io/PyAmpTools/api/plotgen.html#PlotGenRDF.draw_histograms">draw_histograms link</a> for the API and source code. <code class="docutils literal notranslate"><span class="pre">Numpy</span></code> is used as an intermediary between <code class="docutils literal notranslate"><span class="pre">PlotGenerator</span></code> and <code class="docutils literal notranslate"><span class="pre">RDataFrame</span></code>. This choice is made so that users can makes plots in the Python ecosystem if they wish. <code class="docutils literal notranslate"><span class="pre">RDataFrame</span></code> also does not perform any copying and reads directly from the <code class="docutils literal notranslate"><span class="pre">Numpy</span></code> array.</p>
 <p>Some <em>macros</em> can be loaded ( mirrors <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> <a class="reference external" href="https://github.com/remitche66/FSRoot/blob/72959ffdc223546377c690873c7759e4e6b901a0/FSBasic/FSTree.h">macros</a> / <a class="reference external" href="https://github.com/remitche66/FSRoot/blob/master/FSBasic/FSMath.h">math</a> ) that calculates various kinematic quantites (i.e. <em>mass</em> and <em>helicity angles</em>). We can load them as follows</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -429,7 +429,7 @@ Initializing FSRoot for PyROOT...
 </div>
 </div>
 </div>
-<p>We can also use <code class="docutils literal notranslate"><span class="pre">PyROOT</span></code> to load headers files. Here we will load the <code class="docutils literal notranslate"><span class="pre">gluex_style</span></code> and set the style</p>
+<p>We can also use <code class="docutils literal notranslate"><span class="pre">PyROOT</span></code> to load headers files. Here we will load the <code class="docutils literal notranslate"><span class="pre">gluex_style</span></code> and set the plotting style</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">### IF USING ROOT TO PLOT - CAN SET GLUEX STYLE HERE ###</span>
@@ -484,7 +484,7 @@ Initializing FSRoot for PyROOT...
 </div>
 </div>
 </div>
-<p>As always, we have to register the requested amplitudes and the datareaders. We can then create a <code class="docutils literal notranslate"><span class="pre">PlotGenerator</span></code> instance.</p>
+<p>As always, we have to register the requested amplitudes and the datareaders. We can then create a <code class="docutils literal notranslate"><span class="pre">PlotGenerator</span></code> instance. The order matters as <code class="docutils literal notranslate"><span class="pre">PlotGenerator</span></code> uses these amplitudes and datareaders.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">Zlm</span><span class="p">()</span> <span class="p">)</span>
@@ -509,8 +509,8 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 </div>
 </div>
 </div>
-<p>We book our histograms in this dictionary format. For now, we will just make 1D histograms of several kinematic quantities. We use macros inspired and using <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> format to compute quantities. The macros are defined in <code class="docutils literal notranslate"><span class="pre">utils/RDFmacros.py</span></code>.</p>
-<p>For example, <code class="docutils literal notranslate"><span class="pre">MASS(ETA,PI0)</span></code> would compute the invariant mass of the <code class="docutils literal notranslate"><span class="pre">ETA,</span> <span class="pre">PI0</span></code> system.</p>
+<p>We can book histograms in the dictionary format shown below. For now, we will just make 1D histograms of several kinematic quantities. We use macros inspired and using <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> format to compute quantities. The macros are defined in <code class="docutils literal notranslate"><span class="pre">utils/RDFmacros.py</span></code>.</p>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">MASS(ETA,PI0)</span></code> would compute the invariant mass of the <code class="docutils literal notranslate"><span class="pre">ETA,</span> <span class="pre">PI0</span></code> system where <code class="docutils literal notranslate"><span class="pre">ETA</span></code> and <code class="docutils literal notranslate"><span class="pre">PI0</span></code> are defined particles. The order of the <code class="docutils literal notranslate"><span class="pre">particles</span></code> matters and should match what is seen in the configuration file.</p>
 <p>In <code class="docutils literal notranslate"><span class="pre">RDataFrame</span></code>, histograms are first booked and lazily evaluated, to define as much computation as possible before a request for a result is made.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -564,6 +564,14 @@ Info in &lt;TCanvas::Print&gt;: pdf file result_all.pdf has been closed
 </div>
 <div class="cell_output docutils container">
 <img alt="../_images/723b1e1bc42a40a108bc8c3cfaca3d23109ea5c16cb222d66644d67a0df3563e.png" src="../_images/723b1e1bc42a40a108bc8c3cfaca3d23109ea5c16cb222d66644d67a0df3563e.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># cleanup again</span>
+<span class="o">!</span>rm<span class="w"> </span>result_all.pdf
+</pre></div>
+</div>
 </div>
 </div>
 </section>
