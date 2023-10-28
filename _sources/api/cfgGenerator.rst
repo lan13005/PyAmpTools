@@ -1,7 +1,6 @@
 cfgGenerator
 ==========================
 
-(cfgGenerator)=
 .. automodule:: cfgGenerator
    :members:
    :undoc-members:
