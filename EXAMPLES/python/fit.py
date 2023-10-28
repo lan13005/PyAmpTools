@@ -9,26 +9,30 @@ import sys
 import atiSetup
 
 def performFit(
-        fitManager,
+        ati,
         seed_file_tag,
-        always_save_seed: bool = False,
+        seedfile: str = "seed",
+        useMinos: bool = False,
+        hesse: bool = False,
     ):
     '''
     Performs a single fit
 
     Args:
-        fitManager: MinuitMinimizationManager
-        seed_file_tag: Tag to append to output file names
+        ati (AmpToolsInterface):  AmpToolsInterface instance
+        seed_file_tag (str): Tag to append to output file names to distinguish multiple runs
 
     Returns:
-        bFitFailed: Bool indicating if fit failed
-        NLL: Negative log likelihood
+        bFitFailed (bool): flag indicating if fit failed
+        NLL (double): Negative log likelihood
     '''
-    if args.useMinos:
+    fitManager: MinuitMinimizationManager = ati.minuitMinimizationManager()
+
+    if useMinos:
         fitManager.minosMinimization(True)
     else:
         fitManager.migradMinimization()
-    if args.hesse:
+    if hesse:
         fitManager.setEvaluateHessian(True)
 
     bFitFailed = fitManager.status() != 0 and fitManager.eMatrixStatus() != 3
@@ -41,8 +45,8 @@ def performFit(
 
     ati.finalizeFit(seed_file_tag)
 
-    if ( args.seedfile is not None and not bFitFailed ) or always_save_seed:
-        ati.fitResults().writeSeed(f'{args.seedfile}_{seed_file_tag}.txt')
+    if seedfile is not None:
+        ati.fitResults().writeSeed(f'{seedfile}_{seed_file_tag}.txt')
 
     return bFitFailed, NLL
 
@@ -50,25 +54,39 @@ def performFit(
 def runFits(
         ati,
         N: int = 0,
-        always_save_seed: bool = False,
+        RANK_MPI: int = 0,
+        maxIter = 100000,
+        USE_MPI: bool = False,
+        seedfile: str = "seed",
+        useMinos: bool = False,
+        hesse: bool = False,
     ):
     '''
-    Performs N randomized fits, if N=0 then a single fit with no randomization is performed
+    Performs N randomized fits by calling performFit(), if N=0 then a single fit with no randomization is performed
 
     Args:
-        N: Number of randomized fits to perform
+        ati (AmpToolsInterface): AmpToolsInterface instance
+        N (int): Number of randomized fits to perform
+        RANK_MPI (int): MPI rank. Default to 0 for non-MPI.
+        maxIter (int): Maximum number of iterations. Default to 100000.
+        USE_MPI (bool): Use MPI. Default to False.
+        seedfile (str): Output file for seeding next fit based on this fit. Default to "seed" name prefix.
+        useMinos (bool): Use MINOS instead of MIGRAD. Default to False.
+        hesse (bool): Evaluate HESSE matrix after minimization. Default to False.
 
     Returns:
-        minNLL: Minimum negative log likelihood
+        minNLL (double): Minimum negative log likelihood
     '''
+
+    fitargs = (seedfile, useMinos, hesse)
 
     if (RANK_MPI==0):
         print(f'LIKELIHOOD BEFORE MINIMIZATION: {ati.likelihood()}')
         fitManager: MinuitMinimizationManager = ati.minuitMinimizationManager()
-        fitManager.setMaxIterations(args.maxIter)
+        fitManager.setMaxIterations(maxIter)
 
         if N == 0: # No randomization
-            bFitFailed, minNLL = performFit(fitManager, '0', always_save_seed)
+            bFitFailed, minNLL = performFit( ati, '0', *fitargs )
             print(f'LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): {minNLL}')
 
         else: # Randomized parameters
@@ -89,7 +107,7 @@ def runFits(
                 for ipar in range(len(parRangeKeywords)):
                     ati.randomizeParameter(parRangeKeywords[ipar][0], float(parRangeKeywords[ipar][1]), float(parRangeKeywords[ipar][2]))
 
-                bFitFailed, NLL = performFit(fitManager, f'{i}', always_save_seed)
+                bFitFailed, NLL = performFit( ati, f'{i}', *fitargs )
                 if not bFitFailed and NLL < minNLL:
                     minNLL = NLL
                     minFitTag = i
@@ -101,8 +119,8 @@ def runFits(
             else:
                 print(f'MINIMUM LIKELHOOD FROM ITERATION {minFitTag} of {N} RANDOM PRODUCTION PARS = {minNLL}')
                 os.system(f'cp {fitName}_{minFitTag}.fit {fitName}.fit')
-                if args.seedfile is not None:
-                    os.system(f'cp {args.seedfile}_{minFitTag}.txt {args.seedfile}.txt')
+                if seedfile is not None:
+                    os.system(f'cp {seedfile}_{minFitTag}.txt {seedfile}.txt')
 
     if USE_MPI:
        ati.exitMPI()
@@ -116,8 +134,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Perform MLE fits")
     rndSeed = random.seed(datetime.now().timestamp())
     parser.add_argument('cfgfile',       type=str,                  help='AmpTools Configuration file')
-    parser.add_argument('--seedfile',    type=str, default=None,    help='Output file for seeding next fit based on this fit. Do not include extension')
-    parser.add_argument('--always_save_seed', action='store_true',  help='Always save the seed file, even if the fit fails')
+    parser.add_argument('--seedfile',    type=str, default="seed",    help='Output file for seeding next fit based on this fit. Do not include extension')
     parser.add_argument('--numRnd',      type=int, default=0,       help='Perform N fits each seeded with random parameters')
     parser.add_argument('--randomSeed',  type=int, default=rndSeed, help='Sets the random seed used by the random number generator for the fits with randomized initial parameters. If not set, will use the current time.')
     parser.add_argument('--maxIter',     type=int, default=100000,  help='Maximum number of fit iterations')
@@ -144,7 +161,6 @@ if __name__ == '__main__':
         print("\n\n === COMMANDLINE ARGUMENTS === ")
         print("Config file:", args.cfgfile)
         print("Seed file:", args.seedfile)
-        print("Always save seed:", args.always_save_seed)
         print("Number of random fits:", args.numRnd)
         print("Random seed:", args.randomSeed)
         print("Maximum iterations:", args.maxIter)
@@ -173,7 +189,12 @@ if __name__ == '__main__':
     AmpToolsInterface.setRandomSeed(args.randomSeed)
 
     fit_start_time = time.time()
-    nll = runFits(ati, args.numRnd, args.always_save_seed)
+    nll = runFits( ati, N = args.numRnd, \
+                    seedfile = args.seedfile, \
+                    useMinos = args.useMinos, \
+                    hesse = args.hesse, \
+                    maxIter = args.maxIter, \
+                    USE_MPI = USE_MPI )
 
     print("\nDone! MPI.Finalize() / MPI.Init() automatically called at script end / start\n") if USE_MPI else print("\nDone!")
     print(f"Fit time: {time.time() - fit_start_time} seconds")

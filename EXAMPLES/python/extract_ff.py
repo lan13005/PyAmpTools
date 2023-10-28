@@ -8,21 +8,23 @@ import atiSetup
 
 def extract_ff(results, outfileName='', acceptanceCorrect=True, fmt='.5f', regex_merge=None):
     '''
+    Extract Fit Fractions and phase differences between pairs of waves from a FitResults object
+
     Regex merge is a useful tool to merge amplitudes that are related to each other (user-specified)
-    For example waveset: D-2- D-1- D0- D1- D2- D-2+ D-1+ D0+ D1+ D2+
-    To remove the sign at the end (merge reflectivites)     use = r'[-+]$'
-    To remove first sign and number (merge M-projections)   use = r'[-+]?(\d+)'
-    To remove numbers and signs to merge all D:             use = r'[-+]?(\d+)[-+]'
+        For example waveset: D-2- D-1- D0- D1- D2- D-2+ D-1+ D0+ D1+ D2+
+        To remove the sign at the end (merge reflectivites)     use = r'[-+]$'
+        To remove first sign and number (merge M-projections)   use = r'[-+]?(\d+)'
+        To remove numbers and signs to merge all D:             use = r'[-+]?(\d+)[-+]'
 
     Args:
-        results: FitResults object
-        outfileName: Output root file name or dump to stdout if ''
-        acceptanceCorrect: Acceptance correct values
-        fmt: Format string for printing
-        regex_merge: Merge amplitudes: Regex pair (pattern, replace) separated by ~>
+        results (FitResults): FitResults object
+        outfileName (str): Output root file name or dump to stdout if ''
+        acceptanceCorrect (bool): Acceptance correct the values
+        fmt (str): string format for printing
+        regex_merge (str): Merge amplitudes: Regex pair (pattern, replace) separated by ~>
 
     Returns:
-        None
+        None, dumps a file to outfileName or stdout
     '''
 
     def write_ff(amp, intensity, error):

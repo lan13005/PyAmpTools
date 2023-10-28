@@ -10,29 +10,35 @@ from plotgen_utils import book_histogram, turn_on_specifc_waveset
 import atiSetup
 
 def draw_histograms(
+    plotGen,
     results,
     hist_output_name,
     particles,
     HISTS_TO_BOOK,
 ):
     '''
-    Draw booked histograms from RDataFrame
+    Draw histograms from a FitResults object. Histograms are booked using the book_histogram() function that uses macros to compute
+    kinematic quantities to plot. Booked histograms are lazily evaluated / filled with RDataFrame.
 
     Args:
+        plotGen (PlotGenerator): PlotGenerator object
         results (FitResults): FitResults object
         hist_output_name (str): Output file name, do not include file type
         particles (List[str]): List of particles in reaction
         HISTS_TO_BOOK (Dict[str, List]): Dictionary of histograms to book. See book_histogram() for details
 
     Returns:
-        None
+        None, dumps a pdf file based on hist_output_name
     '''
+
+    THStack = ROOT.THStack
+    TCanvas = ROOT.TCanvas
+
     assert( '.' not in hist_output_name ), "Do not include file type in the output name ( -o flag )"
 
     N_BOOKED_HISTS = len(HISTS_TO_BOOK)
     N_PARTICLES = len(particles)
 
-    plotGen = PlotGenerator( results )
     kData, kBkgnd, kGenMC, kAccMC, kNumTypes = plotGen.kData, plotGen.kBkgnd, plotGen.kGenMC, plotGen.kAccMC, plotGen.kNumTypes
     kColors = {
         kData: ROOT.kBlack,
@@ -129,10 +135,7 @@ if __name__ == '__main__':
     gluex_style.SetPadRightMargin(0.08)
     gluex_style.cd()
 
-    ############## SET ALIASES ##############
-    THStack = ROOT.THStack
-    TCanvas = ROOT.TCanvas
-    RDataFrame = ROOT.RDataFrame
+    ############## ENABLE MULTI-THREADING ##############
     ROOT.ROOT.EnableImplicitMT() # REMOVE THIS WHEN DEBUGGING
 
     ############## PARSE COMMAND LINE ARGS ##############
@@ -174,4 +177,5 @@ if __name__ == '__main__':
     particles = ['GLUEXBEAM','RECOIL','ETA','PI0']
 
     ############## DRAW HISTOGRAMS ##############
-    draw_histograms(results, hist_output_name, particles, HISTS_TO_BOOK)
+    plotGen = PlotGenerator( results )
+    draw_histograms(plotGen, results, hist_output_name, particles, HISTS_TO_BOOK)

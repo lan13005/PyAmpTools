@@ -17,18 +17,20 @@ def PlotGen(
     ):
     '''
     Generates plots from a fit result file. The plots are saved to a root file.
+        A c++ user-subclassed PlotGenerator object (here, EtaPiPlotGenerator) is used to generate the plots. Histogram names, ranges, kinematic
+        quantities are all defined there.
 
     Args:
-        plotGen: Sub-classed PlotGenerator instance.
-        plotfile: name of output root file.
-        ampString: Semicolon separated list of coherent sums to plot. Sums are underscore separated amplitudes. Empty string will plot sum of all waves.
-        keepAllAmps: If True, all amplitudes are summed and plotted. If False, only the amplitudes specified in ampString will be plotted.
-        plotAllVars: If True, all variables will be plotted.
-        plotGenHists: If True, generated histograms will be plotted.
-        doAccCorr: If True, acceptance correction will be applied to the histograms.
+        plotGen (EtaPiPlotGenerator): Sub-classed PlotGenerator instance.
+        ofile (str): name of output root file.
+        ampString (str): Semicolon separated list of coherent sums to plot. Sums are underscore separated amplitudes. Empty string will plot sum of all waves.
+        keepAllAmps (bool): If True, all amplitudes are summed and plotted. If False, only the amplitudes specified in ampString will be plotted.
+        plotAllVars (bool): If True, all variables will be plotted.
+        plotGenHists (bool): If True, generated histograms will be plotted.
+        doAccCorr (bool): If True, acceptance correction will be applied to the histograms.
 
     Returns:
-        None
+        None, but saves drawn amplitufe weighted histograms to a root file.
     '''
 
     plotfile = TFile(ofile, 'RECREATE')
