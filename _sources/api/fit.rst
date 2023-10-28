@@ -1,7 +1,7 @@
 fit
 ==========================
 
-.. automodule:: fit
+.. automodule:: cfgGenerator
    :members:
-   :source:
-    https://github.com/lan13005/PyAmpTools/blob/main/EXAMPLES/python/fit.py
+   :undoc-members:
+   :show-inheritance:
