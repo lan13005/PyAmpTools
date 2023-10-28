@@ -405,8 +405,29 @@ document.write(`
 <span class="n">randomSeed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
 <span class="n">seedfile</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;seed_file&#39;</span>
 <span class="n">numRnd</span> <span class="o">=</span> <span class="mi">0</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2"> === COMMANDLINE ARGUMENTS === &quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
+MPI is disabled
+GPU is disabled
+Loading library libAmpTools.so .............. ON
+Loading library libAmpPlotter.so ............ ON
+Loading library libAmpsDataIO.so ............ ON
+Loading library libFSRoot.so ................ OFF
+Loading library libAmpsGen.so ............... OFF
+------------------------------------------------
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2"> === COMMANDLINE ARGUMENTS === &quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Config file:&quot;</span><span class="p">,</span> <span class="n">cfgfile</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Seed file:&quot;</span><span class="p">,</span> <span class="n">seedfile</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of random fits:&quot;</span><span class="p">,</span> <span class="n">numRnd</span><span class="p">)</span>
@@ -416,29 +437,12 @@ document.write(`
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
-MPI is disabled
-GPU is disabled
-Loading library libAmpTools.so .............. ON
-Loading library libAmpPlotter.so ............
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> ON
-Loading library libAmpsDataIO.so ............ ON
-Loading library libFSRoot.so ................ OFF
-Loading library libAmpsGen.so ............... OFF
-------------------------------------------------
-</pre></div>
-</div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> === COMMANDLINE ARGUMENTS === 
 Config file: /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/fit.cfg
 Seed file: seed_file
 Number of random fits: 0
-Random seed: 1698455643
+Random seed: 1698456404
  ============================= 
-
-
-Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 </pre></div>
 </div>
 </div>
@@ -612,7 +616,7 @@ Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 </div>
 </div>
 </div>
-<p>The confirguation file specifies a datareader called <code class="docutils literal notranslate"><span class="pre">ROOTDataReader</span></code> and the amplitude called <code class="docutils literal notranslate"><span class="pre">Zlm</span></code>. There are many datareaders (i.e. for <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> and another for <code class="docutils literal notranslate"><span class="pre">Bootstrapping</span></code>) and amplitudes (i.e. <code class="docutils literal notranslate"><span class="pre">BreitWigner</span></code> and <code class="docutils literal notranslate"><span class="pre">Piecewise</span></code>). Below, <code class="docutils literal notranslate"><span class="pre">DataReader</span></code> is an alias for <code class="docutils literal notranslate"><span class="pre">ROOTDataReader</span></code> or its <code class="docutils literal notranslate"><span class="pre">MPI</span></code> implementation. These aliases are created by <code class="docutils literal notranslate"><span class="pre">atiSetup</span></code>, see <span class="xref myst">here</span> for more information.</p>
+<p>The confirguation file specifies a datareader called <code class="docutils literal notranslate"><span class="pre">ROOTDataReader</span></code> and the amplitude called <code class="docutils literal notranslate"><span class="pre">Zlm</span></code>. There are many datareaders (i.e. for <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> and another for <code class="docutils literal notranslate"><span class="pre">Bootstrapping</span></code>) and amplitudes (i.e. <code class="docutils literal notranslate"><span class="pre">BreitWigner</span></code> and <code class="docutils literal notranslate"><span class="pre">Piecewise</span></code>). Below, <code class="docutils literal notranslate"><span class="pre">DataReader</span></code> is an alias for <code class="docutils literal notranslate"><span class="pre">ROOTDataReader</span></code> or its <code class="docutils literal notranslate"><span class="pre">MPI</span></code> implementation. These aliases are created by <code class="docutils literal notranslate"><span class="pre">atiSetup</span></code>, see [here](Loading Libraries) for more information.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">Zlm</span><span class="p">()</span> <span class="p">)</span>
@@ -624,7 +628,7 @@ Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 </div>
 </div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">AmpToolsInterface</span></code> is the primary way to interact with the <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> minimization library. From this <code class="docutils literal notranslate"><span class="pre">object</span></code> we can access thingss like a <code class="docutils literal notranslate"><span class="pre">ParameterManager</span></code> and a <code class="docutils literal notranslate"><span class="pre">MinimizationManager</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">AmpToolsInterface</span></code> is the primary way to interact with the <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> minimization library. From this <code class="docutils literal notranslate"><span class="pre">object</span></code> we can access things like a <code class="docutils literal notranslate"><span class="pre">ParameterManager</span></code> and a <code class="docutils literal notranslate"><span class="pre">MinimizationManager</span></code>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ati</span> <span class="o">=</span> <span class="n">AmpToolsInterface</span><span class="p">(</span> <span class="n">cfgInfo</span> <span class="p">)</span>
@@ -657,8 +661,15 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 </div>
 </div>
 </div>
-<p>A <code class="docutils literal notranslate"><span class="pre">fit</span></code> module is defined in PyAmpTools to run the standard MLE fit. We simply pass the recently created <code class="docutils literal notranslate"><span class="pre">ati</span></code> instance and the number of fits with random initializations to perform as the optimizer could get stuck in unwanted local minima.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">fit</span></code> module is defined in PyAmpTools to run the standard MLE fit. We simply pass the recently created <code class="docutils literal notranslate"><span class="pre">ati</span></code> instance and the number of fits with random initializations to perform. Randomization is beneficial as the optimizer could get stuck in unwanted local minima.</p>
 <p>A single fit is performed without randomization is performed if <code class="docutils literal notranslate"><span class="pre">numRnd=0</span></code></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>runFits<span class="o">??</span>
+</pre></div>
+</div>
+</div>
+</div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">nll</span> <span class="o">=</span> <span class="n">runFits</span><span class="p">(</span><span class="n">ati</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="n">numRnd</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="o">=</span><span class="n">USE_MPI</span><span class="p">)</span>
@@ -670,7 +681,9 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): 14346.408126566832
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
 
 [ Minuit ]:
 
@@ -716,8 +729,8 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 
 [ MinuitMinimizationManager ]:
 
-	MIGRAD evaluation total wall time:  5.11533e-01 s.
-	   average time per function call:  1.69382e+00 ms.
+	MIGRAD evaluation total wall time:  2.64076e-01 s.
+	   average time per function call:  8.74424e-01 ms.
 
 [ NormIntInterface ]:
 
