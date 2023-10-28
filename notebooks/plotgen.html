@@ -553,15 +553,17 @@ Info in &lt;TCanvas::Print&gt;: pdf file result_all.pdf has been closed
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pdf_url</span> <span class="o">=</span> <span class="s2">&quot;result_all.pdf&quot;</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pdf2image</span> <span class="kn">import</span> <span class="n">convert_from_path</span>
 
-<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">display_pdf</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pdf_url</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-    <span class="n">display_pdf</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">pdf_url</span> <span class="o">=</span> <span class="s2">&quot;result_all.pdf&quot;</span>
+<span class="kn">from</span> <span class="nn">pdf2image</span> <span class="kn">import</span> <span class="n">convert_from_path</span>
+<span class="n">images</span> <span class="o">=</span> <span class="n">convert_from_path</span><span class="p">(</span><span class="n">pdf_url</span><span class="p">)</span>
+<span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># show first page</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
+<img alt="../_images/723b1e1bc42a40a108bc8c3cfaca3d23109ea5c16cb222d66644d67a0df3563e.png" src="../_images/723b1e1bc42a40a108bc8c3cfaca3d23109ea5c16cb222d66644d67a0df3563e.png" />
 </div>
 </div>
 </section>
