@@ -9,6 +9,7 @@ sphinx:
     - "sphinx.ext.autodoc"
     - "sphinx.ext.autosummary"
     - "sphinx.ext.napoleon"
+    - "sphinx.ext.viewcode"
   config:
     add_module_names: False
 

@@ -1,5 +1,7 @@
 fit
 ==========================
 
-.. autofunction:: fit.performFit
-.. autofunction:: fit.runFits
+.. automodule:: fit
+   :members:
+   :undoc-members:
+   :show-inheritance:

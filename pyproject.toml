@@ -18,6 +18,7 @@ dependencies = [
 	"tqdm",
     "tbb", # for FSROOT, multiprocessing/threading
     "psutil", # check process information
+    "pdf2image", # convert pdf to image for plotGen tutorial documentation
     ### CI
     "pytest",
     "pre-commit",

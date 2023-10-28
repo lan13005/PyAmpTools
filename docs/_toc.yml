@@ -4,14 +4,20 @@
 format: jb-book
 root: intro
 parts:
-  - caption: Tutorial
+  - caption: Tutorials
     chapters:
       - file: notebooks/libraryLoading
       - file: notebooks/generation
+      - file: notebooks/fitting
+        sections:
+          - file: notebooks/mle
+          - file: notebooks/mcmc
+      - file: notebooks/plotgen
   - caption: API
     chapters:
       - file: api/cfgGenerator
       - file: api/fit
       - file: api/mcmc
+      - file: api/loadParameters
       - file: api/plotgen
       - file: api/extract_ff

@@ -18,6 +18,8 @@ push:
 
 update: build push
 
+rebuild: clean build push
+
 # Clean the build directory
 clean:
 	@echo "Cleaning up build directory..."
