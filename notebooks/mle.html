@@ -441,7 +441,7 @@ Loading library libAmpsGen.so ............... OFF
 Config file: /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/fit.cfg
 Seed file: seed_file
 Number of random fits: 0
-Random seed: 1698456732
+Random seed: 1698498842
  ============================= 
 </pre></div>
 </div>
@@ -727,12 +727,22 @@ LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): 14346.408126566832
 
 [ MinuitMinimizationManager ]:
 
-	MIGRAD evaluation total wall time:  2.61197e-01 s.
-	   average time per function call:  8.64891e-01 ms.
+	MIGRAD evaluation total wall time:  2.57992e-01 s.
+	   average time per function call:  8.54278e-01 ms.
 
 [ NormIntInterface ]:
 
 	Perfect acceptance -- generated and accepted MC are the same
+</pre></div>
+</div>
+</div>
+</div>
+<p>After the fit is complete, a <code class="docutils literal notranslate"><span class="pre">.fit</span></code> file will be created with the name defined by the <code class="docutils literal notranslate"><span class="pre">fit</span></code> keyword in the cfg file. This file contains the results of the fit. A tutorial on how to plot the results of these <code class="docutils literal notranslate"><span class="pre">.fit</span></code> files will be shown in</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>rm<span class="w"> </span>-f<span class="w"> </span>seed_0.txt
+<span class="o">!</span>rm<span class="w"> </span>-f<span class="w"> </span>normint
+<span class="o">!</span>rm<span class="w"> </span>-f<span class="w"> </span>result_0.fit
 </pre></div>
 </div>
 </div>
