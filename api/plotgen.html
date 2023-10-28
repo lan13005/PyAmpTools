@@ -170,6 +170,7 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/mcmc.html">Markov Chain Monte Carlo</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/plotgen.html">Plotting with RDataFrames</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="current nav bd-sidenav">
@@ -391,12 +392,13 @@ document.write(`
 <span id="plotgenrdf"></span><h2>PlotGenRDF<a class="headerlink" href="#module-PlotGenRDF" title="Permalink to this heading">#</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="PlotGenRDF.draw_histograms">
-<span class="sig-name descname"><span class="pre">draw_histograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HISTS_TO_BOOK</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/PlotGenRDF.html#draw_histograms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#PlotGenRDF.draw_histograms" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">draw_histograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plotGen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HISTS_TO_BOOK</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/PlotGenRDF.html#draw_histograms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#PlotGenRDF.draw_histograms" title="Permalink to this definition">#</a></dt>
 <dd><p>Draw histograms from a FitResults object. Histograms are booked using the book_histogram() function that uses macros to compute
 kinematic quantities to plot. Booked histograms are lazily evaluated / filled with RDataFrame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>plotGen</strong> (<em>PlotGenerator</em>) – PlotGenerator object</p></li>
 <li><p><strong>results</strong> (<em>FitResults</em>) – FitResults object</p></li>
 <li><p><strong>hist_output_name</strong> (<em>str</em>) – Output file name, do not include file type</p></li>
 <li><p><strong>particles</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of particles in reaction</p></li>
