@@ -1,0 +1,596 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fit &#8212; PyAmpTools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=c5ced968eda925caa686" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=c5ced968eda925caa686" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=c5ced968eda925caa686" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=c5ced968eda925caa686" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=c5ced968eda925caa686" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=c5ced968eda925caa686" />
+  <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=c5ced968eda925caa686"></script>
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../_static/sphinx-thebe.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/fit';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../intro.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">PyAmpTools</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../intro.html">
+                    PyAmpTools
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorial</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/libraryLoading.html">Loading Libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/generation.html">Generating Data</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/fitting.html">Fitting</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/mle.html">Maximum Likelihood Estimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/mcmc.html">Markov Chain Monte Carlo</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../api/cfgGenerator.html">cfgGenerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/fit.html">fit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/mcmc.html">mcmc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/loadParameters.html">LoadParameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/plotgen.html">PlotGen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/extract_ff.html">extract_ff</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/lan13005/PyAmpTools" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2F_modules/fit.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <h1>Source code for fit</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/sur/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">atiSetup</span>
+
+<div class="viewcode-block" id="performFit"><a class="viewcode-back" href="../api/fit.html#fit.performFit">[docs]</a><span class="k">def</span> <span class="nf">performFit</span><span class="p">(</span>
+        <span class="n">ati</span><span class="p">,</span> 
+        <span class="n">seed_file_tag</span><span class="p">,</span>
+        <span class="n">seedfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;seed&quot;</span><span class="p">,</span>
+        <span class="n">useMinos</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">hesse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Performs a single fit</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ati (AmpToolsInterface):  AmpToolsInterface instance</span>
+<span class="sd">        seed_file_tag (str): Tag to append to output file names to distinguish multiple runs</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bFitFailed (bool): flag indicating if fit failed</span>
+<span class="sd">        NLL (double): Negative log likelihood</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">fitManager</span><span class="p">:</span> <span class="n">MinuitMinimizationManager</span> <span class="o">=</span> <span class="n">ati</span><span class="o">.</span><span class="n">minuitMinimizationManager</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">useMinos</span><span class="p">:</span>
+        <span class="n">fitManager</span><span class="o">.</span><span class="n">minosMinimization</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fitManager</span><span class="o">.</span><span class="n">migradMinimization</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">hesse</span><span class="p">:</span>
+        <span class="n">fitManager</span><span class="o">.</span><span class="n">setEvaluateHessian</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">bFitFailed</span> <span class="o">=</span> <span class="n">fitManager</span><span class="o">.</span><span class="n">status</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">fitManager</span><span class="o">.</span><span class="n">eMatrixStatus</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">3</span>
+
+    <span class="k">if</span> <span class="n">bFitFailed</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: fit failed use results with caution...&quot;</span><span class="p">)</span>
+        <span class="n">NLL</span> <span class="o">=</span> <span class="mf">1e6</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">NLL</span> <span class="o">=</span> <span class="n">ati</span><span class="o">.</span><span class="n">likelihood</span><span class="p">()</span>
+
+    <span class="n">ati</span><span class="o">.</span><span class="n">finalizeFit</span><span class="p">(</span><span class="n">seed_file_tag</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">seedfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ati</span><span class="o">.</span><span class="n">fitResults</span><span class="p">()</span><span class="o">.</span><span class="n">writeSeed</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">seedfile</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">seed_file_tag</span><span class="si">}</span><span class="s1">.txt&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">bFitFailed</span><span class="p">,</span> <span class="n">NLL</span></div>
+
+<span class="c1">############### PERFORM FIT #############</span>
+<div class="viewcode-block" id="runFits"><a class="viewcode-back" href="../api/fit.html#fit.runFits">[docs]</a><span class="k">def</span> <span class="nf">runFits</span><span class="p">(</span>
+        <span class="n">ati</span><span class="p">,</span>
+        <span class="n">N</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">RANK_MPI</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">maxIter</span> <span class="o">=</span> <span class="mi">100000</span><span class="p">,</span>
+        <span class="n">USE_MPI</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">seedfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;seed&quot;</span><span class="p">,</span>
+        <span class="n">useMinos</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">hesse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Performs N randomized fits, if N=0 then a single fit with no randomization is performed</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ati (AmpToolsInterface): AmpToolsInterface instance</span>
+<span class="sd">        N (int): Number of randomized fits to perform</span>
+<span class="sd">        RANK_MPI (int): MPI rank. Default to 0 for non-MPI.</span>
+<span class="sd">        maxIter (int): Maximum number of iterations. Default to 100000.</span>
+<span class="sd">        USE_MPI (bool): Use MPI. Default to False.</span>
+<span class="sd">        seedfile (str): Output file for seeding next fit based on this fit. Default to &quot;seed&quot; name prefix.</span>
+<span class="sd">        useMinos (bool): Use MINOS instead of MIGRAD. Default to False.</span>
+<span class="sd">        hesse (bool): Evaluate HESSE matrix after minimization. Default to False.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        minNLL (double): Minimum negative log likelihood</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">fitargs</span> <span class="o">=</span> <span class="p">(</span><span class="n">seedfile</span><span class="p">,</span> <span class="n">useMinos</span><span class="p">,</span> <span class="n">hesse</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">RANK_MPI</span><span class="o">==</span><span class="mi">0</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;LIKELIHOOD BEFORE MINIMIZATION: </span><span class="si">{</span><span class="n">ati</span><span class="o">.</span><span class="n">likelihood</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">fitManager</span><span class="p">:</span> <span class="n">MinuitMinimizationManager</span> <span class="o">=</span> <span class="n">ati</span><span class="o">.</span><span class="n">minuitMinimizationManager</span><span class="p">()</span>
+        <span class="n">fitManager</span><span class="o">.</span><span class="n">setMaxIterations</span><span class="p">(</span><span class="n">maxIter</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># No randomization</span>
+            <span class="n">bFitFailed</span><span class="p">,</span> <span class="n">minNLL</span> <span class="o">=</span> <span class="n">performFit</span><span class="p">(</span> <span class="n">ati</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">fitargs</span> <span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): </span><span class="si">{</span><span class="n">minNLL</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># Randomized parameters</span>
+            <span class="n">fitName</span>     <span class="o">=</span> <span class="n">cfgInfo</span><span class="o">.</span><span class="n">fitName</span><span class="p">()</span>
+            <span class="n">maxFraction</span> <span class="o">=</span> <span class="mf">0.5</span>
+            <span class="n">minNLL</span>       <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">float_info</span><span class="o">.</span><span class="n">max</span>
+            <span class="n">minFitTag</span>   <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+            <span class="n">parRangeKeywords</span> <span class="o">=</span> <span class="n">cfgInfo</span><span class="o">.</span><span class="n">userKeywordArguments</span><span class="p">(</span><span class="s2">&quot;parRange&quot;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">###############################################&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;#############   FIT </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1"> OF </span><span class="si">{</span><span class="n">N</span><span class="si">}</span><span class="s1"> ###############&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;###############################################</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="n">ati</span><span class="o">.</span><span class="n">reinitializePars</span><span class="p">()</span>
+                <span class="n">ati</span><span class="o">.</span><span class="n">randomizeProductionPars</span><span class="p">(</span><span class="n">maxFraction</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">ipar</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">parRangeKeywords</span><span class="p">)):</span>
+                    <span class="n">ati</span><span class="o">.</span><span class="n">randomizeParameter</span><span class="p">(</span><span class="n">parRangeKeywords</span><span class="p">[</span><span class="n">ipar</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">(</span><span class="n">parRangeKeywords</span><span class="p">[</span><span class="n">ipar</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">parRangeKeywords</span><span class="p">[</span><span class="n">ipar</span><span class="p">][</span><span class="mi">2</span><span class="p">]))</span>
+
+                <span class="n">bFitFailed</span><span class="p">,</span> <span class="n">NLL</span> <span class="o">=</span> <span class="n">performFit</span><span class="p">(</span> <span class="n">ati</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">fitargs</span> <span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">bFitFailed</span> <span class="ow">and</span> <span class="n">NLL</span> <span class="o">&lt;</span> <span class="n">minNLL</span><span class="p">:</span>
+                    <span class="n">minNLL</span> <span class="o">=</span> <span class="n">NLL</span>
+                    <span class="n">minFitTag</span> <span class="o">=</span> <span class="n">i</span>
+
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;LIKELIHOOD AFTER MINIMIZATION: </span><span class="si">{</span><span class="n">NLL</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">minFitTag</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ALL FITS FAILED!&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;MINIMUM LIKELHOOD FROM ITERATION </span><span class="si">{</span><span class="n">minFitTag</span><span class="si">}</span><span class="s1"> of </span><span class="si">{</span><span class="n">N</span><span class="si">}</span><span class="s1"> RANDOM PRODUCTION PARS = </span><span class="si">{</span><span class="n">minNLL</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;cp </span><span class="si">{</span><span class="n">fitName</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">minFitTag</span><span class="si">}</span><span class="s1">.fit </span><span class="si">{</span><span class="n">fitName</span><span class="si">}</span><span class="s1">.fit&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">seedfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;cp </span><span class="si">{</span><span class="n">seedfile</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">minFitTag</span><span class="si">}</span><span class="s1">.txt </span><span class="si">{</span><span class="n">seedfile</span><span class="si">}</span><span class="s1">.txt&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">USE_MPI</span><span class="p">:</span>
+       <span class="n">ati</span><span class="o">.</span><span class="n">exitMPI</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">minNLL</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="c1">############## PARSE COMMANDLINE ARGUMENTS #############</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Perform MLE fits&quot;</span><span class="p">)</span>
+    <span class="n">rndSeed</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;cfgfile&#39;</span><span class="p">,</span>       <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>                  <span class="n">help</span><span class="o">=</span><span class="s1">&#39;AmpTools Configuration file&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--seedfile&#39;</span><span class="p">,</span>    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>    <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Output file for seeding next fit based on this fit. Do not include extension&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--numRnd&#39;</span><span class="p">,</span>      <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Perform N fits each seeded with random parameters&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--randomSeed&#39;</span><span class="p">,</span>  <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">rndSeed</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Sets the random seed used by the random number generator for the fits with randomized initial parameters. If not set, will use the current time.&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--maxIter&#39;</span><span class="p">,</span>     <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">100000</span><span class="p">,</span>  <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Maximum number of fit iterations&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--useMinos&#39;</span><span class="p">,</span>    <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Use MINOS instead of MIGRAD&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--hesse&#39;</span><span class="p">,</span>       <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Evaluate HESSE matrix after minimization&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--scanPar&#39;</span><span class="p">,</span>     <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>    <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Perform a scan of the given parameter. Stepsize, min, max are to be set in the config file&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--accelerator&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>      <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Force use of given &quot;accelerator&quot; ~ [gpu, mpi, mpigpu, gpumpi]&#39;</span><span class="p">)</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">randomSeed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">randomSeed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+
+    <span class="n">cfgfile</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">cfgfile</span>
+    <span class="k">assert</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">cfgfile</span><span class="p">)</span> <span class="p">),</span> <span class="sa">f</span><span class="s1">&#39;Config file does not exist at specified path&#39;</span>
+
+    <span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
+    <span class="n">REPO_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
+
+    <span class="c1">################### LOAD LIBRARIES ##################</span>
+    <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">args</span><span class="o">.</span><span class="n">accelerator</span><span class="p">)</span>
+
+    <span class="c1">############## LOAD CONFIGURATION FILE ##############</span>
+    <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2"> === COMMANDLINE ARGUMENTS === &quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Config file:&quot;</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">cfgfile</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Seed file:&quot;</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">seedfile</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of random fits:&quot;</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">numRnd</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Random seed:&quot;</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">randomSeed</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Maximum iterations:&quot;</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">maxIter</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Use MINOS:&quot;</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">useMinos</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Evaluate HESSE matrix:&quot;</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">hesse</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Scanning Parameter:&quot;</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">scanPar</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; ============================= </span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">ConfigFileParser</span><span class="p">(</span><span class="n">cfgfile</span><span class="p">)</span>
+    <span class="n">cfgInfo</span><span class="p">:</span> <span class="n">ConfigurationInfo</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getConfigurationInfo</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">cfgInfo</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+
+    <span class="c1"># ############## REGISTER OBJECTS FOR AMPTOOLS ##############</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">Zlm</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">BreitWigner</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">Piecewise</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">PhaseOffset</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">TwoPiAngles</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReader</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReaderFilter</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReaderBootstrap</span><span class="p">()</span> <span class="p">)</span>
+
+    <span class="n">ati</span> <span class="o">=</span> <span class="n">AmpToolsInterface</span><span class="p">(</span> <span class="n">cfgInfo</span> <span class="p">)</span>
+
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">setRandomSeed</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">randomSeed</span><span class="p">)</span>
+
+    <span class="n">fit_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">nll</span> <span class="o">=</span> <span class="n">runFits</span><span class="p">(</span> <span class="n">ati</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">numRnd</span><span class="p">,</span> \
+                    <span class="n">seedfile</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">seedfile</span><span class="p">,</span> \
+                    <span class="n">useMinos</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">useMinos</span><span class="p">,</span> \
+                    <span class="n">hesse</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">hesse</span><span class="p">,</span> \
+                    <span class="n">maxIter</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">maxIter</span><span class="p">,</span> \
+                    <span class="n">USE_MPI</span> <span class="o">=</span> <span class="n">USE_MPI</span> <span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Done! MPI.Finalize() / MPI.Init() automatically called at script end / start</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Done!&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fit time: </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">fit_start_time</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total time: </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start_time</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Final Likelihood: </span><span class="si">{</span><span class="n">nll</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="c1"># Need this for for unit-tests</span>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Lawrence Ng
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=c5ced968eda925caa686"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=c5ced968eda925caa686"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

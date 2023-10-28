@@ -378,16 +378,16 @@ document.write(`
 <h1>LoadParameters<a class="headerlink" href="#loadparameters" title="Permalink to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="LoadParameters.LoadParameters">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LoadParameters</span></span><a class="headerlink" href="#LoadParameters.LoadParameters" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LoadParameters</span></span><a class="reference internal" href="../_modules/LoadParameters.html#LoadParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#LoadParameters.LoadParameters" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="simple">
-<dt>Class to extract amplitude parameters from an AmpTools FitResults or ConfigurationInfo object</dt><dd><p>Ability to format them (complex -&gt; real, imag) for input to other minimization algorithms</p>
+<dt>Class to extract amplitude parameters from an AmpTools FitResults or ConfigurationInfo object</dt><dd><p>Parameters (like production coefficients) can then be formatted (complex -&gt; real, imag) for input to other minimization algorithms</p>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="LoadParameters.LoadParameters.flatten_parameters">
-<span class="sig-name descname"><span class="pre">flatten_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LoadParameters.LoadParameters.flatten_parameters" title="Permalink to this definition">#</a></dt>
-<dd><p>Flatten amplitude parameters (complex-&gt; real, imag) skipping imaginary parts of real amplitudes.
+<span class="sig-name descname"><span class="pre">flatten_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/LoadParameters.html#LoadParameters.flatten_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#LoadParameters.LoadParameters.flatten_parameters" title="Permalink to this definition">#</a></dt>
+<dd><p>Flatten amplitude parameters (complex-&gt; real, imag) skipping imaginary parts of amplitudes fixed to be real.
 If no arguments are passed, use the uniqueProdPars and uniqueProdIsReal from the last call to load_cfg()
 Can also format any dictionary pair into flat format</p>
 <blockquote>
@@ -410,9 +410,9 @@ names (list): list of parameter names expanding complex parameters into Re[par] 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="LoadParameters.LoadParameters.load_cfg">
-<span class="sig-name descname"><span class="pre">load_cfg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LoadParameters.LoadParameters.load_cfg" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">load_cfg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/LoadParameters.html#LoadParameters.load_cfg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#LoadParameters.LoadParameters.load_cfg" title="Permalink to this definition">#</a></dt>
 <dd><dl class="simple">
-<dt>Get a map of unique (parameter: value) pairs excluding additional constrained ones</dt><dd><p>These include production parameters and amplitude parameters</p>
+<dt>Get a map of unique (parameter: value) pairs excluding redundant constrained ones</dt><dd><p>These include production parameters and amplitude parameters</p>
 </dd>
 </dl>
 <dl class="field-list simple">
@@ -424,7 +424,7 @@ names (list): list of parameter names expanding complex parameters into Re[par] 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="LoadParameters.LoadParameters.unflatten_parameters">
-<span class="sig-name descname"><span class="pre">unflatten_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LoadParameters.LoadParameters.unflatten_parameters" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">unflatten_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/LoadParameters.html#LoadParameters.unflatten_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#LoadParameters.LoadParameters.unflatten_parameters" title="Permalink to this definition">#</a></dt>
 <dd><dl class="simple">
 <dt>Unflatten parameters forming complex values (for production parameters) when requested.</dt><dd><p>List to Dictionary</p>
 </dd>

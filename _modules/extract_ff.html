@@ -1,0 +1,513 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>extract_ff &#8212; PyAmpTools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=c5ced968eda925caa686" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=c5ced968eda925caa686" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=c5ced968eda925caa686" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=c5ced968eda925caa686" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=c5ced968eda925caa686" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=c5ced968eda925caa686" />
+  <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=c5ced968eda925caa686"></script>
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../_static/sphinx-thebe.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/extract_ff';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../intro.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">PyAmpTools</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../intro.html">
+                    PyAmpTools
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorial</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/libraryLoading.html">Loading Libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/generation.html">Generating Data</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/fitting.html">Fitting</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/mle.html">Maximum Likelihood Estimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/mcmc.html">Markov Chain Monte Carlo</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../api/cfgGenerator.html">cfgGenerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/fit.html">fit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/mcmc.html">mcmc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/loadParameters.html">LoadParameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/plotgen.html">PlotGen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/extract_ff.html">extract_ff</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/lan13005/PyAmpTools" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2F_modules/extract_ff.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <h1>Source code for extract_ff</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">atiSetup</span>
+
+<div class="viewcode-block" id="extract_ff"><a class="viewcode-back" href="../api/extract_ff.html#extract_ff.extract_ff">[docs]</a><span class="k">def</span> <span class="nf">extract_ff</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">outfileName</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">acceptanceCorrect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;.5f&#39;</span><span class="p">,</span> <span class="n">regex_merge</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Regex merge is a useful tool to merge amplitudes that are related to each other (user-specified)</span>
+<span class="sd">    For example waveset: D-2- D-1- D0- D1- D2- D-2+ D-1+ D0+ D1+ D2+</span>
+<span class="sd">    To remove the sign at the end (merge reflectivites)     use = r&#39;[-+]$&#39;</span>
+<span class="sd">    To remove first sign and number (merge M-projections)   use = r&#39;[-+]?(\d+)&#39;</span>
+<span class="sd">    To remove numbers and signs to merge all D:             use = r&#39;[-+]?(\d+)[-+]&#39;</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        results: FitResults object</span>
+<span class="sd">        outfileName: Output root file name or dump to stdout if &#39;&#39;</span>
+<span class="sd">        acceptanceCorrect: Acceptance correct values</span>
+<span class="sd">        fmt: Format string for printing</span>
+<span class="sd">        regex_merge: Merge amplitudes: Regex pair (pattern, replace) separated by ~&gt;</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">write_ff</span><span class="p">(</span><span class="n">amp</span><span class="p">,</span> <span class="n">intensity</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+        <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;FIT FRACTION </span><span class="si">{</span><span class="n">amp</span><span class="si">}</span><span class="s1"> = </span><span class="si">{</span><span class="n">intensity</span><span class="o">/</span><span class="n">total_intensity</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="s1"> +/- </span><span class="si">{</span><span class="n">error</span><span class="o">/</span><span class="n">total_intensity</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="c1">############### PLOTTING TIME! ################</span>
+    <span class="n">outfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfileName</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">outfileName</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="k">else</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
+    <span class="n">total_intensity</span><span class="p">,</span> <span class="n">total_error</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">intensity</span><span class="p">(</span><span class="n">acceptanceCorrect</span><span class="p">)</span>
+    <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;TOTAL EVENTS = </span><span class="si">{</span><span class="n">total_intensity</span><span class="si">}</span><span class="s2"> +/- </span><span class="si">{</span><span class="n">total_error</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">uniqueAmps</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">ampList</span><span class="p">()</span> <span class="c1"># vector&lt;string&gt;</span>
+    <span class="n">uniqueAmps</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">amp</span><span class="p">)</span> <span class="k">for</span> <span class="n">amp</span> <span class="ow">in</span> <span class="n">uniqueAmps</span><span class="p">]</span>
+
+    <span class="c1">######## DETERMINE UNIQUE AMPLITUDES AND PLOT THEM ALL #########</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">All Unique Amplitudes:&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">amp</span> <span class="ow">in</span> <span class="n">uniqueAmps</span><span class="p">:</span> <span class="c1"># amp ~ &quot;Reaction::Sum::Amp&quot; whereas amp ~ &quot;Amp&quot;</span>
+        <span class="n">amp</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">amp</span><span class="p">)</span><span class="c1">#.split(&#39;::&#39;)[-1] # amp is of type TString I think, convert first</span>
+        <span class="c1"># Print all amplitudes including including constrained ones, polarizations, etc</span>
+        <span class="n">useamp</span> <span class="o">=</span> <span class="p">[</span><span class="n">amp</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; -&gt; </span><span class="si">{</span><span class="n">amp</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">intensity</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">intensity</span><span class="p">(</span><span class="n">useamp</span><span class="p">,</span> <span class="n">acceptanceCorrect</span><span class="p">)</span>
+        <span class="n">write_ff</span><span class="p">(</span><span class="n">amp</span><span class="p">,</span> <span class="n">intensity</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+
+    <span class="c1">######## MERGE AMPLITUDES STRIPPING REGEX MATCHED STRING #########</span>
+    <span class="k">if</span> <span class="n">regex_merge</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">regex</span> <span class="ow">in</span> <span class="n">regex_merge</span><span class="p">:</span>
+            <span class="n">pattern</span><span class="p">,</span> <span class="n">replace</span> <span class="o">=</span> <span class="n">regex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;~&gt;&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="s1">&#39;~&gt;&#39;</span> <span class="ow">in</span> <span class="n">regex</span> <span class="k">else</span> <span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">pattern</span><span class="p">,</span> <span class="n">replace</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;&quot;</span><span class="o">+</span><span class="n">pattern</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;&quot;</span><span class="o">+</span><span class="n">replace</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Merged Amplitude Groups based on regex sub: r&#39;</span><span class="si">{</span><span class="n">pattern</span><span class="si">}</span><span class="s2">&#39; -&gt; r&#39;</span><span class="si">{</span><span class="n">replace</span><span class="si">}</span><span class="s2">&#39;:&quot;</span><span class="p">)</span>
+            <span class="n">merged</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># dictionary of lists</span>
+            <span class="k">for</span> <span class="n">amps</span> <span class="ow">in</span> <span class="n">uniqueAmps</span><span class="p">:</span>
+                <span class="n">filterd_amp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">replace</span><span class="p">,</span> <span class="n">amps</span><span class="p">)</span> <span class="c1"># regex to remove numbers, r&quot;&quot; force conversion to raw string</span>
+                <span class="k">if</span> <span class="n">filterd_amp</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">merged</span><span class="p">:</span>
+                    <span class="n">merged</span><span class="p">[</span><span class="n">filterd_amp</span><span class="p">]</span> <span class="o">=</span><span class="p">[</span><span class="n">amps</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">merged</span><span class="p">[</span><span class="n">filterd_amp</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">amps</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">merged_amp</span><span class="p">,</span> <span class="n">amps</span> <span class="ow">in</span> <span class="n">merged</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; -&gt; </span><span class="si">{</span><span class="n">merged_amp</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">amp</span> <span class="ow">in</span> <span class="n">amps</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;     </span><span class="si">{</span><span class="n">amp</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">merged_amp</span><span class="p">,</span> <span class="n">amps</span> <span class="ow">in</span> <span class="n">merged</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">intensity</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">intensity</span><span class="p">(</span><span class="n">amps</span><span class="p">,</span> <span class="n">acceptanceCorrect</span><span class="p">)</span>
+                <span class="n">write_ff</span><span class="p">(</span><span class="n">merged_amp</span><span class="p">,</span> <span class="n">intensity</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+            <span class="n">merged</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+    <span class="c1">######### WRITE ALL POSSIBLE PHASE DIFFERENCES ##########</span>
+    <span class="k">for</span> <span class="n">amp1</span> <span class="ow">in</span> <span class="n">uniqueAmps</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">amp2</span> <span class="ow">in</span> <span class="n">uniqueAmps</span><span class="p">:</span>
+            <span class="n">amp1</span><span class="p">,</span> <span class="n">amp2</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">amp1</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">amp2</span><span class="p">)</span> <span class="c1"># amps are TStrings</span>
+            <span class="k">if</span> <span class="n">amp1</span> <span class="o">==</span> <span class="n">amp2</span><span class="p">:</span> <span class="k">continue</span>
+            <span class="n">same_reaction</span> <span class="o">=</span> <span class="n">amp1</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;::&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">amp2</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;::&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">same_sum</span>      <span class="o">=</span> <span class="n">amp1</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;::&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">amp2</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;::&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">same_reaction</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">same_sum</span><span class="p">:</span> <span class="k">continue</span> <span class="c1"># interfence only in same {reaction, sum}</span>
+            <span class="n">phase</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">phaseDiff</span><span class="p">(</span><span class="n">amp1</span><span class="p">,</span> <span class="n">amp2</span><span class="p">)</span>
+            <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;PHASE DIFFERENCE </span><span class="si">{</span><span class="n">amp1</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">amp2</span><span class="si">}</span><span class="s1"> = </span><span class="si">{</span><span class="n">phase</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="s1"> +/- </span><span class="si">{</span><span class="n">error</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">outfileName</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+        <span class="n">outfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
+    <span class="n">REPO_HOME</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
+
+    <span class="c1">################### LOAD LIBRARIES ##################</span>
+    <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span>
+
+    <span class="c1">############## PARSE COMMANDLINE ARGUMENTS ##############</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Extract Fit Fractions from FitResults&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;fitName&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Fit file name&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--outputfileName&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Output file name&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--a&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Acceptance correct values&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--fmt&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;.5f&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Format string for printing&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--regex_merge&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Merge amplitudes: Regex pair (pattern, replace) separated by ~&gt;&#39;</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="c1">############## LOAD FIT RESULTS ##############</span>
+    <span class="n">fitName</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">fitName</span>
+    <span class="n">outfileName</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">outputfileName</span>
+    <span class="n">acceptanceCorrect</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">a</span>
+    <span class="n">fmt</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">fmt</span>
+    <span class="n">regex_merge</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">regex_merge</span>
+    <span class="k">assert</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fitName</span><span class="p">)</span> <span class="p">),</span> <span class="sa">f</span><span class="s1">&#39;Fit file does not exist at specified path&#39;</span>
+
+    <span class="c1">############## LOAD FIT RESULTS OBJECT ##############</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">FitResults</span><span class="p">(</span> <span class="n">fitName</span> <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">results</span><span class="o">.</span><span class="n">valid</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Invalid fit result in file: </span><span class="si">{</span><span class="n">fitName</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">exit</span><span class="p">()</span>
+
+    <span class="c1">############## REGISTER OBJECTS FOR AMPTOOLS ##############</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">Zlm</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReader</span><span class="p">()</span> <span class="p">)</span>
+
+    <span class="c1">############## EXTRACT FIT FRACTIONS ##############</span>
+    <span class="n">extract_ff</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">outfileName</span><span class="p">,</span> <span class="n">acceptanceCorrect</span><span class="p">,</span> <span class="n">fmt</span><span class="p">,</span> <span class="n">regex_merge</span><span class="p">)</span>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Lawrence Ng
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=c5ced968eda925caa686"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=c5ced968eda925caa686"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
