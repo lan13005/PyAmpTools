@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>mcmc &#8212; PyAmpTools</title>
+    <title>atiSetup &#8212; PyAmpTools</title>
   
   
   
@@ -62,11 +62,9 @@ const thebe_selector_input = "pre"
 const thebe_selector_output = ".output, .cell_output"
 </script>
     <script async="async" src="../_static/sphinx-thebe.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/mcmc';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/atiSetup';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="LoadParameters" href="loadParameters.html" />
-    <link rel="prev" title="fit" href="fit.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -172,10 +170,10 @@ const thebe_selector_output = ".output, .cell_output"
 </li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
-<ul class="current nav bd-sidenav">
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="cfgGenerator.html">cfgGenerator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fit.html">fit</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">mcmc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcmc.html">mcmc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="loadParameters.html">LoadParameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plotgen.html">PlotGen</a></li>
 <li class="toctree-l1"><a class="reference internal" href="extract_ff.html">extract_ff</a></li>
@@ -250,7 +248,7 @@ const thebe_selector_output = ".output, .cell_output"
       
       
       
-      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2Fapi/mcmc.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2Fapi/atiSetup.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -280,7 +278,7 @@ const thebe_selector_output = ".output, .cell_output"
       
       
       
-      <li><a href="../_sources/api/mcmc.rst" target="_blank"
+      <li><a href="../_sources/api/atiSetup.rst" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -360,7 +358,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>mcmc</h1>
+    <h1>atiSetup</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -374,92 +372,70 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section id="module-mcmc">
-<span id="mcmc"></span><h1>mcmc<a class="headerlink" href="#module-mcmc" title="Permalink to this heading">#</a></h1>
+  <section id="module-atiSetup">
+<span id="atisetup"></span><h1>atiSetup<a class="headerlink" href="#module-atiSetup" title="Permalink to this heading">#</a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="mcmc.LogProb">
-<span class="sig-name descname"><span class="pre">LogProb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ati</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LoadParametersSampler</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#LogProb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.LogProb" title="Permalink to this definition">#</a></dt>
-<dd><p>Definition of the (Log) Posterior distribution</p>
+<dt class="sig sig-object py" id="atiSetup.checkEnvironment">
+<span class="sig-name descname"><span class="pre">checkEnvironment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#checkEnvironment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.checkEnvironment" title="Permalink to this definition">#</a></dt>
+<dd><p>Check if environment variable is set to 1</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="atiSetup.loadLibraries">
+<span class="sig-name descname"><span class="pre">loadLibraries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">accelerator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fsroot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_genamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#loadLibraries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.loadLibraries" title="Permalink to this definition">#</a></dt>
+<dd><p>Load all libraries and print availability</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="atiSetup.loadLibrary">
+<span class="sig-name descname"><span class="pre">loadLibrary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">libName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">RANK_MPI</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">availability</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#loadLibrary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.loadLibrary" title="Permalink to this definition">#</a></dt>
+<dd><p>Load a shared library and print availability</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="atiSetup.prepare_mpigpu">
+<span class="sig-name descname"><span class="pre">prepare_mpigpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">accelerator</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#prepare_mpigpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.prepare_mpigpu" title="Permalink to this definition">#</a></dt>
+<dd><p>Sets variables to use MPI and/or GPU if requested.
+Check who called python. If bash (single process). If mpiexec/mpirun (then MPI)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>par_values</strong> (<em>float</em>) – Flattened (complex-to-Real/Imag) Parameter values. ~ [real1, imag1, real2, imag2, …]</p></li>
-<li><p><strong>keys</strong> (<em>str</em>) – Flattened Parameter names. ~ [amp1,  amp1,  amp2,  amp2, …]</p></li>
-<li><p><strong>ati</strong> (<em>AmpToolsInterface</em>) – AmpToolsInterface instance</p></li>
-<li><p><strong>LoadParametersSampler</strong> (<a class="reference internal" href="loadParameters.html#LoadParameters.LoadParameters" title="LoadParameters.LoadParameters"><em>LoadParameters</em></a>) – LoadParameters class to manage parameters</p></li>
-</ul>
+<dd class="field-odd"><p><strong>accelerator</strong> (<em>str</em>) – accelerator flag from argparse ~ [‘mpi’, ‘gpu’, ‘mpigpu’, ‘gpumpi’, ‘’]</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Log posterior probability</p>
+<dd class="field-even"><p>True if MPI is to be used
+USE_GPU (bool): True if GPU is to be used
+RANK_MPI (int): MPI rank of the process (0 by default even if MPI is not used)</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>log_prob (float)</p>
+<dd class="field-odd"><p>USE_MPI (bool)</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="mcmc.createMovesMixtureFromDict">
-<span class="sig-name descname"><span class="pre">createMovesMixtureFromDict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">moves_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#createMovesMixtureFromDict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.createMovesMixtureFromDict" title="Permalink to this definition">#</a></dt>
-<dd><p>Creates a mixture of moves for the emcee sampler</p>
+<dt class="sig sig-object py" id="atiSetup.set_aliases">
+<span class="sig-name descname"><span class="pre">set_aliases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caller_globals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">USE_MPI</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#set_aliases"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.set_aliases" title="Permalink to this definition">#</a></dt>
+<dd><p>Due to MPI requiring c++ templates and the fact that all classes live under the ROOT namespace, aliasing can clean up the code significantly.
+A dictionary of aliases is appended to the globals() function of the calling function thereby making the aliases available in the calling function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>move</strong> (<em>moves_dict {</em>) – {kwargs: {}, probability} }: Dictionary of moves and their kwargs and probability</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>List of tuples of moves (with kwargs pluggin in) and their probability</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>moves_mixture [ (emcee.moves.{move}(kwargs), probability) ]</p>
+<dd class="field-odd"><p><strong>caller_globals</strong> (<em>dict</em>) – globals() from the calling function</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="mcmc.draw_corner">
-<span class="sig-name descname"><span class="pre">draw_corner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corner_ofile_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'corner.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#draw_corner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.draw_corner" title="Permalink to this definition">#</a></dt>
-<dd><p>Draws a corner plot to visualize sampling and parameter correlations</p>
+<dt class="sig sig-object py" id="atiSetup.setup">
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">calling_globals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accelerator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fsroot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_genamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.setup" title="Permalink to this definition">#</a></dt>
+<dd><p>Performs setup: Load libraries and set aliases</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>results</strong> (<em>dict</em>) – Dictionary containing results of MCMC sampling (samples, MAP, acceptance fraction, autocorrelation time, etc.)</p></li>
-<li><p><strong>corner_ofile_path</strong> (<em>str</em>) – output file path</p></li>
-<li><p><strong>save</strong> (<em>bool</em>) – Save the figure to a file or return figure. Default True = Save</p></li>
-<li><p><strong>kwargs</strong> (<em>dict</em>) – Keyword arguments to pass to corner.corner()</p></li>
+<li><p><strong>calling_globals</strong> (<em>dict</em>) – globals() from the calling function</p></li>
+<li><p><strong>accelerator</strong> (<em>str</em>) – accelerator flag from argparse ~ [‘mpi’, ‘gpu’, ‘mpigpu’, ‘gpumpi’, ‘’]</p></li>
+<li><p><strong>use_fsroot</strong> (<em>bool</em>) – True if FSRoot library should be loaded</p></li>
+<li><p><strong>use_genamp</strong> (<em>bool</em>) – True if GenAmp library should be loaded</p></li>
 </ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Figure object if save=False</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>fig (matplotlib.figure.Figure)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="mcmc.perform_mcmc">
-<span class="sig-name descname"><span class="pre">perform_mcmc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ati,</span> <span class="pre">LoadParametersSampler,</span> <span class="pre">ofolder:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'mcmc',</span> <span class="pre">ofile:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'mcmc.h5',</span> <span class="pre">nwalkers:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">32,</span> <span class="pre">burnIn:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">100,</span> <span class="pre">nsamples:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1000,</span> <span class="pre">params_dict={},</span> <span class="pre">moves_mixture=[&lt;emcee.moves.stretch.StretchMove</span> <span class="pre">object&gt;]</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#perform_mcmc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.perform_mcmc" title="Permalink to this definition">#</a></dt>
-<dd><p>Performs MCMC sampling</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ati</strong> (<em>AmpToolsInterface</em>) – AmpToolsInterface instance</p></li>
-<li><p><strong>LoadParametersSampler</strong> (<a class="reference internal" href="loadParameters.html#LoadParameters.LoadParameters" title="LoadParameters.LoadParameters"><em>LoadParameters</em></a>) – LoadParameters instance</p></li>
-<li><p><strong>ofolder</strong> (<em>str</em>) – output folder name</p></li>
-<li><p><strong>ofile</strong> (<em>str</em>) – output file name</p></li>
-<li><p><strong>nwalkers</strong> (<em>int</em>) – number of walkers</p></li>
-<li><p><strong>burnIn</strong> (<em>int</em>) – number of burn-in steps</p></li>
-<li><p><strong>nsamples</strong> (<em>int</em>) – number of samples</p></li>
-<li><p><strong>params_dict</strong> (<em>dict</em>) – {par: value} or {par: [value, min, max]} where sample from [min, max] for walker initialization</p></li>
-<li><p><strong>[</strong> (<em>moves_mixture</em>) – List of tuples of moves (with kwargs pluggin in) and their probability</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Dictionary containing results of MCMC sampling (samples, MAP, acceptance fraction, autocorrelation time, etc.)</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>results (dict)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -496,24 +472,6 @@ document.write(`
                 <footer class="prev-next-footer">
                   <!-- Previous / next buttons -->
 <div class="prev-next-area">
-    <a class="left-prev"
-       href="fit.html"
-       title="previous page">
-      <i class="fa-solid fa-angle-left"></i>
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">fit</p>
-      </div>
-    </a>
-    <a class="right-next"
-       href="loadParameters.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">LoadParameters</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
-    </a>
 </div>
                 </footer>
               

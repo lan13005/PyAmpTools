@@ -376,7 +376,7 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="loading-libraries">
 <h1>Loading Libraries<a class="headerlink" href="#loading-libraries" title="Permalink to this heading">#</a></h1>
-<p>The standard way to load libraries is through <code class="docutils literal notranslate"><span class="pre">atiSetup</span></code> module. Some environment variables can be set (like MPI/GPU) to specify which library should be loaded. Some aliasing and pythonization of the c++ wrapped class is performed to simplify syntax</p>
+<p>The standard way to load libraries is through the <code class="docutils literal notranslate"><span class="pre">atiSetup</span></code> module. Some environment variables can be set (like MPI/GPU) to specify which libraries should be loaded. Some aliasing and pythonization of the c++ wrapped class is performed to simplify syntax as they all live within the <code class="docutils literal notranslate"><span class="pre">PyROOT</span></code> namespace.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
@@ -391,14 +391,7 @@ document.write(`
 </div>
 </div>
 </div>
-<p>The main module to load the necessary libraries is <code class="docutils literal notranslate"><span class="pre">atiSetup</span></code>, in particular its <code class="docutils literal notranslate"><span class="pre">setup</span></code> function. We can load mpi /gpu libraries by passing an accelerator string. We can also decide to load FSRoot or gen_amp (simulation program) now. We can print the docstring by doing the following.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>atiSetup.setup<span class="o">??</span>
-</pre></div>
-</div>
-</div>
-</div>
+<p>The main module to load the necessary libraries is <code class="docutils literal notranslate"><span class="pre">atiSetup</span></code>, in particular its <code class="docutils literal notranslate"><span class="pre">setup</span></code> function. We can load mpi /gpu libraries by passing an accelerator string. We can also decide to load FSRoot or gen_amp (simulation program) now. See <a class="reference external" href="https://lan13005.github.io/PyAmpTools/api/atiSetup.html">atiSetup</a> for API and source code.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
@@ -420,6 +413,33 @@ Loading library libAmpsGen.so ............... OFF
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
+</pre></div>
+</div>
+</div>
+</div>
+<p>Lets try and load <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> and <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code> libraries also</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
+<span class="n">REPO_HOME</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
+<span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># RANK_MPI defaults to 0 even if not using MPI</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
+MPI is disabled
+GPU is disabled
+Loading library libAmpTools.so .............. ON
+Loading library libAmpPlotter.so ............ ON
+Loading library libAmpsDataIO.so ............ ON
+Loading library libFSRoot.so ................ ON
+Loading library libAmpsGen.so ............... ON
+------------------------------------------------
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
+Initializing FSRoot for PyROOT...
 </pre></div>
 </div>
 </div>

@@ -1,4 +1,15 @@
 Traceback (most recent call last):
+  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/nbclient/client.py", line 778, in _async_poll_for_reply
+    msg = await ensure_async(self.kc.shell_channel.get_msg(timeout=new_timeout))
+  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/jupyter_core/utils/__init__.py", line 189, in ensure_async
+    result = await obj
+  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/jupyter_client/channels.py", line 315, in get_msg
+    raise Empty
+_queue.Empty
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
   File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/jupyter_cache/executors/utils.py", line 58, in single_nb_execution
     executenb(
   File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/nbclient/client.py", line 1305, in execute
@@ -9,118 +20,18 @@ Traceback (most recent call last):
     return future.result()
   File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/nbclient/client.py", line 705, in async_execute
     await self.async_execute_cell(
-  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/nbclient/client.py", line 1058, in async_execute_cell
-    await self._check_raise_for_error(cell, cell_index, exec_reply)
-  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/nbclient/client.py", line 914, in _check_raise_for_error
-    raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
-nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
-------------------
-
-parser = argparse.ArgumentParser(description='emcee fitter')
-parser.add_argument('--cfgfile', type=str, default='', help='Config file name')
-parser.add_argument('--nwalkers', type=int, default=32, help='Number of walkers. Default 32')
-parser.add_argument('--burnin', type=int, default=100, help='Number of burn-in steps. Default 100')
-parser.add_argument('--nsamples', type=int, default=1000, help='Number of samples. Default 1000')
-parser.add_argument('--overwrite', action='store_true', help='Overwrite existing output file if exists')
-parser.add_argument('--accelerator', type=str, default='', help='Force use of given "accelerator" ~ [gpu, mpi, mpigpu, gpumpi]. Default "" = cpu')
-parser.add_argument('--ofolder', type=str, default='mcmc', help='Output folder name. Default "mcmc"')
-parser.add_argument('--ofile', type=str, default='mcmc.h5', help='Output file name. Default "mcmc.h5"')
-parser.add_argument('--corner_ofile', type=str, default='corner.png', help='Corner plot output file name. Default "corner.png"')
-parser.add_argument('--seed', type=int, default=42, help='RNG seed for consistent walker random initialization. Default 42')
-parser.add_argument('--yaml_override', type=str, default={}, help='Path to YAML file containing parameter overrides. Default "" = no override')
-
-cfgfile = 
-
-args = parser.parse_args(sys.argv[1:])
-
-yaml_override = {}
-if args.yaml_override != {}:
-    with open(args.yaml_override, 'r') as f:
-        yaml_override = yaml.safe_load(f)
-
-cfgfile  = args.cfgfile if 'cfgfile' not in yaml_override else yaml_override['cfgfile']
-ofolder  = args.ofolder if 'ofolder' not in yaml_override else yaml_override['ofolder']
-ofile    = args.ofile if 'ofile' not in yaml_override else yaml_override['ofile']
-corner_ofile = args.corner_ofile if 'corner_ofile' not in yaml_override else yaml_override['corner_ofile']
-nwalkers = args.nwalkers if 'nwalkers' not in yaml_override else yaml_override['nwalkers']
-burnIn   = args.burnin if 'burnin' not in yaml_override else yaml_override['burnin']
-nsamples = args.nsamples if 'nsamples' not in yaml_override else yaml_override['nsamples']
-overwrite_ofile = args.overwrite if 'overwrite' not in yaml_override else yaml_override['overwrite']
-seed     = args.seed if 'seed' not in yaml_override else yaml_override['seed']
-params_dict = {} if 'params_dict' not in yaml_override else yaml_override['params_dict']
-moves_mixture = [ emcee.moves.StretchMove() ] if 'moves_mixture' not in yaml_override else createMovesMixtureFromDict(yaml_override['moves_mixture'])
-
-assert( cfgfile != '' ), 'You must specify a config file'
-
-print("\n ====================================================================================")
-print(f" cfgfile: {cfgfile}")
-print(f" ofolder: {ofolder}")
-print(f" ofile: {ofile}")
-print(f" corner_ofile: {corner_ofile}")
-print(f" nwalkers: {nwalkers}")
-print(f" burnIn: {burnIn}")
-print(f" nsamples: {nsamples}")
-print(f" overwrite_ofile: {overwrite_ofile}")
-print(f" seed: {seed}")
-print(f" params_dict: {params_dict}")
-print(f" moves_mixture: {moves_mixture}")
-print(" ====================================================================================\n")
-
-############## PREPARE FOR SAMPLER ##############
-assert( os.path.exists(cfgfile) ), 'Config file does not exist at specified path'
-if os.path.isfile(f'{ofolder}/{ofile}') and overwrite_ofile:
-    os.system(f'rm {ofolder}/{ofile}')
-    print("Overwriting existing output file!")
-os.system(f'mkdir -p {ofolder}')
-
-############## SET ENVIRONMENT VARIABLES ##############
-REPO_HOME     = os.environ['REPO_HOME']
-
-################### LOAD LIBRARIES ##################
-USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals(), args.accelerator)
-
-############## LOAD CONFIGURATION FILE ##############
-parser = ConfigFileParser(cfgfile)
-cfgInfo: ConfigurationInfo = parser.getConfigurationInfo()
-cfgInfo.display()
-
-############## REGISTER OBJECTS FOR AMPTOOLS ##############
-AmpToolsInterface.registerAmplitude( Zlm() )
-AmpToolsInterface.registerAmplitude( BreitWigner() )
-AmpToolsInterface.registerAmplitude( Piecewise() )
-AmpToolsInterface.registerAmplitude( PhaseOffset() )
-AmpToolsInterface.registerAmplitude( TwoPiAngles() )
-AmpToolsInterface.registerDataReader( DataReader() )
-AmpToolsInterface.registerDataReader( DataReaderFilter() )
-
-ati = AmpToolsInterface( cfgInfo )
-LoadParametersSampler = LoadParameters()
-LoadParametersSampler.load_cfg( cfgInfo )
-
-############## RUN MCMC ##############
-np.random.seed(seed)
-
-results = perform_mcmc(ati,
-                        LoadParametersSampler,
-                        ofolder   = ofolder,
-                        ofile     = ofile,
-                        nwalkers  = nwalkers,
-                        burnIn    = burnIn,
-                        nsamples  = nsamples,
-                        params_dict   = params_dict,
-                        moves_mixture = moves_mixture,
-                        )
-elapsed_fit_time = results['elapsed_fit_time']
-draw_corner(results, ofolder, corner_ofile)
-
-print(f"Fit time: {elapsed_fit_time} seconds")
-print(f"Total time: {time.time() - start_time} seconds")
-------------------
-
-
-[0;36m  Cell [0;32mIn[1], line 14[0;36m[0m
-[0;31m    cfgfile =[0m
-[0m              ^[0m
-[0;31mSyntaxError[0m[0;31m:[0m invalid syntax
-
+  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/nbclient/client.py", line 1001, in async_execute_cell
+    exec_reply = await self.task_poll_for_reply
+  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/nbclient/client.py", line 802, in _async_poll_for_reply
+    error_on_timeout_execute_reply = await self._async_handle_timeout(timeout, cell)
+  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/nbclient/client.py", line 852, in _async_handle_timeout
+    raise CellTimeoutError.error_from_timeout_and_cell(
+nbclient.exceptions.CellTimeoutError: A cell timed out while it was being executed, after 30 seconds.
+The message was: Cell execution timed out.
+Here is a preview of the cell contents:
+-------------------
+['############## RUN MCMC ##############', 'np.random.seed(seed)', '', 'results = perform_mcmc(ati,', '                        LoadParametersSampler,']
+...
+['                        ofile     = ofile,', '                        nwalkers  = nwalkers,', '                        burnIn    = burnIn,', '                        nsamples  = nsamples,', '                        )']
+-------------------
 
