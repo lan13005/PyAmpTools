@@ -1,8 +1,12 @@
 mcmc
 ==========================
 
-.. autofunction:: mcmc.LogProb
-.. autofunction:: mcmc.createMovesMixtureFromDict
-.. autofunction:: mcmc.perform_mcmc
-.. autofunction:: mcmc.draw_corner
+.. automodule:: mcmc
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 .. autoclass:: LoadParameters.LoadParameters
+    :members:
+    :undoc-members:
+    :show-inheritance:
