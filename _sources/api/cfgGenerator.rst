@@ -1,4 +1,8 @@
 cfgGenerator
 ==========================
 
-.. autofunction:: cfgGenerator.generate_zlm_cfg
+.. automodule:: cfgGenerator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
