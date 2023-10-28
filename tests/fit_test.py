@@ -10,7 +10,7 @@ def fit(accelerator):
 	output = subprocess.check_output(cmd, shell=True)
 	output = output.decode('utf-8')
 	print(output)
-	os.system(r'rm -f *.fit normint*') # clean up
+	os.system(r'rm -f *.fit normint* *seed*') # clean up
 	# use regex search output for a line that starts with Final Likelihood and extract the number at the end
 	nll = float(re.search(r'Final Likelihood: (\d+\.?\d*)', output).group(1))
 	assert( abs(nll-14346.40812) < 1e-5 ), f"nll = |{nll}-14346.40812| > 1e-5"
