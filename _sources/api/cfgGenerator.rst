@@ -6,3 +6,5 @@ cfgGenerator
    :undoc-members:
    :show-inheritance:
 
+:name: cfgGenerator
+
