@@ -392,7 +392,8 @@ document.write(`
 <dl class="py function">
 <dt class="sig sig-object py" id="PlotGenRDF.draw_histograms">
 <span class="sig-name descname"><span class="pre">draw_histograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HISTS_TO_BOOK</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/PlotGenRDF.html#draw_histograms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#PlotGenRDF.draw_histograms" title="Permalink to this definition">#</a></dt>
-<dd><p>Draw booked histograms from RDataFrame</p>
+<dd><p>Draw histograms from a FitResults object. Histograms are booked using the book_histogram() function that uses macros to compute
+kinematic quantities to plot. Booked histograms are lazily evaluated / filled with RDataFrame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -403,7 +404,7 @@ document.write(`
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dd class="field-even"><p>None, dumps a pdf file based on hist_output_name</p>
 </dd>
 </dl>
 </dd></dl>
@@ -482,21 +483,25 @@ wavesets = ‘resAmp1_resAmp2’</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="PlotGen.PlotGen">
 <span class="sig-name descname"><span class="pre">PlotGen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plotGen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ofile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ampString</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keepAllAmps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotAllVars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotGenHists</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doAccCorr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/PlotGen.html#PlotGen"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#PlotGen.PlotGen" title="Permalink to this definition">#</a></dt>
-<dd><p>Generates plots from a fit result file. The plots are saved to a root file.</p>
+<dd><dl class="simple">
+<dt>Generates plots from a fit result file. The plots are saved to a root file.</dt><dd><p>A c++ user-subclassed PlotGenerator object (here, EtaPiPlotGenerator) is used to generate the plots. Histogram names, ranges, kinematic
+quantities are all defined there.</p>
+</dd>
+</dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>plotGen</strong> – Sub-classed PlotGenerator instance.</p></li>
-<li><p><strong>plotfile</strong> – name of output root file.</p></li>
-<li><p><strong>ampString</strong> – Semicolon separated list of coherent sums to plot. Sums are underscore separated amplitudes. Empty string will plot sum of all waves.</p></li>
-<li><p><strong>keepAllAmps</strong> – If True, all amplitudes are summed and plotted. If False, only the amplitudes specified in ampString will be plotted.</p></li>
-<li><p><strong>plotAllVars</strong> – If True, all variables will be plotted.</p></li>
-<li><p><strong>plotGenHists</strong> – If True, generated histograms will be plotted.</p></li>
-<li><p><strong>doAccCorr</strong> – If True, acceptance correction will be applied to the histograms.</p></li>
+<li><p><strong>plotGen</strong> (<em>EtaPiPlotGenerator</em>) – Sub-classed PlotGenerator instance.</p></li>
+<li><p><strong>ofile</strong> (<em>str</em>) – name of output root file.</p></li>
+<li><p><strong>ampString</strong> (<em>str</em>) – Semicolon separated list of coherent sums to plot. Sums are underscore separated amplitudes. Empty string will plot sum of all waves.</p></li>
+<li><p><strong>keepAllAmps</strong> (<em>bool</em>) – If True, all amplitudes are summed and plotted. If False, only the amplitudes specified in ampString will be plotted.</p></li>
+<li><p><strong>plotAllVars</strong> (<em>bool</em>) – If True, all variables will be plotted.</p></li>
+<li><p><strong>plotGenHists</strong> (<em>bool</em>) – If True, generated histograms will be plotted.</p></li>
+<li><p><strong>doAccCorr</strong> (<em>bool</em>) – If True, acceptance correction will be applied to the histograms.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dd class="field-even"><p>None, but saves drawn amplitufe weighted histograms to a root file.</p>
 </dd>
 </dl>
 </dd></dl>

@@ -343,18 +343,20 @@ document.write(`
     <span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Generates plots from a fit result file. The plots are saved to a root file.</span>
+<span class="sd">        A c++ user-subclassed PlotGenerator object (here, EtaPiPlotGenerator) is used to generate the plots. Histogram names, ranges, kinematic</span>
+<span class="sd">        quantities are all defined there.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        plotGen: Sub-classed PlotGenerator instance.</span>
-<span class="sd">        plotfile: name of output root file.</span>
-<span class="sd">        ampString: Semicolon separated list of coherent sums to plot. Sums are underscore separated amplitudes. Empty string will plot sum of all waves.</span>
-<span class="sd">        keepAllAmps: If True, all amplitudes are summed and plotted. If False, only the amplitudes specified in ampString will be plotted.</span>
-<span class="sd">        plotAllVars: If True, all variables will be plotted.</span>
-<span class="sd">        plotGenHists: If True, generated histograms will be plotted.</span>
-<span class="sd">        doAccCorr: If True, acceptance correction will be applied to the histograms.</span>
+<span class="sd">        plotGen (EtaPiPlotGenerator): Sub-classed PlotGenerator instance.</span>
+<span class="sd">        ofile (str): name of output root file.</span>
+<span class="sd">        ampString (str): Semicolon separated list of coherent sums to plot. Sums are underscore separated amplitudes. Empty string will plot sum of all waves.</span>
+<span class="sd">        keepAllAmps (bool): If True, all amplitudes are summed and plotted. If False, only the amplitudes specified in ampString will be plotted.</span>
+<span class="sd">        plotAllVars (bool): If True, all variables will be plotted.</span>
+<span class="sd">        plotGenHists (bool): If True, generated histograms will be plotted.</span>
+<span class="sd">        doAccCorr (bool): If True, acceptance correction will be applied to the histograms.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        None</span>
+<span class="sd">        None, but saves drawn amplitufe weighted histograms to a root file.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">plotfile</span> <span class="o">=</span> <span class="n">TFile</span><span class="p">(</span><span class="n">ofile</span><span class="p">,</span> <span class="s1">&#39;RECREATE&#39;</span><span class="p">)</span>

@@ -347,13 +347,13 @@ document.write(`
 <span class="sd">    Definition of the (Log) Posterior distribution</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        par_values: Flattened (complex-to-Real/Imag) Parameter values. ~ [real1, imag1, real2, imag2, ...]</span>
-<span class="sd">        keys: Flattened Parameter names. ~ [amp1,  amp1,  amp2,  amp2, ...]</span>
-<span class="sd">        ati: AmpToolsInterface</span>
-<span class="sd">        LoadParametersSampler: LoadParameters class to manage parameters</span>
+<span class="sd">        par_values (float): Flattened (complex-to-Real/Imag) Parameter values. ~ [real1, imag1, real2, imag2, ...]</span>
+<span class="sd">        keys (str): Flattened Parameter names. ~ [amp1,  amp1,  amp2,  amp2, ...]</span>
+<span class="sd">        ati (AmpToolsInterface): AmpToolsInterface instance</span>
+<span class="sd">        LoadParametersSampler (LoadParameters): LoadParameters class to manage parameters</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        log_prob: Log posterior probability</span>
+<span class="sd">        log_prob (float): Log posterior probability</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="c1">## Calculate Log likelihood</span>
@@ -377,10 +377,10 @@ document.write(`
 <span class="sd">    Creates a mixture of moves for the emcee sampler</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        moves_dict: { move: {kwargs: {}, probability} }</span>
+<span class="sd">        moves_dict { move: {kwargs: {}, probability} }: Dictionary of moves and their kwargs and probability</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        moves_mixture: [ (emcee.moves.{move}(kwargs), probability) ]</span>
+<span class="sd">        moves_mixture [ (emcee.moves.{move}(kwargs), probability) ]: List of tuples of moves (with kwargs pluggin in) and their probability</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">moves_mixture</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">move</span><span class="p">,</span> <span class="n">moveDict</span> <span class="ow">in</span> <span class="n">moves_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -407,18 +407,18 @@ document.write(`
 <span class="sd">    Performs MCMC sampling</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        ati: AmpToolsInterface class</span>
-<span class="sd">        LoadParametersSampler: LoadParameters class</span>
-<span class="sd">        ofolder: output folder name</span>
-<span class="sd">        ofile: output file name</span>
-<span class="sd">        nwalkers: number of walkers</span>
-<span class="sd">        burnIn: number of burn-in steps</span>
-<span class="sd">        nsamples: number of samples</span>
-<span class="sd">        params_dict: ~ {par: value} or {par: [value, min, max]} Sample from [min, max] for walker initialization</span>
-<span class="sd">        moves_mixture: Move mixture for sampler</span>
+<span class="sd">        ati (AmpToolsInterface): AmpToolsInterface instance</span>
+<span class="sd">        LoadParametersSampler (LoadParameters): LoadParameters instance</span>
+<span class="sd">        ofolder (str): output folder name</span>
+<span class="sd">        ofile (str): output file name</span>
+<span class="sd">        nwalkers (int): number of walkers</span>
+<span class="sd">        burnIn (int): number of burn-in steps</span>
+<span class="sd">        nsamples (int): number of samples</span>
+<span class="sd">        params_dict (dict): {par: value} or {par: [value, min, max]} where sample from [min, max] for walker initialization</span>
+<span class="sd">        moves_mixture [ (emcee.moves.{move}(kwargs), probability) ]: List of tuples of moves (with kwargs pluggin in) and their probability</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        results: Dictionary containing results of MCMC sampling (samples, MAP, acceptance fraction, autocorrelation time, etc.)</span>
+<span class="sd">        results (dict): Dictionary containing results of MCMC sampling (samples, MAP, acceptance fraction, autocorrelation time, etc.)</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> ================== PERFORM_MCMC() KWARGS CONFIGURATION ================== &#39;</span><span class="p">)</span>
@@ -533,19 +533,19 @@ document.write(`
     <span class="n">results</span><span class="p">,</span>
     <span class="n">ofolder</span><span class="p">,</span>
     <span class="n">corner_ofile</span> <span class="o">=</span> <span class="s1">&#39;corner.png&#39;</span><span class="p">,</span>
-    <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">save</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{},</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Draws a corner plot to visualize sampling and parameter correlations</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        results: Dictionary containing results of MCMC sampling (samples, MAP, acceptance fraction, autocorrelation time, etc.)</span>
-<span class="sd">        ofolder: output folder name</span>
-<span class="sd">        save: Save the figure to a file or return figure. Default True = Save</span>
+<span class="sd">        results (dict): Dictionary containing results of MCMC sampling (samples, MAP, acceptance fraction, autocorrelation time, etc.)</span>
+<span class="sd">        ofolder (str): output folder name</span>
+<span class="sd">        save (bool): Save the figure to a file or return figure. Default True = Save</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        fig: Figure object (or None)</span>
+<span class="sd">        fig (matplotlib.figure.Figure): Figure object if save=False</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="nf">plot_axvh_fit_params</span><span class="p">(</span> <span class="c1"># Yes, some function inception going on</span>

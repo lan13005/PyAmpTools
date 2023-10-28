@@ -334,21 +334,23 @@ document.write(`
 
 <div class="viewcode-block" id="extract_ff"><a class="viewcode-back" href="../api/extract_ff.html#extract_ff.extract_ff">[docs]</a><span class="k">def</span> <span class="nf">extract_ff</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">outfileName</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">acceptanceCorrect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;.5f&#39;</span><span class="p">,</span> <span class="n">regex_merge</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Extract Fit Fractions and phase differences between pairs of waves from a FitResults object</span>
+
 <span class="sd">    Regex merge is a useful tool to merge amplitudes that are related to each other (user-specified)</span>
-<span class="sd">    For example waveset: D-2- D-1- D0- D1- D2- D-2+ D-1+ D0+ D1+ D2+</span>
-<span class="sd">    To remove the sign at the end (merge reflectivites)     use = r&#39;[-+]$&#39;</span>
-<span class="sd">    To remove first sign and number (merge M-projections)   use = r&#39;[-+]?(\d+)&#39;</span>
-<span class="sd">    To remove numbers and signs to merge all D:             use = r&#39;[-+]?(\d+)[-+]&#39;</span>
+<span class="sd">        For example waveset: D-2- D-1- D0- D1- D2- D-2+ D-1+ D0+ D1+ D2+</span>
+<span class="sd">        To remove the sign at the end (merge reflectivites)     use = r&#39;[-+]$&#39;</span>
+<span class="sd">        To remove first sign and number (merge M-projections)   use = r&#39;[-+]?(\d+)&#39;</span>
+<span class="sd">        To remove numbers and signs to merge all D:             use = r&#39;[-+]?(\d+)[-+]&#39;</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        results: FitResults object</span>
-<span class="sd">        outfileName: Output root file name or dump to stdout if &#39;&#39;</span>
-<span class="sd">        acceptanceCorrect: Acceptance correct values</span>
-<span class="sd">        fmt: Format string for printing</span>
-<span class="sd">        regex_merge: Merge amplitudes: Regex pair (pattern, replace) separated by ~&gt;</span>
+<span class="sd">        results (FitResults): FitResults object</span>
+<span class="sd">        outfileName (str): Output root file name or dump to stdout if &#39;&#39;</span>
+<span class="sd">        acceptanceCorrect (bool): Acceptance correct the values</span>
+<span class="sd">        fmt (str): string format for printing</span>
+<span class="sd">        regex_merge (str): Merge amplitudes: Regex pair (pattern, replace) separated by ~&gt;</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        None</span>
+<span class="sd">        None, dumps a file to outfileName or stdout</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="nf">write_ff</span><span class="p">(</span><span class="n">amp</span><span class="p">,</span> <span class="n">intensity</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>

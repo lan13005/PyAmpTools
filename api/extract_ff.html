@@ -378,23 +378,26 @@ document.write(`
 <dl class="py function">
 <dt class="sig sig-object py" id="extract_ff.extract_ff">
 <span class="sig-name descname"><span class="pre">extract_ff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfileName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acceptanceCorrect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.5f'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regex_merge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/extract_ff.html#extract_ff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#extract_ff.extract_ff" title="Permalink to this definition">#</a></dt>
-<dd><p>Regex merge is a useful tool to merge amplitudes that are related to each other (user-specified)
-For example waveset: D-2- D-1- D0- D1- D2- D-2+ D-1+ D0+ D1+ D2+
+<dd><p>Extract Fit Fractions and phase differences between pairs of waves from a FitResults object</p>
+<dl class="simple">
+<dt>Regex merge is a useful tool to merge amplitudes that are related to each other (user-specified)</dt><dd><p>For example waveset: D-2- D-1- D0- D1- D2- D-2+ D-1+ D0+ D1+ D2+
 To remove the sign at the end (merge reflectivites)     use = r’[-+]$’
 To remove first sign and number (merge M-projections)   use = r’[-+]?(d+)’
 To remove numbers and signs to merge all D:             use = r’[-+]?(d+)[-+]’</p>
+</dd>
+</dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>results</strong> – FitResults object</p></li>
-<li><p><strong>outfileName</strong> – Output root file name or dump to stdout if ‘’</p></li>
-<li><p><strong>acceptanceCorrect</strong> – Acceptance correct values</p></li>
-<li><p><strong>fmt</strong> – Format string for printing</p></li>
-<li><p><strong>regex_merge</strong> – Merge amplitudes: Regex pair (pattern, replace) separated by ~&gt;</p></li>
+<li><p><strong>results</strong> (<em>FitResults</em>) – FitResults object</p></li>
+<li><p><strong>outfileName</strong> (<em>str</em>) – Output root file name or dump to stdout if ‘’</p></li>
+<li><p><strong>acceptanceCorrect</strong> (<em>bool</em>) – Acceptance correct the values</p></li>
+<li><p><strong>fmt</strong> (<em>str</em>) – string format for printing</p></li>
+<li><p><strong>regex_merge</strong> (<em>str</em>) – Merge amplitudes: Regex pair (pattern, replace) separated by ~&gt;</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dd class="field-even"><p>None, dumps a file to outfileName or stdout</p>
 </dd>
 </dl>
 </dd></dl>
