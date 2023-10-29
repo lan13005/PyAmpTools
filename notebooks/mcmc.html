@@ -411,7 +411,7 @@ document.write(`
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">from</span> <span class="nn">LoadParameters</span> <span class="kn">import</span> <span class="n">LoadParameters</span>
 <span class="kn">import</span> <span class="nn">corner</span>
-<span class="kn">from</span> <span class="nn">mcmc</span> <span class="kn">import</span> <span class="n">perform_mcmc</span><span class="p">,</span> <span class="n">draw_corner</span>
+<span class="kn">from</span> <span class="nn">mcmc</span> <span class="kn">import</span> <span class="n">perform_mcmc</span><span class="p">,</span> <span class="n">draw_corner</span><span class="p">,</span> <span class="n">LogProb</span>
 </pre></div>
 </div>
 </div>
@@ -423,10 +423,7 @@ MPI is disabled
 GPU is disabled
 Loading library libAmpTools.so .............. ON
 Loading library libAmpPlotter.so ............ ON
-Loading library libAmpsDataIO.so ............
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> ON
+Loading library libAmpsDataIO.so ............ ON
 Loading library libFSRoot.so ................ OFF
 Loading library libAmpsGen.so ............... ON
 ------------------------------------------------
@@ -496,7 +493,26 @@ Loading library libAmpsGen.so ............... ON
 </div>
 </div>
 </div>
-<p>We also have to define the <em>Posterior distribution</em>. In practice this means we have to define the <em>likelihood</em> (which is taken from <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code>) and a <em>prior</em> distribution. For now, we will ignore the <em>prior</em> and run the <code class="docutils literal notranslate"><span class="pre">emcee</span></code> sampler for the <em>likelihood</em> distribution. A definition of the log probability is shown in <a class="reference external" href="https://lan13005.github.io/PyAmpTools/api/mcmc.html#mcmc.LogProb">LogProb</a>.</p>
+<p>We also have to define the <em>Posterior distribution</em>. In practice this means we have to define the <em>likelihood</em> (which is taken from <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code>) and a <em>prior</em> distribution. For now, we will ignore the <em>prior</em> and run the <code class="docutils literal notranslate"><span class="pre">emcee</span></code> sampler for the <em>likelihood</em> distribution. The definition of the log posterior probability used in this tutorial is shown below.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Code</span>
+<span class="n">Code</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">getsourcelines</span><span class="p">(</span><span class="n">LogProb</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">language</span><span class="o">=</span><span class="s1">&#39;python&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">NameError</span><span class="g g-Whitespace">                                 </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">line</span> <span class="mi">2</span>
+<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Code</span>
+<span class="ne">----&gt; </span><span class="mi">2</span> <span class="n">Code</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">getsourcelines</span><span class="p">(</span><span class="n">LogProb</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">language</span><span class="o">=</span><span class="s1">&#39;python&#39;</span><span class="p">)</span>
+
+<span class="ne">NameError</span>: name &#39;inspect&#39; is not defined
+</pre></div>
+</div>
+</div>
+</div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">############## PREPARE FOR SAMPLER ##############</span>
@@ -748,10 +764,10 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 ofolder: mcmc
 ofile: mcmc.h5
 nwalkers: 32
-burnIn: 0
-nsamples: 200
+burnIn: 100
+nsamples: 1000
 params_dict: {}
-moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7ff53dbbeac0&gt;]
+moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7fc702d423a0&gt;]
  =================================================================== 
 
  ================== RUNNING MCMC ================== 
@@ -788,26 +804,30 @@ Par values: [[-140.61192169  -80.65288733  135.65601685 -196.32355813  106.40283
  [-141.01083707  -79.76553813  133.00329094 -194.38767013  106.96930917]
  [-140.26741639  -81.04436324  133.86648453 -193.82747651  106.96513671]
  [-138.91743587  -82.27144038  135.42168896 -191.07462512  107.35279867]]
+
+[Burn-in beginning]
+
+
+[Burn-in complete. Running sampler]
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The chain is shorter than 50 times the integrated autocorrelation time for 5 parameter(s). Use this estimate with caution and run a longer chain!
-N/50 = 4;
-tau: [15.92587787 16.44973334 17.51905651 16.73390776 15.60765933]
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The chain is shorter than 50 times the integrated autocorrelation time for 5 parameter(s). Use this estimate with caution and run a longer chain!
-N/50 = 4;
-tau: [15.92587787 16.44973334 17.51905651 16.73390776 15.60765933]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:41&lt;00:00, 24.36it/s]
+The chain is shorter than 50 times the integrated autocorrelation time for 5 parameter(s). Use this estimate with caution and run a longer chain!
+N/50 = 20;
+tau: [38.61995666 35.25900781 35.79381956 35.558693   35.23900407]
+The chain is shorter than 50 times the integrated autocorrelation time for 5 parameter(s). Use this estimate with caution and run a longer chain!
+N/50 = 20;
+tau: [38.61995666 35.25900781 35.79381956 35.558693   35.23900407]
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[Sampler complete]
 
 
-Mean acceptance fraction: 0.564
-Autocorrelation time: 16.447 steps
+Mean acceptance fraction: 0.556
+Autocorrelation time: 36.094 steps
 
-Mean acceptance fraction: 0.564
-Autocorrelation time: 16.447 steps
+Mean acceptance fraction: 0.556
+Autocorrelation time: 36.094 steps
 Percent samples remaning after masking: 100.00%
 Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
 </pre></div>
@@ -824,19 +844,17 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Corner kwargs: {&#39;color&#39;: &#39;black&#39;, &#39;show_titles&#39;: True}
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> =================== RESULTS =================== 
-MAP Estimates from 6400 samples obtained over 32 walkers:
-   Re[resAmp1]          = -140.188
-   Re[resAmp2]          = -80.310
-   Im[resAmp2]          = 134.706
-   Re[resAmp3]          = -193.365
-   Im[resAmp3]          = 106.786
+ =================== RESULTS =================== 
+MAP Estimates from 32000 samples obtained over 32 walkers:
+   Re[resAmp1]          = -140.002
+   Re[resAmp2]          = -81.014
+   Im[resAmp2]          = 134.457
+   Re[resAmp3]          = -193.514
+   Im[resAmp3]          = 106.840
  =============================================== 
 </pre></div>
 </div>
-<img alt="../_images/5610c91b1804b7c76f6ede66c0437717ce48e2f008a129edc6c422e65f8abcc3.png" src="../_images/5610c91b1804b7c76f6ede66c0437717ce48e2f008a129edc6c422e65f8abcc3.png" />
+<img alt="../_images/6285ecc63310e384c4aaaa30cee1c2d2e059c11e2c6eb48b9643e687dff668ac.png" src="../_images/6285ecc63310e384c4aaaa30cee1c2d2e059c11e2c6eb48b9643e687dff668ac.png" />
 </div>
 </div>
 <p>We can see that the parameters are correlated. In this cfg file <code class="docutils literal notranslate"><span class="pre">resAmp1</span></code> is set to be real while <code class="docutils literal notranslate"><span class="pre">resAmp2</span></code> and <code class="docutils literal notranslate"><span class="pre">resAmp3</span></code> are freely floating complex numbers. It can be seen that resAmp1 is negatively correlated with the other parameters. The other parameters are uniformly positively correlated with each other.</p>
