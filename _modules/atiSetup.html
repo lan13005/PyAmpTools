@@ -340,13 +340,13 @@ document.write(`
 <span class="c1">#  functions are called.                               #</span>
 <span class="c1">########################################################</span>
 
-<div class="viewcode-block" id="setup"><a class="viewcode-back" href="../api/atiSetup.html#atiSetup.setup">[docs]</a><span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">accelerator</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="setup"><a class="viewcode-back" href="../api/atiSetup.html#atiSetup.setup">[docs]</a><span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">accelerator</span><span class="o">=</span><span class="s1">&#39;mpigpu&#39;</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Performs basic setup, loading libraries and setting aliases</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        calling_globals (dict): globals() from the calling function</span>
-<span class="sd">        accelerator (str): accelerator flag from argparse ~ [&#39;mpi&#39;, &#39;gpu&#39;, &#39;mpigpu&#39;, &#39;gpumpi&#39;, &#39;&#39;]</span>
+<span class="sd">        accelerator (str): accelerator flag from argparse ~ [&#39;cpu&#39;, &#39;mpi&#39;, &#39;gpu&#39;, &#39;mpigpu&#39;, &#39;gpumpi&#39;]</span>
 <span class="sd">        use_fsroot (bool): True if FSRoot library should be loaded</span>
 <span class="sd">        use_genamp (bool): True if GenAmp library should be loaded</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -443,9 +443,9 @@ document.write(`
 <span class="c1">#     kwargs[&#39;flush&#39;] = kwargs.get(&#39;flush&#39;, True)</span>
 <span class="c1">#     default_print(*args, **kwargs)</span>
 
-<div class="viewcode-block" id="checkEnvironment"><a class="viewcode-back" href="../api/atiSetup.html#atiSetup.checkEnvironment">[docs]</a><span class="k">def</span> <span class="nf">checkEnvironment</span><span class="p">(</span><span class="n">variable</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39; Check if environment variable is set to 1 &#39;&#39;&#39;</span>
-    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span> <span class="k">if</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">else</span> <span class="kc">False</span></div>
+<span class="c1"># def checkEnvironment(variable):</span>
+<span class="c1">#     &#39;&#39;&#39; Check if environment variable is set to 1 &#39;&#39;&#39;</span>
+<span class="c1">#     return os.environ[variable] == &quot;1&quot; if variable in os.environ else False</span>
 
 <div class="viewcode-block" id="prepare_mpigpu"><a class="viewcode-back" href="../api/atiSetup.html#atiSetup.prepare_mpigpu">[docs]</a><span class="k">def</span> <span class="nf">prepare_mpigpu</span><span class="p">(</span><span class="n">accelerator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>

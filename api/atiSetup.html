@@ -380,12 +380,6 @@ document.write(`
   <section id="module-atiSetup">
 <span id="atisetup"></span><h1>atiSetup<a class="headerlink" href="#module-atiSetup" title="Permalink to this heading">#</a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="atiSetup.checkEnvironment">
-<span class="sig-name descname"><span class="pre">checkEnvironment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#checkEnvironment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.checkEnvironment" title="Permalink to this definition">#</a></dt>
-<dd><p>Check if environment variable is set to 1</p>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="atiSetup.loadLibraries">
 <span class="sig-name descname"><span class="pre">loadLibraries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">accelerator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fsroot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_genamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#loadLibraries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.loadLibraries" title="Permalink to this definition">#</a></dt>
 <dd><p>Load all libraries and print availability</p>
@@ -431,13 +425,13 @@ A dictionary of aliases is appended to the globals() function of the calling fun
 
 <dl class="py function">
 <dt class="sig sig-object py" id="atiSetup.setup">
-<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">calling_globals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accelerator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fsroot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_genamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.setup" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">calling_globals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accelerator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mpigpu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fsroot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_genamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.setup" title="Permalink to this definition">#</a></dt>
 <dd><p>Performs basic setup, loading libraries and setting aliases</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>calling_globals</strong> (<em>dict</em>) – globals() from the calling function</p></li>
-<li><p><strong>accelerator</strong> (<em>str</em>) – accelerator flag from argparse ~ [‘mpi’, ‘gpu’, ‘mpigpu’, ‘gpumpi’, ‘’]</p></li>
+<li><p><strong>accelerator</strong> (<em>str</em>) – accelerator flag from argparse ~ [‘cpu’, ‘mpi’, ‘gpu’, ‘mpigpu’, ‘gpumpi’]</p></li>
 <li><p><strong>use_fsroot</strong> (<em>bool</em>) – True if FSRoot library should be loaded</p></li>
 <li><p><strong>use_genamp</strong> (<em>bool</em>) – True if GenAmp library should be loaded</p></li>
 </ul>
