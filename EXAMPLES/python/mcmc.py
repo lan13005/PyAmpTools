@@ -282,7 +282,7 @@ if __name__ == '__main__':
     parser.add_argument('--burnin', type=int, default=100, help='Number of burn-in steps. Default 100')
     parser.add_argument('--nsamples', type=int, default=1000, help='Number of samples. Default 1000')
     parser.add_argument('--overwrite', action='store_true', help='Overwrite existing output file if exists')
-    parser.add_argument('--accelerator', type=str, default='', help='Force use of given "accelerator" ~ [gpu, mpi, mpigpu, gpumpi]. Default "" = cpu')
+    parser.add_argument('--accelerator', type=str, default='mpigpu', help='Use accelerator if available ~ [cpu, gpu, mpi, mpigpu, gpumpi]')
     parser.add_argument('--ofolder', type=str, default='mcmc', help='Output folder name. Default "mcmc"')
     parser.add_argument('--ofile', type=str, default='mcmc.h5', help='Output file name. Default "mcmc.h5"')
     parser.add_argument('--corner_ofile', type=str, default='corner.png', help='Corner plot output file name. Default "corner.png"')

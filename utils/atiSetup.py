@@ -11,13 +11,13 @@ from pythonization import pythonize_parMgr
 #  functions are called.                               #
 ########################################################
 
-def setup(calling_globals, accelerator='', use_fsroot=False, use_genamp=False):
+def setup(calling_globals, accelerator='mpigpu', use_fsroot=False, use_genamp=False):
     '''
-    Performs setup: Load libraries and set aliases
+    Performs basic setup, loading libraries and setting aliases
 
     Args:
         calling_globals (dict): globals() from the calling function
-        accelerator (str): accelerator flag from argparse ~ ['mpi', 'gpu', 'mpigpu', 'gpumpi', '']
+        accelerator (str): accelerator flag from argparse ~ ['cpu', 'mpi', 'gpu', 'mpigpu', 'gpumpi']
         use_fsroot (bool): True if FSRoot library should be loaded
         use_genamp (bool): True if GenAmp library should be loaded
     '''
@@ -114,9 +114,9 @@ def set_aliases(caller_globals, USE_MPI):
 #     kwargs['flush'] = kwargs.get('flush', True)
 #     default_print(*args, **kwargs)
 
-def checkEnvironment(variable):
-    ''' Check if environment variable is set to 1 '''
-    return os.environ[variable] == "1" if variable in os.environ else False
+# def checkEnvironment(variable):
+#     ''' Check if environment variable is set to 1 '''
+#     return os.environ[variable] == "1" if variable in os.environ else False
 
 def prepare_mpigpu(accelerator):
     '''
@@ -124,23 +124,22 @@ def prepare_mpigpu(accelerator):
     Check who called python. If bash (single process). If mpiexec/mpirun (then MPI)
 
     Args:
-        accelerator (str): accelerator flag from argparse ~ ['mpi', 'gpu', 'mpigpu', 'gpumpi', '']
+        accelerator (str): accelerator flag from argparse ~ ['cpu', 'mpi', 'gpu', 'mpigpu', 'gpumpi']
 
     Returns:
         USE_MPI (bool): True if MPI is to be used
         USE_GPU (bool): True if GPU is to be used
         RANK_MPI (int): MPI rank of the process (0 by default even if MPI is not used)
     '''
-    assert(accelerator in ['mpi', 'gpu', 'mpigpu', 'gpumpi', '']), f'Invalid accelerator flag: {accelerator}'
+    assert( accelerator in ['cpu', 'mpi', 'gpu', 'mpigpu', 'gpumpi'] ), f'Invalid accelerator flag: {accelerator}'
     caller, parent = get_pid_family()
 
     USE_MPI = False
     USE_GPU = False
-    if accelerator != '':
-        if ("mpi" in parent):
-            USE_MPI = True
-        if (check_nvidia_devices()[0]):
-            USE_GPU = True
+    if ("mpi" in parent) and ('mpi' in accelerator):
+        USE_MPI = True
+    if (check_nvidia_devices()[0]) and ('gpu' in accelerator):
+        USE_GPU = True
 
     ## SETUP ENVIRONMENT FOR MPI AND/OR GPU ##
     if USE_MPI:

@@ -18,7 +18,7 @@ def fit(accelerator):
 
 @pytest.mark.fit
 def test_fit_cpu():
-	fit("")
+	fit("cpu")
 
 ## The below tests might come back and bite me.
 # gpu and mpi will be accessed only if available and will fall back
