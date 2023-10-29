@@ -165,9 +165,10 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/fitting.html">Fitting</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/mle.html">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/mcmc.html">Markov Chain Monte Carlo</a></li>
+
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/plotgen.html">Plotting with RDataFrames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/plotgen.html">Plotting Fit Results</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
@@ -337,22 +338,22 @@ document.write(`
 <span class="kn">import</span> <span class="nn">atiSetup</span>
 
 <div class="viewcode-block" id="draw_histograms"><a class="viewcode-back" href="../api/plotgen.html#PlotGenRDF.draw_histograms">[docs]</a><span class="k">def</span> <span class="nf">draw_histograms</span><span class="p">(</span>
-    <span class="n">plotGen</span><span class="p">,</span>
     <span class="n">results</span><span class="p">,</span>
     <span class="n">hist_output_name</span><span class="p">,</span>
     <span class="n">particles</span><span class="p">,</span>
     <span class="n">HISTS_TO_BOOK</span><span class="p">,</span>
+    <span class="n">amplitudes</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Draw histograms from a FitResults object. Histograms are booked using the book_histogram() function that uses macros to compute</span>
 <span class="sd">    kinematic quantities to plot. Booked histograms are lazily evaluated / filled with RDataFrame.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        plotGen (PlotGenerator): PlotGenerator object</span>
 <span class="sd">        results (FitResults): FitResults object</span>
 <span class="sd">        hist_output_name (str): Output file name, do not include file type</span>
 <span class="sd">        particles (List[str]): List of particles in reaction</span>
 <span class="sd">        HISTS_TO_BOOK (Dict[str, List]): Dictionary of histograms to book. See book_histogram() for details</span>
+<span class="sd">        amplitudes (str): Space separated list of wavesets to turn on. Wavesets are semi-colon ; separated list of amplitudes. &quot;all&quot; turns on all waves.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        None, dumps a pdf file based on hist_output_name</span>
@@ -360,6 +361,7 @@ document.write(`
 
     <span class="n">THStack</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">THStack</span>
     <span class="n">TCanvas</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TCanvas</span>
+    <span class="n">plotGen</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">PlotGenerator</span><span class="p">(</span> <span class="n">results</span> <span class="p">)</span>
 
     <span class="k">assert</span><span class="p">(</span> <span class="s1">&#39;.&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">hist_output_name</span> <span class="p">),</span> <span class="s2">&quot;Do not include file type in the output name ( -o flag )&quot;</span>
 
@@ -376,17 +378,18 @@ document.write(`
     <span class="n">reactionNames</span> <span class="o">=</span>  <span class="nb">list</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">reactionList</span><span class="p">())</span>
 
     <span class="c1">### FOR EACH WAVESET, PLOT THE HISTOGRAMS ###</span>
-    <span class="k">for</span> <span class="n">amp</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">]:</span><span class="c1">#, &#39;resAmp1&#39;, &#39;resAmp2&#39;, &#39;resAmp3&#39;, &#39;resAmp1_resAmp2&#39;]:</span>
+    <span class="n">amplitudes</span> <span class="o">=</span> <span class="n">amplitudes</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">amp</span> <span class="ow">in</span> <span class="n">amplitudes</span><span class="p">:</span>
         <span class="n">turn_on_specifc_waveset</span><span class="p">(</span><span class="n">plotGen</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">amp</span><span class="p">)</span>
 
         <span class="n">HISTOGRAM_STORAGE</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># {type: [hist1, hist2, ...]}</span>
         <span class="n">DRAW_OPT_STORAGE</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="nb">type</span> <span class="ow">in</span> <span class="p">[</span><span class="n">kData</span><span class="p">,</span> <span class="n">kBkgnd</span><span class="p">,</span> <span class="n">kGenMC</span><span class="p">,</span> <span class="n">kAccMC</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">srctype</span> <span class="ow">in</span> <span class="p">[</span><span class="n">kData</span><span class="p">,</span> <span class="n">kBkgnd</span><span class="p">,</span> <span class="n">kGenMC</span><span class="p">,</span> <span class="n">kAccMC</span><span class="p">]:</span>
 
             <span class="c1">########### LOAD THE DATA ###########</span>
             <span class="c1"># Reaction: { Variable: [Values] } }</span>
-            <span class="n">value_map</span> <span class="o">=</span> <span class="n">plotGen</span><span class="o">.</span><span class="n">projected_values</span><span class="p">(</span><span class="n">reactionNames</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">N_PARTICLES</span><span class="p">)</span>
-            <span class="n">value_map</span> <span class="o">=</span> <span class="n">value_map</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span>
+            <span class="n">value_map</span> <span class="o">=</span> <span class="n">plotGen</span><span class="o">.</span><span class="n">projected_values</span><span class="p">(</span><span class="n">reactionNames</span><span class="p">,</span> <span class="n">srctype</span><span class="p">,</span> <span class="n">N_PARTICLES</span><span class="p">)</span>
+            <span class="n">value_map</span> <span class="o">=</span> <span class="n">value_map</span><span class="p">[</span><span class="n">srctype</span><span class="p">]</span>
             <span class="n">value_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">value_map</span><span class="p">}</span>
 
             <span class="n">df</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RDF</span><span class="o">.</span><span class="n">FromNumpy</span><span class="p">(</span><span class="n">value_map</span><span class="p">)</span>
@@ -401,8 +404,8 @@ document.write(`
 
             <span class="c1">######### BOOK HISTOGRAMS #########</span>
             <span class="n">BOOKED_HISTOGRAMS</span><span class="p">,</span> <span class="n">DRAW_OPTIONS</span> <span class="o">=</span> <span class="n">book_histogram</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">HISTS_TO_BOOK</span><span class="p">,</span> <span class="n">columns</span><span class="p">)</span>
-            <span class="n">HISTOGRAM_STORAGE</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="o">=</span> <span class="n">BOOKED_HISTOGRAMS</span>
-            <span class="n">DRAW_OPT_STORAGE</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="o">=</span> <span class="n">DRAW_OPTIONS</span>
+            <span class="n">HISTOGRAM_STORAGE</span><span class="p">[</span><span class="n">srctype</span><span class="p">]</span> <span class="o">=</span> <span class="n">BOOKED_HISTOGRAMS</span>
+            <span class="n">DRAW_OPT_STORAGE</span><span class="p">[</span><span class="n">srctype</span><span class="p">]</span> <span class="o">=</span> <span class="n">DRAW_OPTIONS</span>
 
         <span class="c1">###########################################################</span>
         <span class="c1">### NOW CONFIGURE HOW YOU WANT TO DRAW THE HISTOGRAMS ####</span>
@@ -416,7 +419,7 @@ document.write(`
         <span class="n">canvas</span><span class="o">.</span><span class="n">Divide</span><span class="p">(</span><span class="n">ncols</span><span class="p">,</span> <span class="n">nrows</span><span class="p">)</span>
 
         <span class="n">output_name</span> <span class="o">=</span> <span class="n">hist_output_name</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">amp</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">canvas</span><span class="o">.</span><span class="n">Print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_name</span><span class="si">}</span><span class="s2">.pdf[&quot;</span><span class="p">)</span>
+        <span class="c1"># canvas.Print(f&quot;{output_name}.pdf[&quot;)</span>
         <span class="n">stacks</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">ihist</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_BOOKED_HISTS</span><span class="p">):</span>
             <span class="n">canvas</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="n">ihist</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
@@ -426,10 +429,10 @@ document.write(`
             <span class="n">data_hist</span><span class="o">.</span><span class="n">SetMarkerSize</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
             <span class="n">data_hist</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s1">&#39;E&#39;</span><span class="p">)</span> <span class="c1"># Draw first to set labels and y-limits</span>
             <span class="n">stacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">THStack</span><span class="p">(</span><span class="s2">&quot;stack&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
-            <span class="k">for</span> <span class="nb">type</span> <span class="ow">in</span> <span class="p">[</span><span class="n">kBkgnd</span><span class="p">,</span> <span class="n">kAccMC</span><span class="p">]:</span>
-                <span class="n">booked_hist</span> <span class="o">=</span> <span class="n">HISTOGRAM_STORAGE</span><span class="p">[</span><span class="nb">type</span><span class="p">][</span><span class="n">ihist</span><span class="p">]</span>
-                <span class="n">drawOptions</span> <span class="o">=</span> <span class="n">DRAW_OPT_STORAGE</span><span class="p">[</span><span class="nb">type</span><span class="p">][</span><span class="n">ihist</span><span class="p">]</span>
-                <span class="n">booked_hist</span><span class="o">.</span><span class="n">SetFillColorAlpha</span><span class="p">(</span><span class="n">kColors</span><span class="p">[</span><span class="nb">type</span><span class="p">],</span><span class="mf">1.0</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">srctype</span> <span class="ow">in</span> <span class="p">[</span><span class="n">kBkgnd</span><span class="p">,</span> <span class="n">kAccMC</span><span class="p">]:</span>
+                <span class="n">booked_hist</span> <span class="o">=</span> <span class="n">HISTOGRAM_STORAGE</span><span class="p">[</span><span class="n">srctype</span><span class="p">][</span><span class="n">ihist</span><span class="p">]</span>
+                <span class="n">drawOptions</span> <span class="o">=</span> <span class="n">DRAW_OPT_STORAGE</span><span class="p">[</span><span class="n">srctype</span><span class="p">][</span><span class="n">ihist</span><span class="p">]</span>
+                <span class="n">booked_hist</span><span class="o">.</span><span class="n">SetFillColorAlpha</span><span class="p">(</span><span class="n">kColors</span><span class="p">[</span><span class="n">srctype</span><span class="p">],</span><span class="mf">1.0</span><span class="p">)</span>
                 <span class="n">booked_hist</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
                 <span class="n">booked_hist</span>
                 <span class="n">hist_ptr</span> <span class="o">=</span> <span class="n">booked_hist</span><span class="o">.</span><span class="n">GetPtr</span><span class="p">()</span>
@@ -437,8 +440,9 @@ document.write(`
             <span class="n">stacks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s1">&#39;HIST SAME&#39;</span><span class="p">)</span>
             <span class="n">data_hist</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s1">&#39;E SAME&#39;</span><span class="p">)</span> <span class="c1"># Redraw data</span>
 
-        <span class="n">canvas</span><span class="o">.</span><span class="n">Print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_name</span><span class="si">}</span><span class="s2">.pdf&quot;</span><span class="p">)</span>
-        <span class="n">canvas</span><span class="o">.</span><span class="n">Print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_name</span><span class="si">}</span><span class="s2">.pdf]&quot;</span><span class="p">)</span>
+        <span class="n">canvas</span><span class="o">.</span><span class="n">Print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_name</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">)</span>
+        <span class="c1"># canvas.Print(f&quot;{output_name}.pdf&quot;)</span>
+        <span class="c1"># canvas.Print(f&quot;{output_name}.pdf]&quot;)</span>
 
         <span class="c1"># THStack is drawn on TCanvas. Deleting TCanvas (which normally happens when it goes out of scope)</span>
         <span class="c1">#   before THStack will lead to improper deallocation. Also deleting elements of stacks in a for loop</span>
@@ -468,7 +472,7 @@ document.write(`
     <span class="c1">############## PARSE COMMAND LINE ARGS ##############</span>
     <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;PlotGenerator fit results with RDataFrames&#39;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;fit_results&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to fit results file&#39;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="s1">&#39;--output&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Output file name, do not include file type&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;plotgenrdf_result&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="s1">&#39;--output&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;plotgenrdf_result&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Output file name, do not include file type&#39;</span><span class="p">)</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
     <span class="n">fit_results</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">fit_results</span>
     <span class="n">hist_output_name</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span>
@@ -504,8 +508,7 @@ document.write(`
     <span class="n">particles</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;GLUEXBEAM&#39;</span><span class="p">,</span><span class="s1">&#39;RECOIL&#39;</span><span class="p">,</span><span class="s1">&#39;ETA&#39;</span><span class="p">,</span><span class="s1">&#39;PI0&#39;</span><span class="p">]</span>
 
     <span class="c1">############## DRAW HISTOGRAMS ##############</span>
-    <span class="n">plotGen</span> <span class="o">=</span> <span class="n">PlotGenerator</span><span class="p">(</span> <span class="n">results</span> <span class="p">)</span>
-    <span class="n">draw_histograms</span><span class="p">(</span><span class="n">plotGen</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">hist_output_name</span><span class="p">,</span> <span class="n">particles</span><span class="p">,</span> <span class="n">HISTS_TO_BOOK</span><span class="p">)</span>
+    <span class="n">draw_histograms</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">hist_output_name</span><span class="p">,</span> <span class="n">particles</span><span class="p">,</span> <span class="n">HISTS_TO_BOOK</span><span class="p">)</span>
 </pre></div>
 
                 </article>

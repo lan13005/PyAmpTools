@@ -165,9 +165,10 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/fitting.html">Fitting</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/mle.html">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/mcmc.html">Markov Chain Monte Carlo</a></li>
+
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/plotgen.html">Plotting with RDataFrames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/plotgen.html">Plotting Fit Results</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
@@ -345,7 +346,7 @@ document.write(`
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Get a map of unique (parameter: value) pairs excluding redundant constrained ones</span>
 <span class="sd">            These include production parameters and amplitude parameters</span>
-<span class="sd">        </span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            cfg: If cfg is a FitResults object set values to fitted results. For a ConfigurationInfo object set values to initial values</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -395,7 +396,7 @@ document.write(`
 
 <div class="viewcode-block" id="LoadParameters.flatten_parameters"><a class="viewcode-back" href="../api/loadParameters.html#LoadParameters.LoadParameters.flatten_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">flatten_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{}):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Flatten amplitude parameters (complex-&gt; real, imag) skipping imaginary parts of amplitudes fixed to be real. If no arguments are passed, use the uniqueProdPars and uniqueProdIsReal from the last call to load_cfg(). Can also format any dictionary pair into flat format. </span>
+<span class="sd">        Flatten amplitude parameters (complex-&gt; real, imag) skipping imaginary parts of amplitudes fixed to be real. If no arguments are passed, use the uniqueProdPars and uniqueProdIsReal from the last call to load_cfg(). Can also format any dictionary pair into flat format.</span>
 <span class="sd">            Dictionary to List</span>
 
 <span class="sd">        Args:</span>

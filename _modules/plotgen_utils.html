@@ -165,9 +165,10 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/fitting.html">Fitting</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/mle.html">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/mcmc.html">Markov Chain Monte Carlo</a></li>
+
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/plotgen.html">Plotting with RDataFrames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/plotgen.html">Plotting Fit Results</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
@@ -391,12 +392,11 @@ document.write(`
 
 <div class="viewcode-block" id="turn_on_specifc_waveset"><a class="viewcode-back" href="../api/plotgen.html#plotgen_utils.turn_on_specifc_waveset">[docs]</a><span class="k">def</span> <span class="nf">turn_on_specifc_waveset</span><span class="p">(</span><span class="n">plotGen</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">waveset</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Turn on a specific waveset which is an underscore separated list of amplitude names.</span>
+<span class="sd">    Turn on a specific waveset which is an semicolon separated list of amplitude names.</span>
 <span class="sd">       If waveset = all, then turn on all amplitudes</span>
 
 <span class="sd">    Example:</span>
-<span class="sd">        # Will turn on only resAmp1 and resAmp2</span>
-<span class="sd">        wavesets = &#39;resAmp1_resAmp2&#39;</span>
+<span class="sd">        wavesets = &#39;resAmp1;resAmp2&#39; # Will turn on only resAmp1 and resAmp2</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        plotGen: PlotGenerator</span>
@@ -412,7 +412,7 @@ document.write(`
 
     <span class="n">amp_map</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; &gt;&gt; Plotting waveset: </span><span class="si">{</span><span class="n">waveset</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="n">waves</span> <span class="o">=</span> <span class="n">waveset</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+    <span class="n">waves</span> <span class="o">=</span> <span class="n">waveset</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
     <span class="n">_waves</span> <span class="o">=</span> <span class="n">amps</span> <span class="k">if</span> <span class="n">keepAllAmps</span> <span class="k">else</span> <span class="n">waves</span>
     <span class="k">for</span> <span class="n">wave</span> <span class="ow">in</span> <span class="n">_waves</span><span class="p">:</span>
         <span class="n">amp_map</span><span class="p">[</span><span class="n">wave</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="c1"># Placeholder</span>
@@ -429,7 +429,7 @@ document.write(`
         <span class="k">if</span> <span class="n">amp</span> <span class="ow">in</span> <span class="n">amp_map</span> <span class="ow">or</span> <span class="n">keepAllAmps</span><span class="p">:</span>
             <span class="n">amp_map</span><span class="p">[</span><span class="n">amp</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
     <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">amp_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; &gt;&gt; WARNING: Amplitude </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1"> not found in fit results. Exiting...&#39;</span><span class="p">);</span> <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; &gt;&gt; WARNING: Amplitude </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1"> not found in fit results. Exiting...&#39;</span><span class="p">);</span> <span class="n">exit</span><span class="p">();</span>
 
     <span class="c1"># Turn on only the requested amplitudes</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">keepAllAmps</span><span class="p">:</span>

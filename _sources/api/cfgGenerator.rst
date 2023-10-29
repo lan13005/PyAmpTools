@@ -5,4 +5,3 @@ cfgGenerator
    :members:
    :undoc-members:
    :show-inheritance:
-

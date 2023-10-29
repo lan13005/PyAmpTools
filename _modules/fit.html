@@ -165,9 +165,10 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/fitting.html">Fitting</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/mle.html">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/mcmc.html">Markov Chain Monte Carlo</a></li>
+
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/plotgen.html">Plotting with RDataFrames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/plotgen.html">Plotting Fit Results</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
@@ -336,7 +337,7 @@ document.write(`
 <span class="kn">import</span> <span class="nn">atiSetup</span>
 
 <div class="viewcode-block" id="performFit"><a class="viewcode-back" href="../api/fit.html#fit.performFit">[docs]</a><span class="k">def</span> <span class="nf">performFit</span><span class="p">(</span>
-        <span class="n">ati</span><span class="p">,</span> 
+        <span class="n">ati</span><span class="p">,</span>
         <span class="n">seed_file_tag</span><span class="p">,</span>
         <span class="n">seedfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;seed&quot;</span><span class="p">,</span>
         <span class="n">useMinos</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>

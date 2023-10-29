@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Plotting with RDataFrames &#8212; PyAmpTools</title>
+    <title>Plotting Fit Results &#8212; PyAmpTools</title>
   
   
   
@@ -168,9 +168,10 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1 has-children"><a class="reference internal" href="fitting.html">Fitting</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="mle.html">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mcmc.html">Markov Chain Monte Carlo</a></li>
+
 </ul>
 </li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Plotting with RDataFrames</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Plotting Fit Results</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
@@ -361,7 +362,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Plotting with RDataFrames</h1>
+    <h1>Plotting Fit Results</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -375,8 +376,8 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="plotting-with-rdataframes">
-<h1>Plotting with RDataFrames<a class="headerlink" href="#plotting-with-rdataframes" title="Permalink to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="plotting-fit-results">
+<h1>Plotting Fit Results<a class="headerlink" href="#plotting-fit-results" title="Permalink to this heading">#</a></h1>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">ROOT</span>
@@ -419,7 +420,7 @@ Initializing FSRoot for PyROOT...
 </div>
 </div>
 <p>After performing a MLE fit a <code class="docutils literal notranslate"><span class="pre">FitResults</span></code> object is created with a <code class="docutils literal notranslate"><span class="pre">.fit</span></code> extension. This file can be read in using the <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> <a class="reference external" href="https://github.com/mashephe/AmpTools/blob/master/AmpTools/IUAmpTools/PlotGenerator.h">PlotGenerator</a> class. In this class, Amplitudes can be turned on/off and amplitude weights can be extracted for a particular amplitude combination. These weights can then be used for plotting purposes.</p>
-<p>This tutorial will go over how we can use <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> and <code class="docutils literal notranslate"><span class="pre">RDataFrames</span></code> to produce fit results. The <code class="docutils literal notranslate"><span class="pre">draw_histograms</span></code> method of the <code class="docutils literal notranslate"><span class="pre">PlotGenRDF</span></code> module shows an example implementation. See <a class="reference external" href="https://lan13005.github.io/PyAmpTools/api/plotgen.html#PlotGenRDF.draw_histograms">draw_histograms link</a> for the API and source code. <code class="docutils literal notranslate"><span class="pre">Numpy</span></code> is used as an intermediary between <code class="docutils literal notranslate"><span class="pre">PlotGenerator</span></code> and <code class="docutils literal notranslate"><span class="pre">RDataFrame</span></code>. This choice is made so that users can makes plots in the Python ecosystem if they wish. <code class="docutils literal notranslate"><span class="pre">RDataFrame</span></code> also does not perform any copying and reads directly from the <code class="docutils literal notranslate"><span class="pre">Numpy</span></code> array.</p>
+<p>This tutorial will go over how we can use <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> and <code class="docutils literal notranslate"><span class="pre">RDataFrames</span></code> to produce fit results. The <code class="docutils literal notranslate"><span class="pre">draw_histograms</span></code> method of the <code class="docutils literal notranslate"><span class="pre">PlotGenRDF</span></code> module shows an example implementation. <code class="docutils literal notranslate"><span class="pre">Numpy</span></code> is used as an intermediary between <code class="docutils literal notranslate"><span class="pre">PlotGenerator</span></code> and <code class="docutils literal notranslate"><span class="pre">RDataFrame</span></code>. This choice is made so that users can makes plots in the Python ecosystem if they wish instead of going through <code class="docutils literal notranslate"><span class="pre">ROOT</span></code>. It is important to remark that <code class="docutils literal notranslate"><span class="pre">RDataFrame</span></code> does not perform any copying and reads directly from the <code class="docutils literal notranslate"><span class="pre">Numpy</span></code> array.</p>
 <p>Some <em>macros</em> can be loaded ( mirrors <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> <a class="reference external" href="https://github.com/remitche66/FSRoot/blob/72959ffdc223546377c690873c7759e4e6b901a0/FSBasic/FSTree.h">macros</a> / <a class="reference external" href="https://github.com/remitche66/FSRoot/blob/master/FSBasic/FSMath.h">math</a> ) that calculates various kinematic quantites (i.e. <em>mass</em> and <em>helicity angles</em>). We can load them as follows</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -534,9 +535,15 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 
 <span class="c1">############## SETUP ##############</span>
 <span class="n">particles</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;GLUEXBEAM&#39;</span><span class="p">,</span><span class="s1">&#39;RECOIL&#39;</span><span class="p">,</span><span class="s1">&#39;ETA&#39;</span><span class="p">,</span><span class="s1">&#39;PI0&#39;</span><span class="p">]</span>
-
-<span class="c1">############## DRAW HISTOGRAMS ##############</span>
-<span class="n">draw_histograms</span><span class="p">(</span><span class="n">plotGen</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">hist_output_name</span><span class="p">,</span> <span class="n">particles</span><span class="p">,</span> <span class="n">HISTS_TO_BOOK</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>See <a class="reference external" href="https://lan13005.github.io/PyAmpTools/api/plotgen.html#PlotGenRDF.draw_histograms">draw_histograms API</a> for more information and source code.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">amplitudes</span> <span class="o">=</span> <span class="s2">&quot;all resAmp1 resAmp2 resAmp3 resAmp1;resAmp2&quot;</span>
+<span class="n">draw_histograms</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">hist_output_name</span><span class="p">,</span> <span class="n">particles</span><span class="p">,</span> <span class="n">HISTS_TO_BOOK</span><span class="p">,</span> <span class="n">amplitudes</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -544,32 +551,51 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: all
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Info in &lt;TCanvas::Print&gt;: pdf file result_all.pdf has been created
-Info in &lt;TCanvas::Print&gt;: Current canvas added to pdf file result_all.pdf
-Info in &lt;TCanvas::Print&gt;: pdf file result_all.pdf has been closed
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: resAmp1
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: resAmp2
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: resAmp3
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: resAmp1;resAmp2
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>	Creating AmplitudeManager for the reaction:  etapi
+		 particle index assignment:  Beam -&gt; 0
+		 particle index assignment:  Proton -&gt; 1
+		 particle index assignment:  Eta -&gt; 2
+		 particle index assignment:  Pi0 -&gt; 3
+Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
+Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
+Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Info in &lt;TCanvas::Print&gt;: png file result_all.png has been created
+Info in &lt;TCanvas::Print&gt;: png file result_resAmp1.png has been created
+Info in &lt;TCanvas::Print&gt;: png file result_resAmp2.png has been created
+Info in &lt;TCanvas::Print&gt;: png file result_resAmp3.png has been created
+Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been created
 </pre></div>
 </div>
 </div>
 </div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pdf2image</span> <span class="kn">import</span> <span class="n">convert_from_path</span>
-
-<span class="n">pdf_url</span> <span class="o">=</span> <span class="s2">&quot;result_all.pdf&quot;</span>
-<span class="kn">from</span> <span class="nn">pdf2image</span> <span class="kn">import</span> <span class="n">convert_from_path</span>
-<span class="n">images</span> <span class="o">=</span> <span class="n">convert_from_path</span><span class="p">(</span><span class="n">pdf_url</span><span class="p">)</span>
-<span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># show first page</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<img alt="../_images/723b1e1bc42a40a108bc8c3cfaca3d23109ea5c16cb222d66644d67a0df3563e.png" src="../_images/723b1e1bc42a40a108bc8c3cfaca3d23109ea5c16cb222d66644d67a0df3563e.png" />
-</div>
-</div>
+<p>Overall Fit results</p>
+<p><img alt="title" src="notebooks/result_all.png" /></p>
+<p>Only the L=2 M=0 wave</p>
+<p><img alt="title" src="notebooks/result_resAmp1.png" /></p>
+<p>Only the L=2 M=2 wave</p>
+<p><img alt="title" src="notebooks/result_resAmp1.png" /></p>
+<p>Only the L=0 M=0 wave</p>
+<p><img alt="title" src="notebooks/result_resAmp3.png" /></p>
+<p>Coherent sum of (L=2, M=0) (L=2, M=0) waves</p>
+<p><img alt="title" src="notebooks/result_resAmp1;resAmp2.png" /></p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># cleanup again</span>
-<span class="o">!</span>rm<span class="w"> </span>result_all.pdf
+<span class="o">!</span>rm<span class="w"> </span>result*.png
 </pre></div>
 </div>
 </div>

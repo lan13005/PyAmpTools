@@ -65,7 +65,7 @@ const thebe_selector_output = ".output, .cell_output"
     <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/mcmc';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Plotting with RDataFrames" href="plotgen.html" />
+    <link rel="next" title="Plotting Fit Results" href="plotgen.html" />
     <link rel="prev" title="Maximum Likelihood Estimation" href="mle.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -168,9 +168,10 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="fitting.html">Fitting</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="mle.html">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Markov Chain Monte Carlo</a></li>
+
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="plotgen.html">Plotting with RDataFrames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plotgen.html">Plotting Fit Results</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
@@ -350,7 +351,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -366,6 +369,16 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Markov Chain Monte Carlo</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-arguments-to-perform-mcmc">Additional arguments to <code class="docutils literal notranslate"><span class="pre">perform_mcmc</span></code>:</a></li>
+</ul>
+
+            </nav>
         </div>
     </div>
 </div>
@@ -478,7 +491,7 @@ Loading library libAmpsGen.so ............... ON
 </div>
 </div>
 </div>
-<p>We also have to define the <em>Posterior distribution</em>. In practice this means we have to define the <em>likelihood</em> (which is taken from <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code>) and a <em>prior</em> distribution. For now, we will ignore the <em>prior</em> and perform run the <code class="docutils literal notranslate"><span class="pre">emcee</span></code> sampler for the <em>likelihood</em> distribution. The definition of the log probability is shown in <a class="reference external" href="https://lan13005.github.io/PyAmpTools/api/mcmc.html#mcmc.LogProb">LogProb</a>.</p>
+<p>We also have to define the <em>Posterior distribution</em>. In practice this means we have to define the <em>likelihood</em> (which is taken from <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code>) and a <em>prior</em> distribution. For now, we will ignore the <em>prior</em> and run the <code class="docutils literal notranslate"><span class="pre">emcee</span></code> sampler for the <em>likelihood</em> distribution. A definition of the log probability is shown in <a class="reference external" href="https://lan13005.github.io/PyAmpTools/api/mcmc.html#mcmc.LogProb">LogProb</a>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">############## PREPARE FOR SAMPLER ##############</span>
@@ -693,7 +706,7 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 </div>
 </div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> uses a <code class="docutils literal notranslate"><span class="pre">ParameterManager</span></code> to manage the fit parameters (amplitudes and production coefficients). Production coefficients are complex numbers and optimization is generally performed on <em>real</em> numbers. Complex production coefficients have to be flattened first, splitting them up into their real and imaginary parts. The <code class="docutils literal notranslate"><span class="pre">LoadParameters</span></code> class reads in a <a class="reference external" href="https://github.com/mashephe/AmpTools/blob/master/AmpTools/IUAmpTools/FitResults.h">FitResults</a> file or a <a class="reference external" href="https://github.com/mashephe/AmpTools/blob/master/AmpTools/IUAmpTools/ConfigurationInfo.h">ConfigurationInfo</a> object and extracts the free parameters and can perform flattening of complex parameters or unflattening to aggregate real/imaginary components again.</p>
+<p><code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> uses a <code class="docutils literal notranslate"><span class="pre">ParameterManager</span></code> to manage the fit parameters (amplitudes and production coefficients). Production coefficients are complex numbers and optimization is generally performed on <em>real</em> numbers. Complex production coefficients have to be flattened first, splitting them up into their real and imaginary parts. The <code class="docutils literal notranslate"><span class="pre">LoadParameters</span></code> class reads in a <a class="reference external" href="https://github.com/mashephe/AmpTools/blob/master/AmpTools/IUAmpTools/FitResults.h">FitResults</a> file or a <a class="reference external" href="https://github.com/mashephe/AmpTools/blob/master/AmpTools/IUAmpTools/ConfigurationInfo.h">ConfigurationInfo</a> object and extracts the free parameters. If a FitResults file is given, the MLE values used instead of the values set with the <code class="docutils literal notranslate"><span class="pre">initialize</span></code> keyword in the cfg file. This class can also perform flattening of complex parameters or unflattening to aggregate real/imaginary components again.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">LoadParametersSampler</span> <span class="o">=</span> <span class="n">LoadParameters</span><span class="p">()</span>
@@ -733,7 +746,7 @@ nwalkers: 32
 burnIn: 0
 nsamples: 200
 params_dict: {}
-moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7fa504505b20&gt;]
+moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7fcf9a016b20&gt;]
  =================================================================== 
 
  ================== RUNNING MCMC ================== 
@@ -797,7 +810,7 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 </div>
 </div>
 <p>A <a class="reference external" href="https://corner.readthedocs.io/en/latest/">corner</a> plot shows pair-wise parameter correlations along with the parameter PDFs along the diagonal. Uncertainties can be extracted from the posterior distribution samples. <a class="reference external" href="https://lan13005.github.io/PyAmpTools/api/mcmc.html#mcmc.draw_corner">draw_corner</a> wraps <code class="docutils literal notranslate"><span class="pre">corner</span></code> for axis formatting and plotting the Maximum a Posterior (MAP) solution (shown as blue lines) and the initial MLE values (shown as green lines).</p>
-<p>The configuration file has been seeded with the MLE fit (using the <em>include</em> keyword at the bottom of the cfg file pointing to the <em>seed</em> file outputted by <code class="docutils literal notranslate"><span class="pre">fit</span></code>). By running the <code class="docutils literal notranslate"><span class="pre">emcee</span></code> sampler`this way gives an estimate of the local posterior distribution</p>
+<p>The configuration file has been seeded with the MLE fit (using the <em>include</em> keyword at the bottom of the cfg file pointing to the <em>seed</em> file outputted by <code class="docutils literal notranslate"><span class="pre">fit</span></code>). By running the <code class="docutils literal notranslate"><span class="pre">emcee</span></code> sampler this way gives an estimate of the local posterior distribution</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">draw_corner</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">corner_ofile</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -821,7 +834,10 @@ MAP Estimates from 6400 samples obtained over 32 walkers:
 <img alt="../_images/5610c91b1804b7c76f6ede66c0437717ce48e2f008a129edc6c422e65f8abcc3.png" src="../_images/5610c91b1804b7c76f6ede66c0437717ce48e2f008a129edc6c422e65f8abcc3.png" />
 </div>
 </div>
-<p>Additional arguments to <code class="docutils literal notranslate"><span class="pre">perform_mcmc</span></code>:</p>
+<p>We can see that the parameters are correlated. In this cfg file resAmp1 is set to be real while resAmp2 and resAmp3 are freely floating complex numbers. It can be seen that resAmp1 is negatively correlated with the other parameters. The other parameters are uniformly positively correlated with each other.</p>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="additional-arguments-to-perform-mcmc">
+<h1>Additional arguments to <code class="docutils literal notranslate"><span class="pre">perform_mcmc</span></code>:<a class="headerlink" href="#additional-arguments-to-perform-mcmc" title="Permalink to this heading">#</a></h1>
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">params_dict</span></code> - provides ranges or initial values to initialize the walkers with. If you wish to understand the uncertainties around a MLE value, you can pass a dictionary of values: {parameter: value} and the walkers will be initialized around a N-dimensional Gaussian ball around. If you pass a range of values, then the walkers will be uniformly randomized on these intervals.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">move_mixture</span></code> - The mixture of moves can have a significant effect on the results. Each move has a set of hyperparameters and an associated probability to be performed. In general, these moves attempt to create a balance between exploring the parameter space and exploiting (or local sampling) regions of high probability.</p></li>
@@ -880,7 +896,7 @@ MAP Estimates from 6400 samples obtained over 32 walkers:
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Plotting with RDataFrames</p>
+        <p class="prev-next-title">Plotting Fit Results</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -890,6 +906,22 @@ MAP Estimates from 6400 samples obtained over 32 walkers:
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Markov Chain Monte Carlo</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-arguments-to-perform-mcmc">Additional arguments to <code class="docutils literal notranslate"><span class="pre">perform_mcmc</span></code>:</a></li>
+</ul>
+
+  </nav></div>
+
+</div></div>
               
             
           </div>

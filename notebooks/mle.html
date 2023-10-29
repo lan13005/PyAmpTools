@@ -168,9 +168,10 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="fitting.html">Fitting</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mcmc.html">Markov Chain Monte Carlo</a></li>
+
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="plotgen.html">Plotting with RDataFrames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plotgen.html">Plotting Fit Results</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
@@ -403,7 +404,7 @@ document.write(`
 <span class="n">REPO_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
 <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span>
 
-<span class="n">cfgfile</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">REPO_HOME</span><span class="si">}</span><span class="s1">/tests/samples/SIMPLE_EXAMPLE/fit.cfg&#39;</span>
+<span class="n">cfgfile</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">REPO_HOME</span><span class="si">}</span><span class="s1">/tests/samples/SIMPLE_EXAMPLE/fitInit.cfg&#39;</span>
 <span class="n">randomSeed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
 <span class="n">seedfile</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;seed_file&#39;</span>
 <span class="n">numRnd</span> <span class="o">=</span> <span class="mi">0</span>
@@ -440,10 +441,10 @@ Loading library libAmpsGen.so ............... OFF
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> === COMMANDLINE ARGUMENTS === 
-Config file: /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/fit.cfg
+Config file: /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/fitInit.cfg
 Seed file: seed_file
 Number of random fits: 0
-Random seed: 1698514023
+Random seed: 1698539570
  ============================= 
 </pre></div>
 </div>
@@ -519,7 +520,7 @@ Random seed: 1698514023
 	        CONSTRAINTS:  1
 			1.  etapi::imZ::resAmp1
 	         PARAMETERS:  0
-	      INITIAL VALUE:  (-139.917,0)
+	      INITIAL VALUE:  (10,0)
 	               REAL?  1
 	              FIXED?  0
 	              SCALE:  1.0
@@ -535,7 +536,7 @@ Random seed: 1698514023
 	        CONSTRAINTS:  1
 			1.  etapi::imZ::resAmp2
 	         PARAMETERS:  0
-	      INITIAL VALUE:  (-80.7646,134.783)
+	      INITIAL VALUE:  (10,0)
 	               REAL?  0
 	              FIXED?  0
 	              SCALE:  1.0
@@ -551,7 +552,7 @@ Random seed: 1698514023
 	        CONSTRAINTS:  1
 			1.  etapi::imZ::resAmp3
 	         PARAMETERS:  0
-	      INITIAL VALUE:  (-193.378,106.653)
+	      INITIAL VALUE:  (10,0)
 	               REAL?  0
 	              FIXED?  0
 	              SCALE:  1.0
@@ -578,7 +579,7 @@ Random seed: 1698514023
 	        CONSTRAINTS:  1
 			1.  etapi::reZ::resAmp1
 	         PARAMETERS:  0
-	      INITIAL VALUE:  (-139.917,0)
+	      INITIAL VALUE:  (10,0)
 	               REAL?  1
 	              FIXED?  0
 	              SCALE:  1.0
@@ -594,7 +595,7 @@ Random seed: 1698514023
 	        CONSTRAINTS:  1
 			1.  etapi::reZ::resAmp2
 	         PARAMETERS:  0
-	      INITIAL VALUE:  (-80.7646,134.783)
+	      INITIAL VALUE:  (10,0)
 	               REAL?  0
 	              FIXED?  0
 	              SCALE:  1.0
@@ -610,7 +611,7 @@ Random seed: 1698514023
 	        CONSTRAINTS:  1
 			1.  etapi::reZ::resAmp3
 	         PARAMETERS:  0
-	      INITIAL VALUE:  (-193.378,106.653)
+	      INITIAL VALUE:  (10,0)
 	               REAL?  0
 	              FIXED?  0
 	              SCALE:  1.0
@@ -665,7 +666,7 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 </div>
 <p>A <code class="docutils literal notranslate"><span class="pre">fit</span></code> module is defined in PyAmpTools to run the standard MLE fit. We simply pass the recently created <code class="docutils literal notranslate"><span class="pre">ati</span></code> instance and the number of fits with random initializations to perform. Randomization is beneficial as the optimizer could get stuck in unwanted local minima.</p>
 <p>A single fit is performed without randomization is performed if <code class="docutils literal notranslate"><span class="pre">numRnd=0</span></code></p>
-<p>See <a class="reference external" href="https://lan13005.github.io/PyAmpTools/api/fit.html">fit</a> for API and source code.</p>
+<p>See <a class="reference external" href="https://lan13005.github.io/PyAmpTools/api/fit.html">fit</a> for API and source code, including <code class="docutils literal notranslate"><span class="pre">runFits</span></code> below</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">nll</span> <span class="o">=</span> <span class="n">runFits</span><span class="p">(</span><span class="n">ati</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="n">numRnd</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="o">=</span><span class="n">USE_MPI</span><span class="p">)</span>
@@ -673,8 +674,8 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LIKELIHOOD BEFORE MINIMIZATION: 14346.408126566828
-LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): 14346.408125327089
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LIKELIHOOD BEFORE MINIMIZATION: 112356.11732090596
+LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): 14346.408126566832
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
@@ -686,47 +687,45 @@ LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): 14346.408125327089
 	**********
 	 FIRST CALL TO USER FUNCTION AT NEW START POINT, WITH IFLAG=4.
 	 START MIGRAD MINIMIZATION.  STRATEGY  1  CONVERGENCE WHEN EDM .LT. 1.00e-04
-	 FCN=14346.4 FROM MIGRAD     STATUS=INITIATE       16          17 TOTAL
+	 FCN=26585.6 FROM MIGRAD     STATUS=INITIATE      162         163 TOTAL
 	                     EDM= unknown      STRATEGY= 1      NO ERROR MATRIX       
 	  EXT PARAMETER                         CURRENT GUESS       STEP         FIRST   
 	  NO.   NAME                  VALUE          ERROR          SIZE      DERIVATIVE 
-	    1 etapi::reZ::resAmp1_re  -1.39917e+02   1.39917e+00        1.3992   -0.00050711
-	    2 etapi::reZ::resAmp2_re  -8.07646e+01   8.07646e-01       0.80765   -0.00063901
-	    3 etapi::reZ::resAmp2_im   1.34783e+02   1.34783e+00        1.3478   -0.00017916
-	    4 etapi::reZ::resAmp3_re  -1.93378e+02   1.93378e+00        1.9338    0.00066644
-	    5 etapi::reZ::resAmp3_im   1.06653e+02   1.06653e+00        1.0665   -0.00011552
+	    1 etapi::reZ::resAmp1_re  -8.24991e+01   1.00000e-01       -92.499        75.351
+	    2 etapi::reZ::resAmp2_re   9.26049e+01   1.00000e-01             0        2.0926
+	    3 etapi::reZ::resAmp2_im   2.78287e+02   1.00000e-02             0        44.689
+	    4 etapi::reZ::resAmp3_re   1.00000e+01   1.00000e-01             0        75.356
+	    5 etapi::reZ::resAmp3_im   1.50706e+02   1.00000e-02             0       -41.017
 	
 	 MIGRAD MINIMIZATION HAS CONVERGED.
-	 MIGRAD WILL VERIFY CONVERGENCE AND ERROR MATRIX.
-	 COVARIANCE MATRIX CALCULATED SUCCESSFULLY.
-	 FCN=14346.4 FROM MIGRAD     STATUS=CONVERGED      66          67 TOTAL
-	                     EDM=1.28842e-06    STRATEGY= 1      ERROR MATRIX ACCURATE 
+	 FCN=14346.4 FROM MIGRAD     STATUS=CONVERGED     300         301 TOTAL
+	                     EDM=2.08018e-06    STRATEGY= 1  ERROR MATRIX UNCERTAINTY 4.7e+00 per cent
 	  EXT PARAMETER                                             STEP         FIRST   
 	  NO.   NAME                  VALUE          ERROR          SIZE      DERIVATIVE 
-	    1 etapi::reZ::resAmp1_re  -1.39916e+02   2.44381e+00       0.10031   -8.2098e-05
-	    2 etapi::reZ::resAmp2_re  -8.07625e+01   6.25887e+00       0.14903   -1.4642e-06
-	    3 etapi::reZ::resAmp2_im   1.34784e+02   4.87348e+00       0.14445   -9.3737e-05
-	    4 etapi::reZ::resAmp3_re  -1.93379e+02   4.05039e+00        0.1032   -0.00020742
-	    5 etapi::reZ::resAmp3_im   1.06653e+02   4.65991e+00       0.14772   -0.00012693
+	    1 etapi::reZ::resAmp1_re  -1.39917e+02   2.44224e+00     -0.012835   -0.00050537
+	    2 etapi::reZ::resAmp2_re  -8.07646e+01   6.24080e+00      0.037625   -0.00063901
+	    3 etapi::reZ::resAmp2_im   1.34783e+02   4.87638e+00      0.050544   -0.00017916
+	    4 etapi::reZ::resAmp3_re  -1.93378e+02   4.03569e+00      0.042951    0.00066661
+	    5 etapi::reZ::resAmp3_im   1.06653e+02   4.59293e+00      0.021035   -0.00011554
 	
 	 EXTERNAL ERROR MATRIX.    NDIM= 500    NPAR=  5    ERR DEF=1.00000e+00
-	        5.97      -9.93      -7.75      -6.78      -5.82
-	       -9.93       39.2       25.3       21.5       23.1
-	       -7.75       25.3       23.8       15.6       13.7
-	       -6.78       21.5       15.6       16.4       14.9
-	       -5.82       23.1       13.7       14.9       21.7
+	        5.96      -9.78      -7.67      -6.73      -5.68
+	       -9.78       38.9       25.2       21.3       22.5
+	       -7.67       25.2       23.8       15.5       13.4
+	       -6.73       21.3       15.5       16.3       14.6
+	       -5.68       22.5       13.4       14.6       21.1
 	 PARAMETER CORRELATION COEFFICIENTS
 	       NO.  GLOBAL      1      2      3      4      5
-	      1:     0.712  1.000 -0.649 -0.650 -0.685 -0.511
-	      2:     0.913 -0.649  1.000  0.828  0.850  0.792
-	      3:     0.862 -0.650  0.828  1.000  0.790  0.604
-	      4:     0.900 -0.685  0.850  0.790  1.000  0.790
-	      5:     0.840 -0.511  0.792  0.604  0.790  1.000
+	      1:     0.708  1.000 -0.641 -0.644 -0.683 -0.506
+	      2:     0.911 -0.641  1.000  0.828  0.847  0.786
+	      3:     0.862 -0.644  0.828  1.000  0.789  0.600
+	      4:     0.900 -0.683  0.847  0.789  1.000  0.787
+	      5:     0.837 -0.506  0.786  0.600  0.787  1.000
 
 [ MinuitMinimizationManager ]:
 
-	MIGRAD evaluation total wall time:  6.11740e-02 s.
-	   average time per function call:  8.99618e-01 ms.
+	MIGRAD evaluation total wall time:  2.65147e-01 s.
+	   average time per function call:  8.77970e-01 ms.
 
 [ NormIntInterface ]:
 

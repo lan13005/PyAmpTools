@@ -168,9 +168,10 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/fitting.html">Fitting</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/mle.html">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/mcmc.html">Markov Chain Monte Carlo</a></li>
+
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/plotgen.html">Plotting with RDataFrames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/plotgen.html">Plotting Fit Results</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="current nav bd-sidenav">
@@ -392,17 +393,17 @@ document.write(`
 <span id="plotgenrdf"></span><h2>PlotGenRDF<a class="headerlink" href="#module-PlotGenRDF" title="Permalink to this heading">#</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="PlotGenRDF.draw_histograms">
-<span class="sig-name descname"><span class="pre">draw_histograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plotGen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HISTS_TO_BOOK</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/PlotGenRDF.html#draw_histograms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#PlotGenRDF.draw_histograms" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">draw_histograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HISTS_TO_BOOK</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitudes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/PlotGenRDF.html#draw_histograms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#PlotGenRDF.draw_histograms" title="Permalink to this definition">#</a></dt>
 <dd><p>Draw histograms from a FitResults object. Histograms are booked using the book_histogram() function that uses macros to compute
 kinematic quantities to plot. Booked histograms are lazily evaluated / filled with RDataFrame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>plotGen</strong> (<em>PlotGenerator</em>) – PlotGenerator object</p></li>
 <li><p><strong>results</strong> (<em>FitResults</em>) – FitResults object</p></li>
 <li><p><strong>hist_output_name</strong> (<em>str</em>) – Output file name, do not include file type</p></li>
 <li><p><strong>particles</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of particles in reaction</p></li>
 <li><p><strong>HISTS_TO_BOOK</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>List</em><em>]</em>) – Dictionary of histograms to book. See book_histogram() for details</p></li>
+<li><p><strong>amplitudes</strong> (<em>str</em>) – Space separated list of wavesets to turn on. Wavesets are semi-colon ; separated list of amplitudes. “all” turns on all waves.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -461,12 +462,11 @@ name: string</p>
 <dt class="sig sig-object py" id="plotgen_utils.turn_on_specifc_waveset">
 <span class="sig-name descname"><span class="pre">turn_on_specifc_waveset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plotGen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waveset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/plotgen_utils.html#turn_on_specifc_waveset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#plotgen_utils.turn_on_specifc_waveset" title="Permalink to this definition">#</a></dt>
 <dd><dl class="simple">
-<dt>Turn on a specific waveset which is an underscore separated list of amplitude names.</dt><dd><p>If waveset = all, then turn on all amplitudes</p>
+<dt>Turn on a specific waveset which is an semicolon separated list of amplitude names.</dt><dd><p>If waveset = all, then turn on all amplitudes</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<p># Will turn on only resAmp1 and resAmp2
-wavesets = ‘resAmp1_resAmp2’</p>
+<p>wavesets = ‘resAmp1;resAmp2’ # Will turn on only resAmp1 and resAmp2</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
