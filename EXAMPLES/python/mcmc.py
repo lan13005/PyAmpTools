@@ -39,8 +39,8 @@ def LogProb(
     ll = -ati.likelihood()
 
     ## Add lasso prior on parameter values we know are small
-    # lasso = 0.1
-    prior = 0 # -lasso * np.sum(np.abs(par_values[PAR_INDICES >= 2]))
+    # lasso_strength = 0.1
+    prior = 0 # -lasso_strength * np.sum(np.abs(par_values))
 
     log_prob = ll + prior
     # print(f'LogProb: {log_prob} = {ll} + {prior}')
