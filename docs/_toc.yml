@@ -15,6 +15,7 @@ parts:
       - file: notebooks/plotgen
   - caption: API
     chapters:
+      - file: api/atiSetup
       - file: api/cfgGenerator
       - file: api/fit
       - file: api/mcmc

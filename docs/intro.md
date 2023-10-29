@@ -6,6 +6,8 @@ This repository contains Python bindings for AmpTools. Under the hood, it uses [
 
 # Installation
 
+All major dependencies (ROOT, AmpTools, FSRoot) are built from source.
+
 To install AmpTools and FSRoot as a submodule:
 
 ```shell
