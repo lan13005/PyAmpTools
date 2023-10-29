@@ -2,6 +2,13 @@ import os
 import psutil
 import subprocess
 import unittest
+import inspect
+from IPython.display import Code
+
+def PrintSourceCode( function ):
+    ''' Returns the source code of a function '''
+    src_code = ''.join(inspect.getsourcelines(function)[0])
+    return Code( src_code, language='python' )
 
 def get_function_by_pid(pid):
     ''' Returns the function or executable associated with a process ID '''
