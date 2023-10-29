@@ -372,8 +372,8 @@ document.write(`
     <span class="n">ll</span> <span class="o">=</span> <span class="o">-</span><span class="n">ati</span><span class="o">.</span><span class="n">likelihood</span><span class="p">()</span>
 
     <span class="c1">## Add lasso prior on parameter values we know are small</span>
-    <span class="c1"># lasso = 0.1</span>
-    <span class="n">prior</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># -lasso * np.sum(np.abs(par_values[PAR_INDICES &gt;= 2]))</span>
+    <span class="c1"># lasso_strength = 0.1</span>
+    <span class="n">prior</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># -lasso_strength * np.sum(np.abs(par_values))</span>
 
     <span class="n">log_prob</span> <span class="o">=</span> <span class="n">ll</span> <span class="o">+</span> <span class="n">prior</span>
     <span class="c1"># print(f&#39;LogProb: {log_prob} = {ll} + {prior}&#39;)</span>
