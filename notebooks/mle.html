@@ -413,47 +413,18 @@ document.write(`
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">AssertionError</span><span class="g g-Whitespace">                            </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">line</span> <span class="mi">3</span>
-<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
-<span class="g g-Whitespace">      </span><span class="mi">2</span> <span class="n">REPO_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
-<span class="ne">----&gt; </span><span class="mi">3</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span>
-<span class="g g-Whitespace">      </span><span class="mi">5</span> <span class="n">cfgfile</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">REPO_HOME</span><span class="si">}</span><span class="s1">/tests/samples/SIMPLE_EXAMPLE/fitInit.cfg&#39;</span>
-<span class="g g-Whitespace">      </span><span class="mi">6</span> <span class="n">randomSeed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
-
-<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:24,</span> in <span class="ni">setup</span><span class="nt">(calling_globals, accelerator, use_fsroot, use_genamp)</span>
-<span class="g g-Whitespace">     </span><span class="mi">14</span> <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">accelerator</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="g g-Whitespace">     </span><span class="mi">15</span><span class="w">     </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="g g-Whitespace">     </span><span class="mi">16</span><span class="sd">     Performs basic setup, loading libraries and setting aliases</span>
-<span class="g g-Whitespace">     </span><span class="mi">17</span><span class="sd"> </span>
-<span class="sd">   (...)</span>
-<span class="g g-Whitespace">     </span><span class="mi">22</span><span class="sd">         use_genamp (bool): True if GenAmp library should be loaded</span>
-<span class="g g-Whitespace">     </span><span class="mi">23</span><span class="sd">     &#39;&#39;&#39;</span>
-<span class="ne">---&gt; </span><span class="mi">24</span>     <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">loadLibraries</span><span class="p">(</span><span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="p">,</span> <span class="n">use_genamp</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">25</span>     <span class="n">set_aliases</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">27</span>     <span class="k">return</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span>
-
-<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:31,</span> in <span class="ni">loadLibraries</span><span class="nt">(accelerator, use_fsroot, use_genamp)</span>
-<span class="g g-Whitespace">     </span><span class="mi">29</span> <span class="k">def</span> <span class="nf">loadLibraries</span><span class="p">(</span><span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="g g-Whitespace">     </span><span class="mi">30</span><span class="w">     </span><span class="sd">&#39;&#39;&#39; Load all libraries and print availability &#39;&#39;&#39;</span>
-<span class="ne">---&gt; </span><span class="mi">31</span>     <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">prepare_mpigpu</span><span class="p">(</span><span class="n">accelerator</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">32</span>     <span class="n">SUFFIX</span>  <span class="o">=</span> <span class="s2">&quot;_GPU&quot;</span> <span class="k">if</span> <span class="n">USE_GPU</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-<span class="g g-Whitespace">     </span><span class="mi">33</span>     <span class="n">SUFFIX</span> <span class="o">+=</span> <span class="s2">&quot;_MPI&quot;</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-
-<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:134,</span> in <span class="ni">prepare_mpigpu</span><span class="nt">(accelerator)</span>
-<span class="g g-Whitespace">    </span><span class="mi">121</span> <span class="k">def</span> <span class="nf">prepare_mpigpu</span><span class="p">(</span><span class="n">accelerator</span><span class="p">):</span>
-<span class="g g-Whitespace">    </span><span class="mi">122</span><span class="w">     </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="g g-Whitespace">    </span><span class="mi">123</span><span class="sd">     Sets variables to use MPI and/or GPU if requested.</span>
-<span class="g g-Whitespace">    </span><span class="mi">124</span><span class="sd">     Check who called python. If bash (single process). If mpiexec/mpirun (then MPI)</span>
-<span class="sd">   (...)</span>
-<span class="g g-Whitespace">    </span><span class="mi">132</span><span class="sd">         RANK_MPI (int): MPI rank of the process (0 by default even if MPI is not used)</span>
-<span class="g g-Whitespace">    </span><span class="mi">133</span><span class="sd">     &#39;&#39;&#39;</span>
-<span class="ne">--&gt; </span><span class="mi">134</span>     <span class="k">assert</span><span class="p">(</span><span class="n">accelerator</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;cpu&#39;</span><span class="p">,</span> <span class="s1">&#39;mpi&#39;</span><span class="p">,</span> <span class="s1">&#39;gpu&#39;</span><span class="p">,</span> <span class="s1">&#39;mpigpu&#39;</span><span class="p">,</span> <span class="s1">&#39;gpumpi&#39;</span><span class="p">]),</span> <span class="sa">f</span><span class="s1">&#39;Invalid accelerator flag: </span><span class="si">{</span><span class="n">accelerator</span><span class="si">}</span><span class="s1">&#39;</span>
-<span class="g g-Whitespace">    </span><span class="mi">135</span>     <span class="n">caller</span><span class="p">,</span> <span class="n">parent</span> <span class="o">=</span> <span class="n">get_pid_family</span><span class="p">()</span>
-<span class="g g-Whitespace">    </span><span class="mi">137</span>     <span class="n">USE_MPI</span> <span class="o">=</span> <span class="kc">False</span>
-
-<span class="ne">AssertionError</span>: Invalid accelerator flag: 
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
+MPI is disabled
+GPU is disabled
+Loading library libAmpTools.so .............. ON
+Loading library libAmpPlotter.so ............ ON
+Loading library libAmpsDataIO.so ............ ON
+Loading library libFSRoot.so ................ OFF
+Loading library libAmpsGen.so ............... OFF
+------------------------------------------------
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 </pre></div>
 </div>
 </div>
@@ -469,6 +440,16 @@ document.write(`
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> === COMMANDLINE ARGUMENTS === 
+Config file: /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/fitInit.cfg
+Seed file: seed_file
+Number of random fits: 0
+Random seed: 1698592733
+ ============================= 
+</pre></div>
+</div>
+</div>
 </div>
 <p>We first load the configuration file by first passing it through a parser. We can display a detailed representation of its contents like so</p>
 <div class="cell docutils container">
@@ -476,6 +457,165 @@ document.write(`
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">parser</span> <span class="o">=</span> <span class="n">ConfigFileParser</span><span class="p">(</span><span class="n">cfgfile</span><span class="p">)</span>
 <span class="n">cfgInfo</span><span class="p">:</span> <span class="n">ConfigurationInfo</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getConfigurationInfo</span><span class="p">()</span>
 <span class="n">cfgInfo</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   =================================================================
+   |        ^                                                      |
+   |       / \             Version:  v0.15.1-dirty                 |
+   |      /---\                                                    |
+   |     /     \           GDouble:  8 bytes                       |
+   |    /       \ MP           MPI:  NO                            |
+   |     -------               GPU:  NO                            |
+   |        |                                                      |
+   |        |              doi.org/10.5281/zenodo.5039377          |
+   |        | OOLS                                                 |
+   =================================================================
+
+[ ConfigurationInfo ]:
+
+	## CONFIGURATION INFO DISPLAY ##
+	
+
+[ ReactionInfo ]:
+
+	############################################
+	#############   REACTION INFO  #############
+	############################################
+	      REACTION NAME:  etapi
+	      PARTICLE LIST:  4
+			1.  Beam
+			2.  Proton
+			3.  Eta
+			4.  Pi0
+	        DATA READER:  ROOTDataReader
+					/w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
+	      ACC MC READER:  ROOTDataReader
+					/w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
+	      GEN MC READER:  ROOTDataReader
+					/w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
+	  NORMALIZATION INTEGRAL FILE: 
+			    normint
+	      GPU DEVICE NUMBER:  -1
+
+[ CoherentSumInfo ]:
+
+	********************************************
+	***********  COHERENT SUM INFO  ************
+	********************************************
+	      REACTION NAME:  etapi
+	  COHERENT SUM NAME:  reZ
+
+[ AmplitudeInfo ]:
+
+	++++++++++++++++++++++++++++++++++++++++++++
+	+++++++++++++  AMPLITUDE INFO  +++++++++++++
+	++++++++++++++++++++++++++++++++++++++++++++
+	      REACTION NAME:  etapi
+	  COHERENT SUM NAME:  reZ
+	     AMPLITUDE NAME:  resAmp1
+	            FACTORS:  1
+			1.  	 Zlm	 2	 0	 +1	 +1	 0.0	 1.0	
+	 EXTRA PERMUTATIONS:  0
+	        CONSTRAINTS:  1
+			1.  etapi::imZ::resAmp1
+	         PARAMETERS:  0
+	      INITIAL VALUE:  (10,0)
+	               REAL?  1
+	              FIXED?  0
+	              SCALE:  1.0
+	++++++++++++++++++++++++++++++++++++++++++++
+	+++++++++++++  AMPLITUDE INFO  +++++++++++++
+	++++++++++++++++++++++++++++++++++++++++++++
+	      REACTION NAME:  etapi
+	  COHERENT SUM NAME:  reZ
+	     AMPLITUDE NAME:  resAmp2
+	            FACTORS:  1
+			1.  	 Zlm	 2	 2	 +1	 +1	 0.0	 1.0	
+	 EXTRA PERMUTATIONS:  0
+	        CONSTRAINTS:  1
+			1.  etapi::imZ::resAmp2
+	         PARAMETERS:  0
+	      INITIAL VALUE:  (10,0)
+	               REAL?  0
+	              FIXED?  0
+	              SCALE:  1.0
+	++++++++++++++++++++++++++++++++++++++++++++
+	+++++++++++++  AMPLITUDE INFO  +++++++++++++
+	++++++++++++++++++++++++++++++++++++++++++++
+	      REACTION NAME:  etapi
+	  COHERENT SUM NAME:  reZ
+	     AMPLITUDE NAME:  resAmp3
+	            FACTORS:  1
+			1.  	 Zlm	 0	 0	 +1	 +1	 0.0	 1.0	
+	 EXTRA PERMUTATIONS:  0
+	        CONSTRAINTS:  1
+			1.  etapi::imZ::resAmp3
+	         PARAMETERS:  0
+	      INITIAL VALUE:  (10,0)
+	               REAL?  0
+	              FIXED?  0
+	              SCALE:  1.0
+
+[ CoherentSumInfo ]:
+
+	********************************************
+	***********  COHERENT SUM INFO  ************
+	********************************************
+	      REACTION NAME:  etapi
+	  COHERENT SUM NAME:  imZ
+
+[ AmplitudeInfo ]:
+
+	++++++++++++++++++++++++++++++++++++++++++++
+	+++++++++++++  AMPLITUDE INFO  +++++++++++++
+	++++++++++++++++++++++++++++++++++++++++++++
+	      REACTION NAME:  etapi
+	  COHERENT SUM NAME:  imZ
+	     AMPLITUDE NAME:  resAmp1
+	            FACTORS:  1
+			1.  	 Zlm	 2	 0	 -1	 -1	 0.0	 1.0	
+	 EXTRA PERMUTATIONS:  0
+	        CONSTRAINTS:  1
+			1.  etapi::reZ::resAmp1
+	         PARAMETERS:  0
+	      INITIAL VALUE:  (10,0)
+	               REAL?  1
+	              FIXED?  0
+	              SCALE:  1.0
+	++++++++++++++++++++++++++++++++++++++++++++
+	+++++++++++++  AMPLITUDE INFO  +++++++++++++
+	++++++++++++++++++++++++++++++++++++++++++++
+	      REACTION NAME:  etapi
+	  COHERENT SUM NAME:  imZ
+	     AMPLITUDE NAME:  resAmp2
+	            FACTORS:  1
+			1.  	 Zlm	 2	 2	 -1	 -1	 0.0	 1.0	
+	 EXTRA PERMUTATIONS:  0
+	        CONSTRAINTS:  1
+			1.  etapi::reZ::resAmp2
+	         PARAMETERS:  0
+	      INITIAL VALUE:  (10,0)
+	               REAL?  0
+	              FIXED?  0
+	              SCALE:  1.0
+	++++++++++++++++++++++++++++++++++++++++++++
+	+++++++++++++  AMPLITUDE INFO  +++++++++++++
+	++++++++++++++++++++++++++++++++++++++++++++
+	      REACTION NAME:  etapi
+	  COHERENT SUM NAME:  imZ
+	     AMPLITUDE NAME:  resAmp3
+	            FACTORS:  1
+			1.  	 Zlm	 0	 0	 -1	 -1	 0.0	 1.0	
+	 EXTRA PERMUTATIONS:  0
+	        CONSTRAINTS:  1
+			1.  etapi::reZ::resAmp3
+	         PARAMETERS:  0
+	      INITIAL VALUE:  (10,0)
+	               REAL?  0
+	              FIXED?  0
+	              SCALE:  1.0
 </pre></div>
 </div>
 </div>
@@ -500,6 +640,30 @@ document.write(`
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[ Minuit ]:
+
+	**********
+	 **    1 **SET STRATEGY  1
+	**********
+	 NOW USING STRATEGY  1: TRY TO BALANCE SPEED AGAINST RELIABILITY
+
+[ AmplitudeManager ]:
+
+	Creating AmplitudeManager for the reaction:  etapi
+		 particle index assignment:  Beam -&gt; 0
+		 particle index assignment:  Proton -&gt; 1
+		 particle index assignment:  Eta -&gt; 2
+		 particle index assignment:  Pi0 -&gt; 3
+
+[ NormIntInterface ]:
+
+	Loading generated Monte Carlo from file...
+Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
+	Duplicated Monte Carlo set detected, using previously loaded version
+</pre></div>
+</div>
+</div>
 </div>
 <p>A <code class="docutils literal notranslate"><span class="pre">fit</span></code> module is defined in PyAmpTools to run the standard MLE fit. We simply pass the recently created <code class="docutils literal notranslate"><span class="pre">ati</span></code> instance and the number of fits with random initializations to perform. Randomization is beneficial as the optimizer could get stuck in unwanted local minima.</p>
 <p>A single fit is performed without randomization is performed if <code class="docutils literal notranslate"><span class="pre">numRnd=0</span></code></p>
@@ -507,6 +671,66 @@ document.write(`
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">nll</span> <span class="o">=</span> <span class="n">runFits</span><span class="p">(</span><span class="n">ati</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="n">numRnd</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="o">=</span><span class="n">USE_MPI</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LIKELIHOOD BEFORE MINIMIZATION: 112356.11732090596
+LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): 14346.408126566832
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
+
+[ Minuit ]:
+
+	**********
+	 **    2 **MIGRAD 100000 0.1
+	**********
+	 FIRST CALL TO USER FUNCTION AT NEW START POINT, WITH IFLAG=4.
+	 START MIGRAD MINIMIZATION.  STRATEGY  1  CONVERGENCE WHEN EDM .LT. 1.00e-04
+	 FCN=26585.6 FROM MIGRAD     STATUS=INITIATE      162         163 TOTAL
+	                     EDM= unknown      STRATEGY= 1      NO ERROR MATRIX       
+	  EXT PARAMETER                         CURRENT GUESS       STEP         FIRST   
+	  NO.   NAME                  VALUE          ERROR          SIZE      DERIVATIVE 
+	    1 etapi::reZ::resAmp1_re  -8.24991e+01   1.00000e-01       -92.499        75.351
+	    2 etapi::reZ::resAmp2_re   9.26049e+01   1.00000e-01             0        2.0926
+	    3 etapi::reZ::resAmp2_im   2.78287e+02   1.00000e-02             0        44.689
+	    4 etapi::reZ::resAmp3_re   1.00000e+01   1.00000e-01             0        75.356
+	    5 etapi::reZ::resAmp3_im   1.50706e+02   1.00000e-02             0       -41.017
+	
+	 MIGRAD MINIMIZATION HAS CONVERGED.
+	 FCN=14346.4 FROM MIGRAD     STATUS=CONVERGED     300         301 TOTAL
+	                     EDM=2.08018e-06    STRATEGY= 1  ERROR MATRIX UNCERTAINTY 4.7e+00 per cent
+	  EXT PARAMETER                                             STEP         FIRST   
+	  NO.   NAME                  VALUE          ERROR          SIZE      DERIVATIVE 
+	    1 etapi::reZ::resAmp1_re  -1.39917e+02   2.44224e+00     -0.012835   -0.00050537
+	    2 etapi::reZ::resAmp2_re  -8.07646e+01   6.24080e+00      0.037625   -0.00063901
+	    3 etapi::reZ::resAmp2_im   1.34783e+02   4.87638e+00      0.050544   -0.00017916
+	    4 etapi::reZ::resAmp3_re  -1.93378e+02   4.03569e+00      0.042951    0.00066661
+	    5 etapi::reZ::resAmp3_im   1.06653e+02   4.59293e+00      0.021035   -0.00011554
+	
+	 EXTERNAL ERROR MATRIX.    NDIM= 500    NPAR=  5    ERR DEF=1.00000e+00
+	        5.96      -9.78      -7.67      -6.73      -5.68
+	       -9.78       38.9       25.2       21.3       22.5
+	       -7.67       25.2       23.8       15.5       13.4
+	       -6.73       21.3       15.5       16.3       14.6
+	       -5.68       22.5       13.4       14.6       21.1
+	 PARAMETER CORRELATION COEFFICIENTS
+	       NO.  GLOBAL      1      2      3      4      5
+	      1:     0.708  1.000 -0.641 -0.644 -0.683 -0.506
+	      2:     0.911 -0.641  1.000  0.828  0.847  0.786
+	      3:     0.862 -0.644  0.828  1.000  0.789  0.600
+	      4:     0.900 -0.683  0.847  0.789  1.000  0.787
+	      5:     0.837 -0.506  0.786  0.600  0.787  1.000
+
+[ MinuitMinimizationManager ]:
+
+	MIGRAD evaluation total wall time:  2.79585e-01 s.
+	   average time per function call:  9.25778e-01 ms.
+
+[ NormIntInterface ]:
+
+	Perfect acceptance -- generated and accepted MC are the same
 </pre></div>
 </div>
 </div>

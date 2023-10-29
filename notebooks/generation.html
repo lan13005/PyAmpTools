@@ -411,49 +411,22 @@ document.write(`
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Welcome to JupyROOT 6.28/06
+
+------------------------------------------------
+MPI is disabled
+GPU is disabled
+Loading library libAmpTools.so .............. ON
+Loading library libAmpPlotter.so ............ ON
+Loading library libAmpsDataIO.so ............
 </pre></div>
 </div>
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">AssertionError</span><span class="g g-Whitespace">                            </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">line</span> <span class="mi">7</span>
-<span class="g g-Whitespace">      </span><span class="mi">5</span> <span class="n">REPO_HOME</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
-<span class="g g-Whitespace">      </span><span class="mi">6</span> <span class="kn">import</span> <span class="nn">atiSetup</span>
-<span class="ne">----&gt; </span><span class="mi">7</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># RANK_MPI defaults to 0 even if not using MPI</span>
-<span class="g g-Whitespace">      </span><span class="mi">9</span> <span class="kn">from</span> <span class="nn">cfgGenerator</span> <span class="kn">import</span> <span class="n">generate_zlm_cfg</span>
-<span class="g g-Whitespace">     </span><span class="mi">10</span> <span class="n">gen_amp</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">gen_amp</span>
-
-<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:24,</span> in <span class="ni">setup</span><span class="nt">(calling_globals, accelerator, use_fsroot, use_genamp)</span>
-<span class="g g-Whitespace">     </span><span class="mi">14</span> <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">accelerator</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="g g-Whitespace">     </span><span class="mi">15</span><span class="w">     </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="g g-Whitespace">     </span><span class="mi">16</span><span class="sd">     Performs basic setup, loading libraries and setting aliases</span>
-<span class="g g-Whitespace">     </span><span class="mi">17</span><span class="sd"> </span>
-<span class="sd">   (...)</span>
-<span class="g g-Whitespace">     </span><span class="mi">22</span><span class="sd">         use_genamp (bool): True if GenAmp library should be loaded</span>
-<span class="g g-Whitespace">     </span><span class="mi">23</span><span class="sd">     &#39;&#39;&#39;</span>
-<span class="ne">---&gt; </span><span class="mi">24</span>     <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">loadLibraries</span><span class="p">(</span><span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="p">,</span> <span class="n">use_genamp</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">25</span>     <span class="n">set_aliases</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">27</span>     <span class="k">return</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span>
-
-<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:31,</span> in <span class="ni">loadLibraries</span><span class="nt">(accelerator, use_fsroot, use_genamp)</span>
-<span class="g g-Whitespace">     </span><span class="mi">29</span> <span class="k">def</span> <span class="nf">loadLibraries</span><span class="p">(</span><span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="g g-Whitespace">     </span><span class="mi">30</span><span class="w">     </span><span class="sd">&#39;&#39;&#39; Load all libraries and print availability &#39;&#39;&#39;</span>
-<span class="ne">---&gt; </span><span class="mi">31</span>     <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">prepare_mpigpu</span><span class="p">(</span><span class="n">accelerator</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">32</span>     <span class="n">SUFFIX</span>  <span class="o">=</span> <span class="s2">&quot;_GPU&quot;</span> <span class="k">if</span> <span class="n">USE_GPU</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-<span class="g g-Whitespace">     </span><span class="mi">33</span>     <span class="n">SUFFIX</span> <span class="o">+=</span> <span class="s2">&quot;_MPI&quot;</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-
-<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:134,</span> in <span class="ni">prepare_mpigpu</span><span class="nt">(accelerator)</span>
-<span class="g g-Whitespace">    </span><span class="mi">121</span> <span class="k">def</span> <span class="nf">prepare_mpigpu</span><span class="p">(</span><span class="n">accelerator</span><span class="p">):</span>
-<span class="g g-Whitespace">    </span><span class="mi">122</span><span class="w">     </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="g g-Whitespace">    </span><span class="mi">123</span><span class="sd">     Sets variables to use MPI and/or GPU if requested.</span>
-<span class="g g-Whitespace">    </span><span class="mi">124</span><span class="sd">     Check who called python. If bash (single process). If mpiexec/mpirun (then MPI)</span>
-<span class="sd">   (...)</span>
-<span class="g g-Whitespace">    </span><span class="mi">132</span><span class="sd">         RANK_MPI (int): MPI rank of the process (0 by default even if MPI is not used)</span>
-<span class="g g-Whitespace">    </span><span class="mi">133</span><span class="sd">     &#39;&#39;&#39;</span>
-<span class="ne">--&gt; </span><span class="mi">134</span>     <span class="k">assert</span><span class="p">(</span><span class="n">accelerator</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;cpu&#39;</span><span class="p">,</span> <span class="s1">&#39;mpi&#39;</span><span class="p">,</span> <span class="s1">&#39;gpu&#39;</span><span class="p">,</span> <span class="s1">&#39;mpigpu&#39;</span><span class="p">,</span> <span class="s1">&#39;gpumpi&#39;</span><span class="p">]),</span> <span class="sa">f</span><span class="s1">&#39;Invalid accelerator flag: </span><span class="si">{</span><span class="n">accelerator</span><span class="si">}</span><span class="s1">&#39;</span>
-<span class="g g-Whitespace">    </span><span class="mi">135</span>     <span class="n">caller</span><span class="p">,</span> <span class="n">parent</span> <span class="o">=</span> <span class="n">get_pid_family</span><span class="p">()</span>
-<span class="g g-Whitespace">    </span><span class="mi">137</span>     <span class="n">USE_MPI</span> <span class="o">=</span> <span class="kc">False</span>
-
-<span class="ne">AssertionError</span>: Invalid accelerator flag: 
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> ON
+Loading library libFSRoot.so ................ OFF
+Loading library libAmpsGen.so ............... ON
+------------------------------------------------
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 </pre></div>
 </div>
 </div>
@@ -561,6 +534,8 @@ initialize etapi::reZ::resAmp2 cartesian 10 0
 constrain etapi::reZ::resAmp2 etapi::imZ::resAmp2
 initialize etapi::reZ::resAmp3 cartesian 10 0
 constrain etapi::reZ::resAmp3 etapi::imZ::resAmp3
+
+include /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/mle.txt
 </pre></div>
 </div>
 </div>
@@ -675,6 +650,154 @@ hddmname
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   =================================================================
+   |        ^                                                      |
+   |       / \             Version:  v0.15.1-dirty                 |
+   |      /---\                                                    |
+   |     /     \           GDouble:  8 bytes                       |
+   |    /       \ MP           MPI:  NO                            |
+   |     -------               GPU:  NO                            |
+   |        |                                                      |
+   |        |              doi.org/10.5281/zenodo.5039377          |
+   |        | OOLS                                                 |
+   =================================================================
+ConfigFileParser WARNING:  no known resonance found, seed with mass = width = 1GeV
+TRandom3 Seed : 4119918361
+
+[ AmplitudeManager ]:
+
+	Creating AmplitudeManager for the reaction:  etapi
+		 particle index assignment:  Beam -&gt; 0
+		 particle index assignment:  Proton -&gt; 1
+		 particle index assignment:  Eta -&gt; 2
+		 particle index assignment:  Pi0 -&gt; 3
+WARNING: Couldn&#39;t find beam configuration file -- write local version
+
+BeamProperties: Parsing config file local_beam.conf
+BeamProperties WARNING:  generateCombrems parameter Emittance missing: using default = 2.5e-09
+BeamProperties WARNING:  generateCombrems parameter RadiatorThickness missing: using default = 5e-05
+BeamProperties WARNING:  generateCombrems parameter CollimatorDiameter missing: using default = 0.005
+BeamProperties WARNING:  generateCombrems parameter CollimatorDistance missing: using default = 76
+
+Initialization for coherent bremsstralung calculation
+ electron beam energy: 12 GeV
+ primary coherent edge: 9 GeV
+ConfigFileParser WARNING:  Minimum photon energy not high enough to guarantee flat mass distribution!
+Generating four-vectors...
+Processing events...
+401 events were processed.
+Generating four-vectors...
+Processing events...
+852 events were processed.
+Generating four-vectors...
+Processing events...
+1223 events were processed.
+Generating four-vectors...
+Processing events...
+1629 events were processed.
+Generating four-vectors...
+Processing events...
+2041 events were processed.
+Generating four-vectors...
+Processing events...
+2442 events were processed.
+Generating four-vectors...
+Processing events...
+2850 events were processed.
+Generating four-vectors...
+Processing events...
+3214 events were processed.
+Generating four-vectors...
+Processing events...
+3660 events were processed.
+Generating four-vectors...
+Processing events...
+4095 events were processed.
+Generating four-vectors...
+Processing events...
+4554 events were processed.
+Generating four-vectors...
+Processing events...
+4935 events were processed.
+Generating four-vectors...
+Processing events...
+5312 events were processed.
+Generating four-vectors...
+Processing events...
+5710 events were processed.
+Generating four-vectors...
+Processing events...
+6138 events were processed.
+Generating four-vectors...
+Processing events...
+6550 events were processed.
+Generating four-vectors...
+Processing events...
+6936 events were processed.
+Generating four-vectors...
+Processing events...
+7341 events were processed.
+Generating four-vectors...
+Processing events...
+7715 events were processed.
+Generating four-vectors...
+Processing events...
+8081 events were processed.
+Generating four-vectors...
+Processing events...
+8606 events were processed.
+Generating four-vectors...
+Processing events...
+9031 events were processed.
+Generating four-vectors...
+Processing events...
+9517 events were processed.
+Generating four-vectors...
+Processing events...
+9899 events were processed.
+Generating four-vectors...
+Processing events...
+10266 events were processed.
+Generating four-vectors...
+Processing events...
+10690 events were processed.
+Generating four-vectors...
+Processing events...
+11093 events were processed.
+Generating four-vectors...
+Processing events...
+11541 events were processed.
+Generating four-vectors...
+Processing events...
+11982 events were processed.
+Generating four-vectors...
+Processing events...
+12355 events were processed.
+Generating four-vectors...
+Processing events...
+12770 events were processed.
+Generating four-vectors...
+Processing events...
+13216 events were processed.
+Generating four-vectors...
+Processing events...
+13554 events were processed.
+Generating four-vectors...
+Processing events...
+14003 events were processed.
+Generating four-vectors...
+Processing events...
+14404 events were processed.
+Generating four-vectors...
+Processing events...
+14851 events were processed.
+Generating four-vectors...
+Processing events...
+15000 events were processed.
+</pre></div>
+</div>
+</div>
 </div>
 <p>A <code class="docutils literal notranslate"><span class="pre">*diagnostic.root</span></code> is also created containing a variety of mass and angular histograms. A file called <code class="docutils literal notranslate"><span class="pre">test.root</span></code> should have been created containing the 4-momentum components for all particles. To understand physical data collected by a detector, simulations like this one would have to then be passed through a simulation of detector to produce realistic data. We can use <code class="docutils literal notranslate"><span class="pre">PyROOT</span></code> to quickly glance at the contents of the file.</p>
 <div class="cell docutils container">
@@ -688,6 +811,51 @@ hddmname
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tree</span><span class="o">.</span><span class="n">Print</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>******************************************************************************
+*Tree    :kin       : Kinematics                                             *
+*Entries :    15000 : Total =         1269353 bytes  File  Size =     869299 *
+*        :          : Tree compression factor =   1.46                       *
+******************************************************************************
+*Br    0 :NumFinalState : NumFinalState/I                                    *
+*Entries :    15000 : Total  Size=      60675 bytes  File Size  =        521 *
+*Baskets :        2 : Basket Size=      32000 bytes  Compression= 115.47     *
+*............................................................................*
+*Br    1 :E_FinalState : E_FinalState[NumFinalState]/F                       *
+*Entries :    15000 : Total  Size=     241516 bytes  File Size  =     185635 *
+*Baskets :       10 : Basket Size=      32000 bytes  Compression=   1.30     *
+*............................................................................*
+*Br    2 :Px_FinalState : Px_FinalState[NumFinalState]/F                     *
+*Entries :    15000 : Total  Size=     241530 bytes  File Size  =     192045 *
+*Baskets :       10 : Basket Size=      32000 bytes  Compression=   1.25     *
+*............................................................................*
+*Br    3 :Py_FinalState : Py_FinalState[NumFinalState]/F                     *
+*Entries :    15000 : Total  Size=     241530 bytes  File Size  =     192755 *
+*Baskets :       10 : Basket Size=      32000 bytes  Compression=   1.25     *
+*............................................................................*
+*Br    4 :Pz_FinalState : Pz_FinalState[NumFinalState]/F                     *
+*Entries :    15000 : Total  Size=     241530 bytes  File Size  =     189545 *
+*Baskets :       10 : Basket Size=      32000 bytes  Compression=   1.27     *
+*............................................................................*
+*Br    5 :E_Beam    : E_Beam/F                                               *
+*Entries :    15000 : Total  Size=      60633 bytes  File Size  =      53264 *
+*Baskets :        2 : Basket Size=      32000 bytes  Compression=   1.13     *
+*............................................................................*
+*Br    6 :Px_Beam   : Px_Beam/F                                              *
+*Entries :    15000 : Total  Size=      60639 bytes  File Size  =        472 *
+*Baskets :        2 : Basket Size=      32000 bytes  Compression= 127.43     *
+*............................................................................*
+*Br    7 :Py_Beam   : Py_Beam/F                                              *
+*Entries :    15000 : Total  Size=      60639 bytes  File Size  =        472 *
+*Baskets :        2 : Basket Size=      32000 bytes  Compression= 127.43     *
+*............................................................................*
+*Br    8 :Pz_Beam   : Pz_Beam/F                                              *
+*Entries :    15000 : Total  Size=      60639 bytes  File Size  =      53266 *
+*Baskets :        2 : Basket Size=      32000 bytes  Compression=   1.13     *
+*............................................................................*
 </pre></div>
 </div>
 </div>
