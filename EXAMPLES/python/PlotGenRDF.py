@@ -10,22 +10,22 @@ from plotgen_utils import book_histogram, turn_on_specifc_waveset
 import atiSetup
 
 def draw_histograms(
-    plotGen,
     results,
     hist_output_name,
     particles,
     HISTS_TO_BOOK,
+    amplitudes = 'all',
 ):
     '''
     Draw histograms from a FitResults object. Histograms are booked using the book_histogram() function that uses macros to compute
     kinematic quantities to plot. Booked histograms are lazily evaluated / filled with RDataFrame.
 
     Args:
-        plotGen (PlotGenerator): PlotGenerator object
         results (FitResults): FitResults object
         hist_output_name (str): Output file name, do not include file type
         particles (List[str]): List of particles in reaction
         HISTS_TO_BOOK (Dict[str, List]): Dictionary of histograms to book. See book_histogram() for details
+        amplitudes (str): Space separated list of wavesets to turn on. Wavesets are semi-colon ; separated list of amplitudes. "all" turns on all waves.
 
     Returns:
         None, dumps a pdf file based on hist_output_name
@@ -33,6 +33,7 @@ def draw_histograms(
 
     THStack = ROOT.THStack
     TCanvas = ROOT.TCanvas
+    plotGen = ROOT.PlotGenerator( results )
 
     assert( '.' not in hist_output_name ), "Do not include file type in the output name ( -o flag )"
 
@@ -49,17 +50,18 @@ def draw_histograms(
     reactionNames =  list(results.reactionList())
 
     ### FOR EACH WAVESET, PLOT THE HISTOGRAMS ###
-    for amp in ['all']:#, 'resAmp1', 'resAmp2', 'resAmp3', 'resAmp1_resAmp2']:
+    amplitudes = amplitudes.split(' ')
+    for amp in amplitudes:
         turn_on_specifc_waveset(plotGen, results, amp)
 
         HISTOGRAM_STORAGE = {} # {type: [hist1, hist2, ...]}
         DRAW_OPT_STORAGE = {}
-        for type in [kData, kBkgnd, kGenMC, kAccMC]:
+        for srctype in [kData, kBkgnd, kGenMC, kAccMC]:
 
             ########### LOAD THE DATA ###########
             # Reaction: { Variable: [Values] } }
-            value_map = plotGen.projected_values(reactionNames, type, N_PARTICLES)
-            value_map = value_map[type]
+            value_map = plotGen.projected_values(reactionNames, srctype, N_PARTICLES)
+            value_map = value_map[srctype]
             value_map = {k: np.array(v) for k,v in value_map}
 
             df = ROOT.RDF.FromNumpy(value_map)
@@ -74,8 +76,8 @@ def draw_histograms(
 
             ######### BOOK HISTOGRAMS #########
             BOOKED_HISTOGRAMS, DRAW_OPTIONS = book_histogram(df, HISTS_TO_BOOK, columns)
-            HISTOGRAM_STORAGE[type] = BOOKED_HISTOGRAMS
-            DRAW_OPT_STORAGE[type] = DRAW_OPTIONS
+            HISTOGRAM_STORAGE[srctype] = BOOKED_HISTOGRAMS
+            DRAW_OPT_STORAGE[srctype] = DRAW_OPTIONS
 
         ###########################################################
         ### NOW CONFIGURE HOW YOU WANT TO DRAW THE HISTOGRAMS ####
@@ -89,7 +91,7 @@ def draw_histograms(
         canvas.Divide(ncols, nrows)
 
         output_name = hist_output_name + f"_{amp}"
-        canvas.Print(f"{output_name}.pdf[")
+        # canvas.Print(f"{output_name}.pdf[")
         stacks = []
         for ihist in range(N_BOOKED_HISTS):
             canvas.cd(ihist+1)
@@ -99,10 +101,10 @@ def draw_histograms(
             data_hist.SetMarkerSize(1.0)
             data_hist.Draw('E') # Draw first to set labels and y-limits
             stacks.append(THStack("stack",""))
-            for type in [kBkgnd, kAccMC]:
-                booked_hist = HISTOGRAM_STORAGE[type][ihist]
-                drawOptions = DRAW_OPT_STORAGE[type][ihist]
-                booked_hist.SetFillColorAlpha(kColors[type],1.0)
+            for srctype in [kBkgnd, kAccMC]:
+                booked_hist = HISTOGRAM_STORAGE[srctype][ihist]
+                drawOptions = DRAW_OPT_STORAGE[srctype][ihist]
+                booked_hist.SetFillColorAlpha(kColors[srctype],1.0)
                 booked_hist.SetLineColor(0)
                 booked_hist
                 hist_ptr = booked_hist.GetPtr()
@@ -110,8 +112,9 @@ def draw_histograms(
             stacks[-1].Draw('HIST SAME')
             data_hist.Draw('E SAME') # Redraw data
 
-        canvas.Print(f"{output_name}.pdf")
-        canvas.Print(f"{output_name}.pdf]")
+        canvas.Print(f"{output_name}.png")
+        # canvas.Print(f"{output_name}.pdf")
+        # canvas.Print(f"{output_name}.pdf]")
 
         # THStack is drawn on TCanvas. Deleting TCanvas (which normally happens when it goes out of scope)
         #   before THStack will lead to improper deallocation. Also deleting elements of stacks in a for loop
@@ -141,7 +144,7 @@ if __name__ == '__main__':
     ############## PARSE COMMAND LINE ARGS ##############
     parser = argparse.ArgumentParser(description='PlotGenerator fit results with RDataFrames')
     parser.add_argument('fit_results', type=str, help='Path to fit results file')
-    parser.add_argument('-o', '--output', type=str, help='Output file name, do not include file type', default='plotgenrdf_result')
+    parser.add_argument('-o', '--output', type=str, default='plotgenrdf_result', help='Output file name, do not include file type')
     args = parser.parse_args()
     fit_results = args.fit_results
     hist_output_name = args.output
@@ -177,5 +180,4 @@ if __name__ == '__main__':
     particles = ['GLUEXBEAM','RECOIL','ETA','PI0']
 
     ############## DRAW HISTOGRAMS ##############
-    plotGen = PlotGenerator( results )
-    draw_histograms(plotGen, results, hist_output_name, particles, HISTS_TO_BOOK)
+    draw_histograms(results, hist_output_name, particles, HISTS_TO_BOOK)

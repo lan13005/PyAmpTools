@@ -10,5 +10,5 @@ def test_plotrdf():
    cmd = ' '.join(cmd)
    print(cmd)
    os.system(cmd)
-   assert( os.path.exists(f'{output_file}_all.pdf') ), f'PlotGenRDF.py failed to generate {output_file}.pdf'
+   assert( os.path.exists(f'{output_file}_all.png') ), f'PlotGenRDF.py failed to generate {output_file}_all.png'
    os.system(f'rm {output_file}_all.pdf')

@@ -64,12 +64,11 @@ def book_histogram(df, HISTS_TO_BOOK, columns):
 
 def turn_on_specifc_waveset(plotGen, results, waveset, verbose=True):
     '''
-    Turn on a specific waveset which is an underscore separated list of amplitude names.
+    Turn on a specific waveset which is an semicolon separated list of amplitude names.
        If waveset = all, then turn on all amplitudes
 
     Example:
-        # Will turn on only resAmp1 and resAmp2
-        wavesets = 'resAmp1_resAmp2'
+        wavesets = 'resAmp1;resAmp2' # Will turn on only resAmp1 and resAmp2
 
     Args:
         plotGen: PlotGenerator
@@ -85,7 +84,7 @@ def turn_on_specifc_waveset(plotGen, results, waveset, verbose=True):
 
     amp_map = {}
     if verbose: print(f' >> Plotting waveset: {waveset}')
-    waves = waveset.split('_')
+    waves = waveset.split(';')
     _waves = amps if keepAllAmps else waves
     for wave in _waves:
         amp_map[wave] = -1 # Placeholder
@@ -102,7 +101,7 @@ def turn_on_specifc_waveset(plotGen, results, waveset, verbose=True):
         if amp in amp_map or keepAllAmps:
             amp_map[amp] = i
     for k, v in amp_map.items():
-        if v == -1: print(f' >> WARNING: Amplitude {k} not found in fit results. Exiting...'); exit(1)
+        if v == -1: print(f' >> WARNING: Amplitude {k} not found in fit results. Exiting...'); exit();
 
     # Turn on only the requested amplitudes
     if not keepAllAmps:
