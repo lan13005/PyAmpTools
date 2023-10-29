@@ -418,16 +418,14 @@ MPI is disabled
 GPU is disabled
 Loading library libAmpTools.so .............. ON
 Loading library libAmpPlotter.so ............ ON
-Loading library libAmpsDataIO.so ............
+Loading library libAmpsDataIO.so ............ ON
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> ON
-Loading library libFSRoot.so ................ OFF
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Loading library libFSRoot.so ................ OFF
 Loading library libAmpsGen.so ............... ON
 ------------------------------------------------
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
+
+Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 </pre></div>
 </div>
 </div>
@@ -746,7 +744,7 @@ nwalkers: 32
 burnIn: 0
 nsamples: 200
 params_dict: {}
-moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7fcf9a016b20&gt;]
+moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7f4187eacaf0&gt;]
  =================================================================== 
 
  ================== RUNNING MCMC ================== 
@@ -834,7 +832,7 @@ MAP Estimates from 6400 samples obtained over 32 walkers:
 <img alt="../_images/5610c91b1804b7c76f6ede66c0437717ce48e2f008a129edc6c422e65f8abcc3.png" src="../_images/5610c91b1804b7c76f6ede66c0437717ce48e2f008a129edc6c422e65f8abcc3.png" />
 </div>
 </div>
-<p>We can see that the parameters are correlated. In this cfg file resAmp1 is set to be real while resAmp2 and resAmp3 are freely floating complex numbers. It can be seen that resAmp1 is negatively correlated with the other parameters. The other parameters are uniformly positively correlated with each other.</p>
+<p>We can see that the parameters are correlated. In this cfg file <code class="docutils literal notranslate"><span class="pre">resAmp1</span></code> is set to be real while <code class="docutils literal notranslate"><span class="pre">resAmp2</span></code> and <code class="docutils literal notranslate"><span class="pre">resAmp3</span></code> are freely floating complex numbers. It can be seen that resAmp1 is negatively correlated with the other parameters. The other parameters are uniformly positively correlated with each other.</p>
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="additional-arguments-to-perform-mcmc">
 <h1>Additional arguments to <code class="docutils literal notranslate"><span class="pre">perform_mcmc</span></code>:<a class="headerlink" href="#additional-arguments-to-perform-mcmc" title="Permalink to this heading">#</a></h1>
