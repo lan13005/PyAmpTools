@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>mcmc &#8212; PyAmpTools</title>
+    <title>MCMC &#8212; PyAmpTools</title>
   
   
   
@@ -182,7 +182,7 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="atiSetup.html">atiSetup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cfgGenerator.html">cfgGenerator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fit.html">fit</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">mcmc</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">MCMC</a></li>
 <li class="toctree-l1"><a class="reference internal" href="loadParameters.html">LoadParameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plotgen.html">PlotGen</a></li>
 <li class="toctree-l1"><a class="reference internal" href="extract_ff.html">extract_ff</a></li>
@@ -356,7 +356,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -367,11 +369,20 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>mcmc</h1>
+    <h1>MCMC</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">MCMC</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mcmc-optuna">MCMC/Optuna</a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -381,9 +392,11 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section id="module-mcmc">
-<span id="mcmc"></span><h1>mcmc<a class="headerlink" href="#module-mcmc" title="Permalink to this heading">#</a></h1>
-<dl class="py function">
+  <section id="mcmc">
+<h1>MCMC<a class="headerlink" href="#mcmc" title="Permalink to this heading">#</a></h1>
+<section id="id1">
+<h2>MCMC<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h2>
+<span class="target" id="module-mcmc"></span><dl class="py function">
 <dt class="sig sig-object py" id="mcmc.LogProb">
 <span class="sig-name descname"><span class="pre">LogProb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ati</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LoadParametersSampler</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#LogProb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.LogProb" title="Permalink to this definition">#</a></dt>
 <dd><p>Definition of the (Log) Posterior distribution</p>
@@ -473,6 +486,17 @@ document.write(`
 </dd></dl>
 
 </section>
+<section id="mcmc-optuna">
+<h2>MCMC/Optuna<a class="headerlink" href="#mcmc-optuna" title="Permalink to this heading">#</a></h2>
+<span class="target" id="module-mcmcOptimalMoves"></span><dl class="py class">
+<dt class="sig sig-object py" id="mcmcOptimalMoves.Objective">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Objective</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conditions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmcOptimalMoves.html#Objective"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmcOptimalMoves.Objective" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Modified objective function (Class) for Optuna that now takes an initialization list</p>
+</dd></dl>
+
+</section>
+</section>
 
     <script type="text/x-thebe-config">
     {
@@ -528,6 +552,21 @@ document.write(`
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">MCMC</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mcmc-optuna">MCMC/Optuna</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>
