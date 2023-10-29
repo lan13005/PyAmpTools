@@ -398,16 +398,17 @@ document.write(`
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Welcome to JupyROOT 6.28/06
-
-------------------------------------------------
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
 MPI is disabled
 GPU is disabled
 Loading library libAmpTools.so .............. ON
-Loading library libAmpPlotter.so ............
+Loading library libAmpPlotter.so ............ ON
+Loading library libAmpsDataIO.so ............
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> ON
-Loading library libAmpsDataIO.so ............ ON
 Loading library libFSRoot.so ................ ON
 Loading library libAmpsGen.so ............... OFF
 ------------------------------------------------
@@ -582,20 +583,80 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
 </div>
 </div>
 </div>
-<p>Overall Fit results</p>
-<p><img alt="title" src="notebooks/result_all.png" /></p>
-<p>Only the L=2 M=0 wave</p>
-<p><img alt="title" src="notebooks/result_resAmp1.png" /></p>
-<p>Only the L=2 M=2 wave</p>
-<p><img alt="title" src="notebooks/result_resAmp1.png" /></p>
-<p>Only the L=0 M=0 wave</p>
-<p><img alt="title" src="notebooks/result_resAmp3.png" /></p>
-<p>Coherent sum of (L=2, M=0) (L=2, M=0) waves</p>
-<p><img alt="title" src="notebooks/result_resAmp1;resAmp2.png" /></p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># cleanup again</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Overall Fit results</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;result_all.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/cbfa858b77e5b87949685099783f8f4bfbd974c4618314d72fd7f66fa99a356d.png" src="../_images/cbfa858b77e5b87949685099783f8f4bfbd974c4618314d72fd7f66fa99a356d.png" />
+</div>
+</div>
+<p>Only the L=2 M=0 wave</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;result_resAmp1.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/b4642417141c841c7367a4e58919327761b4941b134fbb9fd9c40ccc26c19d0e.png" src="../_images/b4642417141c841c7367a4e58919327761b4941b134fbb9fd9c40ccc26c19d0e.png" />
+</div>
+</div>
+<p>Only the L=2 M=2 wave</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;result_resAmp2.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/330d852199a9c2ae206d532219dea6235797b52b929ebc8622ea189f906105c4.png" src="../_images/330d852199a9c2ae206d532219dea6235797b52b929ebc8622ea189f906105c4.png" />
+</div>
+</div>
+<p>Only the L=0 M=0 wave</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;result_resAmp3.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/367fd349ff85093a42dc229be15a3bd8e576c9ee35566b755bbef3046b8bc225.png" src="../_images/367fd349ff85093a42dc229be15a3bd8e576c9ee35566b755bbef3046b8bc225.png" />
+</div>
+</div>
+<p>Coherent sum of (L=2, M=0) (L=2, M=0) waves</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;result_resAmp1;resAmp2.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/9e1fbd1b13a01b32329887088fb377bb13feb40c94372d0d5277003d06f3a128.png" src="../_images/9e1fbd1b13a01b32329887088fb377bb13feb40c94372d0d5277003d06f3a128.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cleanup</span> <span class="n">again</span>
 <span class="o">!</span>rm<span class="w"> </span>result*.png
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span>  <span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">16</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
+    <span class="n">cleanup</span> <span class="n">again</span>
+            <span class="o">^</span>
+<span class="ne">SyntaxError</span>: invalid syntax
 </pre></div>
 </div>
 </div>
