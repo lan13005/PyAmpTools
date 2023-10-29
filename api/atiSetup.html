@@ -65,6 +65,8 @@ const thebe_selector_output = ".output, .cell_output"
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/atiSetup';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="cfgGenerator" href="cfgGenerator.html" />
+    <link rel="prev" title="Plotting Fit Results" href="../notebooks/plotgen.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -172,7 +174,8 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/plotgen.html">Plotting Fit Results</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
-<ul class="nav bd-sidenav">
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">atiSetup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cfgGenerator.html">cfgGenerator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fit.html">fit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcmc.html">mcmc</a></li>
@@ -401,7 +404,7 @@ document.write(`
 Check who called python. If bash (single process). If mpiexec/mpirun (then MPI)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>accelerator</strong> (<em>str</em>) – accelerator flag from argparse ~ [‘mpi’, ‘gpu’, ‘mpigpu’, ‘gpumpi’, ‘’]</p>
+<dd class="field-odd"><p><strong>accelerator</strong> (<em>str</em>) – accelerator flag from argparse ~ [‘cpu’, ‘mpi’, ‘gpu’, ‘mpigpu’, ‘gpumpi’]</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>True if MPI is to be used
@@ -429,7 +432,7 @@ A dictionary of aliases is appended to the globals() function of the calling fun
 <dl class="py function">
 <dt class="sig sig-object py" id="atiSetup.setup">
 <span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">calling_globals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accelerator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fsroot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_genamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.setup" title="Permalink to this definition">#</a></dt>
-<dd><p>Performs setup: Load libraries and set aliases</p>
+<dd><p>Performs basic setup, loading libraries and setting aliases</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -474,6 +477,24 @@ A dictionary of aliases is appended to the globals() function of the calling fun
                 <footer class="prev-next-footer">
                   <!-- Previous / next buttons -->
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="../notebooks/plotgen.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Plotting Fit Results</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="cfgGenerator.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">cfgGenerator</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               

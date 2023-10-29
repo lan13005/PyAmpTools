@@ -175,6 +175,7 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../api/atiSetup.html">atiSetup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/cfgGenerator.html">cfgGenerator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/fit.html">fit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/mcmc.html">mcmc</a></li>
@@ -414,24 +415,47 @@ document.write(`
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Welcome to JupyROOT 6.28/06
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
-MPI is disabled
-GPU is disabled
-Loading library libAmpTools.so ..............
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> ON
-Loading library libAmpPlotter.so ............
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> ON
-Loading library libAmpsDataIO.so ............ ON
-Loading library libFSRoot.so ................ OFF
-Loading library libAmpsGen.so ............... ON
-------------------------------------------------
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">AssertionError</span><span class="g g-Whitespace">                            </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">line</span> <span class="mi">7</span>
+<span class="g g-Whitespace">      </span><span class="mi">5</span> <span class="n">REPO_HOME</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
+<span class="g g-Whitespace">      </span><span class="mi">6</span> <span class="kn">import</span> <span class="nn">atiSetup</span>
+<span class="ne">----&gt; </span><span class="mi">7</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># RANK_MPI defaults to 0 even if not using MPI</span>
+<span class="g g-Whitespace">      </span><span class="mi">9</span> <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="g g-Whitespace">     </span><span class="mi">10</span> <span class="kn">import</span> <span class="nn">emcee</span>
+
+<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:24,</span> in <span class="ni">setup</span><span class="nt">(calling_globals, accelerator, use_fsroot, use_genamp)</span>
+<span class="g g-Whitespace">     </span><span class="mi">14</span> <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">accelerator</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="g g-Whitespace">     </span><span class="mi">15</span><span class="w">     </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="g g-Whitespace">     </span><span class="mi">16</span><span class="sd">     Performs basic setup, loading libraries and setting aliases</span>
+<span class="g g-Whitespace">     </span><span class="mi">17</span><span class="sd"> </span>
+<span class="sd">   (...)</span>
+<span class="g g-Whitespace">     </span><span class="mi">22</span><span class="sd">         use_genamp (bool): True if GenAmp library should be loaded</span>
+<span class="g g-Whitespace">     </span><span class="mi">23</span><span class="sd">     &#39;&#39;&#39;</span>
+<span class="ne">---&gt; </span><span class="mi">24</span>     <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">loadLibraries</span><span class="p">(</span><span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="p">,</span> <span class="n">use_genamp</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">25</span>     <span class="n">set_aliases</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">27</span>     <span class="k">return</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span>
+
+<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:31,</span> in <span class="ni">loadLibraries</span><span class="nt">(accelerator, use_fsroot, use_genamp)</span>
+<span class="g g-Whitespace">     </span><span class="mi">29</span> <span class="k">def</span> <span class="nf">loadLibraries</span><span class="p">(</span><span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="g g-Whitespace">     </span><span class="mi">30</span><span class="w">     </span><span class="sd">&#39;&#39;&#39; Load all libraries and print availability &#39;&#39;&#39;</span>
+<span class="ne">---&gt; </span><span class="mi">31</span>     <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">prepare_mpigpu</span><span class="p">(</span><span class="n">accelerator</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">32</span>     <span class="n">SUFFIX</span>  <span class="o">=</span> <span class="s2">&quot;_GPU&quot;</span> <span class="k">if</span> <span class="n">USE_GPU</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+<span class="g g-Whitespace">     </span><span class="mi">33</span>     <span class="n">SUFFIX</span> <span class="o">+=</span> <span class="s2">&quot;_MPI&quot;</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+
+<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:134,</span> in <span class="ni">prepare_mpigpu</span><span class="nt">(accelerator)</span>
+<span class="g g-Whitespace">    </span><span class="mi">121</span> <span class="k">def</span> <span class="nf">prepare_mpigpu</span><span class="p">(</span><span class="n">accelerator</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">122</span><span class="w">     </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="g g-Whitespace">    </span><span class="mi">123</span><span class="sd">     Sets variables to use MPI and/or GPU if requested.</span>
+<span class="g g-Whitespace">    </span><span class="mi">124</span><span class="sd">     Check who called python. If bash (single process). If mpiexec/mpirun (then MPI)</span>
+<span class="sd">   (...)</span>
+<span class="g g-Whitespace">    </span><span class="mi">132</span><span class="sd">         RANK_MPI (int): MPI rank of the process (0 by default even if MPI is not used)</span>
+<span class="g g-Whitespace">    </span><span class="mi">133</span><span class="sd">     &#39;&#39;&#39;</span>
+<span class="ne">--&gt; </span><span class="mi">134</span>     <span class="k">assert</span><span class="p">(</span><span class="n">accelerator</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;cpu&#39;</span><span class="p">,</span> <span class="s1">&#39;mpi&#39;</span><span class="p">,</span> <span class="s1">&#39;gpu&#39;</span><span class="p">,</span> <span class="s1">&#39;mpigpu&#39;</span><span class="p">,</span> <span class="s1">&#39;gpumpi&#39;</span><span class="p">]),</span> <span class="sa">f</span><span class="s1">&#39;Invalid accelerator flag: </span><span class="si">{</span><span class="n">accelerator</span><span class="si">}</span><span class="s1">&#39;</span>
+<span class="g g-Whitespace">    </span><span class="mi">135</span>     <span class="n">caller</span><span class="p">,</span> <span class="n">parent</span> <span class="o">=</span> <span class="n">get_pid_family</span><span class="p">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">137</span>     <span class="n">USE_MPI</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="ne">AssertionError</span>: Invalid accelerator flag: 
 </pre></div>
 </div>
 </div>
@@ -486,8 +510,8 @@ Loading library libAmpsGen.so ............... ON
  ofile: mcmc.h5
  corner_ofile: corner.png
  nwalkers: 32
- burnIn: 0
- nsamples: 200
+ burnIn: 100
+ nsamples: 1000
  overwrite_ofile: True
  seed: 42
  ====================================================================================
@@ -747,17 +771,15 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 ofolder: mcmc
 ofile: mcmc.h5
 nwalkers: 32
-burnIn: 0
-nsamples: 200
+burnIn: 100
+nsamples: 1000
 params_dict: {}
-moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7f17416b4b20&gt;]
+moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7fc702d423a0&gt;]
  =================================================================== 
 
  ================== RUNNING MCMC ================== 
 Initializing walkers in an N-ball around the MLE estimate
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Par values: [[-140.61192169  -80.65288733  135.65601685 -196.32355813  106.40283681]
+Par values: [[-140.61192169  -80.65288733  135.65601685 -196.32355813  106.40283681]
  [-139.58933722  -82.04000009  135.81741441 -192.47048633  107.23122161]
  [-139.26853464  -80.38841131  135.10916665 -189.67847841  104.81289824]
  [-139.130199    -79.94654732  135.20659465 -191.62242619  105.14630923]
@@ -789,26 +811,30 @@ Initializing walkers in an N-ball around the MLE estimate
  [-141.01083707  -79.76553813  133.00329094 -194.38767013  106.96930917]
  [-140.26741639  -81.04436324  133.86648453 -193.82747651  106.96513671]
  [-138.91743587  -82.27144038  135.42168896 -191.07462512  107.35279867]]
+
+[Burn-in beginning]
+
+
+[Burn-in complete. Running sampler]
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The chain is shorter than 50 times the integrated autocorrelation time for 5 parameter(s). Use this estimate with caution and run a longer chain!
-N/50 = 4;
-tau: [15.92587787 16.44973334 17.51905651 16.73390776 15.60765933]
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The chain is shorter than 50 times the integrated autocorrelation time for 5 parameter(s). Use this estimate with caution and run a longer chain!
-N/50 = 4;
-tau: [15.92587787 16.44973334 17.51905651 16.73390776 15.60765933]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:41&lt;00:00, 24.36it/s]
+The chain is shorter than 50 times the integrated autocorrelation time for 5 parameter(s). Use this estimate with caution and run a longer chain!
+N/50 = 20;
+tau: [38.61995666 35.25900781 35.79381956 35.558693   35.23900407]
+The chain is shorter than 50 times the integrated autocorrelation time for 5 parameter(s). Use this estimate with caution and run a longer chain!
+N/50 = 20;
+tau: [38.61995666 35.25900781 35.79381956 35.558693   35.23900407]
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[Sampler complete]
 
 
-Mean acceptance fraction: 0.564
-Autocorrelation time: 16.447 steps
+Mean acceptance fraction: 0.556
+Autocorrelation time: 36.094 steps
 
-Mean acceptance fraction: 0.564
-Autocorrelation time: 16.447 steps
+Mean acceptance fraction: 0.556
+Autocorrelation time: 36.094 steps
 Percent samples remaning after masking: 100.00%
 Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
 </pre></div>
@@ -825,19 +851,17 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Corner kwargs: {&#39;color&#39;: &#39;black&#39;, &#39;show_titles&#39;: True}
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> =================== RESULTS =================== 
-MAP Estimates from 6400 samples obtained over 32 walkers:
-   Re[resAmp1]          = -140.188
-   Re[resAmp2]          = -80.310
-   Im[resAmp2]          = 134.706
-   Re[resAmp3]          = -193.365
-   Im[resAmp3]          = 106.786
+ =================== RESULTS =================== 
+MAP Estimates from 32000 samples obtained over 32 walkers:
+   Re[resAmp1]          = -140.002
+   Re[resAmp2]          = -81.014
+   Im[resAmp2]          = 134.457
+   Re[resAmp3]          = -193.514
+   Im[resAmp3]          = 106.840
  =============================================== 
 </pre></div>
 </div>
-<img alt="../_images/5610c91b1804b7c76f6ede66c0437717ce48e2f008a129edc6c422e65f8abcc3.png" src="../_images/5610c91b1804b7c76f6ede66c0437717ce48e2f008a129edc6c422e65f8abcc3.png" />
+<img alt="../_images/6285ecc63310e384c4aaaa30cee1c2d2e059c11e2c6eb48b9643e687dff668ac.png" src="../_images/6285ecc63310e384c4aaaa30cee1c2d2e059c11e2c6eb48b9643e687dff668ac.png" />
 </div>
 </div>
 <p>We can see that the parameters are correlated. In this cfg file <code class="docutils literal notranslate"><span class="pre">resAmp1</span></code> is set to be real while <code class="docutils literal notranslate"><span class="pre">resAmp2</span></code> and <code class="docutils literal notranslate"><span class="pre">resAmp3</span></code> are freely floating complex numbers. It can be seen that resAmp1 is negatively correlated with the other parameters. The other parameters are uniformly positively correlated with each other.</p>

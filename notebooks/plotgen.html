@@ -65,7 +65,7 @@ const thebe_selector_output = ".output, .cell_output"
     <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/plotgen';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="cfgGenerator" href="../api/cfgGenerator.html" />
+    <link rel="next" title="atiSetup" href="../api/atiSetup.html" />
     <link rel="prev" title="Markov Chain Monte Carlo" href="mcmc.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -175,6 +175,7 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../api/atiSetup.html">atiSetup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/cfgGenerator.html">cfgGenerator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/fit.html">fit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/mcmc.html">mcmc</a></li>
@@ -400,29 +401,54 @@ document.write(`
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Welcome to JupyROOT 6.28/06
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
-MPI is disabled
-GPU is disabled
-Loading library libAmpTools.so .............. ON
-Loading library libAmpPlotter.so ............ ON
-Loading library libAmpsDataIO.so ............
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> ON
-Loading library libFSRoot.so ................ ON
-Loading library libAmpsGen.so ............... OFF
-------------------------------------------------
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
-Initializing FSRoot for PyROOT...
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">AssertionError</span><span class="g g-Whitespace">                            </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">line</span> <span class="mi">11</span>
+<span class="g g-Whitespace">      </span><span class="mi">8</span> <span class="kn">import</span> <span class="nn">atiSetup</span>
+<span class="g g-Whitespace">     </span><span class="mi">10</span> <span class="n">REPO_HOME</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
+<span class="ne">---&gt; </span><span class="mi">11</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">13</span> <span class="kn">from</span> <span class="nn">PlotGenRDF</span> <span class="kn">import</span> <span class="n">draw_histograms</span>
+
+<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:24,</span> in <span class="ni">setup</span><span class="nt">(calling_globals, accelerator, use_fsroot, use_genamp)</span>
+<span class="g g-Whitespace">     </span><span class="mi">14</span> <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">accelerator</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="g g-Whitespace">     </span><span class="mi">15</span><span class="w">     </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="g g-Whitespace">     </span><span class="mi">16</span><span class="sd">     Performs basic setup, loading libraries and setting aliases</span>
+<span class="g g-Whitespace">     </span><span class="mi">17</span><span class="sd"> </span>
+<span class="sd">   (...)</span>
+<span class="g g-Whitespace">     </span><span class="mi">22</span><span class="sd">         use_genamp (bool): True if GenAmp library should be loaded</span>
+<span class="g g-Whitespace">     </span><span class="mi">23</span><span class="sd">     &#39;&#39;&#39;</span>
+<span class="ne">---&gt; </span><span class="mi">24</span>     <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">loadLibraries</span><span class="p">(</span><span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="p">,</span> <span class="n">use_genamp</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">25</span>     <span class="n">set_aliases</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">27</span>     <span class="k">return</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span>
+
+<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:31,</span> in <span class="ni">loadLibraries</span><span class="nt">(accelerator, use_fsroot, use_genamp)</span>
+<span class="g g-Whitespace">     </span><span class="mi">29</span> <span class="k">def</span> <span class="nf">loadLibraries</span><span class="p">(</span><span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="g g-Whitespace">     </span><span class="mi">30</span><span class="w">     </span><span class="sd">&#39;&#39;&#39; Load all libraries and print availability &#39;&#39;&#39;</span>
+<span class="ne">---&gt; </span><span class="mi">31</span>     <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">prepare_mpigpu</span><span class="p">(</span><span class="n">accelerator</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">32</span>     <span class="n">SUFFIX</span>  <span class="o">=</span> <span class="s2">&quot;_GPU&quot;</span> <span class="k">if</span> <span class="n">USE_GPU</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+<span class="g g-Whitespace">     </span><span class="mi">33</span>     <span class="n">SUFFIX</span> <span class="o">+=</span> <span class="s2">&quot;_MPI&quot;</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+
+<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:134,</span> in <span class="ni">prepare_mpigpu</span><span class="nt">(accelerator)</span>
+<span class="g g-Whitespace">    </span><span class="mi">121</span> <span class="k">def</span> <span class="nf">prepare_mpigpu</span><span class="p">(</span><span class="n">accelerator</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">122</span><span class="w">     </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="g g-Whitespace">    </span><span class="mi">123</span><span class="sd">     Sets variables to use MPI and/or GPU if requested.</span>
+<span class="g g-Whitespace">    </span><span class="mi">124</span><span class="sd">     Check who called python. If bash (single process). If mpiexec/mpirun (then MPI)</span>
+<span class="sd">   (...)</span>
+<span class="g g-Whitespace">    </span><span class="mi">132</span><span class="sd">         RANK_MPI (int): MPI rank of the process (0 by default even if MPI is not used)</span>
+<span class="g g-Whitespace">    </span><span class="mi">133</span><span class="sd">     &#39;&#39;&#39;</span>
+<span class="ne">--&gt; </span><span class="mi">134</span>     <span class="k">assert</span><span class="p">(</span><span class="n">accelerator</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;cpu&#39;</span><span class="p">,</span> <span class="s1">&#39;mpi&#39;</span><span class="p">,</span> <span class="s1">&#39;gpu&#39;</span><span class="p">,</span> <span class="s1">&#39;mpigpu&#39;</span><span class="p">,</span> <span class="s1">&#39;gpumpi&#39;</span><span class="p">]),</span> <span class="sa">f</span><span class="s1">&#39;Invalid accelerator flag: </span><span class="si">{</span><span class="n">accelerator</span><span class="si">}</span><span class="s1">&#39;</span>
+<span class="g g-Whitespace">    </span><span class="mi">135</span>     <span class="n">caller</span><span class="p">,</span> <span class="n">parent</span> <span class="o">=</span> <span class="n">get_pid_family</span><span class="p">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">137</span>     <span class="n">USE_MPI</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="ne">AssertionError</span>: Invalid accelerator flag: 
 </pre></div>
 </div>
 </div>
 </div>
 <p>After performing a MLE fit a <code class="docutils literal notranslate"><span class="pre">FitResults</span></code> object is created with a <code class="docutils literal notranslate"><span class="pre">.fit</span></code> extension. This file can be read in using the <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> <a class="reference external" href="https://github.com/mashephe/AmpTools/blob/master/AmpTools/IUAmpTools/PlotGenerator.h">PlotGenerator</a> class. In this class, Amplitudes can be turned on/off and amplitude weights can be extracted for a particular amplitude combination. These weights can then be used for plotting purposes.</p>
-<p>This tutorial will go over how we can use <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> and <code class="docutils literal notranslate"><span class="pre">RDataFrames</span></code> to produce fit results. The <code class="docutils literal notranslate"><span class="pre">draw_histograms</span></code> method of the <code class="docutils literal notranslate"><span class="pre">PlotGenRDF</span></code> module shows an example implementation. <code class="docutils literal notranslate"><span class="pre">Numpy</span></code> is used as an intermediary between <code class="docutils literal notranslate"><span class="pre">PlotGenerator</span></code> and <code class="docutils literal notranslate"><span class="pre">RDataFrame</span></code>. This choice is made so that users can makes plots in the Python ecosystem if they wish instead of going through <code class="docutils literal notranslate"><span class="pre">ROOT</span></code>. It is important to remark that <code class="docutils literal notranslate"><span class="pre">RDataFrame</span></code> does not perform any copying and reads directly from the <code class="docutils literal notranslate"><span class="pre">Numpy</span></code> array.</p>
-<p>Some <em>macros</em> can be loaded ( mirrors <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> <a class="reference external" href="https://github.com/remitche66/FSRoot/blob/72959ffdc223546377c690873c7759e4e6b901a0/FSBasic/FSTree.h">macros</a> / <a class="reference external" href="https://github.com/remitche66/FSRoot/blob/master/FSBasic/FSMath.h">math</a> ) that calculates various kinematic quantites (i.e. <em>mass</em> and <em>helicity angles</em>). We can load them as follows</p>
+<p>This tutorial will go over how we can use <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> and <code class="docutils literal notranslate"><span class="pre">RDataFrames</span></code> to produce fit results.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Numpy</span></code> is used as an intermediary between <code class="docutils literal notranslate"><span class="pre">PlotGenerator</span></code> and <code class="docutils literal notranslate"><span class="pre">RDataFrame</span></code>. This choice is made so that users can makes plots in the Python ecosystem if they wish instead of going through <code class="docutils literal notranslate"><span class="pre">ROOT</span></code>. It is important to remark that <code class="docutils literal notranslate"><span class="pre">RDataFrame</span></code> does not perform any copying and reads directly from the <code class="docutils literal notranslate"><span class="pre">Numpy</span></code> array.</p>
+<p>Some <em>macros</em> can be loaded ( mirroring <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> <a class="reference external" href="https://github.com/remitche66/FSRoot/blob/72959ffdc223546377c690873c7759e4e6b901a0/FSBasic/FSTree.h">macros</a> / <a class="reference external" href="https://github.com/remitche66/FSRoot/blob/master/FSBasic/FSMath.h">math</a> ) that calculates various kinematic quantites (i.e. <em>mass</em> and <em>helicity angles</em>). We can load them as follows. We will return to their definitions in a bit.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">RDFmacros</span> <span class="kn">import</span> <span class="n">loadMacros</span>
@@ -455,7 +481,7 @@ Initializing FSRoot for PyROOT...
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit_results</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">REPO_HOME</span><span class="si">}</span><span class="s1">/tests/samples/SIMPLE_EXAMPLE/result.fit&#39;</span>
-<span class="n">hist_output_name</span> <span class="o">=</span> <span class="s1">&#39;result&#39;</span> <span class="c1"># dumps results to a pdf file with this name</span>
+<span class="n">hist_output_name</span> <span class="o">=</span> <span class="s1">&#39;result&#39;</span> <span class="c1"># dumps results to a pdf file with this name, extension will be appended</span>
 </pre></div>
 </div>
 </div>
@@ -511,8 +537,8 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 </div>
 </div>
 </div>
-<p>We can book histograms in the dictionary format shown below. For now, we will just make 1D histograms of several kinematic quantities. We use macros inspired and using <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> format to compute quantities. The macros are defined in <code class="docutils literal notranslate"><span class="pre">utils/RDFmacros.py</span></code>.</p>
-<p>For example, <code class="docutils literal notranslate"><span class="pre">MASS(ETA,PI0)</span></code> would compute the invariant mass of the <code class="docutils literal notranslate"><span class="pre">ETA,</span> <span class="pre">PI0</span></code> system where <code class="docutils literal notranslate"><span class="pre">ETA</span></code> and <code class="docutils literal notranslate"><span class="pre">PI0</span></code> are defined particles. The order of the <code class="docutils literal notranslate"><span class="pre">particles</span></code> matters and should match what is seen in the configuration file.</p>
+<p>We can book histograms in the dictionary format shown below. For now, we will just make 1D histograms of several kinematic quantities. We use macros inspired and using <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> format to compute quantities. The macros are defined in <code class="docutils literal notranslate"><span class="pre">utils/RDFmacros.py</span></code>, see <a class="reference external" href="https://github.com/lan13005/PyAmpTools/blob/main/utils/RDFmacros.py">here for source code</a>.</p>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">MASS(ETA,PI0)</span></code> would compute the invariant mass of the <code class="docutils literal notranslate"><span class="pre">ETA,</span> <span class="pre">PI0</span></code> system where <code class="docutils literal notranslate"><span class="pre">ETA</span></code> and <code class="docutils literal notranslate"><span class="pre">PI0</span></code> are defined <code class="docutils literal notranslate"><span class="pre">particles</span></code>. The order of the <code class="docutils literal notranslate"><span class="pre">particles</span></code> matters and should match what is seen in the configuration file.</p>
 <p>In <code class="docutils literal notranslate"><span class="pre">RDataFrame</span></code>, histograms are first booked and lazily evaluated, to define as much computation as possible before a request for a result is made.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -540,7 +566,7 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 </div>
 </div>
 </div>
-<p>See <a class="reference external" href="https://lan13005.github.io/PyAmpTools/api/plotgen.html#PlotGenRDF.draw_histograms">draw_histograms API</a> for more information and source code.</p>
+<p><code class="docutils literal notranslate"><span class="pre">draw_histograms</span></code> is an example implemenation of how to take the dictionary of histogram specification, fill histograms, and draw the result. See <a class="reference external" href="https://lan13005.github.io/PyAmpTools/api/plotgen.html#PlotGenRDF.draw_histograms">draw_histograms API</a> for more information and source code. We can pass in an <code class="docutils literal notranslate"><span class="pre">amplitudes</span></code> string containing a space separated string of wavesets which are themselves semicolon separated list of amplitudes and draw them all.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">amplitudes</span> <span class="o">=</span> <span class="s2">&quot;all resAmp1 resAmp2 resAmp3 resAmp1;resAmp2&quot;</span>
@@ -550,21 +576,11 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: all
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: resAmp1
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: resAmp2
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: resAmp3
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: resAmp1;resAmp2
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>	Creating AmplitudeManager for the reaction:  etapi
+ &gt;&gt; Plotting waveset: resAmp1
+ &gt;&gt; Plotting waveset: resAmp2
+ &gt;&gt; Plotting waveset: resAmp3
+ &gt;&gt; Plotting waveset: resAmp1;resAmp2
+	Creating AmplitudeManager for the reaction:  etapi
 		 particle index assignment:  Beam -&gt; 0
 		 particle index assignment:  Proton -&gt; 1
 		 particle index assignment:  Eta -&gt; 2
@@ -647,16 +663,8 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cleanup</span> <span class="n">again</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># cleanup again</span>
 <span class="o">!</span>rm<span class="w"> </span>result*.png
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span>  <span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">16</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
-    <span class="n">cleanup</span> <span class="n">again</span>
-            <span class="o">^</span>
-<span class="ne">SyntaxError</span>: invalid syntax
 </pre></div>
 </div>
 </div>
@@ -703,11 +711,11 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
       </div>
     </a>
     <a class="right-next"
-       href="../api/cfgGenerator.html"
+       href="../api/atiSetup.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">cfgGenerator</p>
+        <p class="prev-next-title">atiSetup</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

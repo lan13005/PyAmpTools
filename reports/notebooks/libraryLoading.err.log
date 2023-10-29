@@ -15,32 +15,18 @@ Traceback (most recent call last):
     raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
 nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
 ------------------
-import ROOT
-import os
-from typing import List
-import argparse
-import numpy as np
-from utils import remove_all_whitespace
-from plotgen_utils import book_histogram, turn_on_specifc_waveset
-import atiSetup
-
+############## SET ENVIRONMENT VARIABLES ##############
 REPO_HOME     = os.environ['REPO_HOME']
-atiSetup.setup(globals(), use_fsroot=True)
-
-from PlotGenRDF import draw_histograms
+USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals()) # RANK_MPI defaults to 0 even if not using MPI
 ------------------
 
------ stdout -----
-Welcome to JupyROOT 6.28/06
-------------------
 
 [0;31m---------------------------------------------------------------------------[0m
 [0;31mAssertionError[0m                            Traceback (most recent call last)
-Cell [0;32mIn[1], line 11[0m
-[1;32m      8[0m [38;5;28;01mimport[39;00m [38;5;21;01matiSetup[39;00m
-[1;32m     10[0m REPO_HOME     [38;5;241m=[39m os[38;5;241m.[39menviron[[38;5;124m'[39m[38;5;124mREPO_HOME[39m[38;5;124m'[39m]
-[0;32m---> 11[0m [43matiSetup[49m[38;5;241;43m.[39;49m[43msetup[49m[43m([49m[38;5;28;43mglobals[39;49m[43m([49m[43m)[49m[43m,[49m[43m [49m[43muse_fsroot[49m[38;5;241;43m=[39;49m[38;5;28;43;01mTrue[39;49;00m[43m)[49m
-[1;32m     13[0m [38;5;28;01mfrom[39;00m [38;5;21;01mPlotGenRDF[39;00m [38;5;28;01mimport[39;00m draw_histograms
+Cell [0;32mIn[2], line 3[0m
+[1;32m      1[0m [38;5;66;03m############## SET ENVIRONMENT VARIABLES ##############[39;00m
+[1;32m      2[0m REPO_HOME     [38;5;241m=[39m os[38;5;241m.[39menviron[[38;5;124m'[39m[38;5;124mREPO_HOME[39m[38;5;124m'[39m]
+[0;32m----> 3[0m USE_MPI, USE_GPU, RANK_MPI [38;5;241m=[39m [43matiSetup[49m[38;5;241;43m.[39;49m[43msetup[49m[43m([49m[38;5;28;43mglobals[39;49m[43m([49m[43m)[49m[43m)[49m [38;5;66;03m# RANK_MPI defaults to 0 even if not using MPI[39;00m
 
 File [0;32m/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:24[0m, in [0;36msetup[0;34m(calling_globals, accelerator, use_fsroot, use_genamp)[0m
 [1;32m     14[0m [38;5;28;01mdef[39;00m [38;5;21msetup[39m(calling_globals, accelerator[38;5;241m=[39m[38;5;124m'[39m[38;5;124m'[39m, use_fsroot[38;5;241m=[39m[38;5;28;01mFalse[39;00m, use_genamp[38;5;241m=[39m[38;5;28;01mFalse[39;00m):
