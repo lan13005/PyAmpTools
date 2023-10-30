@@ -80,6 +80,7 @@ def runFits(
 
     fitargs = (seedfile, useMinos, hesse)
 
+    minNLL = 1e6
     if (RANK_MPI==0):
         print(f'LIKELIHOOD BEFORE MINIMIZATION: {ati.likelihood()}')
         fitManager: MinuitMinimizationManager = ati.minuitMinimizationManager()
@@ -191,12 +192,14 @@ if __name__ == '__main__':
     fit_start_time = time.time()
     nll = runFits( ati, N = args.numRnd, \
                     seedfile = args.seedfile, \
+                    RANK_MPI = RANK_MPI, \
                     useMinos = args.useMinos, \
                     hesse = args.hesse, \
                     maxIter = args.maxIter, \
                     USE_MPI = USE_MPI )
 
-    print("\nDone! MPI.Finalize() / MPI.Init() automatically called at script end / start\n") if USE_MPI else print("\nDone!")
-    print(f"Fit time: {time.time() - fit_start_time} seconds")
-    print(f"Total time: {time.time() - start_time} seconds")
-    print(f"Final Likelihood: {nll}") # Need this for for unit-tests
+    if RANK_MPI == 0:
+        print("\nDone! MPI.Finalize() / MPI.Init() automatically called at script end / start\n") if USE_MPI else print("\nDone!")
+        print(f"Fit time: {time.time() - fit_start_time} seconds")
+        print(f"Total time: {time.time() - start_time} seconds")
+        print(f"Final Likelihood: {nll}") # Need this for for unit-tests

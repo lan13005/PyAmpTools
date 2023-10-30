@@ -27,40 +27,45 @@ def setup(calling_globals, accelerator='mpigpu', use_fsroot=False, use_genamp=Fa
     return USE_MPI, USE_GPU, RANK_MPI
 
 def loadLibraries(accelerator, use_fsroot=False, use_genamp=False):
-    ''' Load all libraries and print availability '''
+    ''' Load all libraries and print IS_REQUESTED '''
     USE_MPI, USE_GPU, RANK_MPI = prepare_mpigpu(accelerator)
     SUFFIX  = "_GPU" if USE_GPU else ""
     SUFFIX += "_MPI" if USE_MPI else ""
 
-    print("\n------------------------------------------------")
-    print(f'MPI is {"enabled" if USE_MPI else "disabled"}')
-    print(f'GPU is {"enabled" if USE_GPU else "disabled"}')
+    if RANK_MPI == 0:
+        print("\n------------------------------------------------")
+        print(f'MPI is {"enabled" if USE_MPI else "disabled"}')
+        print(f'GPU is {"enabled" if USE_GPU else "disabled"}')
+        print("------------------------------------------------\n\n")
     #################### LOAD LIBRARIES (ORDER MATTERS!) ###################
+
     loadLibrary(f'libAmpTools{SUFFIX}.so', RANK_MPI)
     loadLibrary(f'libAmpPlotter.so', RANK_MPI)
     loadLibrary(f'libAmpsDataIO{SUFFIX}.so', RANK_MPI) # Depends on AmpPlotter!
     loadLibrary(f'libFSRoot.so', RANK_MPI, use_fsroot)
     loadLibrary(f'libAmpsGen.so', RANK_MPI, use_genamp)
-    print("------------------------------------------------\n")
 
     # Dummy functions that just prints "initialization"
     #  This is to make sure the libraries are loaded
     #  as python is interpreted.
+    if RANK_MPI == 0: print("\n\n------------------------------------------------")
     ROOT.initialize( RANK_MPI == 0 )
     if use_fsroot: ROOT.initialize_fsroot( RANK_MPI == 0 )
+    if RANK_MPI == 0: print("------------------------------------------------\n")
 
     return USE_MPI, USE_GPU, RANK_MPI
 
-def loadLibrary(libName, RANK_MPI=0, availability=True):
-    ''' Load a shared library and print availability '''
+def loadLibrary(libName, RANK_MPI=0, IS_REQUESTED=True):
+    ''' Load a shared library and print IS_REQUESTED '''
     statement = f'Loading library {libName} '
     libExists = check_shared_lib_exists(libName)
     if RANK_MPI == 0: print(f'{statement:.<45}', end='')
-    if not libExists:
-        status = 'NOT FOUND, SKIPPING'
-    else:
-        if availability: ROOT.gSystem.Load(libName)
-        status = "ON" if availability else "OFF"
+    if IS_REQUESTED:
+        if libExists:
+            ROOT.gSystem.Load(libName)
+            status = "ON"
+        else: status = 'NOT FOUND, SKIPPING'
+    else: status = "OFF"
     if RANK_MPI == 0: print(f' {status}')
 
 def set_aliases(caller_globals, USE_MPI):
@@ -77,7 +82,7 @@ def set_aliases(caller_globals, USE_MPI):
         'gInterpreter':               ROOT.gInterpreter,
 
         ############### AmpTools RELATED ##############
-        'AmpToolsInterface':          ROOT.AmpToolsInterface,
+        'AmpToolsInterface':          ROOT.AmpToolsInterfaceMPI if USE_MPI else ROOT.AmpToolsInterface,
         'ConfigFileParser':           ROOT.ConfigFileParser,
         'ConfigurationInfo':          ROOT.ConfigurationInfo,
         'Zlm':                        ROOT.Zlm,
@@ -147,9 +152,10 @@ def prepare_mpigpu(accelerator):
         mpi4pyrc.threads = False
         mpi4pyrc.initialize = False
         from mpi4py import MPI
+        MPI.Init()
         RANK_MPI = MPI.COMM_WORLD.Get_rank()
         SIZE_MPI = MPI.COMM_WORLD.Get_size()
-        print(f'Rank: {RANK_MPI} of {SIZE_MPI}')
+        if RANK_MPI == 0: print(f'Rank: {RANK_MPI} of {SIZE_MPI}')
         assert( (USE_MPI and (SIZE_MPI > 1)) )
     else:
         RANK_MPI = 0
