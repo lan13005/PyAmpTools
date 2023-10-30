@@ -11,10 +11,7 @@ FSROOT_SRCFILES := $(foreach dir,$(FSROOT_SRCDIRS),$(wildcard $(dir)/*.C))
 FSROOT_INCFLAGS := -I$(FSROOT)
 FSROOT_OBJFILES := $(FSROOT_SRCFILES:%.C=%.o) initialize_fsroot.o
 FSROOT_HEADERS := $(shell find $(FSROOT) -type f -name "*.h" -not -path "$(FSROOT)/Examples/**/*.h -not -path $(FSROOT)/lib/*Linkdef.h")
-$(info $(FSROOT_HEADERS))
 FSROOT_HEADERS := $(patsubst $(FSROOT)/%,%,$(FSROOT_HEADERS)) initialize_fsroot.h
-$(info $(FSROOT_HEADERS))
-
 
 Q :=
 CXX := g++
