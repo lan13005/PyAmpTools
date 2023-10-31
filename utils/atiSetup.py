@@ -155,7 +155,7 @@ def prepare_mpigpu(accelerator):
         MPI.Init()
         RANK_MPI = MPI.COMM_WORLD.Get_rank()
         SIZE_MPI = MPI.COMM_WORLD.Get_size()
-        if RANK_MPI == 0: print(f'Rank: {RANK_MPI} of {SIZE_MPI}')
+        print(f'atiSetup| Found Task with Rank: {RANK_MPI} of {SIZE_MPI}')
         assert( (USE_MPI and (SIZE_MPI > 1)) )
     else:
         RANK_MPI = 0
