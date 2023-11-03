@@ -4,6 +4,8 @@ import subprocess
 import unittest
 import inspect
 from IPython.display import Code
+import glob
+import re
 
 def PrintSourceCode( function ):
     ''' Returns the source code of a function '''
@@ -89,6 +91,43 @@ def check_shared_lib_exists(libName, verbose=False):
 def raiseError(errorType, msg):
     ''' Raise an error of type errorType with message msg '''
     raise errorType(msg)
+
+def get_captured_number(fname, prefix, extension):
+    ''' Extract captured number from fname and sort based on it '''
+    ### glob wants * wildcard but regex need .* to match anything
+    prefix = prefix.replace('*', r'.*')
+    match = re.search(rf'{prefix}(\d+){extension}', fname)
+    if match:
+        return int(match.group(1))
+    return 0
+
+def glob_sort_captured(files):
+    '''
+    glob files and sort based on captured number. [] denote the captured location.
+    Example: files = 'FOLDER*/err_[].log'
+        {FOLDER1/err_2.log, FOLDER3/err_1.log} should return {FOLDER3/err_1.log, FOLDER1/err_2.log} as 2, 1 are [] captures
+
+    Args:
+        files (str): glob pattern with [] denoting the capture location
+
+    Returns:
+        list: sorted list of files based on captured number
+    '''
+    if '[]' in files:
+        prefix, extension = files.split('[]')
+        files = files.replace('[]', '*')
+        files = glob.glob(files.replace('[]', '*'))
+        files = sorted(files, key=lambda fname: get_captured_number(fname, prefix, extension))
+    else:
+        files = [files]
+    return files
+
+def safe_getsize(file_path):
+    ''' Return file size if file exists, else return 0 '''
+    try:
+        return os.path.getsize(file_path)
+    except FileNotFoundError:
+        return 0
 
 ###############################################################################################
 def setPlotStyle(
