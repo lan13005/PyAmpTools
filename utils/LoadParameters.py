@@ -10,9 +10,8 @@ class LoadParameters:
     Class to extract amplitude parameters from an AmpTools FitResults or ConfigurationInfo object
        Parameters (like production coefficients) can then be formatted (complex -> real, imag) for input to other minimization algorithms
     '''
-    def __init__(self):
-        self.uniqueProdPars = {}
-        self.uniqueProdIsReal = {}
+    def __init__(self, cfg):
+        self.load_cfg(cfg)
 
     def load_cfg(self, cfg): # cfg: [FitResults, ConfigurationInfo]
         '''
@@ -95,6 +94,7 @@ class LoadParameters:
                 parameters.append(v.imag)
                 key.append(k)
                 names.append(f'Im[{pk}]')
+
         return parameters, key, names
 
     def unflatten_parameters(self, parameters, key):
@@ -115,3 +115,21 @@ class LoadParameters:
             if k not in paramDict: paramDict[k] = param
             else: paramDict[k] += 1j*param # a repeat in key means imaginary part
         return paramDict
+
+def createMovesMixtureFromDict(moves_dict):
+    '''
+    Creates a mixture of moves for the emcee sampler
+
+    Args:
+        moves_dict { move: {kwargs: {}, probability} }: Dictionary of moves and their kwargs and probability
+
+    Returns:
+        moves_mixture [ (emcee.moves.{move}(kwargs), probability) ]: List of tuples of moves (with kwargs pluggin in) and their probability
+    '''
+    moves_mixture = []
+    for move, moveDict in moves_dict.items():
+        move = eval(f'emcee.moves.{move}') # convert string to class
+        kwargs = moveDict['kwargs']
+        prob = moveDict['prob']
+        moves_mixture.append( (move(**kwargs), prob) )
+    return moves_mixture
