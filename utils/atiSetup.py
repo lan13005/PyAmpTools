@@ -4,6 +4,8 @@ import os
 from utils import check_shared_lib_exists, get_pid_family, check_nvidia_devices
 from pythonization import pythonize_parMgr
 
+kModule = 'atiSetup'
+
 ########################################################
 #  This file is used to setup the amptools environment #
 #  It is called by the user in their python script     #
@@ -34,8 +36,8 @@ def loadLibraries(accelerator, use_fsroot=False, use_genamp=False):
 
     if RANK_MPI == 0:
         print("\n------------------------------------------------")
-        print(f'MPI is {"enabled" if USE_MPI else "disabled"}')
-        print(f'GPU is {"enabled" if USE_GPU else "disabled"}')
+        print(f'{kModule}| MPI is {"enabled" if USE_MPI else "disabled"}')
+        print(f'{kModule}| GPU is {"enabled" if USE_GPU else "disabled"}')
         print("------------------------------------------------\n\n")
     #################### LOAD LIBRARIES (ORDER MATTERS!) ###################
 
@@ -59,22 +61,22 @@ def loadLibrary(libName, RANK_MPI=0, IS_REQUESTED=True):
     ''' Load a shared library and print IS_REQUESTED '''
     statement = f'Loading library {libName} '
     libExists = check_shared_lib_exists(libName)
-    if RANK_MPI == 0: print(f'{statement:.<45}', end='')
+    if RANK_MPI == 0: print(f'{kModule}| {statement:.<45}', end='')
     if IS_REQUESTED:
         if libExists:
             ROOT.gSystem.Load(libName)
             status = "ON"
         else: status = 'NOT FOUND, SKIPPING'
     else: status = "OFF"
-    if RANK_MPI == 0: print(f' {status}')
+    if RANK_MPI == 0: print(f'  {status}')
 
-def set_aliases(caller_globals, USE_MPI):
+def set_aliases(called_globals, USE_MPI):
     '''
     Due to MPI requiring c++ templates and the fact that all classes live under the ROOT namespace, aliasing can clean up the code significantly.
     A dictionary of aliases is appended to the globals() function of the calling function thereby making the aliases available in the calling function.
 
     Args:
-        caller_globals (dict): globals() from the calling function
+        called_globals (dict): globals() from the calling function
 
     '''
     aliases = {
@@ -86,6 +88,8 @@ def set_aliases(caller_globals, USE_MPI):
         'ConfigFileParser':           ROOT.ConfigFileParser,
         'ConfigurationInfo':          ROOT.ConfigurationInfo,
         'Zlm':                        ROOT.Zlm,
+        'Vec_ps_refl':                ROOT.Vec_ps_refl,
+        'OmegaDalitz':                ROOT.OmegaDalitz,
         'BreitWigner':                ROOT.BreitWigner,
         'Piecewise':                  ROOT.Piecewise,
         'PhaseOffset':                ROOT.PhaseOffset,
@@ -96,6 +100,7 @@ def set_aliases(caller_globals, USE_MPI):
         ############## DataReader RELATED ##############
         # DataReaderMPI is a template; use [] to specify the type
         'DataReader':                 ROOT.DataReaderMPI['ROOTDataReader'] if USE_MPI else ROOT.ROOTDataReader,
+        'DataReaderTEM':              ROOT.DataReaderMPI['ROOTDataReaderTEM'] if USE_MPI else ROOT.ROOTDataReaderTEM,
         'DataReaderFilter':           ROOT.DataReaderMPI['ROOTDataReaderFilter'] if USE_MPI else ROOT.ROOTDataReaderFilter,
         'DataReaderBootstrap':        ROOT.DataReaderMPI['ROOTDataReaderBootstrap'] if USE_MPI else ROOT.ROOTDataReaderBootstrap,
 
@@ -108,7 +113,7 @@ def set_aliases(caller_globals, USE_MPI):
         'AmplitudeInfo':              ROOT.AmplitudeInfo,
     }
 
-    caller_globals.update(aliases)
+    called_globals.update(aliases)
 
 # default_print = print
 # def print(*args, **kwargs):
@@ -137,11 +142,14 @@ def prepare_mpigpu(accelerator):
         RANK_MPI (int): MPI rank of the process (0 by default even if MPI is not used)
     '''
     assert( accelerator in ['cpu', 'mpi', 'gpu', 'mpigpu', 'gpumpi'] ), f'Invalid accelerator flag: {accelerator}'
-    caller, parent = get_pid_family()
+    called, parent = get_pid_family()
+    print(f'{kModule}| {parent} called {called}')
 
     USE_MPI = False
     USE_GPU = False
-    if ("mpi" in parent) and ('mpi' in accelerator):
+    # mpiexec is executed on the leader node
+    # orted, OpenMPI's daemon process, is executed on the worker nodes
+    if ("mpi" in parent or parent == 'orted') and ('mpi' in accelerator):
         USE_MPI = True
     if (check_nvidia_devices()[0]) and ('gpu' in accelerator):
         USE_GPU = True
@@ -155,7 +163,7 @@ def prepare_mpigpu(accelerator):
         MPI.Init()
         RANK_MPI = MPI.COMM_WORLD.Get_rank()
         SIZE_MPI = MPI.COMM_WORLD.Get_size()
-        print(f'atiSetup| Found Task with Rank: {RANK_MPI} of {SIZE_MPI}')
+        print(f'{kModule}| Found Task with Rank: {RANK_MPI} of {SIZE_MPI}')
         assert( (USE_MPI and (SIZE_MPI > 1)) )
     else:
         RANK_MPI = 0
