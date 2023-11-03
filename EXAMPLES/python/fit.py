@@ -177,11 +177,14 @@ if __name__ == '__main__':
 
     # ############## REGISTER OBJECTS FOR AMPTOOLS ##############
     AmpToolsInterface.registerAmplitude( Zlm() )
+    AmpToolsInterface.registerAmplitude( Vec_ps_refl() )
+    AmpToolsInterface.registerAmplitude( OmegaDalitz() )
     AmpToolsInterface.registerAmplitude( BreitWigner() )
     AmpToolsInterface.registerAmplitude( Piecewise() )
     AmpToolsInterface.registerAmplitude( PhaseOffset() )
     AmpToolsInterface.registerAmplitude( TwoPiAngles() )
     AmpToolsInterface.registerDataReader( DataReader() )
+    AmpToolsInterface.registerDataReader( DataReaderTEM() )
     AmpToolsInterface.registerDataReader( DataReaderFilter() )
     AmpToolsInterface.registerDataReader( DataReaderBootstrap() )
 
