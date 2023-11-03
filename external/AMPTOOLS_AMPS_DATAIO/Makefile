@@ -37,7 +37,7 @@ AMPTOOLS_HEADERS := $(shell find $(AMPTOOLS) -type f -name '*.h' -not -name '*GP
 
 ifdef GPU
 AMPTOOLS_HEADERS += $(shell find $(AMPTOOLS) -type f -name '*GPU*.h')
-GPU_ACCEL := -DGPU_ACCELERATION 
+GPU_ACCEL := -DGPU_ACCELERATION
 INC_DIR += -I$(CUDA_INSTALL_PATH)/include
 CXX_FLAGS += $(GPU_ACCEL) -I$(CUDA_INSTALL_PATH)/include
 SUFFIX := _GPU
@@ -127,5 +127,6 @@ $(TARGET_DICT): $(HEADERS)
 clean:
 	@echo " ==== Cleaning all subdirectories ==== "
 	$(Q)find . -name "*.o" -type f -delete
+	$(Q)find . -name "*.d" -type f -delete
 	$(Q)find . -name ".*" -type f -delete
 	$(Q)rm -f *cxx* *.so *.pcm *Linkdef.h *dict*.h
