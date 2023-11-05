@@ -3,7 +3,7 @@ import argparse
 import time
 import sys
 from LoadParameters import LoadParameters
-from mcmc  import perform_mcmc, draw_corner
+from mcmc  import mcmcManager
 import optuna
 import logging
 import random
@@ -37,10 +37,7 @@ class Objective:
             os.system(f'rm {ofolder}/{ofile}')
             print("Overwriting existing output file!")
 
-        ########### LOAD PARAMETERS FROM CONFIG FILE ###########
-        LoadParametersSampler = LoadParameters()
-        LoadParametersSampler.load_cfg( self.cfgInfo )
-        values, keys, _  = LoadParametersSampler.flatten_parameters()
+        values, keys, _  = LoadParametersSampler[0].flatten_parameters()
         nFreePars = len(values)
 
         ########### ASK OPTUNA FOR MOVES AND ASSOCIATED PROBABILITIES ###########
@@ -105,11 +102,9 @@ class Objective:
                 'corner_ofile': corner_ofile,
             }, f)
 
-        results = perform_mcmc(
-            self.ati,
-            LoadParametersSampler,
-            ofolder       = self.ofolder,
-            ofile         = ofile,
+        mcmcMgr = mcmcManager(self.atis, self.LoadParametersSamplers, ofile)
+
+        mcmcMgr.perform_mcmc(
             nwalkers      = self.nwalkers,
             burnIn        = self.burnIn,
             nsamples      = self.nsamples,
@@ -117,7 +112,7 @@ class Objective:
             moves_mixture = moves_mixture,
         )
 
-        draw_corner(results, self.ofolder, corner_ofile)
+        mcmc.Mgr.draw_corner(corner_ofile)
 
         return results['autocorr_time'], results['acceptance_fraction']
 
@@ -179,7 +174,9 @@ if __name__ == '__main__':
     AmpToolsInterface.registerDataReader( DataReader() )
     AmpToolsInterface.registerDataReader( DataReaderFilter() )
 
-    ati = AmpToolsInterface( cfgInfo )
+    ### CURRENTLY, ONLY ALLOWS A SINGLE CFGFILE ###
+    atis = [ AmpToolsInterface( cfgInfo ) ]
+    LoadParametersSamplers = [ LoadParameters(cfgInfo) ]
 
     ############## RUN OPTIMIZATION ##############
     optuna.logging.get_logger("optuna").addHandler(logging.StreamHandler(sys.stdout))
@@ -193,7 +190,8 @@ if __name__ == '__main__':
         )
 
     conditions = {
-        'ati': ati,
+        'atis': ati,
+        'LoadParametersSamplers': LoadParametersSamplers,
         'cfgfile': cfgfile, # for YAML output
         'cfgInfo': cfgInfo,
         'ofolder': ofolder,
