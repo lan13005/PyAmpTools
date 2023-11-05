@@ -15,14 +15,55 @@ Traceback (most recent call last):
     raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
 nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
 ------------------
-PrintSourceCode(LogProb)
+import ROOT
+import os
+
+############## SET ENVIRONMENT VARIABLES ##############
+REPO_HOME     = os.environ['REPO_HOME']
+import atiSetup
+USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals(), use_genamp=True) # RANK_MPI defaults to 0 even if not using MPI
+
+import numpy as np
+import emcee
+import matplotlib.pyplot as plt
+from LoadParameters import LoadParameters
+import corner
+from mcmc import perform_mcmc, draw_corner, LogProb
+
+from utils import PrintSourceCode
 ------------------
 
+----- stdout -----
+Welcome to JupyROOT 6.28/06
+atiSetup| jupyter-book called python3.9
+
+------------------------------------------------
+atiSetup| MPI is disabled
+atiSetup| GPU is disabled
+------------------------------------------------
+
+
+atiSetup| Loading library libAmpTools.so ..............  ON
+atiSetup| Loading library libAmpPlotter.so ............  ON
+----- stdout -----
+atiSetup| Loading library libAmpsDataIO.so ............  ON
+atiSetup| Loading library libFSRoot.so ................  OFF
+atiSetup| Loading library libAmpsGen.so ...............  ON
+
+
+------------------------------------------------
+----- stdout -----
+------------------------------------------------
+Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
+------------------
 
 [0;31m---------------------------------------------------------------------------[0m
-[0;31mNameError[0m                                 Traceback (most recent call last)
-Cell [0;32mIn[5], line 1[0m
-[0;32m----> 1[0m PrintSourceCode([43mLogProb[49m)
+[0;31mImportError[0m                               Traceback (most recent call last)
+Cell [0;32mIn[1], line 14[0m
+[1;32m     12[0m [38;5;28;01mfrom[39;00m [38;5;21;01mLoadParameters[39;00m [38;5;28;01mimport[39;00m LoadParameters
+[1;32m     13[0m [38;5;28;01mimport[39;00m [38;5;21;01mcorner[39;00m
+[0;32m---> 14[0m [38;5;28;01mfrom[39;00m [38;5;21;01mmcmc[39;00m [38;5;28;01mimport[39;00m perform_mcmc, draw_corner, LogProb
+[1;32m     16[0m [38;5;28;01mfrom[39;00m [38;5;21;01mutils[39;00m [38;5;28;01mimport[39;00m PrintSourceCode
 
-[0;31mNameError[0m: name 'LogProb' is not defined
+[0;31mImportError[0m: cannot import name 'perform_mcmc' from 'mcmc' (/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/mcmc.py)
 

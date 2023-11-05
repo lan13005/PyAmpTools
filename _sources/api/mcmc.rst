@@ -9,7 +9,7 @@ MCMC
    :show-inheritance:
 
 MCMC/Optuna
-------------
+-------
 .. automodule:: mcmcOptimalMoves
    :members:
    :undoc-members:
