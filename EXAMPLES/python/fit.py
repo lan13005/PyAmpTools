@@ -54,9 +54,7 @@ def performFit(
 def runFits(
         ati,
         N: int = 0,
-        RANK_MPI: int = 0,
         maxIter = 100000,
-        USE_MPI: bool = False,
         seedfile: str = "seed",
         useMinos: bool = False,
         hesse: bool = False,
@@ -69,7 +67,6 @@ def runFits(
         N (int): Number of randomized fits to perform
         RANK_MPI (int): MPI rank. Default to 0 for non-MPI.
         maxIter (int): Maximum number of iterations. Default to 100000.
-        USE_MPI (bool): Use MPI. Default to False.
         seedfile (str): Output file for seeding next fit based on this fit. Default to "seed" name prefix.
         useMinos (bool): Use MINOS instead of MIGRAD. Default to False.
         hesse (bool): Evaluate HESSE matrix after minimization. Default to False.
@@ -78,53 +75,49 @@ def runFits(
         minNLL (double): Minimum negative log likelihood
     '''
 
+    minNLL = 1e6
     fitargs = (seedfile, useMinos, hesse)
 
-    minNLL = 1e6
-    if (RANK_MPI==0):
-        print(f'LIKELIHOOD BEFORE MINIMIZATION: {ati.likelihood()}')
-        fitManager: MinuitMinimizationManager = ati.minuitMinimizationManager()
-        fitManager.setMaxIterations(maxIter)
+    print(f'LIKELIHOOD BEFORE MINIMIZATION: {ati.likelihood()}')
+    fitManager: MinuitMinimizationManager = ati.minuitMinimizationManager()
+    fitManager.setMaxIterations(maxIter)
 
-        if N == 0: # No randomization
-            bFitFailed, minNLL = performFit( ati, '0', *fitargs )
-            print(f'LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): {minNLL}')
+    if N == 0: # No randomization
+        bFitFailed, minNLL = performFit( ati, '0', *fitargs )
+        print(f'LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): {minNLL}')
 
-        else: # Randomized parameters
-            fitName     = cfgInfo.fitName()
-            maxFraction = 0.5
-            minNLL       = sys.float_info.max
-            minFitTag   = -1
+    else: # Randomized parameters
+        fitName     = cfgInfo.fitName()
+        maxFraction = 0.5
+        minNLL       = sys.float_info.max
+        minFitTag   = -1
 
-            parRangeKeywords = cfgInfo.userKeywordArguments("parRange")
+        parRangeKeywords = cfgInfo.userKeywordArguments("parRange")
 
-            for i in range(N):
-                print("\n###############################################")
-                print(f'#############   FIT {i} OF {N} ###############')
-                print("###############################################\n")
+        for i in range(N):
+            print("\n###############################################")
+            print(f'#############   FIT {i} OF {N} ###############')
+            print("###############################################\n")
 
-                ati.reinitializePars()
-                ati.randomizeProductionPars(maxFraction)
-                for ipar in range(len(parRangeKeywords)):
-                    ati.randomizeParameter(parRangeKeywords[ipar][0], float(parRangeKeywords[ipar][1]), float(parRangeKeywords[ipar][2]))
+            ati.reinitializePars()
+            ati.randomizeProductionPars(maxFraction)
+            for ipar in range(len(parRangeKeywords)):
+                ati.randomizeParameter(parRangeKeywords[ipar][0], float(parRangeKeywords[ipar][1]), float(parRangeKeywords[ipar][2]))
 
-                bFitFailed, NLL = performFit( ati, f'{i}', *fitargs )
-                if not bFitFailed and NLL < minNLL:
-                    minNLL = NLL
-                    minFitTag = i
+            bFitFailed, NLL = performFit( ati, f'{i}', *fitargs )
+            if not bFitFailed and NLL < minNLL:
+                minNLL = NLL
+                minFitTag = i
 
-                print(f'LIKELIHOOD AFTER MINIMIZATION: {NLL}\n')
+            print(f'LIKELIHOOD AFTER MINIMIZATION: {NLL}\n')
 
-            if minFitTag < 0:
-                print("ALL FITS FAILED!")
-            else:
-                print(f'MINIMUM LIKELHOOD FROM ITERATION {minFitTag} of {N} RANDOM PRODUCTION PARS = {minNLL}')
-                os.system(f'cp {fitName}_{minFitTag}.fit {fitName}.fit')
-                if seedfile is not None:
-                    os.system(f'cp {seedfile}_{minFitTag}.txt {seedfile}.txt')
-
-    if USE_MPI:
-       ati.exitMPI()
+        if minFitTag < 0:
+            print("ALL FITS FAILED!")
+        else:
+            print(f'MINIMUM LIKELHOOD FROM ITERATION {minFitTag} of {N} RANDOM PRODUCTION PARS = {minNLL}')
+            os.system(f'cp {fitName}_{minFitTag}.fit {fitName}.fit')
+            if seedfile is not None:
+                os.system(f'cp {seedfile}_{minFitTag}.txt {seedfile}.txt')
 
     return minNLL
 
@@ -151,29 +144,12 @@ if __name__ == '__main__':
     cfgfile = args.cfgfile
     assert( os.path.isfile(cfgfile) ), f'Config file does not exist at specified path'
 
-    ############## SET ENVIRONMENT VARIABLES ##############
-    REPO_HOME = os.environ['REPO_HOME']
-
     ################### LOAD LIBRARIES ##################
     USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals(), args.accelerator)
 
     ############## LOAD CONFIGURATION FILE ##############
-    if RANK_MPI == 0:
-        print("\n\n === COMMANDLINE ARGUMENTS === ")
-        print("Config file:", args.cfgfile)
-        print("Seed file:", args.seedfile)
-        print("Number of random fits:", args.numRnd)
-        print("Random seed:", args.randomSeed)
-        print("Maximum iterations:", args.maxIter)
-        print("Use MINOS:", args.useMinos)
-        print("Evaluate HESSE matrix:", args.hesse)
-        print("Scanning Parameter:", args.scanPar)
-        print(" ============================= \n\n")
-
     parser = ConfigFileParser(cfgfile)
     cfgInfo: ConfigurationInfo = parser.getConfigurationInfo()
-    if RANK_MPI == 0:
-        cfgInfo.display()
 
     # ############## REGISTER OBJECTS FOR AMPTOOLS ##############
     AmpToolsInterface.registerAmplitude( Zlm() )
@@ -192,17 +168,32 @@ if __name__ == '__main__':
 
     AmpToolsInterface.setRandomSeed(args.randomSeed)
 
-    fit_start_time = time.time()
-    nll = runFits( ati, N = args.numRnd, \
-                    seedfile = args.seedfile, \
-                    RANK_MPI = RANK_MPI, \
-                    useMinos = args.useMinos, \
-                    hesse = args.hesse, \
-                    maxIter = args.maxIter, \
-                    USE_MPI = USE_MPI )
-
     if RANK_MPI == 0:
+        print("\n\n === COMMANDLINE ARGUMENTS === ")
+        print("Config file:", args.cfgfile)
+        print("Seed file:", args.seedfile)
+        print("Number of random fits:", args.numRnd)
+        print("Random seed:", args.randomSeed)
+        print("Maximum iterations:", args.maxIter)
+        print("Use MINOS:", args.useMinos)
+        print("Evaluate HESSE matrix:", args.hesse)
+        print("Scanning Parameter:", args.scanPar)
+        print(" ============================= \n\n")
+
+        cfgInfo.display()
+
+        fit_start_time = time.time()
+
+        nll = runFits( ati, N = args.numRnd, \
+                        seedfile = args.seedfile, \
+                        useMinos = args.useMinos, \
+                        hesse = args.hesse, \
+                        maxIter = args.maxIter )
+
         print("\nDone! MPI.Finalize() / MPI.Init() automatically called at script end / start\n") if USE_MPI else print("\nDone!")
         print(f"Fit time: {time.time() - fit_start_time} seconds")
         print(f"Total time: {time.time() - start_time} seconds")
         print(f"Final Likelihood: {nll}") # Need this for for unit-tests
+
+    if USE_MPI:
+       ati.exitMPI()

@@ -16,16 +16,15 @@ class mcmcManager:
     '''
     This class manages the MCMC sampling process and the interaction with AmpToolsInterface instances
     '''
-    def __init__(self, atis, LoadParametersSamplers, ofolder, ofile):
+    def __init__(self, atis, LoadParametersSamplers, ofile):
         self.atis = atis
         self.LoadParametersSamplers = LoadParametersSamplers
-        self.ofolder = ofolder
         self.ofile = ofile
         self.finishedSetup = False
 
     def Prior(self, parameters):
         '''
-        Prior distribution for the parameters
+        (Log of) Prior distribution for the parameters
 
         Args:
             parameters (dict): Dictionary of parameter names (complex production coeffs and amplitude params) and values.
@@ -35,6 +34,10 @@ class mcmcManager:
             prior (float): Log prior probability
         '''
         return 0
+
+    def Likelihood(self, ati):
+        ''' Returns Log likelihood from AmpToolsInterface instance. Separation for profiling '''
+        return -ati.likelihood()
 
     def LogProb(
         self,
@@ -64,8 +67,8 @@ class mcmcManager:
                 # remove tag from name if multiple cfg files were passed
                 name = name[ :name.rfind('_') ] if n_atis > 1 else name
                 ati.parameterManager()[name] = value
-            logLikelihood = -ati.likelihood()
-            log_prob += logLikelihood + self.Prior(parameters)
+
+            log_prob += self.Likelihood(ati) + self.Prior(parameters)
 
         return log_prob
 
@@ -140,7 +143,7 @@ class mcmcManager:
 
         ############## RUN MCMC IF RESULTS DOES NOT ALREADY EXIST ##############
         fit_start_time = time.time()
-        output_file = f'{self.ofolder}/{self.ofile}'
+        output_file = f'{self.ofile}'
         fileTooSmall = safe_getsize(output_file) < 1e4 # remake if too small, likely corrupted initialization
         if not os.path.exists( output_file ) or fileTooSmall:
             if fileTooSmall:
@@ -199,6 +202,11 @@ class mcmcManager:
         map_idx = np.argmax(sampler.get_log_prob(flat=True)) # maximum a posteriori (MAP) location
         map_estimate = samples[map_idx,:]
 
+        print(' =================== RESULTS =================== ')
+        print(f'MAP Estimates from {len(samples)} samples obtained over {nwalkers} walkers:')
+        [print(f'   {l:20} = {v:0.3f}') for l, v in zip(par_names_flat, map_estimate)]
+        print(' =============================================== ')
+
         ################### TRACK SOME ATTRIBUTES ###################
         self.nwalkers = nwalkers
         self.samples = samples
@@ -210,7 +218,7 @@ class mcmcManager:
 
     def draw_corner(
         self,
-        corner_ofile_path = 'corner.png',
+        corner_ofile = '',
         save = True,
         kwargs = {},
     ):
@@ -218,13 +226,18 @@ class mcmcManager:
         Draws a corner plot to visualize sampling and parameter correlations
 
         Args:
-            corner_ofile_path (str): output file path
+            corner_ofile (str): Output file name
             save (bool): Save the figure to a file or return figure. Default True = Save
+            safe_draw (bool):
             kwargs (dict): Keyword arguments to pass to corner.corner()
 
         Returns:
             fig (matplotlib.figure.Figure): Figure object if save=False
         '''
+
+        if corner_ofile == '':
+            print("No corner plot output file specified. Not drawing corner plot")
+            return
 
         def plot_axvh_fit_params( # Yes, some function inception going on
                 values,  # [real1, imag1, real2, imag2, ...]
@@ -242,19 +255,13 @@ class mcmcManager:
         corner_kwargs = {"color": "black", "show_titles": True }
         corner_kwargs.update(kwargs)
         labels_ReIm = [f'{l.split("::")[-1]}' for l in self.par_names_flat]
-        self.samples = self.samples[::100, :]
         nDim = self.samples.shape[1]
-        fig = corner.corner(self.samples, labels=labels_ReIm, **corner_kwargs)
+        fig = corner.corner( self.samples, labels=labels_ReIm, **corner_kwargs )
         axes = np.array(fig.axes).reshape((nDim, nDim))
         plot_axvh_fit_params(self.map_estimate, nDim, color='royalblue')
         plot_axvh_fit_params(self.mle_values, nDim, color='tab:green')
 
-        print(' =================== RESULTS =================== ')
-        print(f'MAP Estimates from {len(self.samples)} samples obtained over {self.nwalkers} walkers:')
-        [print(f'   {l:20} = {v:0.3f}') for l, v in zip(self.par_names_flat, self.map_estimate)]
-        print(' =============================================== ')
-
-        if save: plt.savefig(f"{corner_ofile_path}")
+        if save: plt.savefig(f"{corner_ofile}")
         else:    return fig
 
 if __name__ == '__main__':
@@ -267,9 +274,8 @@ if __name__ == '__main__':
     parser.add_argument('--nsamples', type=int, default=1000, help='Number of samples. Default 1000')
     parser.add_argument('--overwrite', action='store_true', help='Overwrite existing output file if exists')
     parser.add_argument('--accelerator', type=str, default='mpigpu', help='Use accelerator if available ~ [cpu, gpu, mpi, mpigpu, gpumpi]')
-    parser.add_argument('--ofolder', type=str, default='mcmc', help='Output folder name. Default "mcmc"')
-    parser.add_argument('--ofile', type=str, default='mcmc.h5', help='Output file name. Default "mcmc.h5"')
-    parser.add_argument('--corner_ofile', type=str, default='corner.png', help='Corner plot output file name. Default "corner.png"')
+    parser.add_argument('--ofile', type=str, default='mcmc/mcmc.h5', help='Output file name. Default "mcmc/mcmc.h5"')
+    parser.add_argument('--corner_ofile', type=str, default='', help='Corner plot output file name. Default empty str = do not draw')
     parser.add_argument('--seed', type=int, default=42, help='RNG seed for consistent walker random initialization. Default 42')
     parser.add_argument('--yaml_override', type=str, default={}, help='Path to YAML file containing parameter overrides. Default "" = no override')
 
@@ -282,7 +288,6 @@ if __name__ == '__main__':
 
     ################ Override CLI arguments with YAML file if specified ###################
     cfgfiles  = args.cfgfiles if 'cfgfiles' not in yaml_override else yaml_override['cfgfiles']
-    ofolder  = args.ofolder if 'ofolder' not in yaml_override else yaml_override['ofolder']
     ofile    = args.ofile if 'ofile' not in yaml_override else yaml_override['ofile']
     corner_ofile = args.corner_ofile if 'corner_ofile' not in yaml_override else yaml_override['corner_ofile']
     nwalkers = args.nwalkers if 'nwalkers' not in yaml_override else yaml_override['nwalkers']
@@ -291,37 +296,14 @@ if __name__ == '__main__':
     overwrite_ofile = args.overwrite if 'overwrite' not in yaml_override else yaml_override['overwrite']
     seed     = args.seed if 'seed' not in yaml_override else yaml_override['seed']
     params_dict = {} if 'params_dict' not in yaml_override else yaml_override['params_dict']
-    moves_mixture = [ emcee.moves.StretchMove() ] if 'moves_mixture' not in yaml_override else createMovesMixtureFromDict(yaml_override['moves_mixture'])
+    moves_mixture = [ emcee.moves.StretchMove() ] if 'moves_mixture' not in yaml_override else \
+                        createMovesMixtureFromDict(yaml_override['moves_mixture'])
 
     assert( cfgfiles != '' ), 'You must specify a config file'
-
-    print("\n ====================================================================================")
-    print(f" cfgfiles: {cfgfiles}")
-    print(f" ofolder: {ofolder}")
-    print(f" ofile: {ofile}")
-    print(f" corner_ofile: {corner_ofile}")
-    print(f" nwalkers: {nwalkers}")
-    print(f" burnIn: {burnIn}")
-    print(f" nsamples: {nsamples}")
-    print(f" overwrite_ofile: {overwrite_ofile}")
-    print(f" seed: {seed}")
-    print(f" params_dict: {params_dict}")
-    print(f" moves_mixture: {moves_mixture}")
-    print(" ====================================================================================\n")
-
-    ############## PREPARE FOR SAMPLER ##############
 
     cfgfiles = glob_sort_captured(cfgfiles) # list of sorted config files based on captured number
     for cfgfile in cfgfiles:
         assert( os.path.exists(cfgfile) ), 'Config file does not exist at specified path'
-
-    if os.path.isfile(f'{ofolder}/{ofile}') and overwrite_ofile:
-        os.system(f'rm -f {ofolder}/{ofile}')
-        print("Overwriting existing output file!")
-    os.system(f'mkdir -p {ofolder}')
-
-    ############## SET ENVIRONMENT VARIABLES ##############
-    REPO_HOME     = os.environ['REPO_HOME']
 
     ################### LOAD LIBRARIES ##################
     USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals(), args.accelerator)
@@ -329,14 +311,6 @@ if __name__ == '__main__':
     ############## LOAD CONFIGURATION FILE #############
     parsers  = [ ConfigFileParser(cfgfile) for cfgfile in cfgfiles ]
     cfgInfos = [ parser.getConfigurationInfo() for parser in parsers ] # List of ConfigurationInfo
-    print(f'\n===============================')
-    print(f'Loaded {len(cfgInfos)} config files')
-    print(f'===============================\n')
-    for cfgfile, cfgInfo in zip(cfgfiles, cfgInfos):
-        print('\n=============================================')
-        print(f'Display Of This Config File Below: {cfgfile}')
-        print('=============================================\n')
-        cfgInfo.display()
 
     ############## REGISTER OBJECTS FOR AMPTOOLS ##############
     AmpToolsInterface.registerAmplitude( Zlm() )
@@ -356,30 +330,49 @@ if __name__ == '__main__':
     ############## RUN MCMC ##############
     np.random.seed(seed)
 
-    mcmcMgr = mcmcManager(atis, LoadParametersSamplers, ofolder, ofile)
+    if RANK_MPI == 0:
+        print("\n ====================================================================================")
+        print(f" cfgfiles: {cfgfiles}")
+        print(f" ofile: {ofile}")
+        print(f" corner_ofile: {corner_ofile}")
+        print(f" nwalkers: {nwalkers}")
+        print(f" burnIn: {burnIn}")
+        print(f" nsamples: {nsamples}")
+        print(f" overwrite_ofile: {overwrite_ofile}")
+        print(f" seed: {seed}")
+        print(f" params_dict: {params_dict}")
+        print(f" moves_mixture: {moves_mixture}")
+        print(" ====================================================================================\n")
 
-    mcmcMgr.perform_mcmc(
-        nwalkers = nwalkers,
-        burnIn   = burnIn,
-        nsamples = nsamples,
-        params_dict   = params_dict,
-        moves_mixture = moves_mixture,
-    )
+        print(f'\n===============================')
+        print(f'Loaded {len(cfgInfos)} config files')
+        print(f'===============================\n')
+        displayN = 1 # Modify me to show display more cfg files. Very verbose!
+        for cfgfile, cfgInfo in zip(cfgfiles[:displayN], cfgInfos[:displayN]):
+            print('\n=============================================')
+            print(f'Display Of This Config File Below: {cfgfile}')
+            print('=============================================\n')
+            cfgInfo.display()
 
-    mcmcMgr.draw_corner(f'{ofolder}/{corner_ofile}')
+        ############## PREPARE FOR SAMPLER ##############
+        if os.path.isfile(f'{ofile}') and overwrite_ofile:
+            os.system(f'rm -f {ofile}')
+            print("Overwriting existing output file!")
+        if '/' in ofile:
+            ofolder = ofile[:ofile.rfind("/")]
+            os.system(f'mkdir -p {ofolder}')
 
-    print(f"Fit time: {mcmcMgr.elapsed_fit_time} seconds")
-    print(f"Total time: {time.time() - start_time} seconds")
+        mcmcMgr = mcmcManager(atis, LoadParametersSamplers, ofile)
 
-    # for ati, LoadParametersSampler in zip(atis, LoadParametersSamplers):
-    #     print('deleting ati')
-    #     del ati
-    #     print('deleted ati')
-    #     del LoadParametersSampler
-    #     print('deleted LoadParametersSampler')
+        mcmcMgr.perform_mcmc(
+            nwalkers = nwalkers,
+            burnIn   = burnIn,
+            nsamples = nsamples,
+            params_dict   = params_dict,
+            moves_mixture = moves_mixture,
+        )
 
-    # print("Deleting atis")
-    # del atis
-    # print("Deleting LoadParameters")
-    # del LoadParameters
-    # print("Exiting")
+        mcmcMgr.draw_corner(f'{corner_ofile}')
+
+        print(f"Fit time: {mcmcMgr.elapsed_fit_time} seconds")
+        print(f"Total time: {time.time() - start_time} seconds")
