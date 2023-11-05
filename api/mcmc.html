@@ -380,7 +380,7 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">MCMC</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mcmc-optuna">MCMC/Optuna</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-mcmcOptimalMoves">MCMC/Optuna</a></li>
 </ul>
             </nav>
         </div>
@@ -495,8 +495,51 @@ If multiple config files were passed, the parameter names will be appended with 
 </dd></dl>
 
 </section>
-<section id="mcmc-optuna">
-<h2>MCMC/Optuna<a class="headerlink" href="#mcmc-optuna" title="Permalink to this heading">#</a></h2>
+<section id="module-mcmcOptimalMoves">
+<span id="mcmc-optuna"></span><h2>MCMC/Optuna<a class="headerlink" href="#module-mcmcOptimalMoves" title="Permalink to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="mcmcOptimalMoves.Objective">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Objective</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conditions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmcOptimalMoves.html#Objective"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmcOptimalMoves.Objective" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Modified objective function (Class) for Optuna that now takes an initialization list</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mcmcOptimalMoves.Objective.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trial</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmcOptimalMoves.html#Objective.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmcOptimalMoves.Objective.__call__" title="Permalink to this definition">#</a></dt>
+<dd><dl class="simple">
+<dt>Performs a single trial of the objective function, sampling a mixture of moves.</dt><dd><p>ATM, Contains hard-coded parameter ranges and walker initialization ranges for a specific test case</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>trial</strong> (<em>optuna.trial.Trial</em>) – Optuna trial object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mcmcOptimalMoves.Objective.__dict__">
+<span class="sig-name descname"><span class="pre">__dict__</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">mappingproxy({'__module__':</span> <span class="pre">'mcmcOptimalMoves',</span> <span class="pre">'__doc__':</span> <span class="pre">'\n</span>&#160;&#160;&#160; <span class="pre">Modified</span> <span class="pre">objective</span> <span class="pre">function</span> <span class="pre">(Class)</span> <span class="pre">for</span> <span class="pre">Optuna</span> <span class="pre">that</span> <span class="pre">now</span> <span class="pre">takes</span> <span class="pre">an</span> <span class="pre">initialization</span> <span class="pre">list\n</span>&#160;&#160;&#160; <span class="pre">',</span> <span class="pre">'__init__':</span> <span class="pre">&lt;function</span> <span class="pre">Objective.__init__&gt;,</span> <span class="pre">'__call__':</span> <span class="pre">&lt;function</span> <span class="pre">Objective.__call__&gt;,</span> <span class="pre">'__dict__':</span> <span class="pre">&lt;attribute</span> <span class="pre">'__dict__'</span> <span class="pre">of</span> <span class="pre">'Objective'</span> <span class="pre">objects&gt;,</span> <span class="pre">'__weakref__':</span> <span class="pre">&lt;attribute</span> <span class="pre">'__weakref__'</span> <span class="pre">of</span> <span class="pre">'Objective'</span> <span class="pre">objects&gt;,</span> <span class="pre">'__annotations__':</span> <span class="pre">{}})</span></em><a class="headerlink" href="#mcmcOptimalMoves.Objective.__dict__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mcmcOptimalMoves.Objective.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conditions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmcOptimalMoves.html#Objective.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmcOptimalMoves.Objective.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Primes the objective function with the initialization list</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mcmcOptimalMoves.Objective.__module__">
+<span class="sig-name descname"><span class="pre">__module__</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'mcmcOptimalMoves'</span></em><a class="headerlink" href="#mcmcOptimalMoves.Objective.__module__" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mcmcOptimalMoves.Objective.__weakref__">
+<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#mcmcOptimalMoves.Objective.__weakref__" title="Permalink to this definition">#</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 </section>
 
@@ -564,7 +607,7 @@ If multiple config files were passed, the parameter names will be appended with 
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">MCMC</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mcmc-optuna">MCMC/Optuna</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-mcmcOptimalMoves">MCMC/Optuna</a></li>
 </ul>
   </nav></div>
 

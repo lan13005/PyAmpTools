@@ -1,0 +1,616 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mcmcOptimalMoves &#8212; PyAmpTools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=c5ced968eda925caa686" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=c5ced968eda925caa686" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=c5ced968eda925caa686" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=c5ced968eda925caa686" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=c5ced968eda925caa686" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=c5ced968eda925caa686" />
+  <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=c5ced968eda925caa686"></script>
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../_static/sphinx-thebe.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/mcmcOptimalMoves';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../intro.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">PyAmpTools</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../intro.html">
+                    PyAmpTools
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/libraryLoading.html">Loading Libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/generation.html">Generating Data</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/fitting.html">Fitting</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/mle.html">Maximum Likelihood Estimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/mcmc.html">Markov Chain Monte Carlo</a></li>
+
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/plotgen.html">Plotting Fit Results</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/pyroot.html">PyROOT - Lessons Learned</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../api/atiSetup.html">atiSetup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/cfgGenerator.html">cfgGenerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/fit.html">fit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/mcmc.html">MCMC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/loadParameters.html">LoadParameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/plotgen.html">PlotGen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/extract_ff.html">extract_ff</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/lan13005/PyAmpTools" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2F_modules/mcmcOptimalMoves.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <h1>Source code for mcmcOptimalMoves</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">LoadParameters</span> <span class="kn">import</span> <span class="n">LoadParameters</span>
+<span class="kn">from</span> <span class="nn">mcmc</span>  <span class="kn">import</span> <span class="n">mcmcManager</span>
+<span class="kn">import</span> <span class="nn">optuna</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">emcee.moves</span> <span class="kn">import</span> <span class="n">StretchMove</span><span class="p">,</span> <span class="n">WalkMove</span><span class="p">,</span> <span class="n">DEMove</span><span class="p">,</span> <span class="n">DESnookerMove</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">import</span> <span class="nn">atiSetup</span>
+
+<div class="viewcode-block" id="Objective"><a class="viewcode-back" href="../api/mcmc.html#mcmcOptimalMoves.Objective">[docs]</a><span class="k">class</span> <span class="nc">Objective</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Modified objective function (Class) for Optuna that now takes an initialization list</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+<div class="viewcode-block" id="Objective.__init__"><a class="viewcode-back" href="../api/mcmc.html#mcmcOptimalMoves.Objective.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conditions</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39; Primes the objective function with the initialization list &#39;&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">conditions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Objective.__call__"><a class="viewcode-back" href="../api/mcmc.html#mcmcOptimalMoves.Objective.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">trial</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Performs a single trial of the objective function, sampling a mixture of moves.</span>
+<span class="sd">            ATM, Contains hard-coded parameter ranges and walker initialization ranges for a specific test case</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            trial (optuna.trial.Trial): Optuna trial object</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1">############## PREPARE FOR SAMPLER ##############</span>
+        <span class="n">ofile</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;mcmc_</span><span class="si">{</span><span class="n">trial</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s1">.h5&#39;</span>
+        <span class="n">corner_ofile</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;corner_</span><span class="si">{</span><span class="n">trial</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s1">.png&#39;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">ofile</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">overwrite_ofile</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rm </span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">ofile</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Overwriting existing output file!&quot;</span><span class="p">)</span>
+
+        <span class="n">values</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">_</span>  <span class="o">=</span> <span class="n">LoadParametersSampler</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">flatten_parameters</span><span class="p">()</span>
+        <span class="n">nFreePars</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+        <span class="c1">########### ASK OPTUNA FOR MOVES AND ASSOCIATED PROBABILITIES ###########</span>
+        <span class="n">deMove_s</span>           <span class="o">=</span> <span class="n">trial</span><span class="o">.</span><span class="n">suggest_float</span><span class="p">(</span><span class="s2">&quot;deMove_s&quot;</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">,</span> <span class="mf">1e-4</span><span class="p">)</span>
+        <span class="n">deMove_prob</span>        <span class="o">=</span> <span class="n">trial</span><span class="o">.</span><span class="n">suggest_float</span><span class="p">(</span><span class="s2">&quot;deMove_prob&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">stretchMove_a</span>      <span class="o">=</span> <span class="n">trial</span><span class="o">.</span><span class="n">suggest_float</span><span class="p">(</span><span class="s2">&quot;stretchMove_a&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">)</span>
+        <span class="n">stretchMove_prob</span>   <span class="o">=</span> <span class="n">trial</span><span class="o">.</span><span class="n">suggest_float</span><span class="p">(</span><span class="s2">&quot;stretchMove_prob&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">deSnookerMove_gs</span>   <span class="o">=</span> <span class="n">trial</span><span class="o">.</span><span class="n">suggest_float</span><span class="p">(</span><span class="s2">&quot;deSnookerMove_gs&quot;</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">)</span>
+        <span class="n">deSnookerMove_prob</span> <span class="o">=</span> <span class="n">trial</span><span class="o">.</span><span class="n">suggest_float</span><span class="p">(</span><span class="s2">&quot;deSnookerMove_prob&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">walkMove_prob</span>      <span class="o">=</span> <span class="n">trial</span><span class="o">.</span><span class="n">suggest_float</span><span class="p">(</span><span class="s2">&quot;walkMove_prob&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">walkMove_s</span>         <span class="o">=</span> <span class="n">trial</span><span class="o">.</span><span class="n">suggest_int</span><span class="p">(</span><span class="s2">&quot;walkMove_s&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">nFreePars</span><span class="p">)</span> <span class="c1"># &gt;2 as it calculates std/covs</span>
+
+        <span class="n">deMove</span>        <span class="o">=</span> <span class="n">DEMove</span><span class="p">(</span><span class="n">deMove_s</span><span class="p">)</span>
+        <span class="n">stretchMove</span>   <span class="o">=</span> <span class="n">StretchMove</span><span class="p">(</span><span class="n">stretchMove_a</span><span class="p">)</span>
+        <span class="n">deSnookerMove</span> <span class="o">=</span> <span class="n">DESnookerMove</span><span class="p">(</span><span class="n">deSnookerMove_gs</span><span class="p">)</span>
+        <span class="n">walkMove</span>      <span class="o">=</span> <span class="n">WalkMove</span><span class="p">(</span><span class="n">walkMove_s</span><span class="p">)</span>
+
+        <span class="c1"># Weights will get normalized by emcee</span>
+        <span class="n">moves_mixture</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">stretchMove</span><span class="p">,</span> <span class="n">stretchMove_prob</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">deMove</span><span class="p">,</span> <span class="n">deMove_prob</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">deSnookerMove</span><span class="p">,</span> <span class="n">deSnookerMove_prob</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">walkMove</span><span class="p">,</span> <span class="n">walkMove_prob</span><span class="p">),</span>
+        <span class="p">]</span>
+        <span class="n">moves_dict</span> <span class="o">=</span> <span class="p">{</span> <span class="c1"># For reproducibility we dump this to a YAML file</span>
+            <span class="s1">&#39;StretchMove&#39;</span><span class="p">:</span>   <span class="p">{</span><span class="s1">&#39;kwargs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="n">stretchMove_a</span><span class="p">},</span>         <span class="s1">&#39;prob&#39;</span><span class="p">:</span> <span class="n">stretchMove_prob</span><span class="p">},</span>
+            <span class="s1">&#39;DEMove&#39;</span><span class="p">:</span>        <span class="p">{</span><span class="s1">&#39;kwargs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;sigma&#39;</span><span class="p">:</span> <span class="n">deMove_s</span><span class="p">},</span>          <span class="s1">&#39;prob&#39;</span><span class="p">:</span> <span class="n">deMove_prob</span><span class="p">},</span>
+            <span class="s1">&#39;DESnookerMove&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;kwargs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;gammas&#39;</span><span class="p">:</span> <span class="n">deSnookerMove_gs</span><span class="p">},</span> <span class="s1">&#39;prob&#39;</span><span class="p">:</span> <span class="n">deSnookerMove_prob</span><span class="p">},</span>
+            <span class="s1">&#39;WalkMove&#39;</span><span class="p">:</span>      <span class="p">{</span><span class="s1">&#39;kwargs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;s&#39;</span><span class="p">:</span> <span class="n">walkMove_s</span><span class="p">},</span>            <span class="s1">&#39;prob&#39;</span><span class="p">:</span> <span class="n">walkMove_prob</span><span class="p">},</span>
+        <span class="p">}</span>
+
+        <span class="c1">########## [WALKER INITIALIZATION] IDENTIFY PARAMETER RANGES TO SAMPLE FROM ##########</span>
+        <span class="n">params_dict</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># {par: [value, min, max]} Sample from [min, max] for walker initialization</span>
+        <span class="k">for</span> <span class="n">value</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">keys</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s1">&#39;::&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span> <span class="c1"># production coefficient</span>
+                <span class="n">params_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span><span class="p">,</span> <span class="mi">2500</span><span class="p">,</span> <span class="mi">3000</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span> <span class="c1"># SDME fit parameter</span>
+                <span class="n">params_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span>  <span class="p">,</span> <span class="mi">1</span>   <span class="p">]</span>
+
+        <span class="c1">############## RUN MCMC ##############</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trial </span><span class="si">{</span><span class="n">trial</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Moves mixture: </span><span class="si">{</span><span class="n">moves_mixture</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter ranges: </span><span class="si">{</span><span class="n">params_dict</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Seed the RNG for consistent walker initialization</span>
+        <span class="c1">#   Do not want to introduce additional randomization in</span>
+        <span class="c1">#   order to isolate the effect of the moves mixture</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ofolder</span><span class="si">}</span><span class="s1">/mcmc_</span><span class="si">{</span><span class="n">trial</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s1">.yml&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&#39;&#39;&#39; Create configuration for reproducibility &#39;&#39;&#39;</span>
+            <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">({</span>
+                <span class="s1">&#39;moves_mixture&#39;</span><span class="p">:</span> <span class="n">moves_dict</span><span class="p">,</span>
+                <span class="s1">&#39;params_dict&#39;</span><span class="p">:</span> <span class="n">params_dict</span><span class="p">,</span>
+                <span class="s1">&#39;ofolder&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ofolder</span><span class="p">,</span>
+                <span class="s1">&#39;ofile&#39;</span><span class="p">:</span> <span class="n">ofile</span><span class="p">,</span>
+                <span class="s1">&#39;nwalkers&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">nwalkers</span><span class="p">,</span>
+                <span class="s1">&#39;burnIn&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">burnIn</span><span class="p">,</span>
+                <span class="s1">&#39;nsamples&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">,</span>
+                <span class="s1">&#39;seed&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+                <span class="s1">&#39;cfgfile&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgfile</span><span class="p">,</span>
+                <span class="s1">&#39;corner_ofile&#39;</span><span class="p">:</span> <span class="n">corner_ofile</span><span class="p">,</span>
+            <span class="p">},</span> <span class="n">f</span><span class="p">)</span>
+
+        <span class="n">mcmcMgr</span> <span class="o">=</span> <span class="n">mcmcManager</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">LoadParametersSamplers</span><span class="p">,</span> <span class="n">ofile</span><span class="p">)</span>
+
+        <span class="n">mcmcMgr</span><span class="o">.</span><span class="n">perform_mcmc</span><span class="p">(</span>
+            <span class="n">nwalkers</span>      <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nwalkers</span><span class="p">,</span>
+            <span class="n">burnIn</span>        <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">burnIn</span><span class="p">,</span>
+            <span class="n">nsamples</span>      <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">,</span>
+            <span class="n">params_dict</span>   <span class="o">=</span> <span class="n">params_dict</span><span class="p">,</span>
+            <span class="n">moves_mixture</span> <span class="o">=</span> <span class="n">moves_mixture</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">mcmc</span><span class="o">.</span><span class="n">Mgr</span><span class="o">.</span><span class="n">draw_corner</span><span class="p">(</span><span class="n">corner_ofile</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;autocorr_time&#39;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;acceptance_fraction&#39;</span><span class="p">]</span></div></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;emcee fitter&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;cfgfile&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Config file name&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--ntrials&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Number of trials. Default 10&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--seed&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;RNG seed for consistent walker random initialization. Default 42&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--ofolder&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;mcmc&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Output folder name. Default &quot;mcmc&quot;&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--nwalkers&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Number of walkers. Default 32&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--burnin&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Number of burn-in steps. Default 100&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--nsamples&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">25000</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Number of samples. Default 1000&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--overwrite&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Overwrite existing output file if exists&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--accelerator&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Force use of given &quot;accelerator&quot; ~ [gpu, mpi, mpigpu, gpumpi]. Default &quot;&quot; = cpu&#39;</span><span class="p">)</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="n">cfgfile</span>  <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">cfgfile</span>
+    <span class="n">ntrials</span>  <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">ntrials</span>
+    <span class="n">seed</span>     <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">seed</span>
+    <span class="n">ofolder</span>  <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">ofolder</span>
+    <span class="n">nwalkers</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">nwalkers</span>
+    <span class="n">burnIn</span>   <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">burnin</span>
+    <span class="n">nsamples</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">nsamples</span>
+    <span class="n">overwrite_ofile</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">overwrite</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> ===================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; cfgfile: </span><span class="si">{</span><span class="n">cfgfile</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; ntrials: </span><span class="si">{</span><span class="n">ntrials</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; seed: </span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; ofolder: </span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; nwalkers: </span><span class="si">{</span><span class="n">nwalkers</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; burnIn: </span><span class="si">{</span><span class="n">burnIn</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; nsamples: </span><span class="si">{</span><span class="n">nsamples</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; overwrite_ofile: </span><span class="si">{</span><span class="n">overwrite_ofile</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; ===================</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;mkdir -p </span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
+    <span class="n">REPO_HOME</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
+
+    <span class="c1">################### LOAD LIBRARIES ##################</span>
+    <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">args</span><span class="o">.</span><span class="n">accelerator</span><span class="p">)</span>
+
+    <span class="c1">############## LOAD CONFIGURATION FILE ##############</span>
+    <span class="k">assert</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cfgfile</span><span class="p">)</span> <span class="p">),</span> <span class="s1">&#39;Config file does not exist at specified path&#39;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">ConfigFileParser</span><span class="p">(</span><span class="n">cfgfile</span><span class="p">)</span>
+    <span class="n">cfgInfo</span><span class="p">:</span> <span class="n">ConfigurationInfo</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getConfigurationInfo</span><span class="p">()</span>
+
+    <span class="c1">############## REGISTER OBJECTS FOR AMPTOOLS ##############</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">Zlm</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">BreitWigner</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">Piecewise</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">PhaseOffset</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">TwoPiAngles</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReader</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReaderFilter</span><span class="p">()</span> <span class="p">)</span>
+
+    <span class="c1">### CURRENTLY, ONLY ALLOWS A SINGLE CFGFILE ###</span>
+    <span class="n">atis</span> <span class="o">=</span> <span class="p">[</span> <span class="n">AmpToolsInterface</span><span class="p">(</span> <span class="n">cfgInfo</span> <span class="p">)</span> <span class="p">]</span>
+    <span class="n">LoadParametersSamplers</span> <span class="o">=</span> <span class="p">[</span> <span class="n">LoadParameters</span><span class="p">(</span><span class="n">cfgInfo</span><span class="p">)</span> <span class="p">]</span>
+
+    <span class="c1">############## RUN OPTIMIZATION ##############</span>
+    <span class="n">optuna</span><span class="o">.</span><span class="n">logging</span><span class="o">.</span><span class="n">get_logger</span><span class="p">(</span><span class="s2">&quot;optuna&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">))</span>
+    <span class="n">study_name</span> <span class="o">=</span> <span class="s2">&quot;mcmcOptimalMoves&quot;</span>
+    <span class="n">storage_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;sqlite:///</span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s2">/mcmcOptimalMoves.db&quot;</span>
+    <span class="n">study</span> <span class="o">=</span> <span class="n">optuna</span><span class="o">.</span><span class="n">create_study</span><span class="p">(</span>
+        <span class="n">directions</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;minimize&#39;</span><span class="p">,</span> <span class="s1">&#39;maximize&#39;</span><span class="p">],</span>  <span class="c1"># multi-objective optimization</span>
+        <span class="n">study_name</span><span class="o">=</span><span class="n">study_name</span><span class="p">,</span>
+        <span class="n">storage</span><span class="o">=</span><span class="n">storage_name</span><span class="p">,</span>
+        <span class="n">load_if_exists</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>    <span class="c1"># resume experiment if the database exists</span>
+        <span class="p">)</span>
+
+    <span class="n">conditions</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;atis&#39;</span><span class="p">:</span> <span class="n">ati</span><span class="p">,</span>
+        <span class="s1">&#39;LoadParametersSamplers&#39;</span><span class="p">:</span> <span class="n">LoadParametersSamplers</span><span class="p">,</span>
+        <span class="s1">&#39;cfgfile&#39;</span><span class="p">:</span> <span class="n">cfgfile</span><span class="p">,</span> <span class="c1"># for YAML output</span>
+        <span class="s1">&#39;cfgInfo&#39;</span><span class="p">:</span> <span class="n">cfgInfo</span><span class="p">,</span>
+        <span class="s1">&#39;ofolder&#39;</span><span class="p">:</span> <span class="n">ofolder</span><span class="p">,</span>
+        <span class="s1">&#39;nwalkers&#39;</span><span class="p">:</span> <span class="n">nwalkers</span><span class="p">,</span>
+        <span class="s1">&#39;burnIn&#39;</span><span class="p">:</span> <span class="n">burnIn</span><span class="p">,</span>
+        <span class="s1">&#39;nsamples&#39;</span><span class="p">:</span> <span class="n">nsamples</span><span class="p">,</span>
+        <span class="s1">&#39;seed&#39;</span><span class="p">:</span> <span class="n">seed</span><span class="p">,</span>
+        <span class="s1">&#39;overwrite_ofile&#39;</span><span class="p">:</span> <span class="n">overwrite_ofile</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">study</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="n">Objective</span><span class="p">(</span><span class="n">conditions</span><span class="p">),</span> <span class="n">n_trials</span><span class="o">=</span><span class="n">ntrials</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;best trail parameter and objective value:&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">study</span><span class="o">.</span><span class="n">best_params</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">study</span><span class="o">.</span><span class="n">best_trial</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="c1"># If no best trial exists (i.e. all failed trials) then optuna will throw a</span>
+        <span class="c1">#   RuntimeError crashing python which causes AmpTools to gracelessly terminate</span>
+        <span class="c1">#   dumping a giant stacktrace which could mislead</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Catching raised error while retrieving the best trial, try and gracefully exit...&quot;</span><span class="p">)</span>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Lawrence Ng
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=c5ced968eda925caa686"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=c5ced968eda925caa686"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
