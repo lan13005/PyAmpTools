@@ -64,7 +64,7 @@ NVCC :=  nvcc
 NVCC_FLAGS := -m64 $(CXX_DEFINES)
 
 ifndef GPU_ARCH
-GPU_ARCH := sm_75
+GPU_ARCH := sm_80
 endif
 
 NVCC_FLAGS += -arch=$(GPU_ARCH)
