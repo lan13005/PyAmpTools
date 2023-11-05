@@ -386,13 +386,13 @@ document.write(`
 <dl class="py function">
 <dt class="sig sig-object py" id="atiSetup.loadLibraries">
 <span class="sig-name descname"><span class="pre">loadLibraries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">accelerator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fsroot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_genamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#loadLibraries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.loadLibraries" title="Permalink to this definition">#</a></dt>
-<dd><p>Load all libraries and print availability</p>
+<dd><p>Load all libraries and print IS_REQUESTED</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="atiSetup.loadLibrary">
-<span class="sig-name descname"><span class="pre">loadLibrary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">libName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">RANK_MPI</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">availability</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#loadLibrary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.loadLibrary" title="Permalink to this definition">#</a></dt>
-<dd><p>Load a shared library and print availability</p>
+<span class="sig-name descname"><span class="pre">loadLibrary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">libName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">RANK_MPI</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">IS_REQUESTED</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#loadLibrary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.loadLibrary" title="Permalink to this definition">#</a></dt>
+<dd><p>Load a shared library and print IS_REQUESTED</p>
 </dd></dl>
 
 <dl class="py function">
@@ -417,12 +417,12 @@ RANK_MPI (int): MPI rank of the process (0 by default even if MPI is not used)</
 
 <dl class="py function">
 <dt class="sig sig-object py" id="atiSetup.set_aliases">
-<span class="sig-name descname"><span class="pre">set_aliases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caller_globals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">USE_MPI</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#set_aliases"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.set_aliases" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_aliases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">called_globals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">USE_MPI</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#set_aliases"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.set_aliases" title="Permalink to this definition">#</a></dt>
 <dd><p>Due to MPI requiring c++ templates and the fact that all classes live under the ROOT namespace, aliasing can clean up the code significantly.
 A dictionary of aliases is appended to the globals() function of the calling function thereby making the aliases available in the calling function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>caller_globals</strong> (<em>dict</em>) – globals() from the calling function</p>
+<dd class="field-odd"><p><strong>called_globals</strong> (<em>dict</em>) – globals() from the calling function</p>
 </dd>
 </dl>
 </dd></dl>

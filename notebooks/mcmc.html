@@ -62,8 +62,6 @@ const thebe_selector_input = "pre"
 const thebe_selector_output = ".output, .cell_output"
 </script>
     <script async="async" src="../_static/sphinx-thebe.js"></script>
-    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/mcmc';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -413,7 +411,7 @@ document.write(`
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">from</span> <span class="nn">LoadParameters</span> <span class="kn">import</span> <span class="n">LoadParameters</span>
 <span class="kn">import</span> <span class="nn">corner</span>
-<span class="kn">from</span> <span class="nn">mcmc</span> <span class="kn">import</span> <span class="n">perform_mcmc</span><span class="p">,</span> <span class="n">draw_corner</span><span class="p">,</span> <span class="n">LogProb</span>
+<span class="kn">from</span> <span class="nn">mcmc</span> <span class="kn">import</span> <span class="n">mcmcManager</span>
 
 <span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="n">PrintSourceCode</span>
 </pre></div>
@@ -421,22 +419,30 @@ document.write(`
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Welcome to JupyROOT 6.28/06
+atiSetup| jupyter-book called python3.9
 
 ------------------------------------------------
-MPI is disabled
-GPU is disabled
-Loading library libAmpTools.so .............. ON
-Loading library libAmpPlotter.so ............ ON
-Loading library libAmpsDataIO.so ............
+atiSetup| MPI is disabled
+atiSetup| GPU is disabled
+------------------------------------------------
+
+
+atiSetup| Loading library libAmpTools.so ..............  ON
+atiSetup| Loading library libAmpPlotter.so ............  ON
+atiSetup| Loading library libAmpsDataIO.so ............
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> ON
-Loading library libFSRoot.so ................ OFF
-Loading library libAmpsGen.so ............... ON
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  ON
+atiSetup| Loading library libFSRoot.so ................  OFF
+atiSetup| Loading library libAmpsGen.so ...............  ON
+
+
 ------------------------------------------------
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
+
+Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 </pre></div>
 </div>
 </div>
@@ -446,8 +452,7 @@ Loading library libAmpsGen.so ............... ON
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cfgfile</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">REPO_HOME</span><span class="si">}</span><span class="s1">/tests/samples/SIMPLE_EXAMPLE/fit.cfg&#39;</span>
 <span class="n">overwrite_ofile</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="n">ofolder</span> <span class="o">=</span> <span class="s1">&#39;mcmc&#39;</span>
-<span class="n">ofile</span> <span class="o">=</span> <span class="s1">&#39;mcmc.h5&#39;</span>
+<span class="n">ofile</span> <span class="o">=</span> <span class="s1">&#39;mcmc/mcmc.h5&#39;</span>
 <span class="n">corner_ofile</span> <span class="o">=</span> <span class="s1">&#39;corner.png&#39;</span>
 </pre></div>
 </div>
@@ -472,7 +477,6 @@ Loading library libAmpsGen.so ............... ON
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> ====================================================================================&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; cfgfile: </span><span class="si">{</span><span class="n">cfgfile</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; ofolder: </span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; ofile: </span><span class="si">{</span><span class="n">ofile</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; corner_ofile: </span><span class="si">{</span><span class="n">corner_ofile</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; nwalkers: </span><span class="si">{</span><span class="n">nwalkers</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -487,8 +491,7 @@ Loading library libAmpsGen.so ............... ON
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> ====================================================================================
  cfgfile: /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/fit.cfg
- ofolder: mcmc
- ofile: mcmc.h5
+ ofile: mcmc/mcmc.h5
  corner_ofile: corner.png
  nwalkers: 32
  burnIn: 0
@@ -508,130 +511,26 @@ Loading library libAmpsGen.so ............... ON
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_html"><style>pre { line-height: 125%; }
-td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
-span.linenos { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
-td.linenos .special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }
-span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }
-.output_html .hll { background-color: #ffffcc }
-.output_html { background: #f8f8f8; }
-.output_html .c { color: #3D7B7B; font-style: italic } /* Comment */
-.output_html .err { border: 1px solid #FF0000 } /* Error */
-.output_html .k { color: #008000; font-weight: bold } /* Keyword */
-.output_html .o { color: #666666 } /* Operator */
-.output_html .ch { color: #3D7B7B; font-style: italic } /* Comment.Hashbang */
-.output_html .cm { color: #3D7B7B; font-style: italic } /* Comment.Multiline */
-.output_html .cp { color: #9C6500 } /* Comment.Preproc */
-.output_html .cpf { color: #3D7B7B; font-style: italic } /* Comment.PreprocFile */
-.output_html .c1 { color: #3D7B7B; font-style: italic } /* Comment.Single */
-.output_html .cs { color: #3D7B7B; font-style: italic } /* Comment.Special */
-.output_html .gd { color: #A00000 } /* Generic.Deleted */
-.output_html .ge { font-style: italic } /* Generic.Emph */
-.output_html .ges { font-weight: bold; font-style: italic } /* Generic.EmphStrong */
-.output_html .gr { color: #E40000 } /* Generic.Error */
-.output_html .gh { color: #000080; font-weight: bold } /* Generic.Heading */
-.output_html .gi { color: #008400 } /* Generic.Inserted */
-.output_html .go { color: #717171 } /* Generic.Output */
-.output_html .gp { color: #000080; font-weight: bold } /* Generic.Prompt */
-.output_html .gs { font-weight: bold } /* Generic.Strong */
-.output_html .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
-.output_html .gt { color: #0044DD } /* Generic.Traceback */
-.output_html .kc { color: #008000; font-weight: bold } /* Keyword.Constant */
-.output_html .kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
-.output_html .kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
-.output_html .kp { color: #008000 } /* Keyword.Pseudo */
-.output_html .kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
-.output_html .kt { color: #B00040 } /* Keyword.Type */
-.output_html .m { color: #666666 } /* Literal.Number */
-.output_html .s { color: #BA2121 } /* Literal.String */
-.output_html .na { color: #687822 } /* Name.Attribute */
-.output_html .nb { color: #008000 } /* Name.Builtin */
-.output_html .nc { color: #0000FF; font-weight: bold } /* Name.Class */
-.output_html .no { color: #880000 } /* Name.Constant */
-.output_html .nd { color: #AA22FF } /* Name.Decorator */
-.output_html .ni { color: #717171; font-weight: bold } /* Name.Entity */
-.output_html .ne { color: #CB3F38; font-weight: bold } /* Name.Exception */
-.output_html .nf { color: #0000FF } /* Name.Function */
-.output_html .nl { color: #767600 } /* Name.Label */
-.output_html .nn { color: #0000FF; font-weight: bold } /* Name.Namespace */
-.output_html .nt { color: #008000; font-weight: bold } /* Name.Tag */
-.output_html .nv { color: #19177C } /* Name.Variable */
-.output_html .ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
-.output_html .w { color: #bbbbbb } /* Text.Whitespace */
-.output_html .mb { color: #666666 } /* Literal.Number.Bin */
-.output_html .mf { color: #666666 } /* Literal.Number.Float */
-.output_html .mh { color: #666666 } /* Literal.Number.Hex */
-.output_html .mi { color: #666666 } /* Literal.Number.Integer */
-.output_html .mo { color: #666666 } /* Literal.Number.Oct */
-.output_html .sa { color: #BA2121 } /* Literal.String.Affix */
-.output_html .sb { color: #BA2121 } /* Literal.String.Backtick */
-.output_html .sc { color: #BA2121 } /* Literal.String.Char */
-.output_html .dl { color: #BA2121 } /* Literal.String.Delimiter */
-.output_html .sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
-.output_html .s2 { color: #BA2121 } /* Literal.String.Double */
-.output_html .se { color: #AA5D1F; font-weight: bold } /* Literal.String.Escape */
-.output_html .sh { color: #BA2121 } /* Literal.String.Heredoc */
-.output_html .si { color: #A45A77; font-weight: bold } /* Literal.String.Interpol */
-.output_html .sx { color: #008000 } /* Literal.String.Other */
-.output_html .sr { color: #A45A77 } /* Literal.String.Regex */
-.output_html .s1 { color: #BA2121 } /* Literal.String.Single */
-.output_html .ss { color: #19177C } /* Literal.String.Symbol */
-.output_html .bp { color: #008000 } /* Name.Builtin.Pseudo */
-.output_html .fm { color: #0000FF } /* Name.Function.Magic */
-.output_html .vc { color: #19177C } /* Name.Variable.Class */
-.output_html .vg { color: #19177C } /* Name.Variable.Global */
-.output_html .vi { color: #19177C } /* Name.Variable.Instance */
-.output_html .vm { color: #19177C } /* Name.Variable.Magic */
-.output_html .il { color: #666666 } /* Literal.Number.Integer.Long */</style><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">LogProb</span><span class="p">(</span>
-    <span class="n">par_values</span><span class="p">,</span>
-    <span class="n">keys</span><span class="p">,</span>
-    <span class="n">ati</span><span class="p">,</span>
-    <span class="n">LoadParametersSampler</span>
-    <span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Definition of the (Log) Posterior distribution</span>
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">NameError</span><span class="g g-Whitespace">                                 </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
+<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">PrintSourceCode</span><span class="p">(</span><span class="n">LogProb</span><span class="p">)</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        par_values (float): Flattened (complex-to-Real/Imag) Parameter values. ~ [real1, imag1, real2, imag2, ...]</span>
-<span class="sd">        keys (str): Flattened Parameter names. ~ [amp1,  amp1,  amp2,  amp2, ...]</span>
-<span class="sd">        ati (AmpToolsInterface): AmpToolsInterface instance</span>
-<span class="sd">        LoadParametersSampler (LoadParameters): LoadParameters class to manage parameters</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        log_prob (float): Log posterior probability</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-
-    <span class="c1">## Calculate Log likelihood</span>
-    <span class="n">ll</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1e7</span>
-    <span class="n">parameters</span> <span class="o">=</span> <span class="n">LoadParametersSampler</span><span class="o">.</span><span class="n">unflatten_parameters</span><span class="p">(</span><span class="n">par_values</span><span class="p">,</span> <span class="n">keys</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="c1"># parameterManager has been pythonized to act like a dictionary</span>
-        <span class="n">ati</span><span class="o">.</span><span class="n">parameterManager</span><span class="p">()[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-    <span class="n">ll</span> <span class="o">=</span> <span class="o">-</span><span class="n">ati</span><span class="o">.</span><span class="n">likelihood</span><span class="p">()</span>
-
-    <span class="c1">## Add lasso prior on parameter values we know are small</span>
-    <span class="c1"># lasso_strength = 0.1</span>
-    <span class="n">prior</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># -lasso_strength * np.sum(np.abs(par_values))</span>
-
-    <span class="n">log_prob</span> <span class="o">=</span> <span class="n">ll</span> <span class="o">+</span> <span class="n">prior</span>
-    <span class="c1"># print(f&#39;LogProb: {log_prob} = {ll} + {prior}&#39;)</span>
-    <span class="k">return</span> <span class="n">log_prob</span>
+<span class="ne">NameError</span>: name &#39;LogProb&#39; is not defined
 </pre></div>
-</div></div>
+</div>
+</div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">############## PREPARE FOR SAMPLER ##############</span>
 <span class="k">assert</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cfgfile</span><span class="p">)</span> <span class="p">),</span> <span class="s1">&#39;Config file does not exist at specified path&#39;</span>
-<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">ofile</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">overwrite_ofile</span><span class="p">:</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rm </span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">ofile</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ofile</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">overwrite_ofile</span><span class="p">:</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rm </span><span class="si">{</span><span class="n">ofile</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Overwriting existing output file!&quot;</span><span class="p">)</span>
-<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;mkdir -p </span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0
+<span class="k">if</span> <span class="s1">&#39;/&#39;</span> <span class="ow">in</span> <span class="n">ofile</span><span class="p">:</span>
+    <span class="n">ofolder</span> <span class="o">=</span> <span class="n">ofile</span><span class="p">[:</span><span class="n">ofile</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)]</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;mkdir -p </span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -652,197 +551,12 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   =================================================================
-   |        ^                                                      |
-   |       / \             Version:  v0.15.1-dirty                 |
-   |      /---\                                                    |
-   |     /     \           GDouble:  8 bytes                       |
-   |    /       \ MP           MPI:  NO                            |
-   |     -------               GPU:  NO                            |
-   |        |                                                      |
-   |        |              doi.org/10.5281/zenodo.5039377          |
-   |        | OOLS                                                 |
-   =================================================================
-
-[ ConfigurationInfo ]:
-
-	## CONFIGURATION INFO DISPLAY ##
-	
-
-[ ReactionInfo ]:
-
-	############################################
-	#############   REACTION INFO  #############
-	############################################
-	      REACTION NAME:  etapi
-	      PARTICLE LIST:  4
-			1.  Beam
-			2.  Proton
-			3.  Eta
-			4.  Pi0
-	        DATA READER:  ROOTDataReader
-					/w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
-	      ACC MC READER:  ROOTDataReader
-					/w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-	      GEN MC READER:  ROOTDataReader
-					/w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-	  NORMALIZATION INTEGRAL FILE: 
-			    normint
-	      GPU DEVICE NUMBER:  -1
-
-[ CoherentSumInfo ]:
-
-	********************************************
-	***********  COHERENT SUM INFO  ************
-	********************************************
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  reZ
-
-[ AmplitudeInfo ]:
-
-	++++++++++++++++++++++++++++++++++++++++++++
-	+++++++++++++  AMPLITUDE INFO  +++++++++++++
-	++++++++++++++++++++++++++++++++++++++++++++
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  reZ
-	     AMPLITUDE NAME:  resAmp1
-	            FACTORS:  1
-			1.  	 Zlm	 2	 0	 +1	 +1	 0.0	 1.0	
-	 EXTRA PERMUTATIONS:  0
-	        CONSTRAINTS:  1
-			1.  etapi::imZ::resAmp1
-	         PARAMETERS:  0
-	      INITIAL VALUE:  (-139.917,0)
-	               REAL?  1
-	              FIXED?  0
-	              SCALE:  1.0
-	++++++++++++++++++++++++++++++++++++++++++++
-	+++++++++++++  AMPLITUDE INFO  +++++++++++++
-	++++++++++++++++++++++++++++++++++++++++++++
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  reZ
-	     AMPLITUDE NAME:  resAmp2
-	            FACTORS:  1
-			1.  	 Zlm	 2	 2	 +1	 +1	 0.0	 1.0	
-	 EXTRA PERMUTATIONS:  0
-	        CONSTRAINTS:  1
-			1.  etapi::imZ::resAmp2
-	         PARAMETERS:  0
-	      INITIAL VALUE:  (-80.7646,134.783)
-	               REAL?  0
-	              FIXED?  0
-	              SCALE:  1.0
-	++++++++++++++++++++++++++++++++++++++++++++
-	+++++++++++++  AMPLITUDE INFO  +++++++++++++
-	++++++++++++++++++++++++++++++++++++++++++++
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  reZ
-	     AMPLITUDE NAME:  resAmp3
-	            FACTORS:  1
-			1.  	 Zlm	 0	 0	 +1	 +1	 0.0	 1.0	
-	 EXTRA PERMUTATIONS:  0
-	        CONSTRAINTS:  1
-			1.  etapi::imZ::resAmp3
-	         PARAMETERS:  0
-	      INITIAL VALUE:  (-193.378,106.653)
-	               REAL?  0
-	              FIXED?  0
-	              SCALE:  1.0
-
-[ CoherentSumInfo ]:
-
-	********************************************
-	***********  COHERENT SUM INFO  ************
-	********************************************
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  imZ
-
-[ AmplitudeInfo ]:
-
-	++++++++++++++++++++++++++++++++++++++++++++
-	+++++++++++++  AMPLITUDE INFO  +++++++++++++
-	++++++++++++++++++++++++++++++++++++++++++++
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  imZ
-	     AMPLITUDE NAME:  resAmp1
-	            FACTORS:  1
-			1.  	 Zlm	 2	 0	 -1	 -1	 0.0	 1.0	
-	 EXTRA PERMUTATIONS:  0
-	        CONSTRAINTS:  1
-			1.  etapi::reZ::resAmp1
-	         PARAMETERS:  0
-	      INITIAL VALUE:  (-139.917,0)
-	               REAL?  1
-	              FIXED?  0
-	              SCALE:  1.0
-	++++++++++++++++++++++++++++++++++++++++++++
-	+++++++++++++  AMPLITUDE INFO  +++++++++++++
-	++++++++++++++++++++++++++++++++++++++++++++
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  imZ
-	     AMPLITUDE NAME:  resAmp2
-	            FACTORS:  1
-			1.  	 Zlm	 2	 2	 -1	 -1	 0.0	 1.0	
-	 EXTRA PERMUTATIONS:  0
-	        CONSTRAINTS:  1
-			1.  etapi::reZ::resAmp2
-	         PARAMETERS:  0
-	      INITIAL VALUE:  (-80.7646,134.783)
-	               REAL?  0
-	              FIXED?  0
-	              SCALE:  1.0
-	++++++++++++++++++++++++++++++++++++++++++++
-	+++++++++++++  AMPLITUDE INFO  +++++++++++++
-	++++++++++++++++++++++++++++++++++++++++++++
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  imZ
-	     AMPLITUDE NAME:  resAmp3
-	            FACTORS:  1
-			1.  	 Zlm	 0	 0	 -1	 -1	 0.0	 1.0	
-	 EXTRA PERMUTATIONS:  0
-	        CONSTRAINTS:  1
-			1.  etapi::reZ::resAmp3
-	         PARAMETERS:  0
-	      INITIAL VALUE:  (-193.378,106.653)
-	               REAL?  0
-	              FIXED?  0
-	              SCALE:  1.0
-
-[ Minuit ]:
-
-	**********
-	 **    1 **SET STRATEGY  1
-	**********
-	 NOW USING STRATEGY  1: TRY TO BALANCE SPEED AGAINST RELIABILITY
-
-[ AmplitudeManager ]:
-
-	Creating AmplitudeManager for the reaction:  etapi
-		 particle index assignment:  Beam -&gt; 0
-		 particle index assignment:  Proton -&gt; 1
-		 particle index assignment:  Eta -&gt; 2
-		 particle index assignment:  Pi0 -&gt; 3
-
-[ NormIntInterface ]:
-
-	Loading generated Monte Carlo from file...
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-	Duplicated Monte Carlo set detected, using previously loaded version
-</pre></div>
-</div>
-</div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> uses a <code class="docutils literal notranslate"><span class="pre">ParameterManager</span></code> to manage the fit parameters (amplitudes and production coefficients). Production coefficients are complex numbers and optimization is generally performed on <em>real</em> numbers. Complex production coefficients have to be flattened first, splitting them up into their real and imaginary parts. The <code class="docutils literal notranslate"><span class="pre">LoadParameters</span></code> class reads in a <a class="reference external" href="https://github.com/mashephe/AmpTools/blob/master/AmpTools/IUAmpTools/FitResults.h">FitResults</a> file or a <a class="reference external" href="https://github.com/mashephe/AmpTools/blob/master/AmpTools/IUAmpTools/ConfigurationInfo.h">ConfigurationInfo</a> object and extracts the free parameters. If a FitResults file is given, the MLE values used instead of the values set with the <code class="docutils literal notranslate"><span class="pre">initialize</span></code> keyword in the cfg file. This class can also perform flattening of complex parameters or unflattening to aggregate real/imaginary components again.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">LoadParametersSampler</span> <span class="o">=</span> <span class="n">LoadParameters</span><span class="p">()</span>
 <span class="n">LoadParametersSampler</span><span class="o">.</span><span class="n">load_cfg</span><span class="p">(</span> <span class="n">cfgInfo</span> <span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Input was a ConfigurationInfo object. Take actions accordingly...
 </pre></div>
 </div>
 </div>
@@ -853,85 +567,19 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">############## RUN MCMC ##############</span>
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
 
-<span class="n">results</span> <span class="o">=</span> <span class="n">perform_mcmc</span><span class="p">(</span><span class="n">ati</span><span class="p">,</span>
-                        <span class="n">LoadParametersSampler</span><span class="p">,</span>
-                        <span class="n">ofolder</span>   <span class="o">=</span> <span class="n">ofolder</span><span class="p">,</span>
-                        <span class="n">ofile</span>     <span class="o">=</span> <span class="n">ofile</span><span class="p">,</span>
-                        <span class="n">nwalkers</span>  <span class="o">=</span> <span class="n">nwalkers</span><span class="p">,</span>
-                        <span class="n">burnIn</span>    <span class="o">=</span> <span class="n">burnIn</span><span class="p">,</span>
-                        <span class="n">nsamples</span>  <span class="o">=</span> <span class="n">nsamples</span><span class="p">,</span>
-                        <span class="n">sampler_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>  <span class="c1"># turn off progress bar for cleaner output</span>
-                        <span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> ================== PERFORM_MCMC() KWARGS CONFIGURATION ================== 
-ofolder: mcmc
-ofile: mcmc.h5
-nwalkers: 32
-burnIn: 0
-nsamples: 200
-params_dict: {}
-moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7f60464b6be0&gt;]
- =================================================================== 
+<span class="n">atis</span> <span class="o">=</span> <span class="p">[</span><span class="n">ati</span><span class="p">]</span> <span class="c1"># list of AmpToolsInterface objects to run MCMC on</span>
+<span class="n">LoadParametersSamplers</span> <span class="o">=</span> <span class="p">[</span><span class="n">LoadParametersSampler</span><span class="p">]</span> <span class="c1"># list of LoadParameters objects to run MCMC on</span>
 
- ================== RUNNING MCMC ================== 
-Initializing walkers in an N-ball around the MLE estimate
-Par values: [[-140.61192169  -80.65288733  135.65601685 -196.32355813  106.40283681]
- [-139.58933722  -82.04000009  135.81741441 -192.47048633  107.23122161]
- [-139.26853464  -80.38841131  135.10916665 -189.67847841  104.81289824]
- [-139.130199    -79.94654732  135.20659465 -191.62242619  105.14630923]
- [-141.9676253   -80.58220865  134.87405911 -190.62319364  106.07196924]
- [-140.07213396  -79.83496103  135.28941976 -192.21684297  106.34146852]
- [-139.07504503  -82.26054013  134.76485057 -191.33296422  107.52983266]
- [-138.20876746  -80.93324363  132.14173952 -190.80992391  106.86252495]
- [-140.95017427  -80.90296071  134.62716826 -192.79607879  105.07568573]
- [-138.90975052  -80.39252302  136.20786404 -194.04283152  104.7722398 ]
- [-140.37038283  -80.45354588  133.87066647 -194.56119765  107.75215485]
- [-141.21995307  -80.08676557  134.36627669 -194.0189399   107.69301132]
- [-139.24648857  -80.61460923  133.2918906  -191.06514354  107.51914704]
- [-141.81454394  -80.70639722  136.13563471 -194.07767392  105.96453061]
- [-140.42258813  -82.00674428  134.73475511 -196.4040302   103.85854198]
- [-141.06691526  -80.83485906  134.38003133 -193.55579362  104.53277412]
- [-139.6095763   -81.05297626  136.7749931  -192.37612576  105.79028821]
- [-139.2148914   -81.50387633  135.22614328 -192.35390662  107.19998029]
- [-140.0527624   -81.5468777   133.83679402 -192.7447205   106.23437398]
- [-137.86922922  -81.0037161   135.13490078 -193.38823647  106.40237419]
- [-137.93659112  -80.42482355  134.32112148 -191.82691762  106.48055204]
- [-140.48227005  -82.28792554  135.01834382 -193.87639484  106.57316891]
- [-137.23224861  -80.74314206  134.86422265 -198.14172506  106.44740948]
- [-140.33885027  -80.73652107  133.20786272 -195.58832003  107.45452328]
- [-141.02372212  -80.03009314  136.67377139 -190.66747172  107.27846555]
- [-142.98175284  -79.96455361  134.01976923 -193.57105231  106.11559768]
- [-137.74729374  -80.81993046  133.35123727 -194.29417337  105.67197784]
- [-142.08555518  -80.13196483  134.34895823 -194.9515143   105.339819  ]
- [-140.23518944  -81.82026392  132.61642772 -193.73539005  106.92973906]
- [-141.01083707  -79.76553813  133.00329094 -194.38767013  106.96930917]
- [-140.26741639  -81.04436324  133.86648453 -193.82747651  106.96513671]
- [-138.91743587  -82.27144038  135.42168896 -191.07462512  107.35279867]]
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The chain is shorter than 50 times the integrated autocorrelation time for 5 parameter(s). Use this estimate with caution and run a longer chain!
-N/50 = 4;
-tau: [15.92587787 16.44973334 17.51905651 16.73390776 15.60765933]
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The chain is shorter than 50 times the integrated autocorrelation time for 5 parameter(s). Use this estimate with caution and run a longer chain!
-N/50 = 4;
-tau: [15.92587787 16.44973334 17.51905651 16.73390776 15.60765933]
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[Sampler complete]
+<span class="n">mcmcMgr</span> <span class="o">=</span> <span class="n">mcmcManager</span><span class="p">(</span><span class="n">atis</span><span class="p">,</span> <span class="n">LoadParametersSamplers</span><span class="p">,</span> <span class="n">ofolder</span><span class="p">,</span> <span class="n">ofile</span><span class="p">)</span>
 
+<span class="n">mcmcMgr</span><span class="o">.</span><span class="n">perform_mcmc</span><span class="p">(</span>
+    <span class="n">nwalkers</span> <span class="o">=</span> <span class="n">nwalkers</span><span class="p">,</span>
+    <span class="n">burnIn</span>   <span class="o">=</span> <span class="n">burnIn</span><span class="p">,</span>
+    <span class="n">nsamples</span> <span class="o">=</span> <span class="n">nsamples</span><span class="p">,</span>
+    <span class="n">sampler_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>  <span class="c1"># turn off progress bar for cleaner output</span>
+<span class="p">)</span>
 
-Mean acceptance fraction: 0.564
-Autocorrelation time: 16.447 steps
-
-Mean acceptance fraction: 0.564
-Autocorrelation time: 16.447 steps
-Percent samples remaning after masking: 100.00%
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fit time: </span><span class="si">{</span><span class="n">mcmcMgr</span><span class="o">.</span><span class="n">elapsed_fit_time</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -940,25 +588,9 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 <p>The configuration file has been seeded with the MLE fit (using the <em>include</em> keyword at the bottom of the cfg file pointing to the <em>seed</em> file outputted by <code class="docutils literal notranslate"><span class="pre">fit</span></code>). By running the <code class="docutils literal notranslate"><span class="pre">emcee</span></code> sampler this way gives an estimate of the local posterior distribution</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">draw_corner</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">corner_ofile</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mcmcMgr</span><span class="o">.</span><span class="n">draw_corner</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">corner_ofile</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Corner kwargs: {&#39;color&#39;: &#39;black&#39;, &#39;show_titles&#39;: True}
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> =================== RESULTS =================== 
-MAP Estimates from 6400 samples obtained over 32 walkers:
-   Re[resAmp1]          = -140.188
-   Re[resAmp2]          = -80.310
-   Im[resAmp2]          = 134.706
-   Re[resAmp3]          = -193.365
-   Im[resAmp3]          = 106.786
- =============================================== 
-</pre></div>
-</div>
-<img alt="../_images/5610c91b1804b7c76f6ede66c0437717ce48e2f008a129edc6c422e65f8abcc3.png" src="../_images/5610c91b1804b7c76f6ede66c0437717ce48e2f008a129edc6c422e65f8abcc3.png" />
 </div>
 </div>
 <p>We can see that the parameters are correlated. In this cfg file <code class="docutils literal notranslate"><span class="pre">resAmp1</span></code> is set to be real while <code class="docutils literal notranslate"><span class="pre">resAmp2</span></code> and <code class="docutils literal notranslate"><span class="pre">resAmp3</span></code> are freely floating complex numbers. It can be seen that resAmp1 is negatively correlated with the other parameters. The other parameters are uniformly positively correlated with each other.</p>

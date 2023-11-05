@@ -380,7 +380,7 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">MCMC</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mcmc-optuna">MCMC/Optuna</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-mcmcOptimalMoves">MCMC/Optuna</a></li>
 </ul>
             </nav>
         </div>
@@ -396,17 +396,27 @@ document.write(`
 <h1>MCMC<a class="headerlink" href="#mcmc" title="Permalink to this heading">#</a></h1>
 <section id="id1">
 <h2>MCMC<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h2>
-<span class="target" id="module-mcmc"></span><dl class="py function">
-<dt class="sig sig-object py" id="mcmc.LogProb">
-<span class="sig-name descname"><span class="pre">LogProb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ati</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LoadParametersSampler</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#LogProb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.LogProb" title="Permalink to this definition">#</a></dt>
+<span class="target" id="module-mcmc"></span><dl class="py class">
+<dt class="sig sig-object py" id="mcmc.mcmcManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mcmcManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LoadParametersSamplers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ofile</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#mcmcManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.mcmcManager" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class manages the MCMC sampling process and the interaction with AmpToolsInterface instances</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mcmc.mcmcManager.Likelihood">
+<span class="sig-name descname"><span class="pre">Likelihood</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ati</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#mcmcManager.Likelihood"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.mcmcManager.Likelihood" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns Log likelihood from AmpToolsInterface instance. Separation for profiling</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mcmc.mcmcManager.LogProb">
+<span class="sig-name descname"><span class="pre">LogProb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#mcmcManager.LogProb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.mcmcManager.LogProb" title="Permalink to this definition">#</a></dt>
 <dd><p>Definition of the (Log) Posterior distribution</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>par_values</strong> (<em>float</em>) – Flattened (complex-to-Real/Imag) Parameter values. ~ [real1, imag1, real2, imag2, …]</p></li>
-<li><p><strong>keys</strong> (<em>str</em>) – Flattened Parameter names. ~ [amp1,  amp1,  amp2,  amp2, …]</p></li>
-<li><p><strong>ati</strong> (<em>AmpToolsInterface</em>) – AmpToolsInterface instance</p></li>
-<li><p><strong>LoadParametersSampler</strong> (<a class="reference internal" href="loadParameters.html#LoadParameters.LoadParameters" title="LoadParameters.LoadParameters"><em>LoadParameters</em></a>) – LoadParameters class to manage parameters</p></li>
+<li><p><strong>keys</strong> (<em>str</em>) – Flattened Parameter names. ~ [amp1,  amp1,  amp2,  amp2, …]
+If multiple config files were passed, the parameter names will be appended with a ‘_i’ tag where i is the ith cfg file</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -418,33 +428,34 @@ document.write(`
 </dl>
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="mcmc.createMovesMixtureFromDict">
-<span class="sig-name descname"><span class="pre">createMovesMixtureFromDict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">moves_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#createMovesMixtureFromDict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.createMovesMixtureFromDict" title="Permalink to this definition">#</a></dt>
-<dd><p>Creates a mixture of moves for the emcee sampler</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mcmc.mcmcManager.Prior">
+<span class="sig-name descname"><span class="pre">Prior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#mcmcManager.Prior"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.mcmcManager.Prior" title="Permalink to this definition">#</a></dt>
+<dd><p>(Log of) Prior distribution for the parameters</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>move</strong> (<em>moves_dict {</em>) – {kwargs: {}, probability} }: Dictionary of moves and their kwargs and probability</p>
+<dd class="field-odd"><p><strong>parameters</strong> (<em>dict</em>) – Dictionary of parameter names (complex production coeffs and amplitude params) and values.
+If multiple config files were passed, the parameter names will be appended with a ‘_i’ tag where i is the ith cfg file</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>List of tuples of moves (with kwargs pluggin in) and their probability</p>
+<dd class="field-even"><p>Log prior probability</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>moves_mixture [ (emcee.moves.{move}(kwargs), probability) ]</p>
+<dd class="field-odd"><p>prior (float)</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="mcmc.draw_corner">
-<span class="sig-name descname"><span class="pre">draw_corner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corner_ofile_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'corner.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#draw_corner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.draw_corner" title="Permalink to this definition">#</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="mcmc.mcmcManager.draw_corner">
+<span class="sig-name descname"><span class="pre">draw_corner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corner_ofile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#mcmcManager.draw_corner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.mcmcManager.draw_corner" title="Permalink to this definition">#</a></dt>
 <dd><p>Draws a corner plot to visualize sampling and parameter correlations</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>results</strong> (<em>dict</em>) – Dictionary containing results of MCMC sampling (samples, MAP, acceptance fraction, autocorrelation time, etc.)</p></li>
-<li><p><strong>corner_ofile_path</strong> (<em>str</em>) – output file path</p></li>
+<li><p><strong>corner_ofile</strong> (<em>str</em>) – Output file name</p></li>
 <li><p><strong>save</strong> (<em>bool</em>) – Save the figure to a file or return figure. Default True = Save</p></li>
+<li><p><strong>safe_draw</strong> (<em>bool</em>) – </p></li>
 <li><p><strong>kwargs</strong> (<em>dict</em>) – Keyword arguments to pass to corner.corner()</p></li>
 </ul>
 </dd>
@@ -457,21 +468,17 @@ document.write(`
 </dl>
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="mcmc.perform_mcmc">
-<span class="sig-name descname"><span class="pre">perform_mcmc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ati,</span> <span class="pre">LoadParametersSampler,</span> <span class="pre">ofolder:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'mcmc',</span> <span class="pre">ofile:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'mcmc.h5',</span> <span class="pre">nwalkers:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">32,</span> <span class="pre">burnIn:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">100,</span> <span class="pre">nsamples:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1000,</span> <span class="pre">params_dict={},</span> <span class="pre">moves_mixture=[&lt;emcee.moves.stretch.StretchMove</span> <span class="pre">object&gt;],</span> <span class="pre">sampler_kwargs={}</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#perform_mcmc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.perform_mcmc" title="Permalink to this definition">#</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="mcmc.mcmcManager.perform_mcmc">
+<span class="sig-name descname"><span class="pre">perform_mcmc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">burnIn:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">100,</span> <span class="pre">nwalkers:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">32,</span> <span class="pre">nsamples:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1000,</span> <span class="pre">params_dict:</span> <span class="pre">dict</span> <span class="pre">=</span> <span class="pre">{},</span> <span class="pre">moves_mixture=[&lt;emcee.moves.stretch.StretchMove</span> <span class="pre">object&gt;],</span> <span class="pre">sampler_kwargs={}</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#mcmcManager.perform_mcmc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.mcmcManager.perform_mcmc" title="Permalink to this definition">#</a></dt>
 <dd><p>Performs MCMC sampling</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ati</strong> (<em>AmpToolsInterface</em>) – AmpToolsInterface instance</p></li>
-<li><p><strong>LoadParametersSampler</strong> (<a class="reference internal" href="loadParameters.html#LoadParameters.LoadParameters" title="LoadParameters.LoadParameters"><em>LoadParameters</em></a>) – LoadParameters instance</p></li>
-<li><p><strong>ofolder</strong> (<em>str</em>) – output folder name</p></li>
-<li><p><strong>ofile</strong> (<em>str</em>) – output file name</p></li>
-<li><p><strong>nwalkers</strong> (<em>int</em>) – number of walkers</p></li>
 <li><p><strong>burnIn</strong> (<em>int</em>) – number of burn-in steps</p></li>
+<li><p><strong>nwalkers</strong> (<em>int</em>) – number of walkers</p></li>
 <li><p><strong>nsamples</strong> (<em>int</em>) – number of samples</p></li>
-<li><p><strong>params_dict</strong> (<em>dict</em>) – {par: value} or {par: [value, min, max]} where sample from [min, max] for walker initialization</p></li>
+<li><p><strong>params_dict</strong> (<em>dict</em>) – Dictionary of parameter names (complex production coeffs and amplitude params) and values.</p></li>
 <li><p><strong>[</strong> (<em>moves_mixture</em>) – List of tuples of moves (with kwargs pluggin in) and their probability</p></li>
 <li><p><strong>sampler_kwargs</strong> (<em>dict</em>) – Additional keyword arguments to pass to emcee.EnsembleSampler()</p></li>
 </ul>
@@ -485,9 +492,11 @@ document.write(`
 </dl>
 </dd></dl>
 
+</dd></dl>
+
 </section>
-<section id="mcmc-optuna">
-<h2>MCMC/Optuna<a class="headerlink" href="#mcmc-optuna" title="Permalink to this heading">#</a></h2>
+<section id="module-mcmcOptimalMoves">
+<span id="mcmc-optuna"></span><h2>MCMC/Optuna<a class="headerlink" href="#module-mcmcOptimalMoves" title="Permalink to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="mcmcOptimalMoves.Objective">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Objective</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conditions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmcOptimalMoves.html#Objective"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmcOptimalMoves.Objective" title="Permalink to this definition">#</a></dt>
@@ -562,7 +571,7 @@ document.write(`
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">MCMC</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mcmc-optuna">MCMC/Optuna</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-mcmcOptimalMoves">MCMC/Optuna</a></li>
 </ul>
   </nav></div>
 

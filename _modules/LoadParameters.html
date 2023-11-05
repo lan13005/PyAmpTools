@@ -343,9 +343,8 @@ document.write(`
 <span class="sd">    Class to extract amplitude parameters from an AmpTools FitResults or ConfigurationInfo object</span>
 <span class="sd">       Parameters (like production coefficients) can then be formatted (complex -&gt; real, imag) for input to other minimization algorithms</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdPars</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdIsReal</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_cfg</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LoadParameters.load_cfg"><a class="viewcode-back" href="../api/loadParameters.html#LoadParameters.LoadParameters.load_cfg">[docs]</a>    <span class="k">def</span> <span class="nf">load_cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">):</span> <span class="c1"># cfg: [FitResults, ConfigurationInfo]</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
@@ -428,6 +427,7 @@ document.write(`
                 <span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
                 <span class="n">key</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
                 <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Im[</span><span class="si">{</span><span class="n">pk</span><span class="si">}</span><span class="s1">]&#39;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">names</span></div>
 
 <div class="viewcode-block" id="LoadParameters.unflatten_parameters"><a class="viewcode-back" href="../api/loadParameters.html#LoadParameters.LoadParameters.unflatten_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">unflatten_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
@@ -448,6 +448,24 @@ document.write(`
             <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">paramDict</span><span class="p">:</span> <span class="n">paramDict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">param</span>
             <span class="k">else</span><span class="p">:</span> <span class="n">paramDict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">param</span> <span class="c1"># a repeat in key means imaginary part</span>
         <span class="k">return</span> <span class="n">paramDict</span></div></div>
+
+<span class="k">def</span> <span class="nf">createMovesMixtureFromDict</span><span class="p">(</span><span class="n">moves_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Creates a mixture of moves for the emcee sampler</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        moves_dict { move: {kwargs: {}, probability} }: Dictionary of moves and their kwargs and probability</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        moves_mixture [ (emcee.moves.{move}(kwargs), probability) ]: List of tuples of moves (with kwargs pluggin in) and their probability</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">moves_mixture</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">move</span><span class="p">,</span> <span class="n">moveDict</span> <span class="ow">in</span> <span class="n">moves_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">move</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;emcee.moves.</span><span class="si">{</span><span class="n">move</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="c1"># convert string to class</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="n">moveDict</span><span class="p">[</span><span class="s1">&#39;kwargs&#39;</span><span class="p">]</span>
+        <span class="n">prob</span> <span class="o">=</span> <span class="n">moveDict</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span>
+        <span class="n">moves_mixture</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">(</span><span class="n">move</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">prob</span><span class="p">)</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="n">moves_mixture</span>
 </pre></div>
 
                 </article>

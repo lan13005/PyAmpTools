@@ -336,7 +336,7 @@ document.write(`
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">LoadParameters</span> <span class="kn">import</span> <span class="n">LoadParameters</span>
-<span class="kn">from</span> <span class="nn">mcmc</span>  <span class="kn">import</span> <span class="n">perform_mcmc</span><span class="p">,</span> <span class="n">draw_corner</span>
+<span class="kn">from</span> <span class="nn">mcmc</span>  <span class="kn">import</span> <span class="n">mcmcManager</span>
 <span class="kn">import</span> <span class="nn">optuna</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">random</span>
@@ -370,10 +370,7 @@ document.write(`
             <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rm </span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">ofile</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Overwriting existing output file!&quot;</span><span class="p">)</span>
 
-        <span class="c1">########### LOAD PARAMETERS FROM CONFIG FILE ###########</span>
-        <span class="n">LoadParametersSampler</span> <span class="o">=</span> <span class="n">LoadParameters</span><span class="p">()</span>
-        <span class="n">LoadParametersSampler</span><span class="o">.</span><span class="n">load_cfg</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgInfo</span> <span class="p">)</span>
-        <span class="n">values</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">_</span>  <span class="o">=</span> <span class="n">LoadParametersSampler</span><span class="o">.</span><span class="n">flatten_parameters</span><span class="p">()</span>
+        <span class="n">values</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">_</span>  <span class="o">=</span> <span class="n">LoadParametersSampler</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">flatten_parameters</span><span class="p">()</span>
         <span class="n">nFreePars</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
 
         <span class="c1">########### ASK OPTUNA FOR MOVES AND ASSOCIATED PROBABILITIES ###########</span>
@@ -438,11 +435,9 @@ document.write(`
                 <span class="s1">&#39;corner_ofile&#39;</span><span class="p">:</span> <span class="n">corner_ofile</span><span class="p">,</span>
             <span class="p">},</span> <span class="n">f</span><span class="p">)</span>
 
-        <span class="n">results</span> <span class="o">=</span> <span class="n">perform_mcmc</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ati</span><span class="p">,</span>
-            <span class="n">LoadParametersSampler</span><span class="p">,</span>
-            <span class="n">ofolder</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ofolder</span><span class="p">,</span>
-            <span class="n">ofile</span>         <span class="o">=</span> <span class="n">ofile</span><span class="p">,</span>
+        <span class="n">mcmcMgr</span> <span class="o">=</span> <span class="n">mcmcManager</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">LoadParametersSamplers</span><span class="p">,</span> <span class="n">ofile</span><span class="p">)</span>
+
+        <span class="n">mcmcMgr</span><span class="o">.</span><span class="n">perform_mcmc</span><span class="p">(</span>
             <span class="n">nwalkers</span>      <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nwalkers</span><span class="p">,</span>
             <span class="n">burnIn</span>        <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">burnIn</span><span class="p">,</span>
             <span class="n">nsamples</span>      <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">,</span>
@@ -450,7 +445,7 @@ document.write(`
             <span class="n">moves_mixture</span> <span class="o">=</span> <span class="n">moves_mixture</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">draw_corner</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ofolder</span><span class="p">,</span> <span class="n">corner_ofile</span><span class="p">)</span>
+        <span class="n">mcmc</span><span class="o">.</span><span class="n">Mgr</span><span class="o">.</span><span class="n">draw_corner</span><span class="p">(</span><span class="n">corner_ofile</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;autocorr_time&#39;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;acceptance_fraction&#39;</span><span class="p">]</span></div>
 
@@ -512,7 +507,9 @@ document.write(`
     <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReader</span><span class="p">()</span> <span class="p">)</span>
     <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReaderFilter</span><span class="p">()</span> <span class="p">)</span>
 
-    <span class="n">ati</span> <span class="o">=</span> <span class="n">AmpToolsInterface</span><span class="p">(</span> <span class="n">cfgInfo</span> <span class="p">)</span>
+    <span class="c1">### CURRENTLY, ONLY ALLOWS A SINGLE CFGFILE ###</span>
+    <span class="n">atis</span> <span class="o">=</span> <span class="p">[</span> <span class="n">AmpToolsInterface</span><span class="p">(</span> <span class="n">cfgInfo</span> <span class="p">)</span> <span class="p">]</span>
+    <span class="n">LoadParametersSamplers</span> <span class="o">=</span> <span class="p">[</span> <span class="n">LoadParameters</span><span class="p">(</span><span class="n">cfgInfo</span><span class="p">)</span> <span class="p">]</span>
 
     <span class="c1">############## RUN OPTIMIZATION ##############</span>
     <span class="n">optuna</span><span class="o">.</span><span class="n">logging</span><span class="o">.</span><span class="n">get_logger</span><span class="p">(</span><span class="s2">&quot;optuna&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">))</span>
@@ -526,7 +523,8 @@ document.write(`
         <span class="p">)</span>
 
     <span class="n">conditions</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;ati&#39;</span><span class="p">:</span> <span class="n">ati</span><span class="p">,</span>
+        <span class="s1">&#39;atis&#39;</span><span class="p">:</span> <span class="n">ati</span><span class="p">,</span>
+        <span class="s1">&#39;LoadParametersSamplers&#39;</span><span class="p">:</span> <span class="n">LoadParametersSamplers</span><span class="p">,</span>
         <span class="s1">&#39;cfgfile&#39;</span><span class="p">:</span> <span class="n">cfgfile</span><span class="p">,</span> <span class="c1"># for YAML output</span>
         <span class="s1">&#39;cfgInfo&#39;</span><span class="p">:</span> <span class="n">cfgInfo</span><span class="p">,</span>
         <span class="s1">&#39;ofolder&#39;</span><span class="p">:</span> <span class="n">ofolder</span><span class="p">,</span>

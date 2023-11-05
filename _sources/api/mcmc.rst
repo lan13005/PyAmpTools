@@ -10,7 +10,7 @@ MCMC
 
 MCMC/Optuna
 ------------
-.. autoclass:: mcmcOptimalMoves.Objective
+.. automodule:: mcmcOptimalMoves
    :members:
    :undoc-members:
    :show-inheritance:
