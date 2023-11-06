@@ -362,7 +362,7 @@ document.write(`
     <span class="k">return</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span></div>
 
 <div class="viewcode-block" id="loadLibraries"><a class="viewcode-back" href="../api/atiSetup.html#atiSetup.loadLibraries">[docs]</a><span class="k">def</span> <span class="nf">loadLibraries</span><span class="p">(</span><span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39; Load all libraries and print IS_REQUESTED &#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39; Load all libraries &#39;&#39;&#39;</span>
     <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">prepare_mpigpu</span><span class="p">(</span><span class="n">accelerator</span><span class="p">)</span>
     <span class="n">SUFFIX</span>  <span class="o">=</span> <span class="s2">&quot;_GPU&quot;</span> <span class="k">if</span> <span class="n">USE_GPU</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
     <span class="n">SUFFIX</span> <span class="o">+=</span> <span class="s2">&quot;_MPI&quot;</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
@@ -463,8 +463,8 @@ document.write(`
 
 <div class="viewcode-block" id="prepare_mpigpu"><a class="viewcode-back" href="../api/atiSetup.html#atiSetup.prepare_mpigpu">[docs]</a><span class="k">def</span> <span class="nf">prepare_mpigpu</span><span class="p">(</span><span class="n">accelerator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Sets variables to use MPI and/or GPU if requested.</span>
-<span class="sd">    Check who called python. If bash (single process). If mpiexec/mpirun (then MPI)</span>
+<span class="sd">    Sets environment variables to use MPI and/or GPU if requested.</span>
+<span class="sd">        Checks who called the python script. If bash (single process). If mpiexec/mpirun (then MPI)</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        accelerator (str): accelerator flag from argparse ~ [&#39;cpu&#39;, &#39;mpi&#39;, &#39;gpu&#39;, &#39;mpigpu&#39;, &#39;gpumpi&#39;]</span>

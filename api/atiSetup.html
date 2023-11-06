@@ -386,7 +386,7 @@ document.write(`
 <dl class="py function">
 <dt class="sig sig-object py" id="atiSetup.loadLibraries">
 <span class="sig-name descname"><span class="pre">loadLibraries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">accelerator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fsroot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_genamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#loadLibraries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.loadLibraries" title="Permalink to this definition">#</a></dt>
-<dd><p>Load all libraries and print IS_REQUESTED</p>
+<dd><p>Load all libraries</p>
 </dd></dl>
 
 <dl class="py function">
@@ -398,8 +398,10 @@ document.write(`
 <dl class="py function">
 <dt class="sig sig-object py" id="atiSetup.prepare_mpigpu">
 <span class="sig-name descname"><span class="pre">prepare_mpigpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">accelerator</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#prepare_mpigpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.prepare_mpigpu" title="Permalink to this definition">#</a></dt>
-<dd><p>Sets variables to use MPI and/or GPU if requested.
-Check who called python. If bash (single process). If mpiexec/mpirun (then MPI)</p>
+<dd><dl class="simple">
+<dt>Sets environment variables to use MPI and/or GPU if requested.</dt><dd><p>Checks who called the python script. If bash (single process). If mpiexec/mpirun (then MPI)</p>
+</dd>
+</dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>accelerator</strong> (<em>str</em>) – accelerator flag from argparse ~ [‘cpu’, ‘mpi’, ‘gpu’, ‘mpigpu’, ‘gpumpi’]</p>
