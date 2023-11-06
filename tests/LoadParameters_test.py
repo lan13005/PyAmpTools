@@ -12,8 +12,7 @@ atiSetup.setup(globals())
 def performCheck(input, truths):
     true_params, true_paramsIsReal, true_flat_params, true_names = truths
 
-    paramCtrl = LoadParameters()
-    paramCtrl.load_cfg(input)
+    paramCtrl = LoadParameters(input)
 
     cfgInfo = paramCtrl.cfg
     # cfgInfo.display()
