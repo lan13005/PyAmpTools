@@ -29,7 +29,7 @@ def setup(calling_globals, accelerator='mpigpu', use_fsroot=False, use_genamp=Fa
     return USE_MPI, USE_GPU, RANK_MPI
 
 def loadLibraries(accelerator, use_fsroot=False, use_genamp=False):
-    ''' Load all libraries and print IS_REQUESTED '''
+    ''' Load all libraries '''
     USE_MPI, USE_GPU, RANK_MPI = prepare_mpigpu(accelerator)
     SUFFIX  = "_GPU" if USE_GPU else ""
     SUFFIX += "_MPI" if USE_MPI else ""
@@ -130,8 +130,8 @@ def set_aliases(called_globals, USE_MPI):
 
 def prepare_mpigpu(accelerator):
     '''
-    Sets variables to use MPI and/or GPU if requested.
-    Check who called python. If bash (single process). If mpiexec/mpirun (then MPI)
+    Sets environment variables to use MPI and/or GPU if requested.
+        Checks who called the python script. If bash (single process). If mpiexec/mpirun (then MPI)
 
     Args:
         accelerator (str): accelerator flag from argparse ~ ['cpu', 'mpi', 'gpu', 'mpigpu', 'gpumpi']
