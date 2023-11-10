@@ -48,9 +48,11 @@
 #include "MinuitInterface/MIObserver.h"
 #include "MinuitInterface/MISubject.h"
 #include "IUAmpTools/IntensityManager.h"
+#include "IUAmpTools/GradientCalculator.h"
 
 class ConfigurationInfo;
 class ParameterInfo;
+class GradientCalculator;
 
 class ParameterManager : MIObserver
 {
@@ -78,7 +80,12 @@ public:
 
   ComplexParameter* findParameter(const string& ampName) const; // production parameters
   MinuitParameter* findAmpParameter(const string& parName) const; // amplitude parameters
-  vector<string> getParametersList() const; // production and amplitude
+
+  // production (complex) AND amplitude parameters (real), ignore fixed + require floating
+  void constructParametersLists();
+  vector< string > getParNameList() const { return parNameList; };
+  vector< MinuitParameter* > getParValueList() const { return parValueList; };
+  GradientCalculator* gradientCalculator() const { return m_gradCalc; };
 
   void setAmpParameter( const string& parName, double value );
 
@@ -153,9 +160,15 @@ protected:
   map< string, MinuitParameter* > m_ampParams;
   vector< MinuitParameter* > m_ampPtrCache;
 
+  set< string > m_uniquePars; // includes both production and amplitude parameters
+
   vector< GaussianBound* > m_boundPtrCache;
 
   map <string, vector<string> > m_constraintMap;
+
+  vector< string > parNameList;
+  vector< MinuitParameter* > parValueList;
+  GradientCalculator* m_gradCalc;
 
   static const char* kModule;
 };

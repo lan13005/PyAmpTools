@@ -45,6 +45,7 @@
 #include "IUAmpTools/ConfigurationInfo.h"
 #include "IUAmpTools/ParameterManager.h"
 #include "IUAmpTools/LikelihoodCalculator.h"
+#include "IUAmpTools/GradientCalculator.h"
 #include "IUAmpTools/AmpToolsInterface.h"
 #include "IUAmpTools/FitResults.h"
 
@@ -167,6 +168,9 @@ AmpToolsInterface::resetConfigurationInfo(ConfigurationInfo* configurationInfo){
     m_parameterManager = new ParameterManager ( m_minuitMinimizationManager, m_intensityManagers );
     m_parameterManager->setNeg2LnLikContribManager( lhcontMan );
     m_parameterManager->setupFromConfigurationInfo( m_configurationInfo );
+
+    m_gradientCalculator = m_parameterManager->gradientCalculator();
+    m_gradientCalculator->setFCN([this](){ return this->likelihood(); });
   }
 
   // ************************
@@ -301,6 +305,12 @@ AmpToolsInterface::likelihood () const {
     L += likelihood(reaction->reactionName());
   }
   return L;
+}
+
+pair< double, vector<double> >
+AmpToolsInterface::likelihoodAndGradient(){
+  m_gradientCalculator->calculate();
+  return pair< double, vector<double> >( m_gradientCalculator->fcn(), m_gradientCalculator->grad_fcn() );
 }
 
 void

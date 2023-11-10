@@ -57,6 +57,7 @@
 #include "IUAmpTools/ConfigurationInfo.h"
 #include "IUAmpTools/ParameterManager.h"
 #include "IUAmpTools/LikelihoodCalculator.h"
+#include "IUAmpTools/GradientCalculator.h"
 
 class FitResults;
 
@@ -233,6 +234,11 @@ public:
 
   double likelihood(const string& reactionName) const;
 
+  /** Returns the current value of the likelihood() function and the
+   * gradient of the likelihood function with respect to the parameters.
+  */
+  pair< double, vector<double> > likelihoodAndGradient();
+
   /** Reinitialize production and amplitude parameters to the values from
    * ConfigurationInfo.  This is useful for repeated fits where most parameters
    * should be seeded with the same values, for example in a likelihood
@@ -378,6 +384,7 @@ public:
    *  \see processEvents
    */
 
+
   complex<double> decayAmplitude (int iEvent, string ampName,
                                   unsigned int iDataSet = 0) const;
 
@@ -459,6 +466,7 @@ protected:
   ConfigurationInfo*          m_configurationInfo;
   MinuitMinimizationManager*  m_minuitMinimizationManager;
   ParameterManager*           m_parameterManager;
+  GradientCalculator*         m_gradientCalculator;
 
   vector<IntensityManager*>  m_intensityManagers;
 

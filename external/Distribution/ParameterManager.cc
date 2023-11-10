@@ -48,6 +48,7 @@
 #include "MinuitInterface/MinuitParameterManager.h"
 #include "MinuitInterface/MISubject.h"
 #include "GPUManager/GPUCustomTypes.h"
+#include "IUAmpTools/GradientCalculator.h"
 
 #include "IUAmpTools/report.h"
 const char* ParameterManager::kModule = "ParameterManager";
@@ -132,6 +133,8 @@ ParameterManager::~ParameterManager()
   //   delete *boundItr;
   //   report( DEBUG, kModule ) << " ++ done deleting boundItr at address: " << *boundItr << endl;
   // }
+
+  delete m_gradCalc;
 }
 
 void
@@ -185,6 +188,13 @@ ParameterManager::setupFromConfigurationInfo( ConfigurationInfo* cfgInfo ){
       addNeg2LnLikContribParameter( (**lhcontsItr).fullName(), *parItr );
     }
   }
+
+  constructParametersLists();
+  cout << "parMgr: parValueList" << endl;
+  for (int i = 0; i < parValueList.size(); ++i){
+    cout << parNameList[i] << " " << parValueList[i]->value() << endl;
+  }
+  m_gradCalc = new GradientCalculator( this, parValueList );
 }
 
 void
@@ -498,26 +508,47 @@ ParameterManager::findAmpParameter( const string& parName) const{
   return NULL;
 }
 
-vector<string>
-ParameterManager::getParametersList() const{
-    vector<string> parList;
-    report( DEBUG, kModule ) << "m_prodParams size: " << m_prodParams.size() << endl;
+void
+ParameterManager::constructParametersLists(){
+    if (parNameList.size() > 0) return; // checking one list shold be enough
+
+    // Determine the unique PRODUCTION parameters (many can be constrained to each other)
+    set<string> parsObserved;
+    int index = 0;
+    for ( map< string, vector<string> >::const_iterator cItr = m_constraintMap.begin();
+      cItr != m_constraintMap.end(); cItr++){
+      if ( parsObserved.find(cItr->first) != parsObserved.end() ) continue;
+      parsObserved.insert(cItr->first);
+      m_uniquePars.insert(cItr->first);
+      for (unsigned int i = 0; i < cItr->second.size(); i++){
+        parsObserved.insert(cItr->second[i]);
+      }
+    }
+
+    // Loop over production parameters add them to lists if unique
+    ComplexParameter* parVal;
     for (map<string, ComplexParameter*>::const_iterator pItr = m_prodParams.begin();
       pItr != m_prodParams.end(); pItr++){
-      if (!pItr->second->isFixed())
-        parList.push_back(pItr->first);
+      if (!pItr->second->isFixed() && m_uniquePars.find(pItr->first) != m_uniquePars.end()){
+        parNameList.push_back( pItr->first+"_re" );
+        parVal = pItr->second;
+        parValueList.push_back( parVal->getReal() );
+        if (!pItr->second->isPurelyReal()){
+          parNameList.push_back( pItr->first+"_im" );
+          parValueList.push_back( parVal->getImag() );
+        }
+      }
     }
 
-    report( DEBUG, kModule ) << "m_ampParams size: " << m_ampParams.size() << endl;
+    // Loop over amplitude parameters add them to lists if unique
     for (map<string, MinuitParameter*>::const_iterator pItr = m_ampParams.begin();
       pItr != m_ampParams.end(); pItr++){
-      if (pItr->second->floating())
-        parList.push_back(pItr->first);
+      if (pItr->second->floating()){
+        parNameList.push_back(pItr->first);
+        parValueList.push_back(pItr->second);
+      }
     }
-
-    return parList;
 }
-
 
 void
 ParameterManager::update( const MISubject* parPtr, bool skipCovarianceUpdate){
