@@ -7,7 +7,6 @@
 #include "MinuitInterface/MinuitParameter.h"
 #include "IUAmpTools/report.h"
 #include "IUAmpTools/GradientCalculator.h"
-#include "IUAmpTools/ParameterManager.h"
 
 const char* GradientCalculator::kModule = "GradientCalculator";
 
@@ -22,9 +21,8 @@ const char* GradientCalculator::kModule = "GradientCalculator";
 using namespace std;
 
 GradientCalculator::GradientCalculator(
-        ParameterManager* parMgr,
         vector< MinuitParameter* >& parameters
-    ):  m_parMgr(parMgr), x(parameters){
+    ):  x(parameters){
         npars = parameters.size();
         fGrd.resize(npars, 0);
         fGstep.resize(npars, 0);
@@ -87,21 +85,18 @@ GradientCalculator::calculate() {
             fGstep[i] = (fGstep[i] > 0) ? abs(step) : -abs(step);
 
             // Evaluate function at x + step
-            x[i]->setValue( xtf + step, false ); // false = do not notify ParameterManager!
-            m_parMgr->update(x[i], true); // Manually call update, true = skipCovarianceUpdate
+            x[i]->setValue( xtf + step );
             fs1 = FCN(); ++fNfcn;
 
             // Evaluate function at x - step
-            x[i]->setValue( xtf - step, false );
-            m_parMgr->update(x[i], true);
+            x[i]->setValue( xtf - step );
             fs2 = FCN(); ++fNfcn;
 
             // Calculate first and second derivative
             grbfor = fGrd[i];
             fGrd[i] = (fs1 - fs2) / (2 * step);
             fG2[i] = (fs1 + fs2 - 2 * fAmin) / (step * step);
-            x[i]->setValue( xtf, false ); // Reset x[i] MinuitParameter to the original value
-            m_parMgr->update(x[i], true);
+            x[i]->setValue( xtf ); // Reset x[i] MinuitParameter to the original value
 
             // Check for convergence
             if (abs(grbfor - fGrd[i]) / (abs(fGrd[i]) + dfmin/step) < tlrfGrd){

@@ -6,7 +6,6 @@
 #include <limits>
 #include <functional>
 #include "MinuitInterface/MinuitParameter.h"
-#include "IUAmpTools/ParameterManager.h"
 
 ///////////////////////////////////////////////////////////////////////////
 // This code is supposed to mirror Minuit's derivative calculation
@@ -16,15 +15,13 @@
 // in the TMinuit source code above.
 ///////////////////////////////////////////////////////////////////////////
 
-class ParameterManager; // forward declaration to prevent circular dependency
 
 using namespace std;
 
 class GradientCalculator {
-    ParameterManager* m_parMgr;         // Parameter Manager
 
 public:
-    GradientCalculator(ParameterManager* parMgr, vector< MinuitParameter* >& parameters);
+    GradientCalculator(vector< MinuitParameter* >& parameters);
 
     ~GradientCalculator() {}
 
