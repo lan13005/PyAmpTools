@@ -80,8 +80,6 @@ distribute_makefiles:
 ### kDRModule cannot be found (template). Replace with char
 	cp $(SRC_DIRS)/DataReaderMPI.h AmpTools/AmpTools/IUAmpToolsMPI
 ### allow skipping of covariance update in ParMgr's updateParCovariance()
-	cp $(SRC_DIRS)/MIObserver.* AmpTools/AmpTools/MinuitInterface
-	cp $(SRC_DIRS)/MIFunctionContribution.* AmpTools/AmpTools/MinuitInterface
 	cp $(SRC_DIRS)/ComplexParameter.* AmpTools/AmpTools/IUAmpTools
 ### Not freed m_pdDevNICalc and delete m_pcCalcAmp
 	cp $(SRC_DIRS)/GPUManager.* AmpTools/AmpTools/GPUManager
