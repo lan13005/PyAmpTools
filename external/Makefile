@@ -8,6 +8,12 @@ ifndef ROOTSYS
 $(error ROOTSYS environment variable is not set)
 endif
 
+# SUPPORTED AMPTOOLS / FSROOT VERSIONS
+# Features introduced beyond these commits might get overwritten
+# by the distribution process and can crash the build
+AMPTOOLS_COMMIT := 4c36f0b
+FSROOT_COMMIT := d4d7e73
+
 SRC_DIRS := Distribution
 SUB_DIRS := IUAmpTools IUAmpToolsMPI MinuitInterface UpRootMinuit
 GPU_DIRS := GPUManager
@@ -17,32 +23,40 @@ default: distribute_makefiles
 	@echo " === Running 'make' in the target directory... ==="
 	@cd AmpTools/AmpTools; make
 	@cd AmpTools/AmpPlotter; make
-	@cd FSRoot; make
-	@cd FSRoot/Executables; make
-	@cd AMPTOOLS_AMPS_DATAIO; make
+# @cd FSRoot; make
+# @cd FSRoot/Executables; make
+# @cd AMPTOOLS_AMPS_DATAIO; make
 
 mpi: | default
 	@echo " === Running 'make mpi' in the target directory... ==="
 	@cd AmpTools/AmpTools; make MPI=1
 	@cd AmpTools/AmpPlotter; make
-	@cd AMPTOOLS_AMPS_DATAIO; make MPI=1
+# @cd AMPTOOLS_AMPS_DATAIO; make MPI=1
 
 gpu: | default
 # gpu: distribute_makefiles
 	@echo " === Running 'make gpu' in the target directory... ==="
 	@cd AmpTools/AmpTools; make GPU=1
 	@cd AmpTools/AmpPlotter; make
-	@cd AMPTOOLS_AMPS_DATAIO; make GPU=1
+# @cd AMPTOOLS_AMPS_DATAIO; make GPU=1
 
 mpigpu: gpu mpi
 	@echo " === Running 'make mpigpu' in the target directory... ==="
 	@cd AmpTools/AmpTools; make GPU=1 MPI=1
 	@cd AmpTools/AmpPlotter; make
-	@cd AMPTOOLS_AMPS_DATAIO; make GPU=1 MPI=1
+# @cd AMPTOOLS_AMPS_DATAIO; make GPU=1 MPI=1
 
 gpumpi: mpigpu
 
 distribute_makefiles:
+	@echo " === Checking out Amptools and FSRoot... === "
+	@echo " === Using Amptools commit: $(AMPTOOLS_COMMIT) === "
+	@echo " === Using FSRoot commit: $(FSROOT_COMMIT) === "
+	@echo " === Checking out Amptools... === "
+	@cd AmpTools; git reset --hard; git checkout $(AMPTOOLS_COMMIT)
+	@echo " === Checking out FSRoot... === "
+	@cd FSRoot; git reset --hard; git checkout $(FSROOT_COMMIT)
+
 	@echo " === Distributing Makefiles and modified source codes... === "
 ### Distribute AmpTools makefiles
 	cp $(SRC_DIRS)/AmpTools_Base_Makefile AmpTools/Makefile
@@ -77,6 +91,8 @@ distribute_makefiles:
 	cp $(SRC_DIRS)/MISubject.* AmpTools/AmpTools/MinuitInterface
 	cp $(SRC_DIRS)/URMinuit.* AmpTools/AmpTools/UpRootMinuit
 	cp $(SRC_DIRS)/AmpVecs.* AmpTools/AmpTools/IUAmpTools
+### Introduce GradientCalculator
+	cp $(SRC_DIRS)/GradientCalculator.* AmpTools/AmpTools/IUAmpTools
 ### Distribute FSRoot makefiles and src files
 	cp $(SRC_DIRS)/FSROOT_Makefile FSRoot/Makefile
 	cp $(SRC_DIRS)/initialize_fsroot.* FSRoot
@@ -86,6 +102,6 @@ distribute_makefiles:
 clean:
 	@echo " === Cleaning up target directory === "
 	@cd AmpTools; git reset --hard; make clean
-	@cd AMPTOOLS_AMPS_DATAIO; make clean
-	@cd FSRoot; git reset --hard; make clean
-	@cd FSRoot/Executables; make clean
+# @cd AMPTOOLS_AMPS_DATAIO; make clean
+# @cd FSRoot; git reset --hard; make clean
+# @cd FSRoot/Executables; make clean
