@@ -52,6 +52,7 @@
 
 #include "IUAmpTools/report.h"
 const char* ParameterManager::kModule = "ParameterManager";
+bool ParameterManager::m_performCovarianceUpdate = true;
 
 ParameterManager::ParameterManager( MinuitMinimizationManager* minuitManager,
                                     IntensityManager* intenManager ) :
@@ -194,7 +195,7 @@ ParameterManager::setupFromConfigurationInfo( ConfigurationInfo* cfgInfo ){
   for (int i = 0; i < parValueList.size(); ++i){
     cout << parNameList[i] << " " << parValueList[i]->value() << endl;
   }
-  m_gradCalc = new GradientCalculator( this, parValueList );
+  m_gradCalc = new GradientCalculator( parValueList );
 }
 
 void
@@ -551,7 +552,7 @@ ParameterManager::constructParametersLists(){
 }
 
 void
-ParameterManager::update( const MISubject* parPtr, bool skipCovarianceUpdate){
+ParameterManager::update( const MISubject* parPtr ){
 
   // this method is called whenever any parameter changes
   // if it is an amplitude parameter, we want to notify the
@@ -576,7 +577,7 @@ ParameterManager::update( const MISubject* parPtr, bool skipCovarianceUpdate){
   // For external minimizers we will not have access to the parameter covariance
   //   matrix which comes during Minuit minimization.
   //   See MinuitParameterManager::covarianceMatrix() which uses Minuit mnemat() method
-  if (!skipCovarianceUpdate)
+  if (m_performCovarianceUpdate)
     updateParCovariance();
 }
 

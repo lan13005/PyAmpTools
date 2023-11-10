@@ -52,7 +52,6 @@
 
 class ConfigurationInfo;
 class ParameterInfo;
-class GradientCalculator;
 
 class ParameterManager : MIObserver
 {
@@ -86,6 +85,7 @@ public:
   vector< string > getParNameList() const { return parNameList; };
   vector< MinuitParameter* > getParValueList() const { return parValueList; };
   GradientCalculator* gradientCalculator() const { return m_gradCalc; };
+  static void setSkipCovarianceUpdate(bool skip) { m_performCovarianceUpdate = skip; };
 
   void setAmpParameter( const string& parName, double value );
 
@@ -106,7 +106,7 @@ public:
   bool hasParameter(const string& ampName) const;
 
   // this gets called whenever an amplitude parameter changes
-  void update( const MISubject* parPtr, bool skipCovarianceUpdate = false );
+  void update( const MISubject* parPtr );
 
 protected:
 
@@ -169,6 +169,7 @@ protected:
   vector< string > parNameList;
   vector< MinuitParameter* > parValueList;
   GradientCalculator* m_gradCalc;
+  static bool m_performCovarianceUpdate; // Set false if not using internal Minuit. No fit = no covariance
 
   static const char* kModule;
 };
