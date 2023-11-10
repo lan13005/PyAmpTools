@@ -114,13 +114,7 @@ GradientCalculator::calculate() {
 
 void
 GradientCalculator::setInitialStepSize(const vector< MinuitParameter* >& parameters) {
-    cout << "Setting initial step size" << endl;
-    cout << "fEpsma2: " << fEpsma2 << endl;
-    cout << "npars: " << parameters.size() << endl;
     for (int i = 0; i < parameters.size(); ++i){
-        cout << "fGstep size: " << fGstep.size() << endl;
-        cout << " i = " << i << " value: " << parameters[i]->value() << endl;
-        cout << abs( parameters[i]->value() )*0.01 + fEpsma2 << endl;
         fGstep[i] = abs( parameters[i]->value() )*0.01 + fEpsma2;
     }
 }
