@@ -103,7 +103,7 @@ public:
    * \param[in] callingSubject pointer to the MinuitParameter representing
    * either the real or imaginary part of the value
    */
-  void update( const MISubject* callingSubject, bool skipCovarianceUpdate = false );
+  void update( const MISubject* callingSubject );
 
   /**
    * This sets the value of the parameter.
