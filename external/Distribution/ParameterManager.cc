@@ -191,10 +191,6 @@ ParameterManager::setupFromConfigurationInfo( ConfigurationInfo* cfgInfo ){
   }
 
   constructParametersLists();
-  cout << "parMgr: parValueList" << endl;
-  for (int i = 0; i < parValueList.size(); ++i){
-    cout << parNameList[i] << " " << parValueList[i]->value() << endl;
-  }
   m_gradCalc = new GradientCalculator( parValueList );
 }
 
