@@ -78,7 +78,13 @@ public:
 
   ComplexParameter* findParameter(const string& ampName) const; // production parameters
   MinuitParameter* findAmpParameter(const string& parName) const; // amplitude parameters
-  vector<string> getParametersList() const; // production and amplitude
+
+  // production (complex) AND amplitude parameters (real), ignore fixed + require floating
+  void constructParametersLists();
+  map< string, MinuitParameter* > getParMap() const { return parMap; };
+  vector< MinuitParameter* > getParValueList() const { return parValueList; };
+  static void setDoCovarianceUpdate(bool doUpdate) { m_doCovarianceUpdate = doUpdate; };
+  static bool getDoCovarianceUpdate() { return m_doCovarianceUpdate; };
 
   void setAmpParameter( const string& parName, double value );
 
@@ -99,7 +105,7 @@ public:
   bool hasParameter(const string& ampName) const;
 
   // this gets called whenever an amplitude parameter changes
-  void update( const MISubject* parPtr, bool skipCovarianceUpdate = false );
+  void update( const MISubject* parPtr );
 
 protected:
 
@@ -153,9 +159,15 @@ protected:
   map< string, MinuitParameter* > m_ampParams;
   vector< MinuitParameter* > m_ampPtrCache;
 
+  set< string > m_uniquePars; // includes both production and amplitude parameters
+
   vector< GaussianBound* > m_boundPtrCache;
 
   map <string, vector<string> > m_constraintMap;
+
+  map< string, MinuitParameter* > parMap;
+  vector< MinuitParameter* > parValueList;
+  static bool m_doCovarianceUpdate; // Set false if not using internal Minuit. No fit = no covariance
 
   static const char* kModule;
 };

@@ -8,6 +8,12 @@ ifndef ROOTSYS
 $(error ROOTSYS environment variable is not set)
 endif
 
+# SUPPORTED AMPTOOLS / FSROOT VERSIONS
+# Features introduced beyond these commits might get overwritten
+# by the distribution process and can crash the build
+AMPTOOLS_COMMIT := 4c36f0b
+FSROOT_COMMIT := d4d7e73
+
 SRC_DIRS := Distribution
 SUB_DIRS := IUAmpTools IUAmpToolsMPI MinuitInterface UpRootMinuit
 GPU_DIRS := GPUManager
@@ -43,6 +49,14 @@ mpigpu: gpu mpi
 gpumpi: mpigpu
 
 distribute_makefiles:
+	@echo " === Checking out Amptools and FSRoot... === "
+	@echo " === Using Amptools commit: $(AMPTOOLS_COMMIT) === "
+	@echo " === Using FSRoot commit: $(FSROOT_COMMIT) === "
+	@echo " === Checking out Amptools... === "
+	@cd AmpTools; git reset --hard; git checkout $(AMPTOOLS_COMMIT)
+	@echo " === Checking out FSRoot... === "
+	@cd FSRoot; git reset --hard; git checkout $(FSROOT_COMMIT)
+
 	@echo " === Distributing Makefiles and modified source codes... === "
 ### Distribute AmpTools makefiles
 	cp $(SRC_DIRS)/AmpTools_Base_Makefile AmpTools/Makefile
@@ -59,15 +73,13 @@ distribute_makefiles:
 ### Distribute AmpPlotter makefiles
 	cp $(SRC_DIRS)/AmpPlotter_Makefile AmpTools/AmpPlotter/Makefile
 	cp $(SRC_DIRS)/AmpPlotter_X_Makefile AmpTools/AmpPlotter/AmpPlotter/Makefile
-### Pythonization + ease of modifying parameters
+### Pythonization + ease of modifying parameters + GradientManager
 	cp $(SRC_DIRS)/ParameterManager.* AmpTools/AmpTools/IUAmpTools
 ### Extract amplitude weights
 	cp $(SRC_DIRS)/PlotGenerator.* AmpTools/AmpTools/IUAmpTools
 ### kDRModule cannot be found (template). Replace with char
 	cp $(SRC_DIRS)/DataReaderMPI.h AmpTools/AmpTools/IUAmpToolsMPI
-### allow skipping of covariance update in ParMgr's updateParCovariance()
-	cp $(SRC_DIRS)/MIObserver.* AmpTools/AmpTools/MinuitInterface
-	cp $(SRC_DIRS)/MIFunctionContribution.* AmpTools/AmpTools/MinuitInterface
+### Add getReal and getImag methods
 	cp $(SRC_DIRS)/ComplexParameter.* AmpTools/AmpTools/IUAmpTools
 ### Not freed m_pdDevNICalc and delete m_pcCalcAmp
 	cp $(SRC_DIRS)/GPUManager.* AmpTools/AmpTools/GPUManager
@@ -77,6 +89,8 @@ distribute_makefiles:
 	cp $(SRC_DIRS)/MISubject.* AmpTools/AmpTools/MinuitInterface
 	cp $(SRC_DIRS)/URMinuit.* AmpTools/AmpTools/UpRootMinuit
 	cp $(SRC_DIRS)/AmpVecs.* AmpTools/AmpTools/IUAmpTools
+### Introduce GradientCalculator
+	cp $(SRC_DIRS)/GradientCalculator.* AmpTools/AmpTools/IUAmpTools
 ### Distribute FSRoot makefiles and src files
 	cp $(SRC_DIRS)/FSROOT_Makefile FSRoot/Makefile
 	cp $(SRC_DIRS)/initialize_fsroot.* FSRoot

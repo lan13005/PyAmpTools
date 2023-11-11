@@ -45,6 +45,7 @@
 #include "IUAmpTools/ConfigurationInfo.h"
 #include "IUAmpTools/ParameterManager.h"
 #include "IUAmpTools/LikelihoodCalculator.h"
+#include "IUAmpTools/GradientCalculator.h"
 #include "IUAmpTools/AmpToolsInterface.h"
 #include "IUAmpTools/FitResults.h"
 
@@ -62,6 +63,7 @@ m_functionality( flag ),
 m_configurationInfo( NULL ),
 m_minuitMinimizationManager(NULL),
 m_parameterManager(NULL),
+m_gradientCalculator(NULL),
 m_fitResults(NULL)
 {
   report( DEBUG, kModule ) << "AmpToolsInterface constructor without cfgInfo" << endl;
@@ -75,6 +77,7 @@ m_functionality( flag ),
 m_configurationInfo(configurationInfo),
 m_minuitMinimizationManager(NULL),
 m_parameterManager(NULL),
+m_gradientCalculator(NULL),
 m_fitResults(NULL)
 {
   report (DEBUG, kModule ) << "MAXAMPVECS: " << MAXAMPVECS << endl;
@@ -167,6 +170,10 @@ AmpToolsInterface::resetConfigurationInfo(ConfigurationInfo* configurationInfo){
     m_parameterManager = new ParameterManager ( m_minuitMinimizationManager, m_intensityManagers );
     m_parameterManager->setNeg2LnLikContribManager( lhcontMan );
     m_parameterManager->setupFromConfigurationInfo( m_configurationInfo );
+
+    vector< MinuitParameter* > parValueList = m_parameterManager->getParValueList();
+    m_gradientCalculator = new GradientCalculator( parValueList );
+    m_gradientCalculator->setFCN([this](){ return this->likelihood(); });
   }
 
   // ************************
@@ -301,6 +308,12 @@ AmpToolsInterface::likelihood () const {
     L += likelihood(reaction->reactionName());
   }
   return L;
+}
+
+pair< double, vector<double> >
+AmpToolsInterface::likelihoodAndGradient(){
+  m_gradientCalculator->calculate();
+  return pair< double, vector<double> >( m_gradientCalculator->fcn(), m_gradientCalculator->grad_fcn() );
 }
 
 void
@@ -591,6 +604,9 @@ AmpToolsInterface::clear(){
     m_ampVecs[i].deallocAmpVecs();
     m_ampVecsReactionName[i] = "";
   }
+
+  report (DEBUG, kModule ) << "Deleting gradientCalculator" << endl;
+  if (gradientCalculator()) delete gradientCalculator();
 
   report (DEBUG, kModule ) << "Deleting parameterManager" << endl;
   if (parameterManager()) delete parameterManager();

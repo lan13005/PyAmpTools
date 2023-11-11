@@ -115,19 +115,6 @@ def set_aliases(called_globals, USE_MPI):
 
     called_globals.update(aliases)
 
-# default_print = print
-# def print(*args, **kwargs):
-#     '''
-#     Override print to always flush. Mixing c++ and python code
-#     can cause reordering of stdout
-#     '''
-#     kwargs['flush'] = kwargs.get('flush', True)
-#     default_print(*args, **kwargs)
-
-# def checkEnvironment(variable):
-#     ''' Check if environment variable is set to 1 '''
-#     return os.environ[variable] == "1" if variable in os.environ else False
-
 def prepare_mpigpu(accelerator):
     '''
     Sets environment variables to use MPI and/or GPU if requested.

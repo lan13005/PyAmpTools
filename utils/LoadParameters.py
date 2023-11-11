@@ -75,11 +75,11 @@ class LoadParameters:
 
         Returns:
             parameters (list): list of flattened parameters
-            key (list): list of keys (parameter names) corresponding to parameters
+            keys (list): list of keys (parameter names) corresponding to parameters
             names (list): list of parameter names expanding complex parameters into Re[par] and Im[par]
         '''
         parameters = []
-        key        = [] # lose information on flatten, use key to keep track of provenance
+        keys       = [] # lose information on flatten, use key to keep track of provenance
         names      = [] # track parameter names, appending re/im to name if complex
         if len(params)==0:
             params = self.params
@@ -89,31 +89,39 @@ class LoadParameters:
             real_value = v.real      if k in self.uniqueProdPars else v
             names.append(f'Re[{pk}]' if k in self.uniqueProdPars else pk)
             parameters.append( real_value )
-            key.append(k)
+            keys.append(k+"_re") # MUST match notation in AmpTools' parameterManager
             if not self.paramsIsReal[k]:
                 parameters.append(v.imag)
-                key.append(k)
+                keys.append(k+"_im")
                 names.append(f'Im[{pk}]')
 
-        return parameters, key, names
+        self.keys        = keys
+        self.names       = names
+        self.parmameters = parameters
 
-    def unflatten_parameters(self, parameters, key):
+        return parameters, keys, names
+
+    def unflatten_parameters(self, parameters, keys=[]):
         '''
         Unflatten parameters forming complex values (for production parameters) when requested.
             List to Dictionary
 
         Args:
             parameters (list): list of flattened parameters
-            key (list): list of keys (parameter names) corresponding to parameters
+            keys (list): list of keys (parameter names) corresponding to parameters
 
         Returns:
             paramDict (dict): dictionary of parameters
-
         '''
+
+        if len(keys)==0 and len(parameters)!=0 and len(parameters) == len(self.parmameters):
+            # if no keys passed then use keys from last call to flatten_parameters
+            keys = self.keys
+
         paramDict = {}
-        for k, param in zip(key,parameters):
-            if k not in paramDict: paramDict[k] = param
-            else: paramDict[k] += 1j*param # a repeat in key means imaginary part
+        for k, param in zip(keys,parameters):
+            if   k[:-3] == '_re': paramDict[k[:-3]] =    param
+            elif k[:-3] == '_im': paramDict[k[:-3]] = 1j*param
         return paramDict
 
 def createMovesMixtureFromDict(moves_dict):
