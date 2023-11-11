@@ -63,6 +63,7 @@ m_functionality( flag ),
 m_configurationInfo( NULL ),
 m_minuitMinimizationManager(NULL),
 m_parameterManager(NULL),
+m_gradientCalculator(NULL),
 m_fitResults(NULL)
 {
   report( DEBUG, kModule ) << "AmpToolsInterface constructor without cfgInfo" << endl;
@@ -76,6 +77,7 @@ m_functionality( flag ),
 m_configurationInfo(configurationInfo),
 m_minuitMinimizationManager(NULL),
 m_parameterManager(NULL),
+m_gradientCalculator(NULL),
 m_fitResults(NULL)
 {
   report (DEBUG, kModule ) << "MAXAMPVECS: " << MAXAMPVECS << endl;
@@ -169,7 +171,8 @@ AmpToolsInterface::resetConfigurationInfo(ConfigurationInfo* configurationInfo){
     m_parameterManager->setNeg2LnLikContribManager( lhcontMan );
     m_parameterManager->setupFromConfigurationInfo( m_configurationInfo );
 
-    m_gradientCalculator = m_parameterManager->gradientCalculator();
+    vector< MinuitParameter* > parValueList = m_parameterManager->getParValueList();
+    m_gradientCalculator = new GradientCalculator( parValueList );
     m_gradientCalculator->setFCN([this](){ return this->likelihood(); });
   }
 
@@ -601,6 +604,9 @@ AmpToolsInterface::clear(){
     m_ampVecs[i].deallocAmpVecs();
     m_ampVecsReactionName[i] = "";
   }
+
+  report (DEBUG, kModule ) << "Deleting gradientCalculator" << endl;
+  if (gradientCalculator()) delete gradientCalculator();
 
   report (DEBUG, kModule ) << "Deleting parameterManager" << endl;
   if (parameterManager()) delete parameterManager();

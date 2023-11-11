@@ -48,7 +48,6 @@
 #include "MinuitInterface/MinuitParameterManager.h"
 #include "MinuitInterface/MISubject.h"
 #include "GPUManager/GPUCustomTypes.h"
-#include "IUAmpTools/GradientCalculator.h"
 
 #include "IUAmpTools/report.h"
 const char* ParameterManager::kModule = "ParameterManager";
@@ -134,8 +133,6 @@ ParameterManager::~ParameterManager()
   //   delete *boundItr;
   //   report( DEBUG, kModule ) << " ++ done deleting boundItr at address: " << *boundItr << endl;
   // }
-
-  delete m_gradCalc;
 }
 
 void
@@ -191,7 +188,6 @@ ParameterManager::setupFromConfigurationInfo( ConfigurationInfo* cfgInfo ){
   }
 
   constructParametersLists();
-  m_gradCalc = new GradientCalculator( parValueList );
 }
 
 void

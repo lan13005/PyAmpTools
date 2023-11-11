@@ -48,7 +48,6 @@
 #include "MinuitInterface/MIObserver.h"
 #include "MinuitInterface/MISubject.h"
 #include "IUAmpTools/IntensityManager.h"
-#include "IUAmpTools/GradientCalculator.h"
 
 class ConfigurationInfo;
 class ParameterInfo;
@@ -84,7 +83,6 @@ public:
   void constructParametersLists();
   map< string, MinuitParameter* > getParMap() const { return parMap; };
   vector< MinuitParameter* > getParValueList() const { return parValueList; };
-  GradientCalculator* gradientCalculator() const { return m_gradCalc; };
   static void setDoCovarianceUpdate(bool doUpdate) { m_doCovarianceUpdate = doUpdate; };
   static bool getDoCovarianceUpdate() { return m_doCovarianceUpdate; };
 
@@ -169,7 +167,6 @@ protected:
 
   map< string, MinuitParameter* > parMap;
   vector< MinuitParameter* > parValueList;
-  GradientCalculator* m_gradCalc;
   static bool m_doCovarianceUpdate; // Set false if not using internal Minuit. No fit = no covariance
 
   static const char* kModule;

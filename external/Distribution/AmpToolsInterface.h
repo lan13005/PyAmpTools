@@ -163,6 +163,12 @@ public:
   { return m_parameterManager;}
 
 
+  /** Pointer to the GradientCalculator.
+   *  Use this to get the gradient of the likelihood function.
+   */
+  GradientCalculator* gradientCalculator() const { return m_gradientCalculator; }
+
+
   /** Pointer to an IntensityManager.  There is one for each defined reaction.
    *  (Most applications will not likely need to access these.)
    */
