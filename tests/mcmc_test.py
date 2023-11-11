@@ -12,6 +12,7 @@ def test_mcmc():
             --nwalkers 20 \
             --burnin 10 \
             --nsamples 100 \
+            --corner_ofile '{ofolder}/corner.png' \
             --overwrite"
    print(cmd)
    return_code = subprocess.call(cmd, shell=True)

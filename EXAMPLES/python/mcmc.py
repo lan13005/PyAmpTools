@@ -22,12 +22,16 @@ class mcmcManager:
         self.ofile = ofile
         self.finishedSetup = False
 
-    def Prior(self, parameters):
+    def Prior(self,
+              par_values,
+              keys
+              ):
         '''
-        (Log of) Prior distribution for the parameters
+        (Log of) Prior distribution for the par_values
 
         Args:
-            parameters (dict): Dictionary of parameter names (complex production coeffs and amplitude params) and values.
+            par_values (MinuitParameter*): list of parameter names and values. Production coeffs are split into (re)al/(im)aginary parts
+            keys (str): parameter names
                 If multiple config files were passed, the parameter names will be appended with a '_i' tag where i is the ith cfg file
 
         Returns:
@@ -48,8 +52,8 @@ class mcmcManager:
         Definition of the (Log) Posterior distribution
 
         Args:
-            par_values (float): Flattened (complex-to-Real/Imag) Parameter values. ~ [real1, imag1, real2, imag2, ...]
-            keys (str): Flattened Parameter names. ~ [amp1,  amp1,  amp2,  amp2, ...]
+            par_values (MinuitParameter*): list of parameter names and values. Production coeffs are split into (re)al/(im)aginary parts
+            keys (str): parameter names
                 If multiple config files were passed, the parameter names will be appended with a '_i' tag where i is the ith cfg file
 
         Returns:
@@ -59,16 +63,15 @@ class mcmcManager:
         ## Calculate Log likelihood
         log_prob = 0
         n_atis = len( self.atis )
-        for i, ati, LoadParametersSampler in zip( range(n_atis), self.atis, self.LoadParametersSamplers ):
+        for i, ati in zip( range(n_atis), self.atis ):
             _par_values = par_values[self.paramPartitions[i]:self.paramPartitions[i+1]]
             _keys = keys[self.paramPartitions[i]:self.paramPartitions[i+1]]
-            parameters = LoadParametersSampler.unflatten_parameters( _par_values, _keys )
-            for name, value in parameters.items():
+            for name, value in zip(_keys, _par_values):
                 # remove tag from name if multiple cfg files were passed
                 name = name[ :name.rfind('_') ] if n_atis > 1 else name
                 ati.parameterManager()[name] = value
 
-            log_prob += self.Likelihood(ati) + self.Prior(parameters)
+        log_prob += self.Likelihood(ati) + self.Prior(par_values, keys)
 
         return log_prob
 
@@ -326,6 +329,7 @@ if __name__ == '__main__':
 
     atis = [ AmpToolsInterface(cfgInfo) for cfgInfo in cfgInfos ]
     LoadParametersSamplers = [ LoadParameters(cfgInfo) for cfgInfo in cfgInfos ]
+    [ ati.parameterManager().setDoCovarianceUpdate(False) for ati in atis ] # No internal Minuit fit = no covariance matrix
 
     ############## RUN MCMC ##############
     np.random.seed(seed)
