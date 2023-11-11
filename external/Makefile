@@ -23,28 +23,28 @@ default: distribute_makefiles
 	@echo " === Running 'make' in the target directory... ==="
 	@cd AmpTools/AmpTools; make
 	@cd AmpTools/AmpPlotter; make
-# @cd FSRoot; make
-# @cd FSRoot/Executables; make
-# @cd AMPTOOLS_AMPS_DATAIO; make
+	@cd FSRoot; make
+	@cd FSRoot/Executables; make
+	@cd AMPTOOLS_AMPS_DATAIO; make
 
 mpi: | default
 	@echo " === Running 'make mpi' in the target directory... ==="
 	@cd AmpTools/AmpTools; make MPI=1
 	@cd AmpTools/AmpPlotter; make
-# @cd AMPTOOLS_AMPS_DATAIO; make MPI=1
+	@cd AMPTOOLS_AMPS_DATAIO; make MPI=1
 
 gpu: | default
 # gpu: distribute_makefiles
 	@echo " === Running 'make gpu' in the target directory... ==="
 	@cd AmpTools/AmpTools; make GPU=1
 	@cd AmpTools/AmpPlotter; make
-# @cd AMPTOOLS_AMPS_DATAIO; make GPU=1
+	@cd AMPTOOLS_AMPS_DATAIO; make GPU=1
 
 mpigpu: gpu mpi
 	@echo " === Running 'make mpigpu' in the target directory... ==="
 	@cd AmpTools/AmpTools; make GPU=1 MPI=1
 	@cd AmpTools/AmpPlotter; make
-# @cd AMPTOOLS_AMPS_DATAIO; make GPU=1 MPI=1
+	@cd AMPTOOLS_AMPS_DATAIO; make GPU=1 MPI=1
 
 gpumpi: mpigpu
 
@@ -73,13 +73,13 @@ distribute_makefiles:
 ### Distribute AmpPlotter makefiles
 	cp $(SRC_DIRS)/AmpPlotter_Makefile AmpTools/AmpPlotter/Makefile
 	cp $(SRC_DIRS)/AmpPlotter_X_Makefile AmpTools/AmpPlotter/AmpPlotter/Makefile
-### Pythonization + ease of modifying parameters
+### Pythonization + ease of modifying parameters + GradientManager
 	cp $(SRC_DIRS)/ParameterManager.* AmpTools/AmpTools/IUAmpTools
 ### Extract amplitude weights
 	cp $(SRC_DIRS)/PlotGenerator.* AmpTools/AmpTools/IUAmpTools
 ### kDRModule cannot be found (template). Replace with char
 	cp $(SRC_DIRS)/DataReaderMPI.h AmpTools/AmpTools/IUAmpToolsMPI
-### allow skipping of covariance update in ParMgr's updateParCovariance()
+### Add getReal and getImag methods
 	cp $(SRC_DIRS)/ComplexParameter.* AmpTools/AmpTools/IUAmpTools
 ### Not freed m_pdDevNICalc and delete m_pcCalcAmp
 	cp $(SRC_DIRS)/GPUManager.* AmpTools/AmpTools/GPUManager
@@ -100,6 +100,6 @@ distribute_makefiles:
 clean:
 	@echo " === Cleaning up target directory === "
 	@cd AmpTools; git reset --hard; make clean
-# @cd AMPTOOLS_AMPS_DATAIO; make clean
-# @cd FSRoot; git reset --hard; make clean
-# @cd FSRoot/Executables; make clean
+	@cd AMPTOOLS_AMPS_DATAIO; make clean
+	@cd FSRoot; git reset --hard; make clean
+	@cd FSRoot/Executables; make clean
