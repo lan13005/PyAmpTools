@@ -82,10 +82,11 @@ public:
 
   // production (complex) AND amplitude parameters (real), ignore fixed + require floating
   void constructParametersLists();
-  vector< string > getParNameList() const { return parNameList; };
+  map< string, MinuitParameter* > getParMap() const { return parMap; };
   vector< MinuitParameter* > getParValueList() const { return parValueList; };
   GradientCalculator* gradientCalculator() const { return m_gradCalc; };
-  static void setSkipCovarianceUpdate(bool skip) { m_performCovarianceUpdate = skip; };
+  static void setDoCovarianceUpdate(bool doUpdate) { m_doCovarianceUpdate = doUpdate; };
+  static bool getDoCovarianceUpdate() { return m_doCovarianceUpdate; };
 
   void setAmpParameter( const string& parName, double value );
 
@@ -166,10 +167,10 @@ protected:
 
   map <string, vector<string> > m_constraintMap;
 
-  vector< string > parNameList;
+  map< string, MinuitParameter* > parMap;
   vector< MinuitParameter* > parValueList;
   GradientCalculator* m_gradCalc;
-  static bool m_performCovarianceUpdate; // Set false if not using internal Minuit. No fit = no covariance
+  static bool m_doCovarianceUpdate; // Set false if not using internal Minuit. No fit = no covariance
 
   static const char* kModule;
 };

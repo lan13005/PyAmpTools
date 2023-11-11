@@ -52,7 +52,7 @@
 
 #include "IUAmpTools/report.h"
 const char* ParameterManager::kModule = "ParameterManager";
-bool ParameterManager::m_performCovarianceUpdate = true;
+bool ParameterManager::m_doCovarianceUpdate = true;
 
 ParameterManager::ParameterManager( MinuitMinimizationManager* minuitManager,
                                     IntensityManager* intenManager ) :
@@ -507,7 +507,7 @@ ParameterManager::findAmpParameter( const string& parName) const{
 
 void
 ParameterManager::constructParametersLists(){
-    if (parNameList.size() > 0) return; // checking one list shold be enough
+    if (parMap.size() > 0) return; // checking one list shold be enough
 
     // Determine the unique PRODUCTION parameters (many can be constrained to each other)
     set<string> parsObserved;
@@ -527,12 +527,12 @@ ParameterManager::constructParametersLists(){
     for (map<string, ComplexParameter*>::const_iterator pItr = m_prodParams.begin();
       pItr != m_prodParams.end(); pItr++){
       if (!pItr->second->isFixed() && m_uniquePars.find(pItr->first) != m_uniquePars.end()){
-        parNameList.push_back( pItr->first+"_re" );
         parVal = pItr->second;
         parValueList.push_back( parVal->getReal() );
+        parMap[pItr->first+"_re"] = parVal->getReal();
         if (!pItr->second->isPurelyReal()){
-          parNameList.push_back( pItr->first+"_im" );
           parValueList.push_back( parVal->getImag() );
+          parMap[pItr->first+"_im"] = parVal->getImag();
         }
       }
     }
@@ -541,8 +541,8 @@ ParameterManager::constructParametersLists(){
     for (map<string, MinuitParameter*>::const_iterator pItr = m_ampParams.begin();
       pItr != m_ampParams.end(); pItr++){
       if (pItr->second->floating()){
-        parNameList.push_back(pItr->first);
         parValueList.push_back(pItr->second);
+        parMap[pItr->first] = pItr->second;
       }
     }
 }
@@ -573,7 +573,7 @@ ParameterManager::update( const MISubject* parPtr ){
   // For external minimizers we will not have access to the parameter covariance
   //   matrix which comes during Minuit minimization.
   //   See MinuitParameterManager::covarianceMatrix() which uses Minuit mnemat() method
-  if (m_performCovarianceUpdate)
+  if (m_doCovarianceUpdate)
     updateParCovariance();
 }
 
