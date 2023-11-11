@@ -23,14 +23,28 @@ def test_parMgr():
     ati = AmpToolsInterface( cfgInfo )
     parMgr: ParameterManager = ati.parameterManager()
 
-    key = 'etapi::imZ::resAmp1'
-    nProdPars = len(parMgr)
-    prefit_nll = ati.likelihood()
-    parMgr[key] = complex(15,10)
-    par_real, par_imag = parMgr[key].real, parMgr[key].imag
-    post_nll = ati.likelihood()
+    print("Printing free parameters:")
+    parMap = dict(parMgr.getParMap())
+    for k, v in parMap.items():
+        print(f'{k}: {v.value()}')
+    print()
 
-    assert( nProdPars == 6 )
-    assert( prefit_nll != 1e6 and prefit_nll is not None )
-    assert( par_real == 15 and par_imag == 0 )
-    assert( post_nll != 1e6 and post_nll is not None )
+    key = 'etapi::imZ::resAmp1_re'
+    assert( key in parMgr)
+
+    nProdPars = len(parMgr)
+    assert( nProdPars == 5 )
+
+    prefit_nll = ati.likelihood()
+    print("Prefit NLL:", prefit_nll)
+    assert( prefit_nll == 14346.408126566828 and prefit_nll is not None )
+
+    # we are manually parameters, no available covariance from Minuit
+    parMgr.setDoCovarianceUpdate(False)
+
+    parMgr[key] = 15.0
+    assert( parMgr[key] == 15.0 )
+
+    post_nll = ati.likelihood()
+    print("Postfit NLL:", post_nll)
+    assert( post_nll == 23991.13274997979 and post_nll is not None )
