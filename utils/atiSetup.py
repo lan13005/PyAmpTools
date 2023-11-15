@@ -96,6 +96,7 @@ def set_aliases(called_globals, USE_MPI):
         'TwoPiAngles':                ROOT.TwoPiAngles,
         'ParameterManager':           ROOT.ParameterManager,
         'MinuitMinimizationManager':  ROOT.MinuitMinimizationManager,
+        'Lasso':                      ROOT.Lasso,
 
         ############## DataReader RELATED ##############
         # DataReaderMPI is a template; use [] to specify the type

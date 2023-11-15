@@ -271,6 +271,17 @@ AmpToolsInterface::resetConfigurationInfo(ConfigurationInfo* configurationInfo){
     }
   }
 
+
+  // Here we can attach the likelihood calculators so that Neg2LnLikContribs can
+  // access attributes/methods to calculate values like fit fractions
+
+  if ( m_functionality == kFull){
+    map< string, Neg2LnLikContrib* > lhcontMap = lhcontMan->getMapNameToNeg2LnLikContribs();
+    for ( auto lhcont : lhcontMap ){
+      lhcont.second->attach( m_likCalcMap );
+    }
+  }
+
   // ************************
   // create FitResults
   // ************************

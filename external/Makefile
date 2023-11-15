@@ -83,6 +83,10 @@ distribute_makefiles:
 	cp $(SRC_DIRS)/ComplexParameter.* AmpTools/AmpTools/IUAmpTools
 ### Not freed m_pdDevNICalc and delete m_pcCalcAmp
 	cp $(SRC_DIRS)/GPUManager.* AmpTools/AmpTools/GPUManager
+### Regularization
+	cp $(SRC_DIRS)/LikelihoodCalculator.* AmpTools/AmpTools/IUAmpTools
+	cp $(SRC_DIRS)/Neg2LnLikContrib.* AmpTools/AmpTools/IUAmpTools
+	cp $(SRC_DIRS)/Neg2LnLikContribManager.* AmpTools/AmpTools/IUAmpTools
 ### Add more report statements
 	cp $(SRC_DIRS)/AmpToolsInterface.* AmpTools/AmpTools/IUAmpTools
 	cp $(SRC_DIRS)/MinuitMinimizationManager.* AmpTools/AmpTools/MinuitInterface
