@@ -15,6 +15,31 @@ repos:
       - id: mixed-line-ending
       - id: trailing-whitespace
 
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.6.1
+    hooks:
+      - id: nbstripout
+        args:
+          - --extra-keys
+          - |
+            cell.attachments
+            cell.metadata.code_folding
+            cell.metadata.id
+            cell.metadata.pycharm
+            cell.metadata.user_expressions
+            metadata.celltoolbar
+            metadata.colab.name
+            metadata.colab.provenance
+            metadata.interpreter
+            metadata.notify_time
+            metadata.toc
+            metadata.toc-autonumbering
+            metadata.toc-showcode
+            metadata.toc-showmarkdowntxt
+            metadata.toc-showtags
+            metadata.varInspector
+            metadata.vscode
+
   # - repo: local
   #   hooks:
   #     - id: pytest

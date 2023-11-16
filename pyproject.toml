@@ -19,6 +19,7 @@ dependencies = [
     "tbb", # for FSROOT, multiprocessing/threading
     "psutil", # check process information
     "pdf2image", # convert pdf to image for plotGen tutorial documentation
+    "nbstripout", # strips outputs from notebooks
     ### CI
     "pytest",
     "pre-commit",

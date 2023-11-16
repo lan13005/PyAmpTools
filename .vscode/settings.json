@@ -159,7 +159,8 @@
     "valarray": "cpp",
     "future": "cpp",
     "scoped_allocator": "cpp",
-    "initialize_fsroot.C": "cpp"
+    "initialize_fsroot.C": "cpp",
+    "plotResult.C": "cpp"
   },
   "git.ignoreLimitWarning": true
 }
