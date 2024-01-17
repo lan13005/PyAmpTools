@@ -111,8 +111,15 @@ public:
     while( ( 1 << iPow ) < iNEvents ) iPow++;
     return(  (1<<iPow) < GPU_BLOCK_SIZE_SQ ? GPU_BLOCK_SIZE_SQ : (1<<iPow) );
   }
-  
+
+  // Useful for external algorithms to have some low-level control
+  static void setThisDevice( int id ){ thisDevice = id; }
+  static int getNumDevices(){ cudaGetDeviceCount( &devs ); return devs; }
+
 private:
+
+  static int thisDevice;
+  static int devs;
   
   static bool m_cudaDisplay;
   

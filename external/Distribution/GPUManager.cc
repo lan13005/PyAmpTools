@@ -58,6 +58,8 @@ const char* GPUManager::kModule = "GPUManager";
 #endif
 
 bool GPUManager::m_cudaDisplay = false;
+int GPUManager::thisDevice = 0;
+int GPUManager::devs = 0;
 
 template <class T>
 void reduce(int size, int threads, int blocks, T *d_idata, T *d_odata);
@@ -100,8 +102,6 @@ GPUManager::GPUManager()
   m_iDimThreadX=0;
   m_iDimThreadY=0;
 
-  int thisDevice = 0;
-
   // report(DEBUG , kModule) << "m_pcCalcAmp = " << &m_pcDevCalcAmp << endl;
   report(DEBUG , kModule) << "kModule = " << &kModule << endl;
   report(DEBUG , kModule) << "m_pfVVStar = " << &m_pfVVStar << endl;
@@ -129,7 +129,7 @@ GPUManager::GPUManager()
   // If two even rank jobs land on the same node device zero will be
   // overloaded and device 1 will be unused.
 
-  int rank, devs;
+  int rank;
   MPI_Comm_rank( MPI_COMM_WORLD, &rank );
   cudaGetDeviceCount(&devs);
   thisDevice = rank % devs;
@@ -163,6 +163,7 @@ GPUManager::GPUManager()
 
     report( INFO, kModule ) << "Current GPU Properites:\n";
     report( INFO, kModule ) << "\t Name: "<<devProp.name<<endl;
+    report( INFO, kModule ) << "\t Using Device: "<< thisDevice <<endl;
     report( INFO, kModule ) << "\t Total global memory: "<<devProp.totalGlobalMem/((float)1024*1024)<<" MB"<<endl;
     report( INFO, kModule ) << "\t Rev.: "<<devProp.major<<"."<<devProp.minor<<endl;
     report( INFO, kModule ) << "##################################################" << endl;
