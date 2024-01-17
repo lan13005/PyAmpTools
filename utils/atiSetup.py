@@ -23,8 +23,8 @@ def setup(calling_globals, accelerator='mpigpu', use_fsroot=False, use_genamp=Fa
         use_fsroot (bool): True if FSRoot library should be loaded
         use_genamp (bool): True if GenAmp library should be loaded
     '''
-    USE_MPI, USE_GPU, RANK_MPI = loadLibraries(accelerator, use_fsroot, use_genamp)
-    set_aliases(calling_globals, USE_MPI)
+    USE_MPI, USE_GPU, RANK_MPI = loadLibraries( accelerator, use_fsroot, use_genamp )
+    set_aliases( calling_globals, USE_MPI, USE_GPU )
 
     return USE_MPI, USE_GPU, RANK_MPI
 
@@ -70,7 +70,7 @@ def loadLibrary(libName, RANK_MPI=0, IS_REQUESTED=True):
     else: status = "OFF"
     if RANK_MPI == 0: print(f'  {status}')
 
-def set_aliases(called_globals, USE_MPI):
+def set_aliases( called_globals, USE_MPI, USE_GPU ):
     '''
     Due to MPI requiring c++ templates and the fact that all classes live under the ROOT namespace, aliasing can clean up the code significantly.
     A dictionary of aliases is appended to the globals() function of the calling function thereby making the aliases available in the calling function.
@@ -112,6 +112,8 @@ def set_aliases(called_globals, USE_MPI):
         'TFile':                      ROOT.TFile,
         'AmplitudeInfo':              ROOT.AmplitudeInfo,
     }
+    if USE_GPU:
+        aliases['GPUManager'] = ROOT.GPUManager
 
     called_globals.update(aliases)
 
