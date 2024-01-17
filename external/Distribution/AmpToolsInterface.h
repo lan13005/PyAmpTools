@@ -168,6 +168,9 @@ public:
    */
   GradientCalculator* gradientCalculator() const { return m_gradientCalculator; }
 
+  /** Return a map to all Normalization Integral interfaces.
+  */
+  map< string, NormIntInterface* > normIntMap() const { return m_normIntMap; }
 
   /** Pointer to an IntensityManager.  There is one for each defined reaction.
    *  (Most applications will not likely need to access these.)
