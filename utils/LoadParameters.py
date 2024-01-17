@@ -36,16 +36,19 @@ class LoadParameters:
         self.cfg     = cfg
 
         constraintMap = cfg.constraintMap()
-        constraint_index = {}
+        constraintIndex = {}
         uniqueProdPars   = []
+        allProdPars      = set()
         i = 0
         for k, vs in constraintMap:
-            if k not in constraint_index and not cfg.amplitude(k).fixed():
-                constraint_index[k] = i
+            allProdPars.add(k)
+            if k not in constraintIndex and not cfg.amplitude(k).fixed():
                 uniqueProdPars.append(k)
+                constraintIndex[k] = i #uniqueProdPars[i]
             for v in vs:
-                if v not in constraint_index and not cfg.amplitude(v).fixed():
-                    constraint_index[v] = i
+                if v not in constraintIndex and not cfg.amplitude(v).fixed():
+                    # str(v) needed! appears that inserting v alone will go out of scope
+                    constraintIndex[str(v)] = i #uniqueProdPars[i] 
             i += 1
 
         ######## GET VALUES / REALNESS OF UNIQUE AMPLITUDES' PRODUCTION PARAMETERS ########
@@ -65,6 +68,9 @@ class LoadParameters:
         self.params       = self.uniqueProdPars   | self.ampPars # python 3.9 - merge dictionaries
         self.paramsIsReal = self.uniqueProdIsReal | {k: True for k in self.ampPars.keys()} # all amp params are real
 
+        ####### ADDITIONAL TRACKING #######
+        self.allProdPars = list(allProdPars)
+
     def flatten_parameters(self, params={}):
         '''
         Flatten amplitude parameters (complex-> real, imag) skipping imaginary parts of amplitudes fixed to be real. If no arguments are passed, use the uniqueProdPars and uniqueProdIsReal from the last call to load_cfg(). Can also format any dictionary pair into flat format.
@@ -80,7 +86,7 @@ class LoadParameters:
         '''
         parameters = []
         keys       = [] # lose information on flatten, use key to keep track of provenance
-        names      = [] # track parameter names, appending re/im to name if complex
+        names      = [] # track parameters in a prettier format
         if len(params)==0:
             params = self.params
         for k, v in params.items():
@@ -89,7 +95,14 @@ class LoadParameters:
             real_value = v.real      if k in self.uniqueProdPars else v
             names.append(f'Re[{pk}]' if k in self.uniqueProdPars else pk)
             parameters.append( real_value )
-            keys.append(k+"_re") # MUST match notation in AmpTools' parameterManager
+
+            # Production coefficients will have :: in their name. Normal parameters will not
+            if '::' in k:
+                keys.append(k+"_re") # MUST match notation in AmpTools' parameterManager
+            else:
+                keys.append(k)
+
+            # If parameters are complex, we will include their imaginary components
             if not self.paramsIsReal[k]:
                 parameters.append(v.imag)
                 keys.append(k+"_im")
