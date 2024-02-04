@@ -85,6 +85,8 @@ def turn_on_specifc_waveset(plotGen, results, waveset, verbose=True):
     amp_map = {}
     if verbose: print(f' >> Plotting waveset: {waveset}')
     waves = waveset.split(';')
+    if keepAllAmps:
+        print(f' >>   Keeping all amplitudes: {amps}')
     _waves = amps if keepAllAmps else waves
     for wave in _waves:
         amp_map[wave] = -1 # Placeholder
@@ -104,7 +106,10 @@ def turn_on_specifc_waveset(plotGen, results, waveset, verbose=True):
         if v == -1: print(f' >> WARNING: Amplitude {k} not found in fit results. Exiting...'); exit();
 
     # Turn on only the requested amplitudes
-    if not keepAllAmps:
+    if keepAllAmps:
+        for i in range(len(amps)):
+            plotGen.enableAmp(i)
+    else:
         for i in range(len(amps)):
             plotGen.disableAmp(i)
         for i in amp_map.values():
