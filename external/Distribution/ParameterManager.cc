@@ -525,9 +525,11 @@ ParameterManager::constructParametersLists(){
       if (!pItr->second->isFixed() && m_uniquePars.find(pItr->first) != m_uniquePars.end()){
         parVal = pItr->second;
         parValueList.push_back( parVal->getReal() );
+        parNameList.push_back( pItr->first+"_re" );
         parMap[pItr->first+"_re"] = parVal->getReal();
         if (!pItr->second->isPurelyReal()){
           parValueList.push_back( parVal->getImag() );
+          parNameList.push_back( pItr->first+"_im" );
           parMap[pItr->first+"_im"] = parVal->getImag();
         }
       }
@@ -538,6 +540,7 @@ ParameterManager::constructParametersLists(){
       pItr != m_ampParams.end(); pItr++){
       if (pItr->second->floating()){
         parValueList.push_back(pItr->second);
+        parNameList.push_back(pItr->first);
         parMap[pItr->first] = pItr->second;
       }
     }

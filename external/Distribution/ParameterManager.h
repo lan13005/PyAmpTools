@@ -83,6 +83,7 @@ public:
   void constructParametersLists();
   map< string, MinuitParameter* > getParMap() const { return parMap; };
   vector< MinuitParameter* > getParValueList() const { return parValueList; };
+  vector< string > getParNameList() const { return parNameList; };
   static void setDoCovarianceUpdate(bool doUpdate) { m_doCovarianceUpdate = doUpdate; };
   static bool getDoCovarianceUpdate() { return m_doCovarianceUpdate; };
 
@@ -165,8 +166,9 @@ protected:
 
   map <string, vector<string> > m_constraintMap;
 
-  map< string, MinuitParameter* > parMap;
+  map< string, MinuitParameter* > parMap; // remember maps are sorted! use parNameList to access names of parValueList
   vector< MinuitParameter* > parValueList;
+  vector< string > parNameList; 
   static bool m_doCovarianceUpdate; // Set false if not using internal Minuit. No fit = no covariance
 
   static const char* kModule;
