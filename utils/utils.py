@@ -113,10 +113,14 @@ def glob_sort_captured(files):
     Returns:
         list: sorted list of files based on captured number
     '''
+
     if '[]' in files:
         prefix, extension = files.split('[]')
         files = files.replace('[]', '*')
         files = glob.glob(files.replace('[]', '*'))
+        files = sorted(files, key=lambda fname: get_captured_number(fname, prefix, extension))
+    elif '[]' not in files and '*' in files:
+        files = glob.glob(files)
         files = sorted(files, key=lambda fname: get_captured_number(fname, prefix, extension))
     else:
         files = [files]
