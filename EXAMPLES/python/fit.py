@@ -115,8 +115,10 @@ def runFits(
             print("ALL FITS FAILED!")
         else:
             print(f'MINIMUM LIKELHOOD FROM ITERATION {minFitTag} of {N} RANDOM PRODUCTION PARS = {minNLL}')
+            print(f'cp {fitName}_{minFitTag}.fit {fitName}.fit')
             os.system(f'cp {fitName}_{minFitTag}.fit {fitName}.fit')
             if seedfile is not None:
+                print(f'cp {seedfile}_{minFitTag}.txt {seedfile}.txt')
                 os.system(f'cp {seedfile}_{minFitTag}.txt {seedfile}.txt')
 
     return minNLL

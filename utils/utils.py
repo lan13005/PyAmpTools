@@ -92,14 +92,26 @@ def raiseError(errorType, msg):
     ''' Raise an error of type errorType with message msg '''
     raise errorType(msg)
 
-def get_captured_number(fname, prefix, extension):
-    ''' Extract captured number from fname and sort based on it '''
-    ### glob wants * wildcard but regex need .* to match anything
-    prefix = prefix.replace('*', r'.*')
-    match = re.search(rf'{prefix}(\d+){extension}', fname)
+def get_captured_number(filename, captured_loc, prefix, suffix):
+    """
+    Extracts the numeric part from a filename based on a specific pattern.
+
+    Args:
+        filename (str): The file name from which to extract the number.
+
+    Returns:
+        int: The extracted number.
+    """
+    # Assuming the number is located between the last underscore and the file extension
+    
+    _filename = filename.split('/')[captured_loc]
+    
+    match = re.search(rf'{prefix}(\d+){suffix}', _filename)
     if match:
         return int(match.group(1))
-    return 0
+    else:
+        # Return a default value if no number is found, to avoid sorting errors
+        return float('inf')
 
 def glob_sort_captured(files):
     '''
@@ -114,14 +126,23 @@ def glob_sort_captured(files):
         list: sorted list of files based on captured number
     '''
 
+    files = files.rstrip('/') # Remove right trailing slashes
+
+    # Find location of capture []
+    fname = files.split('/')
+    capture_loc = [i for i, f in enumerate(fname) if '[]' in f]
+    assert( len(capture_loc) == 1 ), "Only one capture location allowed"
+    captured_loc = capture_loc[0]
+    # Get prefix and suffix for regex use
+    prefix, suffix = fname[captured_loc].split('[]')
+    
     if '[]' in files:
-        prefix, extension = files.split('[]')
         files = files.replace('[]', '*')
-        files = glob.glob(files.replace('[]', '*'))
-        files = sorted(files, key=lambda fname: get_captured_number(fname, prefix, extension))
+        files = glob.glob(files)
+        files = sorted(files, key=lambda fname: get_captured_number(fname, captured_loc, prefix, suffix))
     elif '[]' not in files and '*' in files:
         files = glob.glob(files)
-        files = sorted(files, key=lambda fname: get_captured_number(fname, prefix, extension))
+        files = sorted(files, key=lambda fname: get_captured_number(fname, captured_loc, prefix, suffix))
     else:
         files = [files]
     return files
