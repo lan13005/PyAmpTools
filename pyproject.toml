@@ -15,10 +15,11 @@ dependencies = [
     "corner",
     "h5py",
     "emcee",
-	"tqdm",
-    "tbb", # for FSROOT, multiprocessing/threading
-    "psutil", # check process information
-    "pdf2image", # convert pdf to image for plotGen tutorial documentation
+    "tqdm",
+    "IPython",
+    "tbb",        # for FSROOT, multiprocessing/threading
+    "psutil",     # check process information
+    "pdf2image",  # convert pdf to image for plotGen tutorial documentation
     ### CI
     "pytest",
     "pre-commit",
@@ -30,7 +31,7 @@ dependencies = [
     # "ducc0",
     # "h5py",
     # "jax",
-	# matplotlib removed function needed by pygtc (corner plot alternative), install 3.7.0 if you want
+    # matplotlib removed function needed by pygtc (corner plot alternative), install 3.7.0 if you want
     # "pygtc",
 ]
 name = "PyAmpTools"
