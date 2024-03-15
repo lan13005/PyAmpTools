@@ -17,9 +17,11 @@ dependencies = [
     "emcee",
     "tqdm",
     "IPython",
+    "ipykernel",
     "tbb",        # for FSROOT, multiprocessing/threading
     "psutil",     # check process information
     "pdf2image",  # convert pdf to image for plotGen tutorial documentation
+    "scons",      # needed to 'make' AMPTOOLS_GENERATORS
     ### CI
     "pytest",
     "pre-commit",

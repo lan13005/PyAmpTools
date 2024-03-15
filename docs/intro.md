@@ -23,6 +23,12 @@ pip install mpi4py # MPI (if available), mamba will link it against the wrong ex
 pre-commit install --install-hooks # (Optional) commit hooks to perform loose formatting
 ```
 
+If installing `mpi4py` fails due to `error: Cannot link MPI programs` this is a common conda-forge linker issue. Try replacing the built-in linker with the system's and attempt to install `mpi4py` again.
+```shell
+rm $CONDA_PREFIX/compiler_compat/ld
+ln -s /usr/bin/ld $CONDA_PREFIX/compiler_compat/
+```
+
 [ROOT](https://root.cern/install/) >v6.26 is a required dependency. There is a known conflict between AmpTools' GPU usage and RooFit/TMVA which comes with the conda-forge binaries of ROOT. Currently, ROOT has to be built from source with roofit and tmva off. A build script is included to download ROOT from source with the appropriate cmake flags to achieve this
 
 ```shell
@@ -31,10 +37,11 @@ cd root
 source build_root.sh
 ```
 
-Modify `set_environment.sh` to match you GPU environment (default: setup for JLab ifarm)
+Modify `set_environment.sh` to match you GPU environment (default: setup for JLab ifarm). Then create the necessary directory and link the environemnt script, allowing for `set_environment.sh` to be sourced everytime `conda activate PyAmpTools` is executed
 
 ```shell
-ln -snfr set_environment.sh $CONDA_PREFIX/etc/conda/activate.d # load environment variables on conda activation
+mkdir -p $CONDA_PREFIX/etc/conda/activate.d/
+ln -snfr set_environment.sh $CONDA_PREFIX/etc/conda/activate.d/
 ```
 
 Build required libraries
