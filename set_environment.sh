@@ -8,11 +8,14 @@ export CUDA_INSTALL_PATH=/apps/cuda/11.4.2/
 export GPU_ARCH=sm_75
 ####################
 
-if [ -z "$REPO_HOME" ]; then
-    export REPO_HOME=$( dirname "$( readlink -f "${BASH_SOURCE[0]}" )" ) # location of this script
+# Check if REPO_HOME is a full path OR if REPO_HOME is unset or empty
+# VSCode could create additional environment variables... Checking to see if
+#   REPO_HOME is a full path is another check to see if it's been set by the user
+if [[ ! $REPO_HOME == /* ]] || [ -z "$REPO_HOME" ]; then
+    export REPO_HOME=$( dirname "$( readlink -f "${BASH_SOURCE[0]}" )" ) # absolute location of this script
     echo "Setting REPO_HOME to $REPO_HOME"
 else
-    echo "REPO_HOME is already set. Will not attempt override."
+    echo "REPO_HOME is already set. Will not attempt override. REPO_HOME=$REPO_HOME"
 fi
 
 export AMPTOOLS_HOME=$REPO_HOME/external/AmpTools
