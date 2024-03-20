@@ -415,9 +415,9 @@ atiSetup| GPU is disabled
 ------------------------------------------------
 
 
-atiSetup| Loading library libAmpTools.so ..............  NOT FOUND, SKIPPING
-atiSetup| Loading library libAmpPlotter.so ............  NOT FOUND, SKIPPING
-atiSetup| Loading library libAmpsDataIO.so ............  NOT FOUND, SKIPPING
+atiSetup| Loading library libAmpTools.so ..............  ON
+atiSetup| Loading library libAmpPlotter.so ............  ON
+atiSetup| Loading library libAmpsDataIO.so ............  ON
 atiSetup| Loading library libFSRoot.so ................  OFF
 atiSetup| Loading library libAmpsGen.so ...............  OFF
 
@@ -425,39 +425,10 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 ------------------------------------------------
 </pre></div>
 </div>
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">AttributeError</span><span class="g g-Whitespace">                            </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">line</span> <span class="mi">2</span>
-<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
-<span class="ne">----&gt; </span><span class="mi">2</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span> <span class="c1"># RANK_MPI defaults to 0 even if not using MPI</span>
-
-<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:26,</span> in <span class="ni">setup</span><span class="nt">(calling_globals, accelerator, use_fsroot, use_genamp)</span>
-<span class="g g-Whitespace">     </span><span class="mi">16</span> <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">accelerator</span><span class="o">=</span><span class="s1">&#39;mpigpu&#39;</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="g g-Whitespace">     </span><span class="mi">17</span><span class="w">     </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="g g-Whitespace">     </span><span class="mi">18</span><span class="sd">     Performs basic setup, loading libraries and setting aliases</span>
-<span class="g g-Whitespace">     </span><span class="mi">19</span><span class="sd"> </span>
-<span class="sd">   (...)</span>
-<span class="g g-Whitespace">     </span><span class="mi">24</span><span class="sd">         use_genamp (bool): True if GenAmp library should be loaded</span>
-<span class="g g-Whitespace">     </span><span class="mi">25</span><span class="sd">     &#39;&#39;&#39;</span>
-<span class="ne">---&gt; </span><span class="mi">26</span>     <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">loadLibraries</span><span class="p">(</span> <span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="p">,</span> <span class="n">use_genamp</span> <span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">27</span>     <span class="n">set_aliases</span><span class="p">(</span> <span class="n">calling_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span> <span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">29</span>     <span class="k">return</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span>
-
-<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:54,</span> in <span class="ni">loadLibraries</span><span class="nt">(accelerator, use_fsroot, use_genamp)</span>
-<span class="g g-Whitespace">     </span><span class="mi">50</span> <span class="c1"># Dummy functions that just prints &quot;initialization&quot;</span>
-<span class="g g-Whitespace">     </span><span class="mi">51</span> <span class="c1">#  This is to make sure the libraries are loaded</span>
-<span class="g g-Whitespace">     </span><span class="mi">52</span> <span class="c1">#  as python is interpreted.</span>
-<span class="g g-Whitespace">     </span><span class="mi">53</span> <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">------------------------------------------------&quot;</span><span class="p">)</span>
-<span class="ne">---&gt; </span><span class="mi">54</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">55</span> <span class="k">if</span> <span class="n">use_fsroot</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">initialize_fsroot</span><span class="p">(</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">56</span> <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;------------------------------------------------</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-
-<span class="nn">File ~/WORK/WORK/PyAmpTools/root/root-6.28.06-gcc9.3.0/lib/ROOT/_facade.py:196,</span> in <span class="ni">ROOTFacade._fallback_getattr</span><span class="nt">(self, name)</span>
-<span class="g g-Whitespace">    </span><span class="mi">194</span>     <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">195</span>         <span class="k">return</span> <span class="n">res</span>
-<span class="ne">--&gt; </span><span class="mi">196</span> <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Failed to get attribute </span><span class="si">{}</span><span class="s2"> from ROOT&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
-
-<span class="ne">AttributeError</span>: Failed to get attribute initialize from ROOT
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 </pre></div>
 </div>
 </div>
@@ -467,6 +438,33 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
 <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># RANK_MPI defaults to 0 even if not using MPI</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>atiSetup| jupyter-book called python3.9
+
+------------------------------------------------
+atiSetup| MPI is disabled
+atiSetup| GPU is disabled
+------------------------------------------------
+
+
+atiSetup| Loading library libAmpTools.so ..............  ON
+atiSetup| Loading library libAmpPlotter.so ............  ON
+atiSetup| Loading library libAmpsDataIO.so ............  ON
+atiSetup| Loading library libFSRoot.so ................  ON
+atiSetup| Loading library libAmpsGen.so ...............  ON
+
+
+------------------------------------------------
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
+Initializing FSRoot for PyROOT...
 </pre></div>
 </div>
 </div>

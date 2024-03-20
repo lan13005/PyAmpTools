@@ -15,78 +15,123 @@ Traceback (most recent call last):
     raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
 nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
 ------------------
-import ROOT
-import os
+############## RUN MCMC ##############
+np.random.seed(seed)
 
-############## SET ENVIRONMENT VARIABLES ##############
-REPO_HOME     = os.environ['REPO_HOME']
-import atiSetup
-USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals(), use_genamp=True) # RANK_MPI defaults to 0 even if not using MPI
+atis = [ati] # list of AmpToolsInterface objects to run MCMC on
+LoadParametersSamplers = [LoadParametersSampler] # list of LoadParameters objects to run MCMC on
 
-import numpy as np
-import emcee
-import matplotlib.pyplot as plt
-from LoadParameters import LoadParameters
-import corner
-from mcmc import mcmcManager
+mcmcMgr = mcmcManager(atis, LoadParametersSamplers, ofile)
 
-from utils import PrintSourceCode
+mcmcMgr.perform_mcmc(
+    nwalkers = nwalkers,
+    burnIn   = burnIn,
+    nsamples = nsamples,
+    sampler_kwargs = {'progress': False},  # turn off progress bar for cleaner output
+)
+
+print(f"Fit time: {mcmcMgr.elapsed_fit_time} seconds")
 ------------------
 
 ----- stdout -----
-Welcome to JupyROOT 6.28/06
-atiSetup| jupyter-book called python3.9
 
-------------------------------------------------
-atiSetup| MPI is disabled
-atiSetup| GPU is disabled
-------------------------------------------------
+ ================== PERFORM_MCMC() KWARGS CONFIGURATION ================== 
+nwalkers: 32
+burnIn: 0
+nsamples: 200
+params_dict: {}
+moves_mixture: [<emcee.moves.stretch.StretchMove object at 0x7ff1b1b5d340>]
+sampler_kwargs: {'progress': False}
+ =================================================================== 
 
-
-atiSetup| Loading library libAmpTools.so ..............  NOT FOUND, SKIPPING
-atiSetup| Loading library libAmpPlotter.so ............  NOT FOUND, SKIPPING
-atiSetup| Loading library libAmpsDataIO.so ............  NOT FOUND, SKIPPING
-atiSetup| Loading library libFSRoot.so ................  OFF
-atiSetup| Loading library libAmpsGen.so ...............  NOT FOUND, SKIPPING
-
-
-------------------------------------------------
+ ================== RUNNING MCMC ================== 
+Initializing walkers in an N-ball around the MLE estimate
+----- stdout -----
+emcee: Exception while calling your likelihood function:
+  params: [-140.61192169  -80.65288733  135.65601685 -196.32355813  106.40283681]
+  args: [['etapi::imZ::resAmp1_re', 'etapi::imZ::resAmp2_re', 'etapi::imZ::resAmp2_im', 'etapi::imZ::resAmp3_re', 'etapi::imZ::resAmp3_im']]
+  kwargs: {}
+  exception:
+----- stderr -----
+Traceback (most recent call last):
+  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/emcee/ensemble.py", line 624, in __call__
+    return self.f(x, *self.args, **self.kwargs)
+  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/mcmc.py", line 72, in LogProb
+    ati.parameterManager()[name] = value
+  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/pythonization.py", line 20, in <lambda>
+    klass.__setitem__ = lambda self, key, value: _parMgr_setValue(self,key,value)
+  File "/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/pythonization.py", line 11, in _parMgr_setValue
+    assert( not self.getDoCovarianceUpdate() ), 'doCovarianceUpdate must be set to False before setting a new value!'
+AssertionError: doCovarianceUpdate must be set to False before setting a new value!
 ------------------
 
 [0;31m---------------------------------------------------------------------------[0m
-[0;31mAttributeError[0m                            Traceback (most recent call last)
-Cell [0;32mIn[1], line 7[0m
-[1;32m      5[0m REPO_HOME     [38;5;241m=[39m os[38;5;241m.[39menviron[[38;5;124m'[39m[38;5;124mREPO_HOME[39m[38;5;124m'[39m]
-[1;32m      6[0m [38;5;28;01mimport[39;00m [38;5;21;01matiSetup[39;00m
-[0;32m----> 7[0m USE_MPI, USE_GPU, RANK_MPI [38;5;241m=[39m [43matiSetup[49m[38;5;241;43m.[39;49m[43msetup[49m[43m([49m[38;5;28;43mglobals[39;49m[43m([49m[43m)[49m[43m,[49m[43m [49m[43muse_genamp[49m[38;5;241;43m=[39;49m[38;5;28;43;01mTrue[39;49;00m[43m)[49m [38;5;66;03m# RANK_MPI defaults to 0 even if not using MPI[39;00m
-[1;32m      9[0m [38;5;28;01mimport[39;00m [38;5;21;01mnumpy[39;00m [38;5;28;01mas[39;00m [38;5;21;01mnp[39;00m
-[1;32m     10[0m [38;5;28;01mimport[39;00m [38;5;21;01memcee[39;00m
+[0;31mAssertionError[0m                            Traceback (most recent call last)
+Cell [0;32mIn[9], line 9[0m
+[1;32m      5[0m LoadParametersSamplers [38;5;241m=[39m [LoadParametersSampler] [38;5;66;03m# list of LoadParameters objects to run MCMC on[39;00m
+[1;32m      7[0m mcmcMgr [38;5;241m=[39m mcmcManager(atis, LoadParametersSamplers, ofile)
+[0;32m----> 9[0m [43mmcmcMgr[49m[38;5;241;43m.[39;49m[43mperform_mcmc[49m[43m([49m
+[1;32m     10[0m [43m    [49m[43mnwalkers[49m[43m [49m[38;5;241;43m=[39;49m[43m [49m[43mnwalkers[49m[43m,[49m
+[1;32m     11[0m [43m    [49m[43mburnIn[49m[43m   [49m[38;5;241;43m=[39;49m[43m [49m[43mburnIn[49m[43m,[49m
+[1;32m     12[0m [43m    [49m[43mnsamples[49m[43m [49m[38;5;241;43m=[39;49m[43m [49m[43mnsamples[49m[43m,[49m
+[1;32m     13[0m [43m    [49m[43msampler_kwargs[49m[43m [49m[38;5;241;43m=[39;49m[43m [49m[43m{[49m[38;5;124;43m'[39;49m[38;5;124;43mprogress[39;49m[38;5;124;43m'[39;49m[43m:[49m[43m [49m[38;5;28;43;01mFalse[39;49;00m[43m}[49m[43m,[49m[43m  [49m[38;5;66;43;03m# turn off progress bar for cleaner output[39;49;00m
+[1;32m     14[0m [43m)[49m
+[1;32m     16[0m [38;5;28mprint[39m([38;5;124mf[39m[38;5;124m"[39m[38;5;124mFit time: [39m[38;5;132;01m{[39;00mmcmcMgr[38;5;241m.[39melapsed_fit_time[38;5;132;01m}[39;00m[38;5;124m seconds[39m[38;5;124m"[39m)
 
-File [0;32m/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:26[0m, in [0;36msetup[0;34m(calling_globals, accelerator, use_fsroot, use_genamp)[0m
-[1;32m     16[0m [38;5;28;01mdef[39;00m [38;5;21msetup[39m(calling_globals, accelerator[38;5;241m=[39m[38;5;124m'[39m[38;5;124mmpigpu[39m[38;5;124m'[39m, use_fsroot[38;5;241m=[39m[38;5;28;01mFalse[39;00m, use_genamp[38;5;241m=[39m[38;5;28;01mFalse[39;00m):
-[1;32m     17[0m [38;5;250m    [39m[38;5;124;03m'''[39;00m
-[1;32m     18[0m [38;5;124;03m    Performs basic setup, loading libraries and setting aliases[39;00m
-[1;32m     19[0m 
-[0;32m   (...)[0m
-[1;32m     24[0m [38;5;124;03m        use_genamp (bool): True if GenAmp library should be loaded[39;00m
-[1;32m     25[0m [38;5;124;03m    '''[39;00m
-[0;32m---> 26[0m     USE_MPI, USE_GPU, RANK_MPI [38;5;241m=[39m [43mloadLibraries[49m[43m([49m[43m [49m[43maccelerator[49m[43m,[49m[43m [49m[43muse_fsroot[49m[43m,[49m[43m [49m[43muse_genamp[49m[43m [49m[43m)[49m
-[1;32m     27[0m     set_aliases( calling_globals, USE_MPI, USE_GPU )
-[1;32m     29[0m     [38;5;28;01mreturn[39;00m USE_MPI, USE_GPU, RANK_MPI
+File [0;32m/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/mcmc.py:184[0m, in [0;36mmcmcManager.perform_mcmc[0;34m(self, burnIn, nwalkers, nsamples, params_dict, moves_mixture, sampler_kwargs)[0m
+[1;32m    182[0m         sampler[38;5;241m.[39mrun_mcmc(state, nsamples, [38;5;241m*[39m[38;5;241m*[39m_sampler_kwargs);
+[1;32m    183[0m     [38;5;28;01melse[39;00m:
+[0;32m--> 184[0m         [43msampler[49m[38;5;241;43m.[39;49m[43mrun_mcmc[49m[43m([49m[43mpar_values[49m[43m,[49m[43m [49m[43mnsamples[49m[43m,[49m[43m [49m[38;5;241;43m*[39;49m[38;5;241;43m*[39;49m[43m_sampler_kwargs[49m[43m)[49m;
+[1;32m    186[0m     [38;5;28mprint[39m([38;5;124mf[39m[38;5;124m'[39m[38;5;130;01m\n[39;00m[38;5;124m[Sampler complete][39m[38;5;130;01m\n[39;00m[38;5;124m'[39m)
+[1;32m    188[0m [38;5;28;01melse[39;00m: [38;5;66;03m# Found already existing HDF5 file, will just load it[39;00m
 
-File [0;32m/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:54[0m, in [0;36mloadLibraries[0;34m(accelerator, use_fsroot, use_genamp)[0m
-[1;32m     50[0m [38;5;66;03m# Dummy functions that just prints "initialization"[39;00m
-[1;32m     51[0m [38;5;66;03m#  This is to make sure the libraries are loaded[39;00m
-[1;32m     52[0m [38;5;66;03m#  as python is interpreted.[39;00m
-[1;32m     53[0m [38;5;28;01mif[39;00m RANK_MPI [38;5;241m==[39m [38;5;241m0[39m: [38;5;28mprint[39m([38;5;124m"[39m[38;5;130;01m\n[39;00m[38;5;130;01m\n[39;00m[38;5;124m------------------------------------------------[39m[38;5;124m"[39m)
-[0;32m---> 54[0m [43mROOT[49m[38;5;241;43m.[39;49m[43minitialize[49m( RANK_MPI [38;5;241m==[39m [38;5;241m0[39m )
-[1;32m     55[0m [38;5;28;01mif[39;00m use_fsroot: ROOT[38;5;241m.[39minitialize_fsroot( RANK_MPI [38;5;241m==[39m [38;5;241m0[39m )
-[1;32m     56[0m [38;5;28;01mif[39;00m RANK_MPI [38;5;241m==[39m [38;5;241m0[39m: [38;5;28mprint[39m([38;5;124m"[39m[38;5;124m------------------------------------------------[39m[38;5;130;01m\n[39;00m[38;5;124m"[39m)
+File [0;32m/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/emcee/ensemble.py:443[0m, in [0;36mEnsembleSampler.run_mcmc[0;34m(self, initial_state, nsteps, **kwargs)[0m
+[1;32m    440[0m     initial_state [38;5;241m=[39m [38;5;28mself[39m[38;5;241m.[39m_previous_state
+[1;32m    442[0m results [38;5;241m=[39m [38;5;28;01mNone[39;00m
+[0;32m--> 443[0m [38;5;28;01mfor[39;00m results [38;5;129;01min[39;00m [38;5;28mself[39m[38;5;241m.[39msample(initial_state, iterations[38;5;241m=[39mnsteps, [38;5;241m*[39m[38;5;241m*[39mkwargs):
+[1;32m    444[0m     [38;5;28;01mpass[39;00m
+[1;32m    446[0m [38;5;66;03m# Store so that the ``initial_state=None`` case will work[39;00m
 
-File [0;32m~/WORK/WORK/PyAmpTools/root/root-6.28.06-gcc9.3.0/lib/ROOT/_facade.py:196[0m, in [0;36mROOTFacade._fallback_getattr[0;34m(self, name)[0m
-[1;32m    194[0m     [38;5;28;01mif[39;00m res:
-[1;32m    195[0m         [38;5;28;01mreturn[39;00m res
-[0;32m--> 196[0m [38;5;28;01mraise[39;00m [38;5;167;01mAttributeError[39;00m([38;5;124m"[39m[38;5;124mFailed to get attribute [39m[38;5;132;01m{}[39;00m[38;5;124m from ROOT[39m[38;5;124m"[39m[38;5;241m.[39mformat(name))
+File [0;32m/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/emcee/ensemble.py:344[0m, in [0;36mEnsembleSampler.sample[0;34m(self, initial_state, log_prob0, rstate0, blobs0, iterations, tune, skip_initial_state_check, thin_by, thin, store, progress, progress_kwargs)[0m
+[1;32m    342[0m     state[38;5;241m.[39mblobs [38;5;241m=[39m blobs0
+[1;32m    343[0m [38;5;28;01mif[39;00m state[38;5;241m.[39mlog_prob [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m:
+[0;32m--> 344[0m     state[38;5;241m.[39mlog_prob, state[38;5;241m.[39mblobs [38;5;241m=[39m [38;5;28;43mself[39;49m[38;5;241;43m.[39;49m[43mcompute_log_prob[49m[43m([49m[43mstate[49m[38;5;241;43m.[39;49m[43mcoords[49m[43m)[49m
+[1;32m    345[0m [38;5;28;01mif[39;00m np[38;5;241m.[39mshape(state[38;5;241m.[39mlog_prob) [38;5;241m!=[39m ([38;5;28mself[39m[38;5;241m.[39mnwalkers,):
+[1;32m    346[0m     [38;5;28;01mraise[39;00m [38;5;167;01mValueError[39;00m([38;5;124m"[39m[38;5;124mincompatible input dimensions[39m[38;5;124m"[39m)
 
-[0;31mAttributeError[0m: Failed to get attribute initialize from ROOT
+File [0;32m/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/emcee/ensemble.py:489[0m, in [0;36mEnsembleSampler.compute_log_prob[0;34m(self, coords)[0m
+[1;32m    487[0m     [38;5;28;01melse[39;00m:
+[1;32m    488[0m         map_func [38;5;241m=[39m [38;5;28mmap[39m
+[0;32m--> 489[0m     results [38;5;241m=[39m [38;5;28;43mlist[39;49m[43m([49m[43mmap_func[49m[43m([49m[38;5;28;43mself[39;49m[38;5;241;43m.[39;49m[43mlog_prob_fn[49m[43m,[49m[43m [49m[43mp[49m[43m)[49m[43m)[49m
+[1;32m    491[0m [38;5;28;01mtry[39;00m:
+[1;32m    492[0m     log_prob [38;5;241m=[39m np[38;5;241m.[39marray([[38;5;28mfloat[39m(l[[38;5;241m0[39m]) [38;5;28;01mfor[39;00m l [38;5;129;01min[39;00m results])
+
+File [0;32m/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/emcee/ensemble.py:624[0m, in [0;36m_FunctionWrapper.__call__[0;34m(self, x)[0m
+[1;32m    622[0m [38;5;28;01mdef[39;00m [38;5;21m__call__[39m([38;5;28mself[39m, x):
+[1;32m    623[0m     [38;5;28;01mtry[39;00m:
+[0;32m--> 624[0m         [38;5;28;01mreturn[39;00m [38;5;28;43mself[39;49m[38;5;241;43m.[39;49m[43mf[49m[43m([49m[43mx[49m[43m,[49m[43m [49m[38;5;241;43m*[39;49m[38;5;28;43mself[39;49m[38;5;241;43m.[39;49m[43margs[49m[43m,[49m[43m [49m[38;5;241;43m*[39;49m[38;5;241;43m*[39;49m[38;5;28;43mself[39;49m[38;5;241;43m.[39;49m[43mkwargs[49m[43m)[49m
+[1;32m    625[0m     [38;5;28;01mexcept[39;00m:  [38;5;66;03m# pragma: no cover[39;00m
+[1;32m    626[0m         [38;5;28;01mimport[39;00m [38;5;21;01mtraceback[39;00m
+
+File [0;32m/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/mcmc.py:72[0m, in [0;36mmcmcManager.LogProb[0;34m(self, par_values, keys)[0m
+[1;32m     69[0m     [38;5;28;01mfor[39;00m name, value [38;5;129;01min[39;00m [38;5;28mzip[39m(_keys, _par_values):
+[1;32m     70[0m         [38;5;66;03m# remove tag from name if multiple cfg files were passed[39;00m
+[1;32m     71[0m         name [38;5;241m=[39m name[ :name[38;5;241m.[39mrfind([38;5;124m'[39m[38;5;124m_[39m[38;5;124m'[39m) ] [38;5;28;01mif[39;00m n_atis [38;5;241m>[39m [38;5;241m1[39m [38;5;28;01melse[39;00m name
+[0;32m---> 72[0m         [43mati[49m[38;5;241;43m.[39;49m[43mparameterManager[49m[43m([49m[43m)[49m[43m[[49m[43mname[49m[43m][49m [38;5;241m=[39m value
+[1;32m     74[0m log_prob [38;5;241m+[39m[38;5;241m=[39m [38;5;28mself[39m[38;5;241m.[39mLikelihood(ati) [38;5;241m+[39m [38;5;28mself[39m[38;5;241m.[39mPrior(par_values, keys)
+[1;32m     76[0m [38;5;28;01mreturn[39;00m log_prob
+
+File [0;32m/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/pythonization.py:20[0m, in [0;36mpythonize_parMgr.<locals>.<lambda>[0;34m(self, key, value)[0m
+[1;32m     18[0m klass[38;5;241m.[39m[38;5;21m__len__[39m  [38;5;241m=[39m [38;5;28;01mlambda[39;00m [38;5;28mself[39m: [38;5;28mself[39m[38;5;241m.[39mgetParMap()[38;5;241m.[39msize()
+[1;32m     19[0m klass[38;5;241m.[39m[38;5;21m__getitem__[39m [38;5;241m=[39m [38;5;28;01mlambda[39;00m [38;5;28mself[39m, key: _parMgr_returnParPtr_if_keyExists([38;5;28mself[39m,key)[38;5;241m.[39mvalue()
+[0;32m---> 20[0m klass[38;5;241m.[39m[38;5;21m__setitem__[39m [38;5;241m=[39m [38;5;28;01mlambda[39;00m [38;5;28mself[39m, key, value: [43m_parMgr_setValue[49m[43m([49m[38;5;28;43mself[39;49m[43m,[49m[43mkey[49m[43m,[49m[43mvalue[49m[43m)[49m
+[1;32m     21[0m klass[38;5;241m.[39m[38;5;21m__contains__[39m [38;5;241m=[39m [38;5;28;01mlambda[39;00m [38;5;28mself[39m, key: key [38;5;129;01min[39;00m [38;5;28mself[39m[38;5;241m.[39mgetParMap()
+
+File [0;32m/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/pythonization.py:11[0m, in [0;36m_parMgr_setValue[0;34m(self, key, value)[0m
+[1;32m      9[0m [38;5;28;01mdef[39;00m [38;5;21m_parMgr_setValue[39m([38;5;28mself[39m, key, value):
+[1;32m     10[0m     [38;5;28;01massert[39;00m( key [38;5;129;01min[39;00m [38;5;28mself[39m[38;5;241m.[39mgetParMap() ), [38;5;124mf[39m[38;5;124m'[39m[38;5;124mProduction (or Amplitude) Parameter [39m[38;5;132;01m{[39;00mkey[38;5;132;01m}[39;00m[38;5;124m does not exist in ParameterManager[39m[38;5;124m'[39m
+[0;32m---> 11[0m     [38;5;28;01massert[39;00m( [38;5;129;01mnot[39;00m [38;5;28mself[39m[38;5;241m.[39mgetDoCovarianceUpdate() ), [38;5;124m'[39m[38;5;124mdoCovarianceUpdate must be set to False before setting a new value![39m[38;5;124m'[39m
+[1;32m     12[0m     [38;5;28mself[39m[38;5;241m.[39mgetParMap()[key][38;5;241m.[39msetValue(value)
+
+[0;31mAssertionError[0m: doCovarianceUpdate must be set to False before setting a new value!
 

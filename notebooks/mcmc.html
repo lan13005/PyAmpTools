@@ -429,52 +429,20 @@ atiSetup| GPU is disabled
 ------------------------------------------------
 
 
-atiSetup| Loading library libAmpTools.so ..............  NOT FOUND, SKIPPING
-atiSetup| Loading library libAmpPlotter.so ............  NOT FOUND, SKIPPING
-atiSetup| Loading library libAmpsDataIO.so ............  NOT FOUND, SKIPPING
+atiSetup| Loading library libAmpTools.so ..............  ON
+atiSetup| Loading library libAmpPlotter.so ............  ON
+atiSetup| Loading library libAmpsDataIO.so ............
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  ON
 atiSetup| Loading library libFSRoot.so ................  OFF
-atiSetup| Loading library libAmpsGen.so ...............  NOT FOUND, SKIPPING
+atiSetup| Loading library libAmpsGen.so ...............  ON
 
 
 ------------------------------------------------
-</pre></div>
-</div>
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">AttributeError</span><span class="g g-Whitespace">                            </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">line</span> <span class="mi">7</span>
-<span class="g g-Whitespace">      </span><span class="mi">5</span> <span class="n">REPO_HOME</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
-<span class="g g-Whitespace">      </span><span class="mi">6</span> <span class="kn">import</span> <span class="nn">atiSetup</span>
-<span class="ne">----&gt; </span><span class="mi">7</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># RANK_MPI defaults to 0 even if not using MPI</span>
-<span class="g g-Whitespace">      </span><span class="mi">9</span> <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="g g-Whitespace">     </span><span class="mi">10</span> <span class="kn">import</span> <span class="nn">emcee</span>
+------------------------------------------------
 
-<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:26,</span> in <span class="ni">setup</span><span class="nt">(calling_globals, accelerator, use_fsroot, use_genamp)</span>
-<span class="g g-Whitespace">     </span><span class="mi">16</span> <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">accelerator</span><span class="o">=</span><span class="s1">&#39;mpigpu&#39;</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="g g-Whitespace">     </span><span class="mi">17</span><span class="w">     </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="g g-Whitespace">     </span><span class="mi">18</span><span class="sd">     Performs basic setup, loading libraries and setting aliases</span>
-<span class="g g-Whitespace">     </span><span class="mi">19</span><span class="sd"> </span>
-<span class="sd">   (...)</span>
-<span class="g g-Whitespace">     </span><span class="mi">24</span><span class="sd">         use_genamp (bool): True if GenAmp library should be loaded</span>
-<span class="g g-Whitespace">     </span><span class="mi">25</span><span class="sd">     &#39;&#39;&#39;</span>
-<span class="ne">---&gt; </span><span class="mi">26</span>     <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">loadLibraries</span><span class="p">(</span> <span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="p">,</span> <span class="n">use_genamp</span> <span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">27</span>     <span class="n">set_aliases</span><span class="p">(</span> <span class="n">calling_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span> <span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">29</span>     <span class="k">return</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span>
-
-<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/atiSetup.py:54,</span> in <span class="ni">loadLibraries</span><span class="nt">(accelerator, use_fsroot, use_genamp)</span>
-<span class="g g-Whitespace">     </span><span class="mi">50</span> <span class="c1"># Dummy functions that just prints &quot;initialization&quot;</span>
-<span class="g g-Whitespace">     </span><span class="mi">51</span> <span class="c1">#  This is to make sure the libraries are loaded</span>
-<span class="g g-Whitespace">     </span><span class="mi">52</span> <span class="c1">#  as python is interpreted.</span>
-<span class="g g-Whitespace">     </span><span class="mi">53</span> <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">------------------------------------------------&quot;</span><span class="p">)</span>
-<span class="ne">---&gt; </span><span class="mi">54</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">55</span> <span class="k">if</span> <span class="n">use_fsroot</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">initialize_fsroot</span><span class="p">(</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">56</span> <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;------------------------------------------------</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-
-<span class="nn">File ~/WORK/WORK/PyAmpTools/root/root-6.28.06-gcc9.3.0/lib/ROOT/_facade.py:196,</span> in <span class="ni">ROOTFacade._fallback_getattr</span><span class="nt">(self, name)</span>
-<span class="g g-Whitespace">    </span><span class="mi">194</span>     <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">195</span>         <span class="k">return</span> <span class="n">res</span>
-<span class="ne">--&gt; </span><span class="mi">196</span> <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Failed to get attribute </span><span class="si">{}</span><span class="s2"> from ROOT&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
-
-<span class="ne">AttributeError</span>: Failed to get attribute initialize from ROOT
+Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 </pre></div>
 </div>
 </div>
@@ -626,8 +594,8 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <span class="sd">        Definition of the (Log) Posterior distribution</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            par_values (float): Flattened (complex-to-Real/Imag) Parameter values. ~ [real1, imag1, real2, imag2, ...]</span>
-<span class="sd">            keys (str): Flattened Parameter names. ~ [amp1,  amp1,  amp2,  amp2, ...]</span>
+<span class="sd">            par_values (MinuitParameter*): list of parameter names and values. Production coeffs are split into (re)al/(im)aginary parts</span>
+<span class="sd">            keys (str): parameter names</span>
 <span class="sd">                If multiple config files were passed, the parameter names will be appended with a &#39;_i&#39; tag where i is the ith cfg file</span>
 
 <span class="sd">        Returns:</span>
@@ -637,16 +605,15 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
         <span class="c1">## Calculate Log likelihood</span>
         <span class="n">log_prob</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">n_atis</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">atis</span> <span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ati</span><span class="p">,</span> <span class="n">LoadParametersSampler</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_atis</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">atis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">LoadParametersSamplers</span> <span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ati</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_atis</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">atis</span> <span class="p">):</span>
             <span class="n">_par_values</span> <span class="o">=</span> <span class="n">par_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]]</span>
             <span class="n">_keys</span> <span class="o">=</span> <span class="n">keys</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]]</span>
-            <span class="n">parameters</span> <span class="o">=</span> <span class="n">LoadParametersSampler</span><span class="o">.</span><span class="n">unflatten_parameters</span><span class="p">(</span> <span class="n">_par_values</span><span class="p">,</span> <span class="n">_keys</span> <span class="p">)</span>
-            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">_keys</span><span class="p">,</span> <span class="n">_par_values</span><span class="p">):</span>
                 <span class="c1"># remove tag from name if multiple cfg files were passed</span>
                 <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[</span> <span class="p">:</span><span class="n">name</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="p">]</span> <span class="k">if</span> <span class="n">n_atis</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">name</span>
                 <span class="n">ati</span><span class="o">.</span><span class="n">parameterManager</span><span class="p">()[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
-            <span class="n">log_prob</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Likelihood</span><span class="p">(</span><span class="n">ati</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Prior</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="n">log_prob</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Likelihood</span><span class="p">(</span><span class="n">ati</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Prior</span><span class="p">(</span><span class="n">par_values</span><span class="p">,</span> <span class="n">keys</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">log_prob</span>
 </pre></div>
@@ -685,7 +652,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   =================================================================
    |        ^                                                      |
-   |       / \             Version:  v0.15.1-dirty                 |
+   |       / \             Version:  v0.15.1-5-g4c36-dirty         |
    |      /---\                                                    |
    |     /     \           GDouble:  8 bytes                       |
    |    /       \ MP           MPI:  NO                            |
@@ -904,7 +871,7 @@ nwalkers: 32
 burnIn: 0
 nsamples: 200
 params_dict: {}
-moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7f2b0be9c190&gt;]
+moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7ff1b1b5d340&gt;]
 sampler_kwargs: {&#39;progress&#39;: False}
  =================================================================== 
 
@@ -912,25 +879,94 @@ sampler_kwargs: {&#39;progress&#39;: False}
 Initializing walkers in an N-ball around the MLE estimate
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The chain is shorter than 50 times the integrated autocorrelation time for 5 parameter(s). Use this estimate with caution and run a longer chain!
-N/50 = 4;
-tau: [15.92587787 16.44973334 17.51905651 16.73390776 15.60765933]
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>emcee: Exception while calling your likelihood function:
+  params: [-140.61192169  -80.65288733  135.65601685 -196.32355813  106.40283681]
+  args: [[&#39;etapi::imZ::resAmp1_re&#39;, &#39;etapi::imZ::resAmp2_re&#39;, &#39;etapi::imZ::resAmp2_im&#39;, &#39;etapi::imZ::resAmp3_re&#39;, &#39;etapi::imZ::resAmp3_im&#39;]]
+  kwargs: {}
+  exception:
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[Sampler complete]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Traceback (most recent call last):
+  File &quot;/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/emcee/ensemble.py&quot;, line 624, in __call__
+    return self.f(x, *self.args, **self.kwargs)
+  File &quot;/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/mcmc.py&quot;, line 72, in LogProb
+    ati.parameterManager()[name] = value
+  File &quot;/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/pythonization.py&quot;, line 20, in &lt;lambda&gt;
+    klass.__setitem__ = lambda self, key, value: _parMgr_setValue(self,key,value)
+  File &quot;/w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/pythonization.py&quot;, line 11, in _parMgr_setValue
+    assert( not self.getDoCovarianceUpdate() ), &#39;doCovarianceUpdate must be set to False before setting a new value!&#39;
+AssertionError: doCovarianceUpdate must be set to False before setting a new value!
+</pre></div>
+</div>
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">AssertionError</span><span class="g g-Whitespace">                            </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">9</span><span class="p">],</span> <span class="n">line</span> <span class="mi">9</span>
+<span class="g g-Whitespace">      </span><span class="mi">5</span> <span class="n">LoadParametersSamplers</span> <span class="o">=</span> <span class="p">[</span><span class="n">LoadParametersSampler</span><span class="p">]</span> <span class="c1"># list of LoadParameters objects to run MCMC on</span>
+<span class="g g-Whitespace">      </span><span class="mi">7</span> <span class="n">mcmcMgr</span> <span class="o">=</span> <span class="n">mcmcManager</span><span class="p">(</span><span class="n">atis</span><span class="p">,</span> <span class="n">LoadParametersSamplers</span><span class="p">,</span> <span class="n">ofile</span><span class="p">)</span>
+<span class="ne">----&gt; </span><span class="mi">9</span> <span class="n">mcmcMgr</span><span class="o">.</span><span class="n">perform_mcmc</span><span class="p">(</span>
+<span class="g g-Whitespace">     </span><span class="mi">10</span>     <span class="n">nwalkers</span> <span class="o">=</span> <span class="n">nwalkers</span><span class="p">,</span>
+<span class="g g-Whitespace">     </span><span class="mi">11</span>     <span class="n">burnIn</span>   <span class="o">=</span> <span class="n">burnIn</span><span class="p">,</span>
+<span class="g g-Whitespace">     </span><span class="mi">12</span>     <span class="n">nsamples</span> <span class="o">=</span> <span class="n">nsamples</span><span class="p">,</span>
+<span class="g g-Whitespace">     </span><span class="mi">13</span>     <span class="n">sampler_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>  <span class="c1"># turn off progress bar for cleaner output</span>
+<span class="g g-Whitespace">     </span><span class="mi">14</span> <span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">16</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fit time: </span><span class="si">{</span><span class="n">mcmcMgr</span><span class="o">.</span><span class="n">elapsed_fit_time</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
 
-Mean acceptance fraction: 0.564
-Autocorrelation time: 16.447 steps
- =================== RESULTS =================== 
-MAP Estimates from 6400 samples obtained over 32 walkers:
-   Re[resAmp1]          = -140.188
-   Re[resAmp2]          = -80.310
-   Im[resAmp2]          = 134.706
-   Re[resAmp3]          = -193.365
-   Im[resAmp3]          = 106.786
- =============================================== 
-Fit time: 9.658270835876465 seconds
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
+<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/mcmc.py:184,</span> in <span class="ni">mcmcManager.perform_mcmc</span><span class="nt">(self, burnIn, nwalkers, nsamples, params_dict, moves_mixture, sampler_kwargs)</span>
+<span class="g g-Whitespace">    </span><span class="mi">182</span>         <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="o">**</span><span class="n">_sampler_kwargs</span><span class="p">);</span>
+<span class="g g-Whitespace">    </span><span class="mi">183</span>     <span class="k">else</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">184</span>         <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">par_values</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="o">**</span><span class="n">_sampler_kwargs</span><span class="p">);</span>
+<span class="g g-Whitespace">    </span><span class="mi">186</span>     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">[Sampler complete]</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">188</span> <span class="k">else</span><span class="p">:</span> <span class="c1"># Found already existing HDF5 file, will just load it</span>
+
+<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/emcee/ensemble.py:443,</span> in <span class="ni">EnsembleSampler.run_mcmc</span><span class="nt">(self, initial_state, nsteps, **kwargs)</span>
+<span class="g g-Whitespace">    </span><span class="mi">440</span>     <span class="n">initial_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_previous_state</span>
+<span class="g g-Whitespace">    </span><span class="mi">442</span> <span class="n">results</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="ne">--&gt; </span><span class="mi">443</span> <span class="k">for</span> <span class="n">results</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">initial_state</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="n">nsteps</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">444</span>     <span class="k">pass</span>
+<span class="g g-Whitespace">    </span><span class="mi">446</span> <span class="c1"># Store so that the ``initial_state=None`` case will work</span>
+
+<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/emcee/ensemble.py:344,</span> in <span class="ni">EnsembleSampler.sample</span><span class="nt">(self, initial_state, log_prob0, rstate0, blobs0, iterations, tune, skip_initial_state_check, thin_by, thin, store, progress, progress_kwargs)</span>
+<span class="g g-Whitespace">    </span><span class="mi">342</span>     <span class="n">state</span><span class="o">.</span><span class="n">blobs</span> <span class="o">=</span> <span class="n">blobs0</span>
+<span class="g g-Whitespace">    </span><span class="mi">343</span> <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">log_prob</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">344</span>     <span class="n">state</span><span class="o">.</span><span class="n">log_prob</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">blobs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_log_prob</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">345</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">log_prob</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nwalkers</span><span class="p">,):</span>
+<span class="g g-Whitespace">    </span><span class="mi">346</span>     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;incompatible input dimensions&quot;</span><span class="p">)</span>
+
+<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/emcee/ensemble.py:489,</span> in <span class="ni">EnsembleSampler.compute_log_prob</span><span class="nt">(self, coords)</span>
+<span class="g g-Whitespace">    </span><span class="mi">487</span>     <span class="k">else</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">488</span>         <span class="n">map_func</span> <span class="o">=</span> <span class="nb">map</span>
+<span class="ne">--&gt; </span><span class="mi">489</span>     <span class="n">results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">map_func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_prob_fn</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span>
+<span class="g g-Whitespace">    </span><span class="mi">491</span> <span class="k">try</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">492</span>     <span class="n">log_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">results</span><span class="p">])</span>
+
+<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/emcee/ensemble.py:624,</span> in <span class="ni">_FunctionWrapper.__call__</span><span class="nt">(self, x)</span>
+<span class="g g-Whitespace">    </span><span class="mi">622</span> <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">623</span>     <span class="k">try</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">624</span>         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">625</span>     <span class="k">except</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+<span class="g g-Whitespace">    </span><span class="mi">626</span>         <span class="kn">import</span> <span class="nn">traceback</span>
+
+<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/mcmc.py:72,</span> in <span class="ni">mcmcManager.LogProb</span><span class="nt">(self, par_values, keys)</span>
+<span class="g g-Whitespace">     </span><span class="mi">69</span>     <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">_keys</span><span class="p">,</span> <span class="n">_par_values</span><span class="p">):</span>
+<span class="g g-Whitespace">     </span><span class="mi">70</span>         <span class="c1"># remove tag from name if multiple cfg files were passed</span>
+<span class="g g-Whitespace">     </span><span class="mi">71</span>         <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[</span> <span class="p">:</span><span class="n">name</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="p">]</span> <span class="k">if</span> <span class="n">n_atis</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">name</span>
+<span class="ne">---&gt; </span><span class="mi">72</span>         <span class="n">ati</span><span class="o">.</span><span class="n">parameterManager</span><span class="p">()[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+<span class="g g-Whitespace">     </span><span class="mi">74</span> <span class="n">log_prob</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Likelihood</span><span class="p">(</span><span class="n">ati</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Prior</span><span class="p">(</span><span class="n">par_values</span><span class="p">,</span> <span class="n">keys</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">76</span> <span class="k">return</span> <span class="n">log_prob</span>
+
+<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/pythonization.py:20,</span> in <span class="ni">pythonize_parMgr.&lt;locals&gt;.&lt;lambda&gt;</span><span class="nt">(self, key, value)</span>
+<span class="g g-Whitespace">     </span><span class="mi">18</span> <span class="n">klass</span><span class="o">.</span><span class="fm">__len__</span>  <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">getParMap</span><span class="p">()</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+<span class="g g-Whitespace">     </span><span class="mi">19</span> <span class="n">klass</span><span class="o">.</span><span class="fm">__getitem__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">_parMgr_returnParPtr_if_keyExists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+<span class="ne">---&gt; </span><span class="mi">20</span> <span class="n">klass</span><span class="o">.</span><span class="fm">__setitem__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">_parMgr_setValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">key</span><span class="p">,</span><span class="n">value</span><span class="p">)</span>
+<span class="nn">     21 klass.__contains__ = lambda self, key: key</span> in <span class="ni">self.getParMap</span><span class="nt">()</span>
+
+<span class="nn">File /w/halld-scshelf2101/lng/Mambaforge/envs/PyAmpTools/lib/python3.9/site-packages/pythonization.py:11,</span> in <span class="ni">_parMgr_setValue</span><span class="nt">(self, key, value)</span>
+<span class="g g-Whitespace">      </span><span class="mi">9</span> <span class="k">def</span> <span class="nf">_parMgr_setValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="g g-Whitespace">     </span><span class="mi">10</span>     <span class="k">assert</span><span class="p">(</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">getParMap</span><span class="p">()</span> <span class="p">),</span> <span class="sa">f</span><span class="s1">&#39;Production (or Amplitude) Parameter </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1"> does not exist in ParameterManager&#39;</span>
+<span class="ne">---&gt; </span><span class="mi">11</span>     <span class="k">assert</span><span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDoCovarianceUpdate</span><span class="p">()</span> <span class="p">),</span> <span class="s1">&#39;doCovarianceUpdate must be set to False before setting a new value!&#39;</span>
+<span class="g g-Whitespace">     </span><span class="mi">12</span>     <span class="bp">self</span><span class="o">.</span><span class="n">getParMap</span><span class="p">()[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+<span class="ne">AssertionError</span>: doCovarianceUpdate must be set to False before setting a new value!
 </pre></div>
 </div>
 </div>
