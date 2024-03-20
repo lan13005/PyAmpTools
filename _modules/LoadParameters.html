@@ -369,16 +369,19 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span>     <span class="o">=</span> <span class="n">cfg</span>
 
         <span class="n">constraintMap</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">constraintMap</span><span class="p">()</span>
-        <span class="n">constraint_index</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">constraintIndex</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">uniqueProdPars</span>   <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">allProdPars</span>      <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">vs</span> <span class="ow">in</span> <span class="n">constraintMap</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">constraint_index</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">cfg</span><span class="o">.</span><span class="n">amplitude</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">fixed</span><span class="p">():</span>
-                <span class="n">constraint_index</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="n">allProdPars</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">constraintIndex</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">cfg</span><span class="o">.</span><span class="n">amplitude</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">fixed</span><span class="p">():</span>
                 <span class="n">uniqueProdPars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+                <span class="n">constraintIndex</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span> <span class="c1">#uniqueProdPars[i]</span>
             <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vs</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">constraint_index</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">cfg</span><span class="o">.</span><span class="n">amplitude</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">fixed</span><span class="p">():</span>
-                    <span class="n">constraint_index</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+                <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">constraintIndex</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">cfg</span><span class="o">.</span><span class="n">amplitude</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">fixed</span><span class="p">():</span>
+                    <span class="c1"># str(v) needed! appears that inserting v alone will go out of scope</span>
+                    <span class="n">constraintIndex</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)]</span> <span class="o">=</span> <span class="n">i</span> <span class="c1">#uniqueProdPars[i] </span>
             <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="c1">######## GET VALUES / REALNESS OF UNIQUE AMPLITUDES&#39; PRODUCTION PARAMETERS ########</span>
@@ -396,7 +399,10 @@ document.write(`
 
         <span class="c1">####### MERGE DICTIONARIES ########</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">params</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdPars</span>   <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">ampPars</span> <span class="c1"># python 3.9 - merge dictionaries</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">paramsIsReal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdIsReal</span> <span class="o">|</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="kc">True</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ampPars</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span> <span class="c1"># all amp params are real</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paramsIsReal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdIsReal</span> <span class="o">|</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="kc">True</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ampPars</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span> <span class="c1"># all amp params are real</span>
+
+        <span class="c1">####### ADDITIONAL TRACKING #######</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">allProdPars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">allProdPars</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="LoadParameters.flatten_parameters"><a class="viewcode-back" href="../api/loadParameters.html#LoadParameters.LoadParameters.flatten_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">flatten_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{}):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
@@ -408,12 +414,12 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            parameters (list): list of flattened parameters</span>
-<span class="sd">            key (list): list of keys (parameter names) corresponding to parameters</span>
+<span class="sd">            keys (list): list of keys (parameter names) corresponding to parameters</span>
 <span class="sd">            names (list): list of parameter names expanding complex parameters into Re[par] and Im[par]</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">parameters</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">key</span>        <span class="o">=</span> <span class="p">[]</span> <span class="c1"># lose information on flatten, use key to keep track of provenance</span>
-        <span class="n">names</span>      <span class="o">=</span> <span class="p">[]</span> <span class="c1"># track parameter names, appending re/im to name if complex</span>
+        <span class="n">keys</span>       <span class="o">=</span> <span class="p">[]</span> <span class="c1"># lose information on flatten, use key to keep track of provenance</span>
+        <span class="n">names</span>      <span class="o">=</span> <span class="p">[]</span> <span class="c1"># track parameters in a prettier format</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
             <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -422,31 +428,46 @@ document.write(`
             <span class="n">real_value</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">real</span>      <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdPars</span> <span class="k">else</span> <span class="n">v</span>
             <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Re[</span><span class="si">{</span><span class="n">pk</span><span class="si">}</span><span class="s1">]&#39;</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdPars</span> <span class="k">else</span> <span class="n">pk</span><span class="p">)</span>
             <span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">real_value</span> <span class="p">)</span>
-            <span class="n">key</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+            <span class="c1"># Production coefficients will have :: in their name. Normal parameters will not</span>
+            <span class="k">if</span> <span class="s1">&#39;::&#39;</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
+                <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="s2">&quot;_re&quot;</span><span class="p">)</span> <span class="c1"># MUST match notation in AmpTools&#39; parameterManager</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+            <span class="c1"># If parameters are complex, we will include their imaginary components</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">paramsIsReal</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
                 <span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
-                <span class="n">key</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+                <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="s2">&quot;_im&quot;</span><span class="p">)</span>
                 <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Im[</span><span class="si">{</span><span class="n">pk</span><span class="si">}</span><span class="s1">]&#39;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">names</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span>        <span class="o">=</span> <span class="n">keys</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">names</span>       <span class="o">=</span> <span class="n">names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parmameters</span> <span class="o">=</span> <span class="n">parameters</span>
 
-<div class="viewcode-block" id="LoadParameters.unflatten_parameters"><a class="viewcode-back" href="../api/loadParameters.html#LoadParameters.LoadParameters.unflatten_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">unflatten_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">names</span></div>
+
+<div class="viewcode-block" id="LoadParameters.unflatten_parameters"><a class="viewcode-back" href="../api/loadParameters.html#LoadParameters.LoadParameters.unflatten_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">unflatten_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="p">[]):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Unflatten parameters forming complex values (for production parameters) when requested.</span>
 <span class="sd">            List to Dictionary</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            parameters (list): list of flattened parameters</span>
-<span class="sd">            key (list): list of keys (parameter names) corresponding to parameters</span>
+<span class="sd">            keys (list): list of keys (parameter names) corresponding to parameters</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            paramDict (dict): dictionary of parameters</span>
-
 <span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span><span class="o">!=</span><span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parmameters</span><span class="p">):</span>
+            <span class="c1"># if no keys passed then use keys from last call to flatten_parameters</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span>
+
         <span class="n">paramDict</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">parameters</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">paramDict</span><span class="p">:</span> <span class="n">paramDict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">param</span>
-            <span class="k">else</span><span class="p">:</span> <span class="n">paramDict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">param</span> <span class="c1"># a repeat in key means imaginary part</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span><span class="n">parameters</span><span class="p">):</span>
+            <span class="k">if</span>   <span class="n">k</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;_re&#39;</span><span class="p">:</span> <span class="n">paramDict</span><span class="p">[</span><span class="n">k</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]]</span> <span class="o">=</span>    <span class="n">param</span>
+            <span class="k">elif</span> <span class="n">k</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;_im&#39;</span><span class="p">:</span> <span class="n">paramDict</span><span class="p">[</span><span class="n">k</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">param</span>
         <span class="k">return</span> <span class="n">paramDict</span></div></div>
 
 <span class="k">def</span> <span class="nf">createMovesMixtureFromDict</span><span class="p">(</span><span class="n">moves_dict</span><span class="p">):</span>

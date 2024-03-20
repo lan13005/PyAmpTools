@@ -414,8 +414,8 @@ document.write(`
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>par_values</strong> (<em>float</em>) – Flattened (complex-to-Real/Imag) Parameter values. ~ [real1, imag1, real2, imag2, …]</p></li>
-<li><p><strong>keys</strong> (<em>str</em>) – Flattened Parameter names. ~ [amp1,  amp1,  amp2,  amp2, …]
+<li><p><strong>par_values</strong> (<em>MinuitParameter*</em>) – list of parameter names and values. Production coeffs are split into (re)al/(im)aginary parts</p></li>
+<li><p><strong>keys</strong> (<em>str</em>) – parameter names
 If multiple config files were passed, the parameter names will be appended with a ‘_i’ tag where i is the ith cfg file</p></li>
 </ul>
 </dd>
@@ -430,12 +430,15 @@ If multiple config files were passed, the parameter names will be appended with 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mcmc.mcmcManager.Prior">
-<span class="sig-name descname"><span class="pre">Prior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#mcmcManager.Prior"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.mcmcManager.Prior" title="Permalink to this definition">#</a></dt>
-<dd><p>(Log of) Prior distribution for the parameters</p>
+<span class="sig-name descname"><span class="pre">Prior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mcmc.html#mcmcManager.Prior"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mcmc.mcmcManager.Prior" title="Permalink to this definition">#</a></dt>
+<dd><p>(Log of) Prior distribution for the par_values</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>parameters</strong> (<em>dict</em>) – Dictionary of parameter names (complex production coeffs and amplitude params) and values.
-If multiple config files were passed, the parameter names will be appended with a ‘_i’ tag where i is the ith cfg file</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>par_values</strong> (<em>MinuitParameter*</em>) – list of parameter names and values. Production coeffs are split into (re)al/(im)aginary parts</p></li>
+<li><p><strong>keys</strong> (<em>str</em>) – parameter names
+If multiple config files were passed, the parameter names will be appended with a ‘_i’ tag where i is the ith cfg file</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Log prior probability</p>

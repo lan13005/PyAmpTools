@@ -355,12 +355,16 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span> <span class="o">=</span> <span class="n">ofile</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">finishedSetup</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="mcmcManager.Prior"><a class="viewcode-back" href="../api/mcmc.html#mcmc.mcmcManager.Prior">[docs]</a>    <span class="k">def</span> <span class="nf">Prior</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
+<div class="viewcode-block" id="mcmcManager.Prior"><a class="viewcode-back" href="../api/mcmc.html#mcmc.mcmcManager.Prior">[docs]</a>    <span class="k">def</span> <span class="nf">Prior</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+              <span class="n">par_values</span><span class="p">,</span>
+              <span class="n">keys</span>
+              <span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        (Log of) Prior distribution for the parameters</span>
+<span class="sd">        (Log of) Prior distribution for the par_values</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            parameters (dict): Dictionary of parameter names (complex production coeffs and amplitude params) and values.</span>
+<span class="sd">            par_values (MinuitParameter*): list of parameter names and values. Production coeffs are split into (re)al/(im)aginary parts</span>
+<span class="sd">            keys (str): parameter names</span>
 <span class="sd">                If multiple config files were passed, the parameter names will be appended with a &#39;_i&#39; tag where i is the ith cfg file</span>
 
 <span class="sd">        Returns:</span>
@@ -381,8 +385,8 @@ document.write(`
 <span class="sd">        Definition of the (Log) Posterior distribution</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            par_values (float): Flattened (complex-to-Real/Imag) Parameter values. ~ [real1, imag1, real2, imag2, ...]</span>
-<span class="sd">            keys (str): Flattened Parameter names. ~ [amp1,  amp1,  amp2,  amp2, ...]</span>
+<span class="sd">            par_values (MinuitParameter*): list of parameter names and values. Production coeffs are split into (re)al/(im)aginary parts</span>
+<span class="sd">            keys (str): parameter names</span>
 <span class="sd">                If multiple config files were passed, the parameter names will be appended with a &#39;_i&#39; tag where i is the ith cfg file</span>
 
 <span class="sd">        Returns:</span>
@@ -392,16 +396,15 @@ document.write(`
         <span class="c1">## Calculate Log likelihood</span>
         <span class="n">log_prob</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">n_atis</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">atis</span> <span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ati</span><span class="p">,</span> <span class="n">LoadParametersSampler</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_atis</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">atis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">LoadParametersSamplers</span> <span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ati</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_atis</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">atis</span> <span class="p">):</span>
             <span class="n">_par_values</span> <span class="o">=</span> <span class="n">par_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]]</span>
             <span class="n">_keys</span> <span class="o">=</span> <span class="n">keys</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]]</span>
-            <span class="n">parameters</span> <span class="o">=</span> <span class="n">LoadParametersSampler</span><span class="o">.</span><span class="n">unflatten_parameters</span><span class="p">(</span> <span class="n">_par_values</span><span class="p">,</span> <span class="n">_keys</span> <span class="p">)</span>
-            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">_keys</span><span class="p">,</span> <span class="n">_par_values</span><span class="p">):</span>
                 <span class="c1"># remove tag from name if multiple cfg files were passed</span>
                 <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[</span> <span class="p">:</span><span class="n">name</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="p">]</span> <span class="k">if</span> <span class="n">n_atis</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">name</span>
                 <span class="n">ati</span><span class="o">.</span><span class="n">parameterManager</span><span class="p">()[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
-            <span class="n">log_prob</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Likelihood</span><span class="p">(</span><span class="n">ati</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Prior</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="n">log_prob</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Likelihood</span><span class="p">(</span><span class="n">ati</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Prior</span><span class="p">(</span><span class="n">par_values</span><span class="p">,</span> <span class="n">keys</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">log_prob</span></div>
 
@@ -659,6 +662,7 @@ document.write(`
 
     <span class="n">atis</span> <span class="o">=</span> <span class="p">[</span> <span class="n">AmpToolsInterface</span><span class="p">(</span><span class="n">cfgInfo</span><span class="p">)</span> <span class="k">for</span> <span class="n">cfgInfo</span> <span class="ow">in</span> <span class="n">cfgInfos</span> <span class="p">]</span>
     <span class="n">LoadParametersSamplers</span> <span class="o">=</span> <span class="p">[</span> <span class="n">LoadParameters</span><span class="p">(</span><span class="n">cfgInfo</span><span class="p">)</span> <span class="k">for</span> <span class="n">cfgInfo</span> <span class="ow">in</span> <span class="n">cfgInfos</span> <span class="p">]</span>
+    <span class="p">[</span> <span class="n">ati</span><span class="o">.</span><span class="n">parameterManager</span><span class="p">()</span><span class="o">.</span><span class="n">setDoCovarianceUpdate</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">ati</span> <span class="ow">in</span> <span class="n">atis</span> <span class="p">]</span> <span class="c1"># No internal Minuit fit = no covariance matrix</span>
 
     <span class="c1">############## RUN MCMC ##############</span>
     <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
