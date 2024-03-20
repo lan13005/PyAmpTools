@@ -7,7 +7,19 @@ import unittest
 
 import psutil
 from IPython.display import Code
+import math
 
+
+def calculate_subplot_grid_size(length_of_list):
+    sqrt_length = math.sqrt(length_of_list)
+    rows = math.floor(sqrt_length)
+    columns = rows
+
+    while rows * columns < length_of_list:
+        if columns == rows: columns += 1
+        else: rows += 1
+
+    return rows, columns
 
 def PrintSourceCode(function):
     """Returns the source code of a function"""
