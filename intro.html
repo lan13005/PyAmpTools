@@ -381,7 +381,7 @@ document.write(`
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">PyAmpTools</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#potential-errors">Potential Errors</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#potential-build-errors">Potential Build Errors</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#failure-to-pip-install-mpi4py">Failure to pip install mpi4py</a><ul class="nav section-nav flex-column">
 </ul>
 </li>
@@ -406,8 +406,10 @@ document.write(`
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">#</a></h1>
-<p>The following setup uses the <code class="docutils literal notranslate"><span class="pre">Bash</span></code> Shell. All major dependencies (ROOT, AmpTools, FSRoot) are built from source. ROOT versions &gt;6.26 is required (build steps are shown below) requiring at least some version of <code class="docutils literal notranslate"><span class="pre">gcc</span></code> (9.3.0 works). For JLab installations one should run the following bash commands or append to .bashrc file</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>/etc/profile.d/modules.sh
+<p>The following setup uses the <code class="docutils literal notranslate"><span class="pre">Bash</span></code> Shell. All major dependencies (ROOT, AmpTools, FSRoot) are built from source.
+<a class="reference external" href="https://root.cern/install/">ROOT</a> &gt;v6.26 is a required dependency (build steps are shown below) requiring at least some version of <code class="docutils literal notranslate"><span class="pre">gcc</span></code> (9.3.0 works). For JLab installations one should run the following bash commands or append to .bashrc file</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Append to bashrc file</span>
+<span class="nb">source</span><span class="w"> </span>/etc/profile.d/modules.sh
 module<span class="w"> </span>use<span class="w"> </span>/apps/modulefiles
 module<span class="w"> </span>load<span class="w"> </span>mpi/openmpi3-x86_64
 module<span class="w"> </span>load<span class="w"> </span>gcc/9.3.0
@@ -426,14 +428,14 @@ pip<span class="w"> </span>install<span class="w"> </span>mpi4py<span class="w">
 pre-commit<span class="w"> </span>install<span class="w"> </span>--install-hooks<span class="w"> </span><span class="c1"># (Optional) commit hooks to perform loose formatting</span>
 </pre></div>
 </div>
-<p><a class="reference external" href="https://root.cern/install/">ROOT</a> &gt;v6.26 is a required dependency. There is a known conflict between AmpTools’ GPU usage and RooFit/TMVA which comes with the conda-forge binaries of ROOT. Currently, ROOT has to be built from source with roofit and tmva off. A build script is included to download ROOT from source with the appropriate cmake flags to achieve this</p>
+<p>There is a known conflict between AmpTools’ GPU usage and RooFit/TMVA which comes with the conda-forge binaries of ROOT. Currently, ROOT has to be built from source with roofit and tmva off. A build script is included to download ROOT from source with the appropriate cmake flags to achieve this</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>root
 <span class="c1"># Modify build_root.sh to match your environment (gcc versions, etc))</span>
 <span class="c1"># if you modify the root version and use VSCode please update .vscode/settings.json file&#39;s extraPaths variable accordingly</span>
 <span class="nb">source</span><span class="w"> </span>build_root.sh
 </pre></div>
 </div>
-<p>Modify <code class="docutils literal notranslate"><span class="pre">set_environment.sh</span></code> to match you GPU environment (default: setup for JLab ifarm). Then create the necessary directory and link the environment script, allowing for <code class="docutils literal notranslate"><span class="pre">set_environment.sh</span></code> to be sourced everytime <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">PyAmpTools</span></code> is executed. <em>Note:</em> VSCode loads the environment but does not appear to run activate.d requiring manual activation.</p>
+<p>Modify <code class="docutils literal notranslate"><span class="pre">set_environment.sh</span></code> to match you GPU environment (default: setup for JLab ifarm). Then create the necessary directory and link the environment script, allowing for <code class="docutils literal notranslate"><span class="pre">set_environment.sh</span></code> to be sourced everytime <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">PyAmpTools</span></code> is executed. <strong>Note:</strong> VSCode loads the environment but does not appear to run activate.d requiring manual activation.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/
 ln<span class="w"> </span>-snfr<span class="w"> </span>set_environment.sh<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/
 </pre></div>
@@ -441,7 +443,7 @@ ln<span class="w"> </span>-snfr<span class="w"> </span>set_environment.sh<span c
 <p>Build required libraries</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Options in brackets are optional</span>
 <span class="nb">cd</span><span class="w"> </span>external
-make<span class="w"> </span><span class="o">[</span>mpi/gpu/mpigpu/gpumpi<span class="o">]</span><span class="w"> </span><span class="c1"># distributes modified Makefiles and makes AmpTools + AMPS_DATAIO into a shared libraries</span>
+make<span class="w"> </span><span class="o">[</span>mpi/gpu/mpigpu/gpumpi<span class="o">]</span><span class="w"> </span><span class="c1"># distributes modified Makefiles and makes libraries</span>
 </pre></div>
 </div>
 <p>Simple Unit tests</p>
@@ -456,8 +458,8 @@ pytest<span class="w"> </span>-k<span class="w"> </span><span class="o">[</span>
 <p>AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in <code class="docutils literal notranslate"><span class="pre">external</span></code> directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_AMPS_DATAIO</span></code>. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code>, a program to produce simulations with AmpTools, is provided in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_GENERATORS</span></code> but is not built by the main makefile, a separate makefile is included with that directory.</p>
 <p>Currently, the main scripts that perform an analysis, from simulation to fitting to plotting results, is located in <code class="docutils literal notranslate"><span class="pre">EXAMPLES/python</span></code> folder. These scripts can also be run from the commandline but its main functionality can be imported into another script (or Jupyter). Utility functions used by these scripts are located in the <code class="docutils literal notranslate"><span class="pre">utils</span></code> folder. Hopefully these scripts exposes enough functionality that adapation to other algorithms and use cases is easier.</p>
 </section>
-<section class="tex2jax_ignore mathjax_ignore" id="potential-errors">
-<h1>Potential Errors<a class="headerlink" href="#potential-errors" title="Permalink to this heading">#</a></h1>
+<section class="tex2jax_ignore mathjax_ignore" id="potential-build-errors">
+<h1>Potential Build Errors<a class="headerlink" href="#potential-build-errors" title="Permalink to this heading">#</a></h1>
 <section id="failure-to-pip-install-mpi4py">
 <h2>Failure to pip install mpi4py<a class="headerlink" href="#failure-to-pip-install-mpi4py" title="Permalink to this heading">#</a></h2>
 <p>If installing <code class="docutils literal notranslate"><span class="pre">mpi4py</span></code> fails due to <code class="docutils literal notranslate"><span class="pre">error:</span> <span class="pre">Cannot</span> <span class="pre">link</span> <span class="pre">MPI</span> <span class="pre">programs</span></code> this is a common conda-forge linker issue. Try replacing the built-in linker with the system’s and attempt to install <code class="docutils literal notranslate"><span class="pre">mpi4py</span></code> again.</p>
@@ -552,7 +554,7 @@ ln<span class="w"> </span>-s<span class="w"> </span>/usr/bin/ld<span class="w"> 
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">PyAmpTools</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#potential-errors">Potential Errors</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#potential-build-errors">Potential Build Errors</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#failure-to-pip-install-mpi4py">Failure to pip install mpi4py</a><ul class="nav section-nav flex-column">
 </ul>
 </li>

@@ -6,9 +6,11 @@ This repository contains Python bindings for AmpTools. Under the hood, it uses [
 
 # Installation
 
-The following setup uses the `Bash` Shell. All major dependencies (ROOT, AmpTools, FSRoot) are built from source. ROOT versions >6.26 is required (build steps are shown below) requiring at least some version of `gcc` (9.3.0 works). For JLab installations one should run the following bash commands or append to .bashrc file
+The following setup uses the `Bash` Shell. All major dependencies (ROOT, AmpTools, FSRoot) are built from source. 
+[ROOT](https://root.cern/install/) >v6.26 is a required dependency (build steps are shown below) requiring at least some version of `gcc` (9.3.0 works). For JLab installations one should run the following bash commands or append to .bashrc file
 
 ```shell
+# Append to bashrc file
 source /etc/profile.d/modules.sh
 module use /apps/modulefiles
 module load mpi/openmpi3-x86_64
@@ -32,7 +34,7 @@ pip install mpi4py # MPI (if available), mamba will link it against the wrong ex
 pre-commit install --install-hooks # (Optional) commit hooks to perform loose formatting
 ```
 
-[ROOT](https://root.cern/install/) >v6.26 is a required dependency. There is a known conflict between AmpTools' GPU usage and RooFit/TMVA which comes with the conda-forge binaries of ROOT. Currently, ROOT has to be built from source with roofit and tmva off. A build script is included to download ROOT from source with the appropriate cmake flags to achieve this
+There is a known conflict between AmpTools' GPU usage and RooFit/TMVA which comes with the conda-forge binaries of ROOT. Currently, ROOT has to be built from source with roofit and tmva off. A build script is included to download ROOT from source with the appropriate cmake flags to achieve this
 
 ```shell
 cd root
@@ -41,7 +43,7 @@ cd root
 source build_root.sh
 ```
 
-Modify `set_environment.sh` to match you GPU environment (default: setup for JLab ifarm). Then create the necessary directory and link the environment script, allowing for `set_environment.sh` to be sourced everytime `conda activate PyAmpTools` is executed. *Note:* VSCode loads the environment but does not appear to run activate.d requiring manual activation.
+Modify `set_environment.sh` to match you GPU environment (default: setup for JLab ifarm). Then create the necessary directory and link the environment script, allowing for `set_environment.sh` to be sourced everytime `conda activate PyAmpTools` is executed. **Note:** VSCode loads the environment but does not appear to run activate.d requiring manual activation.
 
 ```shell
 mkdir -p $CONDA_PREFIX/etc/conda/activate.d/
@@ -53,7 +55,7 @@ Build required libraries
 ```shell
 # Options in brackets are optional
 cd external
-make [mpi/gpu/mpigpu/gpumpi] # distributes modified Makefiles and makes AmpTools + AMPS_DATAIO into a shared libraries
+make [mpi/gpu/mpigpu/gpumpi] # distributes modified Makefiles and makes libraries
 ```
 
 Simple Unit tests
@@ -71,9 +73,9 @@ AmpTools and FSRoot are included as git submodules. Modified source files and ma
 
 Currently, the main scripts that perform an analysis, from simulation to fitting to plotting results, is located in `EXAMPLES/python` folder. These scripts can also be run from the commandline but its main functionality can be imported into another script (or Jupyter). Utility functions used by these scripts are located in the `utils` folder. Hopefully these scripts exposes enough functionality that adapation to other algorithms and use cases is easier.
 
-# Potential Errors
+# Potential Build Errors
 
-## Failure to pip install mpi4py
+### Failure to pip install mpi4py
 
 If installing `mpi4py` fails due to `error: Cannot link MPI programs` this is a common conda-forge linker issue. Try replacing the built-in linker with the system's and attempt to install `mpi4py` again.
 ```shell
