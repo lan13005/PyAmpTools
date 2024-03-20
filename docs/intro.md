@@ -7,7 +7,7 @@ This repository contains Python bindings for AmpTools. Under the hood, it uses [
 # Installation
 
 The following setup uses the `Bash` Shell. All major dependencies (ROOT, AmpTools, FSRoot) are built from source.
-[ROOT](https://root.cern/install/) >v6.26 is a required dependency (build steps are shown below) requiring at least some version of `gcc` (9.3.0 works). For JLab installations one should run the following bash commands or append to .bashrc file
+[ROOT](https://root.cern/install/) >v6.26 is a required dependency (build steps are shown below) requiring at least some version of `gcc` (9.3.0 works). For JLab installations one should run the following bash commands or append to `.bashrc` file
 
 ```shell
 # Append to bashrc file

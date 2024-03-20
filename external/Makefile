@@ -5,7 +5,7 @@
 
 # check for existence of ROOTSYS environment variable
 ifndef ROOTSYS
-$(error ROOTSYS environment variable is not set)
+$(error ROOTSYS environment variable is not set. If ROOT is already built, please source set_environment.sh)
 endif
 
 # SUPPORTED AMPTOOLS / FSROOT VERSIONS
@@ -18,7 +18,7 @@ SRC_DIRS := Distribution
 SUB_DIRS := IUAmpTools IUAmpToolsMPI MinuitInterface UpRootMinuit
 GPU_DIRS := GPUManager
 
-# # Default target: Distribute Makefiles and run 'make'
+# Default target: Distribute Makefiles and run 'make'
 default: distribute_makefiles
 	@echo " === Running 'make' in the target directory... ==="
 	@cd AmpTools/AmpTools; make
