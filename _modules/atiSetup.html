@@ -356,8 +356,8 @@ document.write(`
 <span class="sd">        use_fsroot (bool): True if FSRoot library should be loaded</span>
 <span class="sd">        use_genamp (bool): True if GenAmp library should be loaded</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">loadLibraries</span><span class="p">(</span><span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="p">,</span> <span class="n">use_genamp</span><span class="p">)</span>
-    <span class="n">set_aliases</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">)</span>
+    <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">loadLibraries</span><span class="p">(</span> <span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="p">,</span> <span class="n">use_genamp</span> <span class="p">)</span>
+    <span class="n">set_aliases</span><span class="p">(</span> <span class="n">calling_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span> <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span></div>
 
@@ -403,7 +403,7 @@ document.write(`
     <span class="k">else</span><span class="p">:</span> <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;OFF&quot;</span>
     <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="set_aliases"><a class="viewcode-back" href="../api/atiSetup.html#atiSetup.set_aliases">[docs]</a><span class="k">def</span> <span class="nf">set_aliases</span><span class="p">(</span><span class="n">called_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">):</span>
+<div class="viewcode-block" id="set_aliases"><a class="viewcode-back" href="../api/atiSetup.html#atiSetup.set_aliases">[docs]</a><span class="k">def</span> <span class="nf">set_aliases</span><span class="p">(</span> <span class="n">called_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span> <span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Due to MPI requiring c++ templates and the fact that all classes live under the ROOT namespace, aliasing can clean up the code significantly.</span>
 <span class="sd">    A dictionary of aliases is appended to the globals() function of the calling function thereby making the aliases available in the calling function.</span>
@@ -445,6 +445,8 @@ document.write(`
         <span class="s1">&#39;TFile&#39;</span><span class="p">:</span>                      <span class="n">ROOT</span><span class="o">.</span><span class="n">TFile</span><span class="p">,</span>
         <span class="s1">&#39;AmplitudeInfo&#39;</span><span class="p">:</span>              <span class="n">ROOT</span><span class="o">.</span><span class="n">AmplitudeInfo</span><span class="p">,</span>
     <span class="p">}</span>
+    <span class="k">if</span> <span class="n">USE_GPU</span><span class="p">:</span>
+        <span class="n">aliases</span><span class="p">[</span><span class="s1">&#39;GPUManager&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">GPUManager</span>
 
     <span class="n">called_globals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">aliases</span><span class="p">)</span></div>
 

@@ -419,7 +419,7 @@ RANK_MPI (int): MPI rank of the process (0 by default even if MPI is not used)</
 
 <dl class="py function">
 <dt class="sig sig-object py" id="atiSetup.set_aliases">
-<span class="sig-name descname"><span class="pre">set_aliases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">called_globals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">USE_MPI</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#set_aliases"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.set_aliases" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_aliases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">called_globals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">USE_MPI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">USE_GPU</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atiSetup.html#set_aliases"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atiSetup.set_aliases" title="Permalink to this definition">#</a></dt>
 <dd><p>Due to MPI requiring c++ templates and the fact that all classes live under the ROOT namespace, aliasing can clean up the code significantly.
 A dictionary of aliases is appended to the globals() function of the calling function thereby making the aliases available in the calling function.</p>
 <dl class="field-list simple">
