@@ -6,8 +6,8 @@ This repository contains Python bindings for AmpTools. Under the hood, it uses [
 
 # Installation
 
-The following setup uses the `Bash` Shell. All major dependencies (ROOT, AmpTools, FSRoot) are built from source. 
-[ROOT](https://root.cern/install/) >v6.26 is a required dependency (build steps are shown below) requiring at least some version of `gcc` (9.3.0 works). For JLab installations one should run the following bash commands or append to .bashrc file
+The following setup uses the `Bash` Shell. All major dependencies (ROOT, AmpTools, FSRoot) are built from source.
+[ROOT](https://root.cern/install/) >v6.26 is a required dependency (build steps are shown below) requiring at least some version of `gcc` (9.3.0 works). For JLab installations one should run the following bash commands or append to `.bashrc` file
 
 ```shell
 # Append to bashrc file
@@ -29,7 +29,7 @@ Environment setup. `conda` can be very slow to resolve dependencies for ROOT. Us
 ```shell
 conda env create  # Creates environment specified by environment.yml and pyproject.toml
 conda activate PyAmpTools # activate the environment
-pip install mpi4py # MPI (if available), mamba will link it against the wrong executables. 
+pip install mpi4py # MPI (if available), mamba will link it against the wrong executables.
 # if installing mpi4py fails, see bottom of page
 pre-commit install --install-hooks # (Optional) commit hooks to perform loose formatting
 ```
@@ -43,11 +43,12 @@ cd root
 source build_root.sh
 ```
 
-Modify `set_environment.sh` to match you GPU environment (default: setup for JLab ifarm). Then create the necessary directory and link the environment script, allowing for `set_environment.sh` to be sourced everytime `conda activate PyAmpTools` is executed. **Note:** VSCode loads the environment but does not appear to run activate.d requiring manual activation.
+Modify `set_environment.sh` to match you GPU environment (default: setup for JLab ifarm). Then create the necessary directory and link the environment script, allowing for `set_environment.sh` to be sourced everytime `conda activate PyAmpTools` is executed. **Note:** VSCode loads the environment but does not appear to run `activate.d` and therefore requires manual activation.
 
 ```shell
 mkdir -p $CONDA_PREFIX/etc/conda/activate.d/
-ln -snfr set_environment.sh $CONDA_PREFIX/etc/conda/activate.d/
+source set_environment.sh # manually source for now
+ln -snfr set_environment.sh $CONDA_PREFIX/etc/conda/activate.d/ # setup auto-load for next time
 ```
 
 Build required libraries
@@ -66,6 +67,7 @@ pytest -v
 pytest -k [marked-test] # to run a specific marked test defined in pytest.ini
 ```
 
+---
 
 # Usage / Design
 
@@ -73,15 +75,37 @@ AmpTools and FSRoot are included as git submodules. Modified source files and ma
 
 Currently, the main scripts that perform an analysis, from simulation to fitting to plotting results, is located in `EXAMPLES/python` folder. These scripts can also be run from the commandline but its main functionality can be imported into another script (or Jupyter). Utility functions used by these scripts are located in the `utils` folder. Hopefully these scripts exposes enough functionality that adapation to other algorithms and use cases is easier.
 
-# Potential Build Errors
+---
 
-### Failure to pip install mpi4py
+# Additional Information
+
+## Jupyter notebooks in VSCode
+
+* Enter `jupyter-notebook --no-browser --port=8888` into the terminal
+    * Copy localhost URL of the form: `http://localhost:8888/tree?token=e9aba1fab24532ceb89e29ba4485d8639ca4f4b41c490b91`
+* Open your jupyter-notebook
+    * Select Another Kernel
+    * Connect to 'existing jupyter server'
+    * Enter localhost url
+    * Name it anything you like
+
+## Building documentation
+
+Documentation is powered by jupyter-book (a distribution of sphinx). A makefile is prepared to **build** and **clean** the documentation and **push** the changes to github pages. All three steps can be performed with the **rebuild** recipe.
+
+To rebuild web documentation
+
+```
+cd docs
+make rebuild # or choose one [clean/build/push/rebuild]
+```
+
+## Potential Build Errors
+
+#### Failure to pip install mpi4py
 
 If installing `mpi4py` fails due to `error: Cannot link MPI programs` this is a common conda-forge linker issue. Try replacing the built-in linker with the system's and attempt to install `mpi4py` again.
 ```shell
 rm $CONDA_PREFIX/compiler_compat/ld
 ln -s /usr/bin/ld $CONDA_PREFIX/compiler_compat/
-```
-
-```{tableofcontents}
 ```

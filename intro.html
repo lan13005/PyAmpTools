@@ -381,8 +381,11 @@ document.write(`
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">PyAmpTools</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#potential-build-errors">Potential Build Errors</a><ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#failure-to-pip-install-mpi4py">Failure to pip install mpi4py</a><ul class="nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-information">Additional Information</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jupyter-notebooks-in-vscode">Jupyter notebooks in VSCode</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-documentation">Building documentation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#potential-build-errors">Potential Build Errors</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#failure-to-pip-install-mpi4py">Failure to pip install mpi4py</a></li>
 </ul>
 </li>
 </ul>
@@ -407,7 +410,7 @@ document.write(`
 <section class="tex2jax_ignore mathjax_ignore" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">#</a></h1>
 <p>The following setup uses the <code class="docutils literal notranslate"><span class="pre">Bash</span></code> Shell. All major dependencies (ROOT, AmpTools, FSRoot) are built from source.
-<a class="reference external" href="https://root.cern/install/">ROOT</a> &gt;v6.26 is a required dependency (build steps are shown below) requiring at least some version of <code class="docutils literal notranslate"><span class="pre">gcc</span></code> (9.3.0 works). For JLab installations one should run the following bash commands or append to .bashrc file</p>
+<a class="reference external" href="https://root.cern/install/">ROOT</a> &gt;v6.26 is a required dependency (build steps are shown below) requiring at least some version of <code class="docutils literal notranslate"><span class="pre">gcc</span></code> (9.3.0 works). For JLab installations one should run the following bash commands or append to <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code> file</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Append to bashrc file</span>
 <span class="nb">source</span><span class="w"> </span>/etc/profile.d/modules.sh
 module<span class="w"> </span>use<span class="w"> </span>/apps/modulefiles
@@ -423,7 +426,7 @@ module<span class="w"> </span>load<span class="w"> </span>gcc/9.3.0
 <p>Environment setup. <code class="docutils literal notranslate"><span class="pre">conda</span></code> can be very slow to resolve dependencies for ROOT. Use <a class="reference external" href="https://github.com/conda-forge/miniforge#mambaforge">Mamba</a> or <a class="reference external" href="https://docs.anaconda.com/free/miniconda/index.html">Miniconda</a> instead of conda for faster dependency resolution</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w">  </span><span class="c1"># Creates environment specified by environment.yml and pyproject.toml</span>
 conda<span class="w"> </span>activate<span class="w"> </span>PyAmpTools<span class="w"> </span><span class="c1"># activate the environment</span>
-pip<span class="w"> </span>install<span class="w"> </span>mpi4py<span class="w"> </span><span class="c1"># MPI (if available), mamba will link it against the wrong executables. </span>
+pip<span class="w"> </span>install<span class="w"> </span>mpi4py<span class="w"> </span><span class="c1"># MPI (if available), mamba will link it against the wrong executables.</span>
 <span class="c1"># if installing mpi4py fails, see bottom of page</span>
 pre-commit<span class="w"> </span>install<span class="w"> </span>--install-hooks<span class="w"> </span><span class="c1"># (Optional) commit hooks to perform loose formatting</span>
 </pre></div>
@@ -435,9 +438,10 @@ pre-commit<span class="w"> </span>install<span class="w"> </span>--install-hooks
 <span class="nb">source</span><span class="w"> </span>build_root.sh
 </pre></div>
 </div>
-<p>Modify <code class="docutils literal notranslate"><span class="pre">set_environment.sh</span></code> to match you GPU environment (default: setup for JLab ifarm). Then create the necessary directory and link the environment script, allowing for <code class="docutils literal notranslate"><span class="pre">set_environment.sh</span></code> to be sourced everytime <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">PyAmpTools</span></code> is executed. <strong>Note:</strong> VSCode loads the environment but does not appear to run activate.d requiring manual activation.</p>
+<p>Modify <code class="docutils literal notranslate"><span class="pre">set_environment.sh</span></code> to match you GPU environment (default: setup for JLab ifarm). Then create the necessary directory and link the environment script, allowing for <code class="docutils literal notranslate"><span class="pre">set_environment.sh</span></code> to be sourced everytime <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">PyAmpTools</span></code> is executed. <strong>Note:</strong> VSCode loads the environment but does not appear to run <code class="docutils literal notranslate"><span class="pre">activate.d</span></code> and therefore requires manual activation.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/
-ln<span class="w"> </span>-snfr<span class="w"> </span>set_environment.sh<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/
+<span class="nb">source</span><span class="w"> </span>set_environment.sh<span class="w"> </span><span class="c1"># manually source for now</span>
+ln<span class="w"> </span>-snfr<span class="w"> </span>set_environment.sh<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/<span class="w"> </span><span class="c1"># setup auto-load for next time</span>
 </pre></div>
 </div>
 <p>Build required libraries</p>
@@ -453,48 +457,59 @@ pytest<span class="w"> </span>-k<span class="w"> </span><span class="o">[</span>
 </pre></div>
 </div>
 </section>
+<hr class="docutils" />
 <section class="tex2jax_ignore mathjax_ignore" id="usage-design">
 <h1>Usage / Design<a class="headerlink" href="#usage-design" title="Permalink to this heading">#</a></h1>
 <p>AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in <code class="docutils literal notranslate"><span class="pre">external</span></code> directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_AMPS_DATAIO</span></code>. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code>, a program to produce simulations with AmpTools, is provided in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_GENERATORS</span></code> but is not built by the main makefile, a separate makefile is included with that directory.</p>
 <p>Currently, the main scripts that perform an analysis, from simulation to fitting to plotting results, is located in <code class="docutils literal notranslate"><span class="pre">EXAMPLES/python</span></code> folder. These scripts can also be run from the commandline but its main functionality can be imported into another script (or Jupyter). Utility functions used by these scripts are located in the <code class="docutils literal notranslate"><span class="pre">utils</span></code> folder. Hopefully these scripts exposes enough functionality that adapation to other algorithms and use cases is easier.</p>
 </section>
-<section class="tex2jax_ignore mathjax_ignore" id="potential-build-errors">
-<h1>Potential Build Errors<a class="headerlink" href="#potential-build-errors" title="Permalink to this heading">#</a></h1>
+<hr class="docutils" />
+<section class="tex2jax_ignore mathjax_ignore" id="additional-information">
+<h1>Additional Information<a class="headerlink" href="#additional-information" title="Permalink to this heading">#</a></h1>
+<section id="jupyter-notebooks-in-vscode">
+<h2>Jupyter notebooks in VSCode<a class="headerlink" href="#jupyter-notebooks-in-vscode" title="Permalink to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Enter <code class="docutils literal notranslate"><span class="pre">jupyter-notebook</span> <span class="pre">--no-browser</span> <span class="pre">--port=8888</span></code> into the terminal</p>
+<ul>
+<li><p>Copy localhost URL of the form: <code class="docutils literal notranslate"><span class="pre">http://localhost:8888/tree?token=e9aba1fab24532ceb89e29ba4485d8639ca4f4b41c490b91</span></code></p></li>
+</ul>
+</li>
+<li><p>Open your jupyter-notebook</p>
+<ul>
+<li><p>Select Another Kernel</p></li>
+<li><p>Connect to ‘existing jupyter server’</p></li>
+<li><p>Enter localhost url</p></li>
+<li><p>Name it anything you like</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="building-documentation">
+<h2>Building documentation<a class="headerlink" href="#building-documentation" title="Permalink to this heading">#</a></h2>
+<p>Documentation is powered by jupyter-book (a distribution of sphinx). A makefile is prepared to <strong>build</strong> and <strong>clean</strong> the documentation and <strong>push</strong> the changes to github pages. All three steps can be performed with the <strong>rebuild</strong> recipe.</p>
+<p>To rebuild web documentation</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">docs</span>
+<span class="n">make</span> <span class="n">rebuild</span> <span class="c1"># or choose one [clean/build/push/rebuild]</span>
+</pre></div>
+</div>
+</section>
+<section id="potential-build-errors">
+<h2>Potential Build Errors<a class="headerlink" href="#potential-build-errors" title="Permalink to this heading">#</a></h2>
 <section id="failure-to-pip-install-mpi4py">
-<h2>Failure to pip install mpi4py<a class="headerlink" href="#failure-to-pip-install-mpi4py" title="Permalink to this heading">#</a></h2>
+<h3>Failure to pip install mpi4py<a class="headerlink" href="#failure-to-pip-install-mpi4py" title="Permalink to this heading">#</a></h3>
 <p>If installing <code class="docutils literal notranslate"><span class="pre">mpi4py</span></code> fails due to <code class="docutils literal notranslate"><span class="pre">error:</span> <span class="pre">Cannot</span> <span class="pre">link</span> <span class="pre">MPI</span> <span class="pre">programs</span></code> this is a common conda-forge linker issue. Try replacing the built-in linker with the system’s and attempt to install <code class="docutils literal notranslate"><span class="pre">mpi4py</span></code> again.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>rm<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/compiler_compat/ld
 ln<span class="w"> </span>-s<span class="w"> </span>/usr/bin/ld<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/compiler_compat/
 </pre></div>
 </div>
-<div class="toctree-wrapper compound">
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/libraryLoading.html">Loading Libraries</a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/generation.html">Generating Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/fitting.html">Fitting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/plotgen.html">Plotting Fit Results</a></li>
-</ul>
-</div>
-<div class="toctree-wrapper compound">
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/pyroot.html">PyROOT - Lessons Learned</a></li>
-</ul>
-</div>
-<div class="toctree-wrapper compound">
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="api/atiSetup.html">atiSetup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/cfgGenerator.html">cfgGenerator</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/fit.html">fit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/mcmc.html">MCMC</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/loadParameters.html">LoadParameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/plotgen.html">PlotGen</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/extract_ff.html">extract_ff</a></li>
-</ul>
-</div>
 </section>
+</section>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
 </section>
 
     <script type="text/x-thebe-config">
@@ -554,8 +569,11 @@ ln<span class="w"> </span>-s<span class="w"> </span>/usr/bin/ld<span class="w"> 
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">PyAmpTools</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#potential-build-errors">Potential Build Errors</a><ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#failure-to-pip-install-mpi4py">Failure to pip install mpi4py</a><ul class="nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-information">Additional Information</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jupyter-notebooks-in-vscode">Jupyter notebooks in VSCode</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-documentation">Building documentation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#potential-build-errors">Potential Build Errors</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#failure-to-pip-install-mpi4py">Failure to pip install mpi4py</a></li>
 </ul>
 </li>
 </ul>
