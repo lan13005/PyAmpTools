@@ -82,6 +82,8 @@ def runFits(
     fitManager: MinuitMinimizationManager = ati.minuitMinimizationManager()
     fitManager.setMaxIterations(maxIter)
 
+    cfgInfo = ati.configurationInfo()
+
     if N == 0: # No randomization
         bFitFailed, minNLL = performFit( ati, '0', *fitargs )
         print(f'LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): {minNLL}')
@@ -186,7 +188,8 @@ if __name__ == '__main__':
 
         fit_start_time = time.time()
 
-        nll = runFits( ati, N = args.numRnd, \
+        nll = runFits( ati, cfgInfo,
+                        N = args.numRnd, \
                         seedfile = args.seedfile, \
                         useMinos = args.useMinos, \
                         hesse = args.hesse, \
