@@ -4,6 +4,8 @@
 format: jb-book
 root: intro
 parts:
+  - chapters:
+    - file: additional_info
   - caption: Tutorials
     chapters:
       - file: notebooks/libraryLoading
