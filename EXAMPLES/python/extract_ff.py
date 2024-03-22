@@ -10,7 +10,7 @@ def extract_ff(results, outfileName='', acceptanceCorrect=True, fmt='.5f', regex
     '''
     Extract Fit Fractions and phase differences between pairs of waves from a FitResults object
 
-    Regex merge is a useful tool to merge amplitudes that are related to each other (user-specified)
+    Regex merge can be a useful tool to merge amplitudes that are related to each other (user-specified)
         For example waveset: D-2- D-1- D0- D1- D2- D-2+ D-1+ D0+ D1+ D2+
         To remove the sign at the end (merge reflectivites)     use = r'[-+]$'
         To remove first sign and number (merge M-projections)   use = r'[-+]?(\d+)'
@@ -21,7 +21,7 @@ def extract_ff(results, outfileName='', acceptanceCorrect=True, fmt='.5f', regex
         outfileName (str): Output root file name or dump to stdout if ''
         acceptanceCorrect (bool): Acceptance correct the values
         fmt (str): string format for printing
-        regex_merge (str): Merge amplitudes: Regex pair (pattern, replace) separated by ~>
+        regex_merge (List[str]): Merge amplitudes: List of Regex pairs (pattern, replace) separated by ~>
 
     Returns:
         None, dumps a file to outfileName or stdout
@@ -34,6 +34,7 @@ def extract_ff(results, outfileName='', acceptanceCorrect=True, fmt='.5f', regex
     outfile = open(outfileName, 'w') if outfileName != '' else sys.stdout
     total_intensity, total_error = results.intensity(acceptanceCorrect)
     outfile.write(f"TOTAL EVENTS = {total_intensity} +/- {total_error}\n")
+
     uniqueAmps = results.ampList() # vector<string>
     uniqueAmps = [str(amp) for amp in uniqueAmps]
 
@@ -60,10 +61,13 @@ def extract_ff(results, outfileName='', acceptanceCorrect=True, fmt='.5f', regex
                     merged[filterd_amp] =[amps]
                 else:
                     merged[filterd_amp].append(amps)
+
             for merged_amp, amps in merged.items():
+
+                if len(amps) <= 1: continue # skip if none merged
                 print(f' -> {merged_amp}')
                 for amp in amps: print(f'     {amp}')
-            for merged_amp, amps in merged.items():
+
                 intensity, error = results.intensity(amps, acceptanceCorrect)
                 write_ff(merged_amp, intensity, error)
             merged.clear()
@@ -78,6 +82,11 @@ def extract_ff(results, outfileName='', acceptanceCorrect=True, fmt='.5f', regex
             if not same_reaction or not same_sum: continue # interfence only in same {reaction, sum}
             phase, error = results.phaseDiff(amp1, amp2)
             outfile.write(f'PHASE DIFFERENCE {amp1} {amp2} = {phase:{fmt}} +/- {error:{fmt}}\n')
+
+    outfile.write("\n########### FIT STATUS ###########\n")
+    outfile.write(f"# bestMinimum = {results.bestMinimum()}\n")
+    outfile.write(f"# lastMinuitCommandStatus = {results.lastMinuitCommandStatus()}\n")
+    outfile.write(f"# eMatrixStatus = {results.eMatrixStatus()}\n")
 
     if outfileName != '':
         outfile.close()
