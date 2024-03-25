@@ -38,7 +38,7 @@ dependencies = [
 ]
 name = "PyAmpTools"
 requires-python = ">=3.9"
-version = "0.0.0"
+version = "0.1.0"
 
 [tool.isort]
 known_third_party = "THIRDPARTY,sympy"

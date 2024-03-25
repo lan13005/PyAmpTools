@@ -37,10 +37,11 @@ pre-commit install --install-hooks # (Optional) commit hooks to perform loose fo
 There is a known conflict between AmpTools' GPU usage and RooFit/TMVA which comes with the conda-forge binaries of ROOT. Currently, ROOT has to be built from source with roofit and tmva off. A build script is included to download ROOT from source with the appropriate cmake flags to achieve this
 
 ```shell
-cd root
+cd external/root
 # Modify build_root.sh to match your environment (gcc versions, etc))
 # if you modify the root version and use VSCode please update .vscode/settings.json file's extraPaths variable accordingly
 source build_root.sh
+cd ../.. # move back to main directory
 ```
 
 Modify `set_environment.sh` to match you GPU environment (default: setup for JLab ifarm). Then create the necessary directory and link the environment script, allowing for `set_environment.sh` to be sourced everytime `conda activate PyAmpTools` is executed. **Note:** VSCode loads the environment but does not appear to run `activate.d` and therefore requires manual activation.
