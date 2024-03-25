@@ -19,7 +19,7 @@ def recursive_link_if_not_exist(source_folders, destination_folder, ftype, verbo
 REPO_HOME = expandvars("$REPO_HOME")
 
 source_folders = [
-        f"{REPO_HOME}/utils/",
+        f"{REPO_HOME}/utility/",
         f"{REPO_HOME}/EXAMPLES/python",
         ]
 

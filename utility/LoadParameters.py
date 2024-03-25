@@ -48,7 +48,7 @@ class LoadParameters:
             for v in vs:
                 if v not in constraintIndex and not cfg.amplitude(v).fixed():
                     # str(v) needed! appears that inserting v alone will go out of scope
-                    constraintIndex[str(v)] = i #uniqueProdPars[i] 
+                    constraintIndex[str(v)] = i #uniqueProdPars[i]
             i += 1
 
         ######## GET VALUES / REALNESS OF UNIQUE AMPLITUDES' PRODUCTION PARAMETERS ########
