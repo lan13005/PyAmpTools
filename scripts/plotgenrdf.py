@@ -122,8 +122,10 @@ def draw_histograms(
         del stacks
         del canvas
 
+def _cli_plotgenrdf():
 
-if __name__ == '__main__':
+    ''' Command line interface for plotting fit results using RDataFrames '''
+
     ############## SET ENVIRONMENT VARIABLES ##############
     REPO_HOME     = os.environ['REPO_HOME']
 
@@ -181,3 +183,7 @@ if __name__ == '__main__':
 
     ############## DRAW HISTOGRAMS ##############
     draw_histograms(results, hist_output_name, particles, HISTS_TO_BOOK)
+
+
+if __name__ == '__main__':
+    _cli_plotgenrdf()

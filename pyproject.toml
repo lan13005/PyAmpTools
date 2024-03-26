@@ -36,7 +36,7 @@ dependencies = [
     # matplotlib removed function needed by pygtc (corner plot alternative), install 3.7.0 if you want
     # "pygtc",
 ]
-name = "PyAmpTools"
+name = "PyAmpToolsTest"
 requires-python = ">=3.9"
 version = "0.1.0"
 
@@ -47,5 +47,11 @@ profile = "black"
 [tool.nbqa.addopts]
 black = ["--line-length=85"]
 
-[tool.setuptools]
-py-modules = []
+[project.scripts]
+amp_fit = "pyamptools.mle:_cli_runFits" # variable name will be the executable name in conda env bin
+amp_fitfrac = "pyamptools.extract_ff:_cli_extract_ff"
+amp_mcmc = "pyamptools.mcmc:_cli_mcmc"
+
+# [tool.setuptools]
+# py-modules = []
+# package-dir = {"" = "src"}

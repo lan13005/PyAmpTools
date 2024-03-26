@@ -9,7 +9,6 @@ import argparse
 import time
 import sys
 import yaml
-import atiSetup
 from utils import glob_sort_captured, safe_getsize
 
 class mcmcManager:
@@ -267,7 +266,10 @@ class mcmcManager:
         if save: plt.savefig(f"{corner_ofile}")
         else:    return fig
 
-if __name__ == '__main__':
+def _cli_mcmc():
+
+    ''' Command line interface for performing mcmc fits '''
+
     start_time = time.time()
 
     parser = argparse.ArgumentParser(description='emcee fitter')
@@ -309,6 +311,7 @@ if __name__ == '__main__':
         assert( os.path.exists(cfgfile) ), 'Config file does not exist at specified path'
 
     ################### LOAD LIBRARIES ##################
+    import atiSetup
     USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals(), args.accelerator)
 
     ############## LOAD CONFIGURATION FILE #############
@@ -380,3 +383,6 @@ if __name__ == '__main__':
 
         print(f"Fit time: {mcmcMgr.elapsed_fit_time} seconds")
         print(f"Total time: {time.time() - start_time} seconds")
+
+if __name__ == '__main__':
+    _cli_mcmc()

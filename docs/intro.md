@@ -64,7 +64,7 @@ Simple Unit tests
 
 ```shell
 sed -i "s~REPLACE_FOLDER_LOCATION~$REPO_HOME/tests/samples/SIMPLE_EXAMPLE~" $REPO_HOME/tests/samples/SIMPLE_EXAMPLE/fit.cfg # update path
-pytest -v
+pytest -v # -s to not hide stdout
 pytest -k [marked-test] # to run a specific marked test defined in pytest.ini
 ```
 
@@ -74,7 +74,7 @@ pytest -k [marked-test] # to run a specific marked test defined in pytest.ini
 
 AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in `external` directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in `external/AMPTOOLS_AMPS_DATAIO`. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of `gen_amp`, a program to produce simulations with AmpTools, is provided in `external/AMPTOOLS_GENERATORS` but is not built by the main makefile, a separate makefile is included with that directory.
 
-Currently, the main scripts that perform an analysis, from simulation to fitting to plotting results, is located in `EXAMPLES/python` folder. These scripts can also be run from the commandline but its main functionality can be imported into another script (or Jupyter). Utility functions used by these scripts are located in the `utility` folder. Hopefully these scripts exposes enough functionality that adapation to other algorithms and use cases is easier.
+Currently there exists executables for maximimum likelihood fitting (`amp_fit`), extracting fit fractions from MLE fit results (`amp_fitfrac`), and Markov chain Monte Carlo (`amp_mcmc`). Additional files in the `scripts` folder are provided that perform `amptools` configuration file generation and plotting of the MLE fit results. These scripts are reaction dependent, therefore should be used as references to build upon. Utility functions are located in the `utility` folder.
 
 ---
 

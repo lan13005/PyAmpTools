@@ -1,4 +1,4 @@
-name: PyAmpTools
+name: PyAmpToolsTest
 channels:
   - anaconda
   - defaults

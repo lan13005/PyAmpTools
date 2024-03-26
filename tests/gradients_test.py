@@ -1,7 +1,6 @@
 #!/sur/bin/env python
 
 import os
-import atiSetup
 import pytest
 
 ##########################################################
@@ -16,6 +15,7 @@ def test_gradients():
     assert( os.path.isfile(cfgfile) ), f'Config file does not exist at specified path'
 
     ################### LOAD LIBRARIES ##################
+    import atiSetup
     USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals())
 
     ############## LOAD CONFIGURATION FILE ##############

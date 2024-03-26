@@ -7,7 +7,7 @@ import argparse
 import atiSetup
 
 def PlotGen(
-        plotGen,
+        results,
         ofile,
         ampString = 'all',
         keepAllAmps = False,
@@ -21,7 +21,7 @@ def PlotGen(
         quantities are all defined there.
 
     Args:
-        plotGen (EtaPiPlotGenerator): Sub-classed PlotGenerator instance.
+        results (FitResults): FitResults object containing the fit results.
         ofile (str): name of output root file.
         ampString (str): Semicolon separated list of coherent sums to plot. Sums are underscore separated amplitudes. Empty string will plot sum of all waves.
         keepAllAmps (bool): If True, all amplitudes are summed and plotted. If False, only the amplitudes specified in ampString will be plotted.
@@ -43,6 +43,8 @@ def PlotGen(
     if doAccCorr: print(" >> Doing acceptance correction")
     else: print(" >> Not doing acceptance correction")
     if keepAllAmps: print( "\n >> Plotting all amplitudes\n" )
+
+    plotGen = EtaPiPlotGenerator( results )
 
     wavesets = ampString.split(';')
     for waveset in wavesets:
@@ -137,7 +139,8 @@ def PlotGen(
         plotfile.Close()
 
 
-if __name__ == '__main__':
+def _cli_plotgen():
+    ''' Command line interface for generating plots from a fit result file. The plots are saved to a root file. '''
 
     ############## SET ENVIRONMENT VARIABLES ##############
     REPO_HOME     = os.environ['REPO_HOME']
@@ -181,9 +184,8 @@ if __name__ == '__main__':
     # opt = PlotGenerator.Option
     # if plotGenHists: opt = PlotGenerator.kDefault
     # else: opt = PlotGenerator.kNoGenMC
-    plotGen = EtaPiPlotGenerator( results )
 
-    PlotGen(plotGen, ofile, ampString, keepAllAmps, plotAllVars, plotGenHists, doAccCorr)
+    PlotGen(results, ofile, ampString, keepAllAmps, plotAllVars, plotGenHists, doAccCorr)
 
     #################################################################################
     ## CANT GET PLOTTER GUI TO WORK, MULTIPLE INSTANCES OF TAPPLICATION LAUNCHING ###
@@ -212,3 +214,6 @@ if __name__ == '__main__':
     # print(" >> Main window ready, starting event loop...")
     # app.Run()
     #################################################################################
+
+if __name__ == '__main__':
+    _cli_plotgen()

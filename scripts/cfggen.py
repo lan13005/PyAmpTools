@@ -131,7 +131,7 @@ if __name__ == '__main__':
     fixedAmps = []
 
     ## Load datasets
-    baseFolder = "/w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/REAL_MI_EXAMPLE/samples"
+    baseFolder = f"{REPO_HOME}/tests/samples/REAL_MI_EXAMPLE/samples"
 
     ## Polarization related, reactNames are scaled by the scales parameters
     ##   Default: parScale0 is fixed to 1.0

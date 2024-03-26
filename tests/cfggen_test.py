@@ -4,7 +4,8 @@ import pytest
 @pytest.mark.cfggenerator
 def test_cfgGenerator():
    REPO_HOME = os.environ["REPO_HOME"]
-   cmd = [f'python {REPO_HOME}/EXAMPLES/python/cfgGenerator.py']
+   SCRIPTS = f'{REPO_HOME}/scripts'
+   cmd = [f'python {SCRIPTS}/cfggen.py']
    output_file = 'EtaPi.cfg'
    cmd = ' '.join(cmd)
    print(cmd)

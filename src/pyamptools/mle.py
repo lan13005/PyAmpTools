@@ -6,9 +6,8 @@ import time
 from datetime import datetime
 import random
 import sys
-import atiSetup
 
-def performFit(
+def _performFit(
         ati,
         seed_file_tag,
         seedfile: str = "seed",
@@ -60,7 +59,7 @@ def runFits(
         hesse: bool = False,
     ):
     '''
-    Performs N randomized fits by calling performFit(), if N=0 then a single fit with no randomization is performed
+    Performs N randomized fits by calling _performFit(), if N=0 then a single fit with no randomization is performed
 
     Args:
         ati (AmpToolsInterface): AmpToolsInterface instance
@@ -85,7 +84,7 @@ def runFits(
     cfgInfo = ati.configurationInfo()
 
     if N == 0: # No randomization
-        bFitFailed, minNLL = performFit( ati, '0', *fitargs )
+        bFitFailed, minNLL = _performFit( ati, '0', *fitargs )
         print(f'LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): {minNLL}')
 
     else: # Randomized parameters
@@ -106,7 +105,7 @@ def runFits(
             for ipar in range(len(parRangeKeywords)):
                 ati.randomizeParameter(parRangeKeywords[ipar][0], float(parRangeKeywords[ipar][1]), float(parRangeKeywords[ipar][2]))
 
-            bFitFailed, NLL = performFit( ati, f'{i}', *fitargs )
+            bFitFailed, NLL = _performFit( ati, f'{i}', *fitargs )
             if not bFitFailed and NLL < minNLL:
                 minNLL = NLL
                 minFitTag = i
@@ -125,7 +124,10 @@ def runFits(
 
     return minNLL
 
-if __name__ == '__main__':
+def _cli_runFits():
+
+    ''' Command line interface for performing maximum likelihood fits '''
+
     start_time = time.time()
 
     ############## PARSE COMMANDLINE ARGUMENTS #############
@@ -149,6 +151,7 @@ if __name__ == '__main__':
     assert( os.path.isfile(cfgfile) ), f'Config file does not exist at specified path'
 
     ################### LOAD LIBRARIES ##################
+    import atiSetup
     USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals(), args.accelerator)
 
     ############## LOAD CONFIGURATION FILE ##############
@@ -188,7 +191,7 @@ if __name__ == '__main__':
 
         fit_start_time = time.time()
 
-        nll = runFits( ati, cfgInfo,
+        nll = runFits( ati,
                         N = args.numRnd, \
                         seedfile = args.seedfile, \
                         useMinos = args.useMinos, \
@@ -202,3 +205,6 @@ if __name__ == '__main__':
 
     if USE_MPI:
        ati.exitMPI()
+
+if __name__ == '__main__':
+    _cli_runFits()

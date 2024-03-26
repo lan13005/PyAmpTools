@@ -112,8 +112,9 @@ class Objective:
             moves_mixture = moves_mixture,
         )
 
-        mcmc.Mgr.draw_corner(corner_ofile)
+        mcmcMgr.draw_corner(corner_ofile)
 
+        # HMM WHERE IS RESULTS DEFINED?
         return results['autocorr_time'], results['acceptance_fraction']
 
 if __name__ == '__main__':

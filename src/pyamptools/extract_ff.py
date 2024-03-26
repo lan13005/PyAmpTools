@@ -4,7 +4,6 @@ import os
 import argparse
 import re
 import sys
-import atiSetup
 
 def extract_ff(results, outfileName='', acceptanceCorrect=True, fmt='.5f', regex_merge=None):
     '''
@@ -91,12 +90,15 @@ def extract_ff(results, outfileName='', acceptanceCorrect=True, fmt='.5f', regex
     if outfileName != '':
         outfile.close()
 
-if __name__ == '__main__':
+def _cli_extract_ff():
+
+    ''' Command line interface for extracting fit fractions from an amptools fit results '''
 
     ############## SET ENVIRONMENT VARIABLES ##############
     REPO_HOME     = os.environ['REPO_HOME']
 
     ################### LOAD LIBRARIES ##################
+    import atiSetup
     atiSetup.setup(globals())
 
     ############## PARSE COMMANDLINE ARGUMENTS ##############
@@ -128,3 +130,7 @@ if __name__ == '__main__':
 
     ############## EXTRACT FIT FRACTIONS ##############
     extract_ff(results, outfileName, acceptanceCorrect, fmt, regex_merge)
+
+
+if __name__ == '__main__':
+    _cli_extract_ff()
