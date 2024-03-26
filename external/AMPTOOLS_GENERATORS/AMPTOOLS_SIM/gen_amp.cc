@@ -56,7 +56,7 @@ gen_amp::~gen_amp()
 
 void
 gen_amp::print_help(){
-	cout << endl << "Simulation attributes:" << endl << endl;
+	cout << endl << "GEN_AMP: Simulation attributes:" << endl << endl;
 	cout << "----- General -----" << endl;
 	cout << "configfile:    Configuration file" << endl;
 	cout << "outname:       Output file name" << endl;

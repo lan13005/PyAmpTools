@@ -62,6 +62,7 @@
   ],
   "livePreview.defaultPreviewPath": "/docs/_build/html/api.html",
   "files.associations": {
+    "*.config": "cmake",
     "iostream": "cpp",
     "ostream": "cpp",
     "string": "cpp",
@@ -159,7 +160,8 @@
     "valarray": "cpp",
     "future": "cpp",
     "scoped_allocator": "cpp",
-    "initialize_fsroot.C": "cpp"
+    "initialize_fsroot.C": "cpp",
+    "FSModeTree.C": "cpp"
   },
   "git.ignoreLimitWarning": true
 }

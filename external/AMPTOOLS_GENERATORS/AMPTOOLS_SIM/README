@@ -1,4 +1,0 @@
-gen_amp requires some modifications since the original version requires HDDM
-- We can remove the dependence on HDDM by using a preprocessor directive
-- It requires ccdb for beam information which can we can clone and build ourselves
-- To convert from the executable version to class version we just need to create a header file and split gen_amp into a constructor/print_help/generate parts. The code is basically only reorganized.
