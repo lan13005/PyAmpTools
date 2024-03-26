@@ -28,7 +28,7 @@ Environment setup. `conda` can be very slow to resolve dependencies for ROOT. Us
 
 ```shell
 conda env create  # Creates environment specified by environment.yml and pyproject.toml
-conda activate PyAmpTools # activate the environment
+conda activate pyamptools # activate the environment
 pip install mpi4py # MPI (if available), mamba will link it against the wrong executables.
 # if installing mpi4py fails, see bottom of page
 pre-commit install --install-hooks # (Optional) commit hooks to perform loose formatting
@@ -37,13 +37,14 @@ pre-commit install --install-hooks # (Optional) commit hooks to perform loose fo
 There is a known conflict between AmpTools' GPU usage and RooFit/TMVA which comes with the conda-forge binaries of ROOT. Currently, ROOT has to be built from source with roofit and tmva off. A build script is included to download ROOT from source with the appropriate cmake flags to achieve this
 
 ```shell
-cd root
+cd external/root
 # Modify build_root.sh to match your environment (gcc versions, etc))
 # if you modify the root version and use VSCode please update .vscode/settings.json file's extraPaths variable accordingly
 source build_root.sh
+cd ../.. # move back to main directory
 ```
 
-Modify `set_environment.sh` to match you GPU environment (default: setup for JLab ifarm). Then create the necessary directory and link the environment script, allowing for `set_environment.sh` to be sourced everytime `conda activate PyAmpTools` is executed. **Note:** VSCode loads the environment but does not appear to run `activate.d` and therefore requires manual activation.
+Modify `set_environment.sh` to match you GPU environment (default: setup for JLab ifarm). Then create the necessary directory and link the environment script, allowing for `set_environment.sh` to be sourced everytime `conda activate pyamptools` is executed. **Note:** VSCode loads the environment but does not appear to run `activate.d` and therefore requires manual activation.
 
 ```shell
 mkdir -p $CONDA_PREFIX/etc/conda/activate.d/
@@ -63,7 +64,7 @@ Simple Unit tests
 
 ```shell
 sed -i "s~REPLACE_FOLDER_LOCATION~$REPO_HOME/tests/samples/SIMPLE_EXAMPLE~" $REPO_HOME/tests/samples/SIMPLE_EXAMPLE/fit.cfg # update path
-pytest -v
+pytest -v # -s to not hide stdout
 pytest -k [marked-test] # to run a specific marked test defined in pytest.ini
 ```
 
@@ -73,7 +74,7 @@ pytest -k [marked-test] # to run a specific marked test defined in pytest.ini
 
 AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in `external` directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in `external/AMPTOOLS_AMPS_DATAIO`. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of `gen_amp`, a program to produce simulations with AmpTools, is provided in `external/AMPTOOLS_GENERATORS` but is not built by the main makefile, a separate makefile is included with that directory.
 
-Currently, the main scripts that perform an analysis, from simulation to fitting to plotting results, is located in `EXAMPLES/python` folder. These scripts can also be run from the commandline but its main functionality can be imported into another script (or Jupyter). Utility functions used by these scripts are located in the `utils` folder. Hopefully these scripts exposes enough functionality that adapation to other algorithms and use cases is easier.
+Currently there exists executables for maximimum likelihood fitting (`amp_fit`), extracting fit fractions from MLE fit results (`amp_fitfrac`), and Markov chain Monte Carlo (`amp_mcmc`). Additional files in the `scripts` folder are provided that perform `amptools` configuration file generation and plotting of the MLE fit results. These scripts are reaction dependent, therefore should be used as references to build upon. Utility functions are located in the `utility` folder.
 
 ---
 
@@ -89,7 +90,7 @@ Currently, the main scripts that perform an analysis, from simulation to fitting
     * Enter localhost url
     * Name it anything you like
 
-## Building documentation
+# Building documentation
 
 Documentation is powered by jupyter-book (a distribution of sphinx). A makefile is prepared to **build** and **clean** the documentation and **push** the changes to github pages. All three steps can be performed with the **rebuild** recipe.
 
@@ -98,14 +99,4 @@ To rebuild web documentation
 ```
 cd docs
 make rebuild # or choose one [clean/build/push/rebuild]
-```
-
-## Potential Build Errors
-
-#### Failure to pip install mpi4py
-
-If installing `mpi4py` fails due to `error: Cannot link MPI programs` this is a common conda-forge linker issue. Try replacing the built-in linker with the system's and attempt to install `mpi4py` again.
-```shell
-rm $CONDA_PREFIX/compiler_compat/ld
-ln -s /usr/bin/ld $CONDA_PREFIX/compiler_compat/
 ```

@@ -1,0 +1,825 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pyamptools.mcmc &#8212; PyAmpTools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/pyamptools/mcmc';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="../../intro.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">PyAmpTools</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../intro.html">
+                    PyAmpTools
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../additional_info.html">Potential Build Errors</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../demos/libraryLoading.html">Loading Libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demos/generation.html">Generating Data</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../demos/fitting.html">Fitting</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../demos/mle.html">Maximum Likelihood Estimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../demos/mcmc.html">Markov Chain Monte Carlo</a></li>
+
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../demos/plotgen.html">Plotting Fit Results</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../demos/pyroot.html">PyROOT - Lessons Learned</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../api/atiSetup.html">atiSetup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/mle.html">mle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/mcmc.html">MCMC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/loadParameters.html">LoadParameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/plotgen.html">PlotGen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/extract_ff.html">extract_ff</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/lan13005/PyAmpTools" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2F_modules/pyamptools/mcmc.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for pyamptools.mcmc</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">emcee</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">pyamptools.utility.LoadParameters</span> <span class="kn">import</span> <span class="n">LoadParameters</span><span class="p">,</span> <span class="n">createMovesMixtureFromDict</span>
+<span class="kn">import</span> <span class="nn">corner</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">from</span> <span class="nn">pyamptools.utility.utils</span> <span class="kn">import</span> <span class="n">glob_sort_captured</span><span class="p">,</span> <span class="n">safe_getsize</span>
+
+<div class="viewcode-block" id="mcmcManager">
+<a class="viewcode-back" href="../../api/mcmc.html#pyamptools.mcmc.mcmcManager">[docs]</a>
+<span class="k">class</span> <span class="nc">mcmcManager</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This class manages the MCMC sampling process and the interaction with AmpToolsInterface instances</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atis</span><span class="p">,</span> <span class="n">LoadParametersSamplers</span><span class="p">,</span> <span class="n">ofile</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atis</span> <span class="o">=</span> <span class="n">atis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">LoadParametersSamplers</span> <span class="o">=</span> <span class="n">LoadParametersSamplers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span> <span class="o">=</span> <span class="n">ofile</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finishedSetup</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="mcmcManager.Prior">
+<a class="viewcode-back" href="../../api/mcmc.html#pyamptools.mcmc.mcmcManager.Prior">[docs]</a>
+    <span class="k">def</span> <span class="nf">Prior</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+              <span class="n">par_values</span><span class="p">,</span>
+              <span class="n">keys</span>
+              <span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        (Log of) Prior distribution for the par_values</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            par_values (MinuitParameter*): list of parameter names and values. Production coeffs are split into (re)al/(im)aginary parts</span>
+<span class="sd">            keys (str): parameter names</span>
+<span class="sd">                If multiple config files were passed, the parameter names will be appended with a &#39;_i&#39; tag where i is the ith cfg file</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            prior (float): Log prior probability</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="mcmcManager.Likelihood">
+<a class="viewcode-back" href="../../api/mcmc.html#pyamptools.mcmc.mcmcManager.Likelihood">[docs]</a>
+    <span class="k">def</span> <span class="nf">Likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ati</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39; Returns Log likelihood from AmpToolsInterface instance. Separation for profiling &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">ati</span><span class="o">.</span><span class="n">likelihood</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="mcmcManager.LogProb">
+<a class="viewcode-back" href="../../api/mcmc.html#pyamptools.mcmc.mcmcManager.LogProb">[docs]</a>
+    <span class="k">def</span> <span class="nf">LogProb</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">par_values</span><span class="p">,</span>
+        <span class="n">keys</span><span class="p">,</span>
+        <span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Definition of the (Log) Posterior distribution</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            par_values (MinuitParameter*): list of parameter names and values. Production coeffs are split into (re)al/(im)aginary parts</span>
+<span class="sd">            keys (str): parameter names</span>
+<span class="sd">                If multiple config files were passed, the parameter names will be appended with a &#39;_i&#39; tag where i is the ith cfg file</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            log_prob (float): Log posterior probability</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1">## Calculate Log likelihood</span>
+        <span class="n">log_prob</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">n_atis</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">atis</span> <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ati</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_atis</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">atis</span> <span class="p">):</span>
+            <span class="n">_par_values</span> <span class="o">=</span> <span class="n">par_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]]</span>
+            <span class="n">_keys</span> <span class="o">=</span> <span class="n">keys</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]]</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">_keys</span><span class="p">,</span> <span class="n">_par_values</span><span class="p">):</span>
+                <span class="c1"># remove tag from name if multiple cfg files were passed</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[</span> <span class="p">:</span><span class="n">name</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="p">]</span> <span class="k">if</span> <span class="n">n_atis</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">name</span>
+                <span class="n">ati</span><span class="o">.</span><span class="n">parameterManager</span><span class="p">()[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="n">log_prob</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Likelihood</span><span class="p">(</span><span class="n">ati</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Prior</span><span class="p">(</span><span class="n">par_values</span><span class="p">,</span> <span class="n">keys</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">log_prob</span></div>
+
+
+<div class="viewcode-block" id="mcmcManager.perform_mcmc">
+<a class="viewcode-back" href="../../api/mcmc.html#pyamptools.mcmc.mcmcManager.perform_mcmc">[docs]</a>
+    <span class="k">def</span> <span class="nf">perform_mcmc</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">burnIn</span><span class="p">:</span>    <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+            <span class="n">nwalkers</span><span class="p">:</span>  <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span>
+            <span class="n">nsamples</span><span class="p">:</span>  <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+            <span class="c1">### Non-CLI arguments Below ###</span>
+            <span class="n">params_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span>
+            <span class="n">moves_mixture</span> <span class="o">=</span> <span class="p">[</span> <span class="n">emcee</span><span class="o">.</span><span class="n">moves</span><span class="o">.</span><span class="n">StretchMove</span><span class="p">()</span> <span class="p">],</span>
+            <span class="n">sampler_kwargs</span> <span class="o">=</span> <span class="p">{},</span>
+        <span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Performs MCMC sampling</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            burnIn (int): number of burn-in steps</span>
+<span class="sd">            nwalkers (int): number of walkers</span>
+<span class="sd">            nsamples (int): number of samples</span>
+<span class="sd">            params_dict (dict): Dictionary of parameter names (complex production coeffs and amplitude params) and values.</span>
+<span class="sd">            moves_mixture [ (emcee.moves.{move}(kwargs), probability) ]: List of tuples of moves (with kwargs pluggin in) and their probability</span>
+<span class="sd">            sampler_kwargs (dict): Additional keyword arguments to pass to emcee.EnsembleSampler()</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            results (dict): Dictionary containing results of MCMC sampling (samples, MAP, acceptance fraction, autocorrelation time, etc.)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> ================== PERFORM_MCMC() KWARGS CONFIGURATION ================== &#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;nwalkers: </span><span class="si">{</span><span class="n">nwalkers</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;burnIn: </span><span class="si">{</span><span class="n">burnIn</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;nsamples: </span><span class="si">{</span><span class="n">nsamples</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;params_dict: </span><span class="si">{</span><span class="n">params_dict</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;moves_mixture: </span><span class="si">{</span><span class="n">moves_mixture</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;sampler_kwargs: </span><span class="si">{</span><span class="n">sampler_kwargs</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; =================================================================== </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="c1">########## SETUP PARAMETERS ############</span>
+        <span class="c1">## AmpTools config files are assumed to contain the MLE values already</span>
+        <span class="c1">##   this can be acheived by running fit.py with --seedfile</span>
+        <span class="c1">##   and using the include directive in the config file to add the seedfile</span>
+        <span class="c1">##   to override values</span>
+        <span class="c1">## doNotScatter = True  will initialize walkers in an N-ball around the MLE estimate</span>
+        <span class="c1">## doNotScatter = False will uniformly sample (or scatter) on user-specified interval</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">doNotScatter</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">params_dict</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">first_element</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">params_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+            <span class="n">doNotScatter</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">first_element</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">list</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">params_dict</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">params_dict</span> <span class="k">if</span> <span class="n">doNotScatter</span> <span class="k">else</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">params_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+        <span class="c1">####### LOAD PARAMETERS #####</span>
+        <span class="n">mle_values</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">par_names_flat</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="n">paramPartitions</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">LoadParametersSampler</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">LoadParametersSamplers</span><span class="p">):</span>
+            <span class="n">mles</span><span class="p">,</span> <span class="n">ks</span><span class="p">,</span> <span class="n">pars</span> <span class="o">=</span> <span class="n">LoadParametersSampler</span><span class="o">.</span><span class="n">flatten_parameters</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+            <span class="n">mle_values</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">mles</span><span class="p">)</span>
+            <span class="n">tag</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">LoadParametersSamplers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+            <span class="n">keys</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span> <span class="p">[</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">k</span><span class="si">}{</span><span class="n">tag</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ks</span> <span class="p">]</span> <span class="p">)</span>
+            <span class="n">par_names_flat</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span> <span class="p">[</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">par</span><span class="si">}{</span><span class="n">tag</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">pars</span> <span class="p">]</span> <span class="p">)</span>
+            <span class="n">paramPartitions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">mles</span><span class="p">)</span> <span class="o">+</span> <span class="n">paramPartitions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span> <span class="o">=</span> <span class="n">paramPartitions</span>
+
+        <span class="c1">####### ADDITIONAL BASIC SETUP ########</span>
+        <span class="k">if</span> <span class="n">nwalkers</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">mle_values</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[emcee req.] Number of walkers must be at least twice the number of </span><span class="se">\</span>
+<span class="s2">                  parameters. Overwriting nwalkers to 2*len(mle_values) = 2*</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">mle_values</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">nwalkers</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">mle_values</span><span class="p">)</span>
+
+        <span class="n">nDim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mle_values</span><span class="p">)</span>
+
+        <span class="c1">############## RUN MCMC IF RESULTS DOES NOT ALREADY EXIST ##############</span>
+        <span class="n">fit_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">output_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">fileTooSmall</span> <span class="o">=</span> <span class="n">safe_getsize</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e4</span> <span class="c1"># remake if too small, likely corrupted initialization</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span> <span class="n">output_file</span> <span class="p">)</span> <span class="ow">or</span> <span class="n">fileTooSmall</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">fileTooSmall</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rm -f </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; ================== RUNNING MCMC ================== &#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">doNotScatter</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Initializing walkers in an N-ball around the MLE estimate&quot;</span><span class="p">)</span>
+                <span class="n">par_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mle_values</span><span class="p">)</span>
+                <span class="n">par_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">par_values</span><span class="p">,</span> <span class="n">nwalkers</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nDim</span><span class="p">,</span> <span class="n">nwalkers</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+                <span class="n">par_values</span><span class="p">[</span><span class="n">par_values</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">1e-2</span> <span class="c1"># avoid 0 values, leads to large condition number for sampler</span>
+                <span class="n">par_values</span> <span class="o">*=</span> <span class="p">(</span> <span class="mi">1</span> <span class="o">+</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">nwalkers</span><span class="p">,</span> <span class="n">nDim</span><span class="p">))</span> <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Randomly sampling on user-specified interval&quot;</span><span class="p">)</span>
+                <span class="n">par_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nwalkers</span><span class="p">,</span> <span class="n">nDim</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">mini</span><span class="p">,</span> <span class="n">maxi</span><span class="p">)</span> <span class="ow">in</span> <span class="n">params_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">par_values</span><span class="p">[:,</span> <span class="n">keys</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">mini</span><span class="p">,</span> <span class="n">maxi</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">nwalkers</span><span class="p">)</span>
+
+            <span class="n">backend</span> <span class="o">=</span> <span class="n">emcee</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">HDFBackend</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+            <span class="n">backend</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">nwalkers</span><span class="p">,</span> <span class="n">nDim</span><span class="p">)</span>
+            <span class="n">sampler</span> <span class="o">=</span> <span class="n">emcee</span><span class="o">.</span><span class="n">EnsembleSampler</span><span class="p">(</span><span class="n">nwalkers</span><span class="p">,</span> <span class="n">nDim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">LogProb</span><span class="p">,</span>
+                                            <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="n">keys</span><span class="p">],</span>
+                                            <span class="n">moves</span><span class="o">=</span><span class="n">moves_mixture</span><span class="p">,</span>
+                                            <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span>
+
+            <span class="n">_sampler_kwargs</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="kc">True</span> <span class="p">}</span>
+            <span class="n">_sampler_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">sampler_kwargs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">burnIn</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">[Burn-in beginning]</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">state</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">par_values</span><span class="p">,</span> <span class="n">burnIn</span><span class="p">)</span>
+                <span class="n">sampler</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">[Burn-in complete. Running sampler]</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="o">**</span><span class="n">_sampler_kwargs</span><span class="p">);</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">par_values</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="o">**</span><span class="n">_sampler_kwargs</span><span class="p">);</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">[Sampler complete]</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># Found already existing HDF5 file, will just load it</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; ================== LOADING MCMC ================== &#39;</span><span class="p">)</span>
+            <span class="n">sampler</span> <span class="o">=</span> <span class="n">emcee</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">HDFBackend</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+        <span class="n">fit_end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="c1">################# CALCULATE AUTOCORR AND ACCEPTANCE FRACTION #################</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">get_chain</span><span class="p">(</span><span class="n">flat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># returns (nsamples*nwalkers, 5) flattened array</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sampler</span><span class="p">,</span> <span class="n">emcee</span><span class="o">.</span><span class="n">EnsembleSampler</span><span class="p">):</span>
+            <span class="n">acceptance_fraction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">acceptance_fraction</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># HDF5 backend</span>
+            <span class="c1"># function implementation in github, acceptance_fraction not available from HDF5 backend</span>
+            <span class="n">acceptance_fraction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">accepted</span> <span class="o">/</span> <span class="n">sampler</span><span class="o">.</span><span class="n">iteration</span><span class="p">)</span>
+        <span class="n">autocorr_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">get_autocorr_time</span><span class="p">(</span><span class="n">quiet</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mean acceptance fraction: </span><span class="si">{</span><span class="n">acceptance_fraction</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Autocorrelation time: </span><span class="si">{</span><span class="n">autocorr_time</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> steps&quot;</span><span class="p">)</span>
+
+        <span class="c1">################### COMPUTE MAP ESTIMATE ###################</span>
+        <span class="n">map_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">get_log_prob</span><span class="p">(</span><span class="n">flat</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span> <span class="c1"># maximum a posteriori (MAP) location</span>
+        <span class="n">map_estimate</span> <span class="o">=</span> <span class="n">samples</span><span class="p">[</span><span class="n">map_idx</span><span class="p">,:]</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; =================== RESULTS =================== &#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;MAP Estimates from </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span><span class="si">}</span><span class="s1"> samples obtained over </span><span class="si">{</span><span class="n">nwalkers</span><span class="si">}</span><span class="s1"> walkers:&#39;</span><span class="p">)</span>
+        <span class="p">[</span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;   </span><span class="si">{</span><span class="n">l</span><span class="si">:</span><span class="s1">20</span><span class="si">}</span><span class="s1"> = </span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s1">0.3f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">par_names_flat</span><span class="p">,</span> <span class="n">map_estimate</span><span class="p">)]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; =============================================== &#39;</span><span class="p">)</span>
+
+        <span class="c1">################### TRACK SOME ATTRIBUTES ###################</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nwalkers</span> <span class="o">=</span> <span class="n">nwalkers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="n">samples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mle_values</span> <span class="o">=</span> <span class="n">mle_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">map_estimate</span> <span class="o">=</span> <span class="n">map_estimate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span> <span class="o">=</span> <span class="n">paramPartitions</span> <span class="c1"># list of indices to re-group par_names_flat into each cfg file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">par_names_flat</span> <span class="o">=</span> <span class="n">par_names_flat</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elapsed_fit_time</span> <span class="o">=</span> <span class="n">fit_end_time</span> <span class="o">-</span> <span class="n">fit_start_time</span></div>
+
+
+<div class="viewcode-block" id="mcmcManager.draw_corner">
+<a class="viewcode-back" href="../../api/mcmc.html#pyamptools.mcmc.mcmcManager.draw_corner">[docs]</a>
+    <span class="k">def</span> <span class="nf">draw_corner</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">corner_ofile</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+        <span class="n">save</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{},</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Draws a corner plot to visualize sampling and parameter correlations</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            corner_ofile (str): Output file name</span>
+<span class="sd">            save (bool): Save the figure to a file or return figure. Default True = Save</span>
+<span class="sd">            safe_draw (bool):</span>
+<span class="sd">            kwargs (dict): Keyword arguments to pass to corner.corner()</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            fig (matplotlib.figure.Figure): Figure object if save=False</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">corner_ofile</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No corner plot output file specified. Not drawing corner plot&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">def</span> <span class="nf">plot_axvh_fit_params</span><span class="p">(</span> <span class="c1"># Yes, some function inception going on</span>
+                <span class="n">values</span><span class="p">,</span>  <span class="c1"># [real1, imag1, real2, imag2, ...]</span>
+                <span class="n">nDim</span><span class="p">,</span>    <span class="c1"># number of parameters</span>
+                <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span>
+            <span class="p">):</span>
+<span class="w">            </span><span class="sd">&#39;&#39;&#39; Draws lines on the corner plot to indicate the specific parameter values &#39;&#39;&#39;</span>
+            <span class="k">for</span> <span class="n">yi</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDim</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">yi</span><span class="p">):</span>
+                    <span class="n">axes</span><span class="p">[</span><span class="n">yi</span><span class="p">,</span> <span class="n">xi</span><span class="p">]</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">xi</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+                    <span class="n">axes</span><span class="p">[</span><span class="n">yi</span><span class="p">,</span> <span class="n">xi</span><span class="p">]</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">yi</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+                <span class="n">axes</span><span class="p">[</span><span class="n">yi</span><span class="p">,</span> <span class="n">yi</span><span class="p">]</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">yi</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+
+        <span class="c1">####### DRAW CORNER PLOT #######</span>
+        <span class="n">corner_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="s2">&quot;show_titles&quot;</span><span class="p">:</span> <span class="kc">True</span> <span class="p">}</span>
+        <span class="n">corner_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">labels_ReIm</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;::&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_names_flat</span><span class="p">]</span>
+        <span class="n">nDim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">corner</span><span class="o">.</span><span class="n">corner</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels_ReIm</span><span class="p">,</span> <span class="o">**</span><span class="n">corner_kwargs</span> <span class="p">)</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nDim</span><span class="p">,</span> <span class="n">nDim</span><span class="p">))</span>
+        <span class="n">plot_axvh_fit_params</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">map_estimate</span><span class="p">,</span> <span class="n">nDim</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;royalblue&#39;</span><span class="p">)</span>
+        <span class="n">plot_axvh_fit_params</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mle_values</span><span class="p">,</span> <span class="n">nDim</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;tab:green&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">save</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">corner_ofile</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>    <span class="k">return</span> <span class="n">fig</span></div>
+</div>
+
+
+<span class="k">def</span> <span class="nf">_cli_mcmc</span><span class="p">():</span>
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39; Command line interface for performing mcmc fits &#39;&#39;&#39;</span>
+
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;emcee fitter&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--cfgfiles&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Config file name or glob pattern&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--nwalkers&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Number of walkers. Default 32&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--burnin&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Number of burn-in steps. Default 100&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--nsamples&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Number of samples. Default 1000&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--overwrite&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Overwrite existing output file if exists&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--accelerator&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;mpigpu&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Use accelerator if available ~ [cpu, gpu, mpi, mpigpu, gpumpi]&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--ofile&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;mcmc/mcmc.h5&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Output file name. Default &quot;mcmc/mcmc.h5&quot;&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--corner_ofile&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Corner plot output file name. Default empty str = do not draw&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--seed&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;RNG seed for consistent walker random initialization. Default 42&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--yaml_override&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="p">{},</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to YAML file containing parameter overrides. Default &quot;&quot; = no override&#39;</span><span class="p">)</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="n">yaml_override</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">yaml_override</span> <span class="o">!=</span> <span class="p">{}:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">yaml_override</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">yaml_override</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="c1">################ Override CLI arguments with YAML file if specified ###################</span>
+    <span class="n">cfgfiles</span>  <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">cfgfiles</span> <span class="k">if</span> <span class="s1">&#39;cfgfiles&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">yaml_override</span> <span class="k">else</span> <span class="n">yaml_override</span><span class="p">[</span><span class="s1">&#39;cfgfiles&#39;</span><span class="p">]</span>
+    <span class="n">ofile</span>    <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">ofile</span> <span class="k">if</span> <span class="s1">&#39;ofile&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">yaml_override</span> <span class="k">else</span> <span class="n">yaml_override</span><span class="p">[</span><span class="s1">&#39;ofile&#39;</span><span class="p">]</span>
+    <span class="n">corner_ofile</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">corner_ofile</span> <span class="k">if</span> <span class="s1">&#39;corner_ofile&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">yaml_override</span> <span class="k">else</span> <span class="n">yaml_override</span><span class="p">[</span><span class="s1">&#39;corner_ofile&#39;</span><span class="p">]</span>
+    <span class="n">nwalkers</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">nwalkers</span> <span class="k">if</span> <span class="s1">&#39;nwalkers&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">yaml_override</span> <span class="k">else</span> <span class="n">yaml_override</span><span class="p">[</span><span class="s1">&#39;nwalkers&#39;</span><span class="p">]</span>
+    <span class="n">burnIn</span>   <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">burnin</span> <span class="k">if</span> <span class="s1">&#39;burnin&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">yaml_override</span> <span class="k">else</span> <span class="n">yaml_override</span><span class="p">[</span><span class="s1">&#39;burnin&#39;</span><span class="p">]</span>
+    <span class="n">nsamples</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">nsamples</span> <span class="k">if</span> <span class="s1">&#39;nsamples&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">yaml_override</span> <span class="k">else</span> <span class="n">yaml_override</span><span class="p">[</span><span class="s1">&#39;nsamples&#39;</span><span class="p">]</span>
+    <span class="n">overwrite_ofile</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">overwrite</span> <span class="k">if</span> <span class="s1">&#39;overwrite&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">yaml_override</span> <span class="k">else</span> <span class="n">yaml_override</span><span class="p">[</span><span class="s1">&#39;overwrite&#39;</span><span class="p">]</span>
+    <span class="n">seed</span>     <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">seed</span> <span class="k">if</span> <span class="s1">&#39;seed&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">yaml_override</span> <span class="k">else</span> <span class="n">yaml_override</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span>
+    <span class="n">params_dict</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="s1">&#39;params_dict&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">yaml_override</span> <span class="k">else</span> <span class="n">yaml_override</span><span class="p">[</span><span class="s1">&#39;params_dict&#39;</span><span class="p">]</span>
+    <span class="n">moves_mixture</span> <span class="o">=</span> <span class="p">[</span> <span class="n">emcee</span><span class="o">.</span><span class="n">moves</span><span class="o">.</span><span class="n">StretchMove</span><span class="p">()</span> <span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;moves_mixture&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">yaml_override</span> <span class="k">else</span> \
+                        <span class="n">createMovesMixtureFromDict</span><span class="p">(</span><span class="n">yaml_override</span><span class="p">[</span><span class="s1">&#39;moves_mixture&#39;</span><span class="p">])</span>
+
+    <span class="k">assert</span><span class="p">(</span> <span class="n">cfgfiles</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="p">),</span> <span class="s1">&#39;You must specify a config file&#39;</span>
+
+    <span class="n">cfgfiles</span> <span class="o">=</span> <span class="n">glob_sort_captured</span><span class="p">(</span><span class="n">cfgfiles</span><span class="p">)</span> <span class="c1"># list of sorted config files based on captured number</span>
+    <span class="k">for</span> <span class="n">cfgfile</span> <span class="ow">in</span> <span class="n">cfgfiles</span><span class="p">:</span>
+        <span class="k">assert</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cfgfile</span><span class="p">)</span> <span class="p">),</span> <span class="s1">&#39;Config file does not exist at specified path&#39;</span>
+
+    <span class="c1">################### LOAD LIBRARIES ##################</span>
+    <span class="kn">from</span> <span class="nn">pyamptools</span> <span class="kn">import</span> <span class="n">atiSetup</span>
+    <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">args</span><span class="o">.</span><span class="n">accelerator</span><span class="p">)</span>
+
+    <span class="c1">############## LOAD CONFIGURATION FILE #############</span>
+    <span class="n">parsers</span>  <span class="o">=</span> <span class="p">[</span> <span class="n">ConfigFileParser</span><span class="p">(</span><span class="n">cfgfile</span><span class="p">)</span> <span class="k">for</span> <span class="n">cfgfile</span> <span class="ow">in</span> <span class="n">cfgfiles</span> <span class="p">]</span>
+    <span class="n">cfgInfos</span> <span class="o">=</span> <span class="p">[</span> <span class="n">parser</span><span class="o">.</span><span class="n">getConfigurationInfo</span><span class="p">()</span> <span class="k">for</span> <span class="n">parser</span> <span class="ow">in</span> <span class="n">parsers</span> <span class="p">]</span> <span class="c1"># List of ConfigurationInfo</span>
+
+    <span class="c1">############## REGISTER OBJECTS FOR AMPTOOLS ##############</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">Zlm</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">Vec_ps_refl</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">OmegaDalitz</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">BreitWigner</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">Piecewise</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">PhaseOffset</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">TwoPiAngles</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReader</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReaderTEM</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReaderFilter</span><span class="p">()</span> <span class="p">)</span>
+
+    <span class="n">atis</span> <span class="o">=</span> <span class="p">[</span> <span class="n">AmpToolsInterface</span><span class="p">(</span><span class="n">cfgInfo</span><span class="p">)</span> <span class="k">for</span> <span class="n">cfgInfo</span> <span class="ow">in</span> <span class="n">cfgInfos</span> <span class="p">]</span>
+    <span class="n">LoadParametersSamplers</span> <span class="o">=</span> <span class="p">[</span> <span class="n">LoadParameters</span><span class="p">(</span><span class="n">cfgInfo</span><span class="p">)</span> <span class="k">for</span> <span class="n">cfgInfo</span> <span class="ow">in</span> <span class="n">cfgInfos</span> <span class="p">]</span>
+    <span class="p">[</span> <span class="n">ati</span><span class="o">.</span><span class="n">parameterManager</span><span class="p">()</span><span class="o">.</span><span class="n">setDoCovarianceUpdate</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">ati</span> <span class="ow">in</span> <span class="n">atis</span> <span class="p">]</span> <span class="c1"># No internal Minuit fit = no covariance matrix</span>
+
+    <span class="c1">############## RUN MCMC ##############</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> ====================================================================================&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; cfgfiles: </span><span class="si">{</span><span class="n">cfgfiles</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; ofile: </span><span class="si">{</span><span class="n">ofile</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; corner_ofile: </span><span class="si">{</span><span class="n">corner_ofile</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; nwalkers: </span><span class="si">{</span><span class="n">nwalkers</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; burnIn: </span><span class="si">{</span><span class="n">burnIn</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; nsamples: </span><span class="si">{</span><span class="n">nsamples</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; overwrite_ofile: </span><span class="si">{</span><span class="n">overwrite_ofile</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; seed: </span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; params_dict: </span><span class="si">{</span><span class="n">params_dict</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; moves_mixture: </span><span class="si">{</span><span class="n">moves_mixture</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; ====================================================================================</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">===============================&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Loaded </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cfgInfos</span><span class="p">)</span><span class="si">}</span><span class="s1"> config files&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;===============================</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">displayN</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># Modify me to show display more cfg files. Very verbose!</span>
+        <span class="k">for</span> <span class="n">cfgfile</span><span class="p">,</span> <span class="n">cfgInfo</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cfgfiles</span><span class="p">[:</span><span class="n">displayN</span><span class="p">],</span> <span class="n">cfgInfos</span><span class="p">[:</span><span class="n">displayN</span><span class="p">]):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">=============================================&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Display Of This Config File Below: </span><span class="si">{</span><span class="n">cfgfile</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;=============================================</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">cfgInfo</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+
+        <span class="c1">############## PREPARE FOR SAMPLER ##############</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ofile</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">overwrite_ofile</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rm -f </span><span class="si">{</span><span class="n">ofile</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Overwriting existing output file!&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;/&#39;</span> <span class="ow">in</span> <span class="n">ofile</span><span class="p">:</span>
+            <span class="n">ofolder</span> <span class="o">=</span> <span class="n">ofile</span><span class="p">[:</span><span class="n">ofile</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)]</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;mkdir -p </span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="n">mcmcMgr</span> <span class="o">=</span> <span class="n">mcmcManager</span><span class="p">(</span><span class="n">atis</span><span class="p">,</span> <span class="n">LoadParametersSamplers</span><span class="p">,</span> <span class="n">ofile</span><span class="p">)</span>
+
+        <span class="n">mcmcMgr</span><span class="o">.</span><span class="n">perform_mcmc</span><span class="p">(</span>
+            <span class="n">nwalkers</span> <span class="o">=</span> <span class="n">nwalkers</span><span class="p">,</span>
+            <span class="n">burnIn</span>   <span class="o">=</span> <span class="n">burnIn</span><span class="p">,</span>
+            <span class="n">nsamples</span> <span class="o">=</span> <span class="n">nsamples</span><span class="p">,</span>
+            <span class="n">params_dict</span>   <span class="o">=</span> <span class="n">params_dict</span><span class="p">,</span>
+            <span class="n">moves_mixture</span> <span class="o">=</span> <span class="n">moves_mixture</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">mcmcMgr</span><span class="o">.</span><span class="n">draw_corner</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">corner_ofile</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fit time: </span><span class="si">{</span><span class="n">mcmcMgr</span><span class="o">.</span><span class="n">elapsed_fit_time</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total time: </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start_time</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">_cli_mcmc</span><span class="p">()</span>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Lawrence Ng
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

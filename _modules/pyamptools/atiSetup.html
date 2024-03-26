@@ -1,0 +1,594 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pyamptools.atiSetup &#8212; PyAmpTools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/pyamptools/atiSetup';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="../../intro.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">PyAmpTools</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../intro.html">
+                    PyAmpTools
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../additional_info.html">Potential Build Errors</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../demos/libraryLoading.html">Loading Libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demos/generation.html">Generating Data</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../demos/fitting.html">Fitting</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../demos/mle.html">Maximum Likelihood Estimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../demos/mcmc.html">Markov Chain Monte Carlo</a></li>
+
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../demos/plotgen.html">Plotting Fit Results</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../demos/pyroot.html">PyROOT - Lessons Learned</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../api/atiSetup.html">atiSetup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/mle.html">mle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/mcmc.html">MCMC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/loadParameters.html">LoadParameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/plotgen.html">PlotGen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/extract_ff.html">extract_ff</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/lan13005/PyAmpTools" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2F_modules/pyamptools/atiSetup.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for pyamptools.atiSetup</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">ROOT</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">pyamptools.utility.utils</span> <span class="kn">import</span> <span class="n">check_shared_lib_exists</span><span class="p">,</span> <span class="n">get_pid_family</span><span class="p">,</span> <span class="n">check_nvidia_devices</span>
+<span class="kn">from</span> <span class="nn">pyamptools.utility.pythonization</span> <span class="kn">import</span> <span class="n">pythonize_parMgr</span>
+
+<span class="n">kModule</span> <span class="o">=</span> <span class="s1">&#39;atiSetup&#39;</span>
+
+<span class="c1">########################################################</span>
+<span class="c1">#  This file is used to setup the amptools environment #</span>
+<span class="c1">#  It is called by the user in their python script     #</span>
+<span class="c1">#  and should be called before any other amptools      #</span>
+<span class="c1">#  functions are called.                               #</span>
+<span class="c1">########################################################</span>
+
+<div class="viewcode-block" id="setup">
+<a class="viewcode-back" href="../../api/atiSetup.html#pyamptools.atiSetup.setup">[docs]</a>
+<span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">accelerator</span><span class="o">=</span><span class="s1">&#39;mpigpu&#39;</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Performs basic setup, loading libraries and setting aliases</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        calling_globals (dict): globals() from the calling function</span>
+<span class="sd">        accelerator (str): accelerator flag from argparse ~ [&#39;cpu&#39;, &#39;mpi&#39;, &#39;gpu&#39;, &#39;mpigpu&#39;, &#39;gpumpi&#39;]</span>
+<span class="sd">        use_fsroot (bool): True if FSRoot library should be loaded</span>
+<span class="sd">        use_genamp (bool): True if GenAmp library should be loaded</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">loadLibraries</span><span class="p">(</span> <span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="p">,</span> <span class="n">use_genamp</span> <span class="p">)</span>
+    <span class="n">set_aliases</span><span class="p">(</span> <span class="n">calling_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span></div>
+
+
+<div class="viewcode-block" id="loadLibraries">
+<a class="viewcode-back" href="../../api/atiSetup.html#pyamptools.atiSetup.loadLibraries">[docs]</a>
+<span class="k">def</span> <span class="nf">loadLibraries</span><span class="p">(</span><span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39; Load all libraries &#39;&#39;&#39;</span>
+    <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">prepare_mpigpu</span><span class="p">(</span><span class="n">accelerator</span><span class="p">)</span>
+    <span class="n">SUFFIX</span>  <span class="o">=</span> <span class="s2">&quot;_GPU&quot;</span> <span class="k">if</span> <span class="n">USE_GPU</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">SUFFIX</span> <span class="o">+=</span> <span class="s2">&quot;_MPI&quot;</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">------------------------------------------------&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s1">| MPI is </span><span class="si">{</span><span class="s2">&quot;enabled&quot;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">USE_MPI</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s2">&quot;disabled&quot;</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s1">| GPU is </span><span class="si">{</span><span class="s2">&quot;enabled&quot;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">USE_GPU</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s2">&quot;disabled&quot;</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;------------------------------------------------</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1">#################### LOAD LIBRARIES (ORDER MATTERS!) ###################</span>
+
+    <span class="n">loadLibrary</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;libAmpTools</span><span class="si">{</span><span class="n">SUFFIX</span><span class="si">}</span><span class="s1">.so&#39;</span><span class="p">,</span> <span class="n">RANK_MPI</span><span class="p">)</span>
+    <span class="n">loadLibrary</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;libAmpPlotter.so&#39;</span><span class="p">,</span> <span class="n">RANK_MPI</span><span class="p">)</span>
+    <span class="n">loadLibrary</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;libAmpsDataIO</span><span class="si">{</span><span class="n">SUFFIX</span><span class="si">}</span><span class="s1">.so&#39;</span><span class="p">,</span> <span class="n">RANK_MPI</span><span class="p">)</span> <span class="c1"># Depends on AmpPlotter!</span>
+    <span class="n">loadLibrary</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;libFSRoot.so&#39;</span><span class="p">,</span> <span class="n">RANK_MPI</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="p">)</span>
+    <span class="n">loadLibrary</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;libAmpsGen.so&#39;</span><span class="p">,</span> <span class="n">RANK_MPI</span><span class="p">,</span> <span class="n">use_genamp</span><span class="p">)</span>
+
+    <span class="c1"># Dummy functions that just prints &quot;initialization&quot;</span>
+    <span class="c1">#  This is to make sure the libraries are loaded</span>
+    <span class="c1">#  as python is interpreted.</span>
+    <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">------------------------------------------------&quot;</span><span class="p">)</span>
+    <span class="n">ROOT</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span>
+    <span class="k">if</span> <span class="n">use_fsroot</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">initialize_fsroot</span><span class="p">(</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span>
+    <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;------------------------------------------------</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span></div>
+
+
+<div class="viewcode-block" id="loadLibrary">
+<a class="viewcode-back" href="../../api/atiSetup.html#pyamptools.atiSetup.loadLibrary">[docs]</a>
+<span class="k">def</span> <span class="nf">loadLibrary</span><span class="p">(</span><span class="n">libName</span><span class="p">,</span> <span class="n">RANK_MPI</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">IS_REQUESTED</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39; Load a shared library and print IS_REQUESTED &#39;&#39;&#39;</span>
+    <span class="n">statement</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Loading library </span><span class="si">{</span><span class="n">libName</span><span class="si">}</span><span class="s1"> &#39;</span>
+    <span class="n">libExists</span> <span class="o">=</span> <span class="n">check_shared_lib_exists</span><span class="p">(</span><span class="n">libName</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s1">| </span><span class="si">{</span><span class="n">statement</span><span class="si">:</span><span class="s1">.&lt;45</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">IS_REQUESTED</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">libExists</span><span class="p">:</span>
+            <span class="n">ROOT</span><span class="o">.</span><span class="n">gSystem</span><span class="o">.</span><span class="n">Load</span><span class="p">(</span><span class="n">libName</span><span class="p">)</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;ON&quot;</span>
+        <span class="k">else</span><span class="p">:</span> <span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;NOT FOUND, SKIPPING&#39;</span>
+    <span class="k">else</span><span class="p">:</span> <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;OFF&quot;</span>
+    <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="set_aliases">
+<a class="viewcode-back" href="../../api/atiSetup.html#pyamptools.atiSetup.set_aliases">[docs]</a>
+<span class="k">def</span> <span class="nf">set_aliases</span><span class="p">(</span> <span class="n">called_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span> <span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Due to MPI requiring c++ templates and the fact that all classes live under the ROOT namespace, aliasing can clean up the code significantly.</span>
+<span class="sd">    A dictionary of aliases is appended to the globals() function of the calling function thereby making the aliases available in the calling function.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        called_globals (dict): globals() from the calling function</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">aliases</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="c1">############### PyROOT RELATED ################</span>
+        <span class="s1">&#39;gInterpreter&#39;</span><span class="p">:</span>               <span class="n">ROOT</span><span class="o">.</span><span class="n">gInterpreter</span><span class="p">,</span>
+
+        <span class="c1">############### AmpTools RELATED ##############</span>
+        <span class="s1">&#39;AmpToolsInterface&#39;</span><span class="p">:</span>          <span class="n">ROOT</span><span class="o">.</span><span class="n">AmpToolsInterfaceMPI</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">AmpToolsInterface</span><span class="p">,</span>
+        <span class="s1">&#39;ConfigFileParser&#39;</span><span class="p">:</span>           <span class="n">ROOT</span><span class="o">.</span><span class="n">ConfigFileParser</span><span class="p">,</span>
+        <span class="s1">&#39;ConfigurationInfo&#39;</span><span class="p">:</span>          <span class="n">ROOT</span><span class="o">.</span><span class="n">ConfigurationInfo</span><span class="p">,</span>
+        <span class="s1">&#39;Zlm&#39;</span><span class="p">:</span>                        <span class="n">ROOT</span><span class="o">.</span><span class="n">Zlm</span><span class="p">,</span>
+        <span class="s1">&#39;Vec_ps_refl&#39;</span><span class="p">:</span>                <span class="n">ROOT</span><span class="o">.</span><span class="n">Vec_ps_refl</span><span class="p">,</span>
+        <span class="s1">&#39;OmegaDalitz&#39;</span><span class="p">:</span>                <span class="n">ROOT</span><span class="o">.</span><span class="n">OmegaDalitz</span><span class="p">,</span>
+        <span class="s1">&#39;BreitWigner&#39;</span><span class="p">:</span>                <span class="n">ROOT</span><span class="o">.</span><span class="n">BreitWigner</span><span class="p">,</span>
+        <span class="s1">&#39;Piecewise&#39;</span><span class="p">:</span>                  <span class="n">ROOT</span><span class="o">.</span><span class="n">Piecewise</span><span class="p">,</span>
+        <span class="s1">&#39;PhaseOffset&#39;</span><span class="p">:</span>                <span class="n">ROOT</span><span class="o">.</span><span class="n">PhaseOffset</span><span class="p">,</span>
+        <span class="s1">&#39;TwoPiAngles&#39;</span><span class="p">:</span>                <span class="n">ROOT</span><span class="o">.</span><span class="n">TwoPiAngles</span><span class="p">,</span>
+        <span class="s1">&#39;ParameterManager&#39;</span><span class="p">:</span>           <span class="n">ROOT</span><span class="o">.</span><span class="n">ParameterManager</span><span class="p">,</span>
+        <span class="s1">&#39;MinuitMinimizationManager&#39;</span><span class="p">:</span>  <span class="n">ROOT</span><span class="o">.</span><span class="n">MinuitMinimizationManager</span><span class="p">,</span>
+
+        <span class="c1">############## DataReader RELATED ##############</span>
+        <span class="c1"># DataReaderMPI is a template; use [] to specify the type</span>
+        <span class="s1">&#39;DataReader&#39;</span><span class="p">:</span>                 <span class="n">ROOT</span><span class="o">.</span><span class="n">DataReaderMPI</span><span class="p">[</span><span class="s1">&#39;ROOTDataReader&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ROOTDataReader</span><span class="p">,</span>
+        <span class="s1">&#39;DataReaderTEM&#39;</span><span class="p">:</span>              <span class="n">ROOT</span><span class="o">.</span><span class="n">DataReaderMPI</span><span class="p">[</span><span class="s1">&#39;ROOTDataReaderTEM&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ROOTDataReaderTEM</span><span class="p">,</span>
+        <span class="s1">&#39;DataReaderFilter&#39;</span><span class="p">:</span>           <span class="n">ROOT</span><span class="o">.</span><span class="n">DataReaderMPI</span><span class="p">[</span><span class="s1">&#39;ROOTDataReaderFilter&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ROOTDataReaderFilter</span><span class="p">,</span>
+        <span class="s1">&#39;DataReaderBootstrap&#39;</span><span class="p">:</span>        <span class="n">ROOT</span><span class="o">.</span><span class="n">DataReaderMPI</span><span class="p">[</span><span class="s1">&#39;ROOTDataReaderBootstrap&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ROOTDataReaderBootstrap</span><span class="p">,</span>
+
+        <span class="c1">########### PLOTTER / RESULTS RELATED ###########</span>
+        <span class="s1">&#39;FitResults&#39;</span><span class="p">:</span>                 <span class="n">ROOT</span><span class="o">.</span><span class="n">FitResults</span><span class="p">,</span>
+        <span class="s1">&#39;EtaPiPlotGenerator&#39;</span><span class="p">:</span>         <span class="n">ROOT</span><span class="o">.</span><span class="n">EtaPiPlotGenerator</span><span class="p">,</span>
+        <span class="s1">&#39;PlotGenerator&#39;</span><span class="p">:</span>              <span class="n">ROOT</span><span class="o">.</span><span class="n">PlotGenerator</span><span class="p">,</span>
+        <span class="s1">&#39;TH1&#39;</span><span class="p">:</span>                        <span class="n">ROOT</span><span class="o">.</span><span class="n">TH1</span><span class="p">,</span>
+        <span class="s1">&#39;TFile&#39;</span><span class="p">:</span>                      <span class="n">ROOT</span><span class="o">.</span><span class="n">TFile</span><span class="p">,</span>
+        <span class="s1">&#39;AmplitudeInfo&#39;</span><span class="p">:</span>              <span class="n">ROOT</span><span class="o">.</span><span class="n">AmplitudeInfo</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">USE_GPU</span><span class="p">:</span>
+        <span class="n">aliases</span><span class="p">[</span><span class="s1">&#39;GPUManager&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">GPUManager</span>
+
+    <span class="n">called_globals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">aliases</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="prepare_mpigpu">
+<a class="viewcode-back" href="../../api/atiSetup.html#pyamptools.atiSetup.prepare_mpigpu">[docs]</a>
+<span class="k">def</span> <span class="nf">prepare_mpigpu</span><span class="p">(</span><span class="n">accelerator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Sets environment variables to use MPI and/or GPU if requested.</span>
+<span class="sd">        Checks who called the python script. If bash (single process). If mpiexec/mpirun (then MPI)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        accelerator (str): accelerator flag from argparse ~ [&#39;cpu&#39;, &#39;mpi&#39;, &#39;gpu&#39;, &#39;mpigpu&#39;, &#39;gpumpi&#39;]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        USE_MPI (bool): True if MPI is to be used</span>
+<span class="sd">        USE_GPU (bool): True if GPU is to be used</span>
+<span class="sd">        RANK_MPI (int): MPI rank of the process (0 by default even if MPI is not used)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">assert</span><span class="p">(</span> <span class="n">accelerator</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;cpu&#39;</span><span class="p">,</span> <span class="s1">&#39;mpi&#39;</span><span class="p">,</span> <span class="s1">&#39;gpu&#39;</span><span class="p">,</span> <span class="s1">&#39;mpigpu&#39;</span><span class="p">,</span> <span class="s1">&#39;gpumpi&#39;</span><span class="p">]</span> <span class="p">),</span> <span class="sa">f</span><span class="s1">&#39;Invalid accelerator flag: </span><span class="si">{</span><span class="n">accelerator</span><span class="si">}</span><span class="s1">&#39;</span>
+    <span class="n">called</span><span class="p">,</span> <span class="n">parent</span> <span class="o">=</span> <span class="n">get_pid_family</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s1">| </span><span class="si">{</span><span class="n">parent</span><span class="si">}</span><span class="s1"> called </span><span class="si">{</span><span class="n">called</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">USE_MPI</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">USE_GPU</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="c1"># mpiexec is executed on the leader node</span>
+    <span class="c1"># orted, OpenMPI&#39;s daemon process, is executed on the worker nodes</span>
+    <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;mpi&quot;</span> <span class="ow">in</span> <span class="n">parent</span> <span class="ow">or</span> <span class="n">parent</span> <span class="o">==</span> <span class="s1">&#39;orted&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;mpi&#39;</span> <span class="ow">in</span> <span class="n">accelerator</span><span class="p">):</span>
+        <span class="n">USE_MPI</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">check_nvidia_devices</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;gpu&#39;</span> <span class="ow">in</span> <span class="n">accelerator</span><span class="p">):</span>
+        <span class="n">USE_GPU</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1">## SETUP ENVIRONMENT FOR MPI AND/OR GPU ##</span>
+    <span class="k">if</span> <span class="n">USE_MPI</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">mpi4py</span> <span class="kn">import</span> <span class="n">rc</span> <span class="k">as</span> <span class="n">mpi4pyrc</span>
+        <span class="n">mpi4pyrc</span><span class="o">.</span><span class="n">threads</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">mpi4pyrc</span><span class="o">.</span><span class="n">initialize</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="kn">from</span> <span class="nn">mpi4py</span> <span class="kn">import</span> <span class="n">MPI</span>
+        <span class="n">MPI</span><span class="o">.</span><span class="n">Init</span><span class="p">()</span>
+        <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="o">.</span><span class="n">Get_rank</span><span class="p">()</span>
+        <span class="n">SIZE_MPI</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="o">.</span><span class="n">Get_size</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s1">| Found Task with Rank: </span><span class="si">{</span><span class="n">RANK_MPI</span><span class="si">}</span><span class="s1"> of </span><span class="si">{</span><span class="n">SIZE_MPI</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">assert</span><span class="p">(</span> <span class="p">(</span><span class="n">USE_MPI</span> <span class="ow">and</span> <span class="p">(</span><span class="n">SIZE_MPI</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">))</span> <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">SIZE_MPI</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Lawrence Ng
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
