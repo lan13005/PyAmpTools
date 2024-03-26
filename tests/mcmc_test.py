@@ -2,13 +2,14 @@ import os
 import subprocess
 import pytest
 
+REPO_HOME = os.environ['REPO_HOME']
+cfgfile = f'{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/fit.cfg'
+mle_fit = f'{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/result.fit'
+ofolder = f'{REPO_HOME}/tests/mcmc'
+
 @pytest.mark.mcmc
 def test_mcmc():
-   REPO_HOME = os.environ['REPO_HOME']
-   cfgfile = f'{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/fit.cfg'
-   mle_fit = f'{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/result.fit'
-   ofolder = f'{REPO_HOME}/tests/mcmc'
-   cmd=f"python {REPO_HOME}/EXAMPLES/python/mcmc.py --cfgfile {cfgfile} --ofile '{ofolder}/mcmc.h5' \
+   cmd=f"amp_mcmc --cfgfile {cfgfile} --ofile '{ofolder}/mcmc.h5' \
             --nwalkers 20 \
             --burnin 10 \
             --nsamples 100 \

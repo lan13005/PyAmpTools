@@ -1,7 +1,7 @@
-PlotGen
+mle
 ==========================
 
-.. automodule:: pyamptools.utility.plotgen_utils
+.. automodule:: pyamptools.mle
    :members:
    :undoc-members:
    :show-inheritance:

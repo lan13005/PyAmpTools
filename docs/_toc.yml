@@ -8,21 +8,20 @@ parts:
     - file: additional_info
   - caption: Tutorials
     chapters:
-      - file: notebooks/libraryLoading
-      - file: notebooks/generation
-      - file: notebooks/fitting
+      - file: demos/libraryLoading
+      - file: demos/generation
+      - file: demos/fitting
         sections:
-          - file: notebooks/mle
-          - file: notebooks/mcmc
-      - file: notebooks/plotgen
+          - file: demos/mle
+          - file: demos/mcmc
+      - file: demos/plotgen
   - caption: Development
     chapters:
-      - file: notebooks/pyroot
+      - file: demos/pyroot
   - caption: API
     chapters:
       - file: api/atiSetup
-      - file: api/cfgGenerator
-      - file: api/fit
+      - file: api/mle
       - file: api/mcmc
       - file: api/loadParameters
       - file: api/plotgen
