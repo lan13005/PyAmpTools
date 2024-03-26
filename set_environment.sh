@@ -37,11 +37,9 @@ export LD_LIBRARY_PATH=$FSROOT/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$REPO_HOME/external/AMPTOOLS_AMPS_DATAIO:$LD_LIBRARY_PATH
 
 ##################### Activate ROOT #################
-if [ -f "$REPO_HOME/root/thisroot.sh" ]; then
-    source $REPO_HOME/root/thisroot.sh $REPO_HOME/root # setup ROOT
+if [ -f "$REPO_HOME/external/root/thisroot.sh" ]; then
+    source $REPO_HOME/external/root/thisroot.sh $REPO_HOME/external/root # setup ROOT
 else
     echo ""
     echo "ROOT not found. Please go into root and run build_root.sh to your specifications."
 fi
-
-python $REPO_HOME/utils/link_modules.py # symlink files into conda environment and root include directory

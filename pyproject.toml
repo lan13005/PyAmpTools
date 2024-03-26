@@ -18,6 +18,7 @@ dependencies = [
     "tqdm",
     "IPython",
     "ipykernel",
+    "jupyter",
     "tbb",        # for FSROOT, multiprocessing/threading
     "psutil",     # check process information
     "pdf2image",  # convert pdf to image for plotGen tutorial documentation
@@ -27,6 +28,9 @@ dependencies = [
     "pre-commit",
     ### Fun stuff
     "termcolor",
+    ### Docs
+    "jupyter-book",
+    "ghp-import",
 
     # Requirements for NIFTy
     # "nifty8",
@@ -36,9 +40,9 @@ dependencies = [
     # matplotlib removed function needed by pygtc (corner plot alternative), install 3.7.0 if you want
     # "pygtc",
 ]
-name = "PyAmpTools"
+name = "pyamptools"
 requires-python = ">=3.9"
-version = "0.0.0"
+version = "0.1.0"
 
 [tool.isort]
 known_third_party = "THIRDPARTY,sympy"
@@ -47,5 +51,11 @@ profile = "black"
 [tool.nbqa.addopts]
 black = ["--line-length=85"]
 
-[tool.setuptools]
-py-modules = []
+[project.scripts]
+amp_fit = "pyamptools.mle:_cli_runFits" # variable name will be the executable name in conda env bin
+amp_fitfrac = "pyamptools.extract_ff:_cli_extract_ff"
+amp_mcmc = "pyamptools.mcmc:_cli_mcmc"
+
+# [tool.setuptools]
+# py-modules = []
+# package-dir = {"" = "src"}

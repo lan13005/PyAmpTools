@@ -1,9 +1,9 @@
 import ROOT
 import os
-import atiSetup
+from pyamptools import atiSetup
 import pytest
-from LoadParameters import LoadParameters
-from utils import testKnownFailure
+from pyamptools.utility.LoadParameters import LoadParameters
+from pyamptools.utility.utils import testKnownFailure
 
 ############## SET ENVIRONMENT VARIABLES ##############
 REPO_HOME     = os.environ['REPO_HOME']
