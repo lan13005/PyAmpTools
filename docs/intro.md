@@ -28,7 +28,7 @@ Environment setup. `conda` can be very slow to resolve dependencies for ROOT. Us
 
 ```shell
 conda env create  # Creates environment specified by environment.yml and pyproject.toml
-conda activate PyAmpTools # activate the environment
+conda activate pyamptools # activate the environment
 pip install mpi4py # MPI (if available), mamba will link it against the wrong executables.
 # if installing mpi4py fails, see bottom of page
 pre-commit install --install-hooks # (Optional) commit hooks to perform loose formatting
@@ -44,7 +44,7 @@ source build_root.sh
 cd ../.. # move back to main directory
 ```
 
-Modify `set_environment.sh` to match you GPU environment (default: setup for JLab ifarm). Then create the necessary directory and link the environment script, allowing for `set_environment.sh` to be sourced everytime `conda activate PyAmpTools` is executed. **Note:** VSCode loads the environment but does not appear to run `activate.d` and therefore requires manual activation.
+Modify `set_environment.sh` to match you GPU environment (default: setup for JLab ifarm). Then create the necessary directory and link the environment script, allowing for `set_environment.sh` to be sourced everytime `conda activate pyamptools` is executed. **Note:** VSCode loads the environment but does not appear to run `activate.d` and therefore requires manual activation.
 
 ```shell
 mkdir -p $CONDA_PREFIX/etc/conda/activate.d/

@@ -7,7 +7,7 @@ from collections import Counter
 '''
 Counts the occurence of hexadecimal addresses in a text file.
 This is useful if you have a giant print log (i.e. from Amptools debugging)
-to try and catch unsuspecting points pointing to same address
+to try and catch unsuspecting pointers pointing to same address
 '''
 
 def count_hex_addresses(file_path):

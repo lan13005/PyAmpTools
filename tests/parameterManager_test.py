@@ -1,7 +1,7 @@
 import ROOT
 import os
 from typing import List
-import atiSetup
+from pyamptools import atiSetup
 import pytest
 
 @pytest.mark.parmgr

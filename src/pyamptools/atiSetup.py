@@ -1,8 +1,7 @@
 import ROOT
-from ROOT import pythonization
 import os
-from utils import check_shared_lib_exists, get_pid_family, check_nvidia_devices
-from pythonization import pythonize_parMgr
+from pyamptools.utility.utils import check_shared_lib_exists, get_pid_family, check_nvidia_devices
+from pyamptools.utility.pythonization import pythonize_parMgr
 
 kModule = 'atiSetup'
 

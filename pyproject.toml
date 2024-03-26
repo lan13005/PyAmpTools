@@ -18,6 +18,7 @@ dependencies = [
     "tqdm",
     "IPython",
     "ipykernel",
+    "jupyter",
     "tbb",        # for FSROOT, multiprocessing/threading
     "psutil",     # check process information
     "pdf2image",  # convert pdf to image for plotGen tutorial documentation
@@ -27,6 +28,9 @@ dependencies = [
     "pre-commit",
     ### Fun stuff
     "termcolor",
+    ### Docs
+    "jupyter-book",
+    "ghp-import",
 
     # Requirements for NIFTy
     # "nifty8",
@@ -36,7 +40,7 @@ dependencies = [
     # matplotlib removed function needed by pygtc (corner plot alternative), install 3.7.0 if you want
     # "pygtc",
 ]
-name = "PyAmpToolsTest"
+name = "pyamptools"
 requires-python = ">=3.9"
 version = "0.1.0"
 

@@ -4,7 +4,7 @@ import ROOT
 import os
 from typing import List
 import argparse
-import atiSetup
+from pyamptools import atiSetup
 
 def PlotGen(
         results,

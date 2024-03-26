@@ -1,5 +1,5 @@
 from ROOT import pythonization
-from utils import raiseError
+from pyamptools.utility.utils import raiseError
 
 ############## PYTHONIZATION ##############
 def _parMgr_returnParPtr_if_keyExists(self,key):

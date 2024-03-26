@@ -4,7 +4,7 @@ import ROOT
 import os
 import itertools
 import random
-import atiSetup
+from pyamptools import atiSetup
 
 def generate_zlm_cfg(
     EJMs,

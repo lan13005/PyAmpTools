@@ -151,7 +151,7 @@ def _cli_runFits():
     assert( os.path.isfile(cfgfile) ), f'Config file does not exist at specified path'
 
     ################### LOAD LIBRARIES ##################
-    import atiSetup
+    from pyamptools import atiSetup
     USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals(), args.accelerator)
 
     ############## LOAD CONFIGURATION FILE ##############

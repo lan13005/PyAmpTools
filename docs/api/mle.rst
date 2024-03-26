@@ -1,7 +1,7 @@
-cfgGenerator
+mle
 ==========================
 
-.. automodule:: cfgGenerator
+.. automodule:: pyamptools.mle
    :members:
    :undoc-members:
    :show-inheritance:

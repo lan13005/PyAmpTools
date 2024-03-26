@@ -38,7 +38,7 @@ def extract_ff(results, outfileName='', acceptanceCorrect=True, fmt='.5f', regex
     uniqueAmps = [str(amp) for amp in uniqueAmps]
 
     ######## DETERMINE UNIQUE AMPLITUDES AND PLOT THEM ALL #########
-    print('\nAll Unique Amplitudes:')
+    print(f'\nAll Unique Amplitudes:')
     for amp in uniqueAmps: # amp ~ "Reaction::Sum::Amp" whereas amp ~ "Amp"
         amp = str(amp)#.split('::')[-1] # amp is of type TString I think, convert first
         # Print all amplitudes including including constrained ones, polarizations, etc
@@ -98,7 +98,7 @@ def _cli_extract_ff():
     REPO_HOME     = os.environ['REPO_HOME']
 
     ################### LOAD LIBRARIES ##################
-    import atiSetup
+    from pyamptools import atiSetup
     atiSetup.setup(globals())
 
     ############## PARSE COMMANDLINE ARGUMENTS ##############

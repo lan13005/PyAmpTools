@@ -2,15 +2,15 @@ import os
 import argparse
 import time
 import sys
-from LoadParameters import LoadParameters
-from mcmc  import mcmcManager
+from pyamptools.utility.LoadParameters import LoadParameters
+from pyamptools.mcmc  import mcmcManager
 import optuna
 import logging
 import random
 import numpy as np
 from emcee.moves import StretchMove, WalkMove, DEMove, DESnookerMove
 import yaml
-import atiSetup
+from pyamptools import atiSetup
 
 class Objective:
     '''
@@ -191,7 +191,7 @@ if __name__ == '__main__':
         )
 
     conditions = {
-        'atis': ati,
+        'atis': atis,
         'LoadParametersSamplers': LoadParametersSamplers,
         'cfgfile': cfgfile, # for YAML output
         'cfgInfo': cfgInfo,

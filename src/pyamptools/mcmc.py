@@ -3,13 +3,13 @@ import emcee
 import os
 from typing import List
 import matplotlib.pyplot as plt
-from LoadParameters import LoadParameters, createMovesMixtureFromDict
+from pyamptools.utility.LoadParameters import LoadParameters, createMovesMixtureFromDict
 import corner
 import argparse
 import time
 import sys
 import yaml
-from utils import glob_sort_captured, safe_getsize
+from pyamptools.utility.utils import glob_sort_captured, safe_getsize
 
 class mcmcManager:
     '''
@@ -311,7 +311,7 @@ def _cli_mcmc():
         assert( os.path.exists(cfgfile) ), 'Config file does not exist at specified path'
 
     ################### LOAD LIBRARIES ##################
-    import atiSetup
+    from pyamptools import atiSetup
     USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals(), args.accelerator)
 
     ############## LOAD CONFIGURATION FILE #############
