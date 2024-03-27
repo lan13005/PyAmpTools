@@ -1,0 +1,8 @@
+gen_amp / gen_vec_ps requires some modifications since the original version requires HDDM
+- We can remove the dependence on HDDM by conditioning on a preprocessor directive: #ifdef HDDM. For future development, if needed.
+- It requires ccdb for beam information which can we can clone and build ourselves
+- To convert from the executable version to class version we need to
+    - create an associated header file that now stores all the state variables and their default values
+        - these values can be overwritten by the setatrr() python method when wrapped
+    - create a void print_help method
+    - create a void generate method which is likely the rest of code in the original compiled version
