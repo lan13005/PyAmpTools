@@ -4,6 +4,16 @@ Quantum Chromodynamics in the low energy regime is poorly understood. Gluon rich
 
 This repository contains Python bindings for AmpTools. Under the hood, it uses [PyROOT](https://root.cern/manual/python/) which uses cppyy. These bindings will hopefully simplify the interaction with the AmpTools library while also providing access to the python ecosystem. [FSRoot](https://github.com/remitche66/FSRoot) is also included as a submodule and can be integrated into analysis workflows.
 
+---
+
+# Usage / Design
+
+AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in `external` directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in `external/AMPTOOLS_AMPS_DATAIO`. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of `gen_amp`, a program to produce simulations with AmpTools, is provided in `external/AMPTOOLS_GENERATORS` but is not built by the main makefile, a separate makefile is included with that directory.
+
+Currently there exists **executables** for maximimum likelihood fitting (`amp_fit`), extracting fit fractions from MLE fit results (`amp_fitfrac`), and Markov chain Monte Carlo (`amp_mcmc`). Additional files in the `scripts` folder are provided that perform `amptools` configuration file generation and plotting of the MLE fit results. These scripts are reaction dependent, therefore should be used as references to build upon. Utility functions are located in the `utility` folder.
+
+---
+
 # Installation
 
 The following setup uses the `Bash` Shell. All major dependencies (ROOT, AmpTools, FSRoot) are built from source.
@@ -47,6 +57,7 @@ cd ../.. # move back to main directory
 Modify `set_environment.sh` to match you GPU environment (default: setup for JLab ifarm). Then create the necessary directory and link the environment script, allowing for `set_environment.sh` to be sourced everytime `conda activate pyamptools` is executed. **Note:** VSCode loads the environment but does not appear to run `activate.d` and therefore requires manual activation.
 
 ```shell
+# Modify set_environment.sh for your setup
 mkdir -p $CONDA_PREFIX/etc/conda/activate.d/
 source set_environment.sh # manually source for now
 ln -snfr set_environment.sh $CONDA_PREFIX/etc/conda/activate.d/ # setup auto-load for next time
@@ -59,22 +70,6 @@ Build required libraries
 cd external
 make [mpi/gpu/mpigpu/gpumpi] # distributes modified Makefiles and makes libraries
 ```
-
-Simple Unit tests
-
-```shell
-sed -i "s~REPLACE_FOLDER_LOCATION~$REPO_HOME/tests/samples/SIMPLE_EXAMPLE~" $REPO_HOME/tests/samples/SIMPLE_EXAMPLE/fit.cfg # update path
-pytest -v # -s to not hide stdout
-pytest -k [marked-test] # to run a specific marked test defined in pytest.ini
-```
-
----
-
-# Usage / Design
-
-AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in `external` directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in `external/AMPTOOLS_AMPS_DATAIO`. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of `gen_amp`, a program to produce simulations with AmpTools, is provided in `external/AMPTOOLS_GENERATORS` but is not built by the main makefile, a separate makefile is included with that directory.
-
-Currently there exists executables for maximimum likelihood fitting (`amp_fit`), extracting fit fractions from MLE fit results (`amp_fitfrac`), and Markov chain Monte Carlo (`amp_mcmc`). Additional files in the `scripts` folder are provided that perform `amptools` configuration file generation and plotting of the MLE fit results. These scripts are reaction dependent, therefore should be used as references to build upon. Utility functions are located in the `utility` folder.
 
 ---
 
@@ -89,6 +84,14 @@ Currently there exists executables for maximimum likelihood fitting (`amp_fit`),
     * Connect to 'existing jupyter server'
     * Enter localhost url
     * Name it anything you like
+
+# Unit Testing
+
+```shell
+sed -i "s~REPLACE_FOLDER_LOCATION~$REPO_HOME/tests/samples/SIMPLE_EXAMPLE~" $REPO_HOME/tests/samples/SIMPLE_EXAMPLE/fit.cfg # update path
+pytest -v # -s to not hide stdout
+pytest -k [marked-test] # to run a specific marked test defined in pytest.ini
+```
 
 # Building documentation
 

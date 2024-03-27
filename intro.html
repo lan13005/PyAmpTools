@@ -394,12 +394,13 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">PyAmpTools</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-information">Additional Information</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jupyter-notebooks-in-vscode">Jupyter notebooks in VSCode</a></li>
 </ul>
 </li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-testing">Unit Testing</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#building-documentation">Building documentation</a><ul class="visible nav section-nav flex-column">
 </ul>
 </li>
@@ -420,6 +421,13 @@ document.write(`
 <p>Quantum Chromodynamics in the low energy regime is poorly understood. Gluon rich systems, like hybrid mesons, are predicted by theory but experimental idenficiation of these states have been difficult. The light meson spectrum contains many overlapping states that require partial wave (amplitude) analysis to disentangle. <a class="reference external" href="https://github.com/mashephe/AmpTools">AmpTools</a> is a library written in c++ that facilitates performing unbinned maximum likelihood fits of experimental data to a coherent sum of amplitudes.</p>
 <p>This repository contains Python bindings for AmpTools. Under the hood, it uses <a class="reference external" href="https://root.cern/manual/python/">PyROOT</a> which uses cppyy. These bindings will hopefully simplify the interaction with the AmpTools library while also providing access to the python ecosystem. <a class="reference external" href="https://github.com/remitche66/FSRoot">FSRoot</a> is also included as a submodule and can be integrated into analysis workflows.</p>
 </section>
+<hr class="docutils" />
+<section class="tex2jax_ignore mathjax_ignore" id="usage-design">
+<h1>Usage / Design<a class="headerlink" href="#usage-design" title="Link to this heading">#</a></h1>
+<p>AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in <code class="docutils literal notranslate"><span class="pre">external</span></code> directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_AMPS_DATAIO</span></code>. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code>, a program to produce simulations with AmpTools, is provided in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_GENERATORS</span></code> but is not built by the main makefile, a separate makefile is included with that directory.</p>
+<p>Currently there exists <strong>executables</strong> for maximimum likelihood fitting (<code class="docutils literal notranslate"><span class="pre">amp_fit</span></code>), extracting fit fractions from MLE fit results (<code class="docutils literal notranslate"><span class="pre">amp_fitfrac</span></code>), and Markov chain Monte Carlo (<code class="docutils literal notranslate"><span class="pre">amp_mcmc</span></code>). Additional files in the <code class="docutils literal notranslate"><span class="pre">scripts</span></code> folder are provided that perform <code class="docutils literal notranslate"><span class="pre">amptools</span></code> configuration file generation and plotting of the MLE fit results. These scripts are reaction dependent, therefore should be used as references to build upon. Utility functions are located in the <code class="docutils literal notranslate"><span class="pre">utility</span></code> folder.</p>
+</section>
+<hr class="docutils" />
 <section class="tex2jax_ignore mathjax_ignore" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
 <p>The following setup uses the <code class="docutils literal notranslate"><span class="pre">Bash</span></code> Shell. All major dependencies (ROOT, AmpTools, FSRoot) are built from source.
@@ -453,7 +461,8 @@ pre-commit<span class="w"> </span>install<span class="w"> </span>--install-hooks
 </pre></div>
 </div>
 <p>Modify <code class="docutils literal notranslate"><span class="pre">set_environment.sh</span></code> to match you GPU environment (default: setup for JLab ifarm). Then create the necessary directory and link the environment script, allowing for <code class="docutils literal notranslate"><span class="pre">set_environment.sh</span></code> to be sourced everytime <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">pyamptools</span></code> is executed. <strong>Note:</strong> VSCode loads the environment but does not appear to run <code class="docutils literal notranslate"><span class="pre">activate.d</span></code> and therefore requires manual activation.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Modify set_environment.sh for your setup</span>
+mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/
 <span class="nb">source</span><span class="w"> </span>set_environment.sh<span class="w"> </span><span class="c1"># manually source for now</span>
 ln<span class="w"> </span>-snfr<span class="w"> </span>set_environment.sh<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/<span class="w"> </span><span class="c1"># setup auto-load for next time</span>
 </pre></div>
@@ -464,18 +473,6 @@ ln<span class="w"> </span>-snfr<span class="w"> </span>set_environment.sh<span c
 make<span class="w"> </span><span class="o">[</span>mpi/gpu/mpigpu/gpumpi<span class="o">]</span><span class="w"> </span><span class="c1"># distributes modified Makefiles and makes libraries</span>
 </pre></div>
 </div>
-<p>Simple Unit tests</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;s~REPLACE_FOLDER_LOCATION~</span><span class="nv">$REPO_HOME</span><span class="s2">/tests/samples/SIMPLE_EXAMPLE~&quot;</span><span class="w"> </span><span class="nv">$REPO_HOME</span>/tests/samples/SIMPLE_EXAMPLE/fit.cfg<span class="w"> </span><span class="c1"># update path</span>
-pytest<span class="w"> </span>-v<span class="w"> </span><span class="c1"># -s to not hide stdout</span>
-pytest<span class="w"> </span>-k<span class="w"> </span><span class="o">[</span>marked-test<span class="o">]</span><span class="w"> </span><span class="c1"># to run a specific marked test defined in pytest.ini</span>
-</pre></div>
-</div>
-</section>
-<hr class="docutils" />
-<section class="tex2jax_ignore mathjax_ignore" id="usage-design">
-<h1>Usage / Design<a class="headerlink" href="#usage-design" title="Link to this heading">#</a></h1>
-<p>AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in <code class="docutils literal notranslate"><span class="pre">external</span></code> directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_AMPS_DATAIO</span></code>. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code>, a program to produce simulations with AmpTools, is provided in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_GENERATORS</span></code> but is not built by the main makefile, a separate makefile is included with that directory.</p>
-<p>Currently there exists executables for maximimum likelihood fitting (<code class="docutils literal notranslate"><span class="pre">amp_fit</span></code>), extracting fit fractions from MLE fit results (<code class="docutils literal notranslate"><span class="pre">amp_fitfrac</span></code>), and Markov chain Monte Carlo (<code class="docutils literal notranslate"><span class="pre">amp_mcmc</span></code>). Additional files in the <code class="docutils literal notranslate"><span class="pre">scripts</span></code> folder are provided that perform <code class="docutils literal notranslate"><span class="pre">amptools</span></code> configuration file generation and plotting of the MLE fit results. These scripts are reaction dependent, therefore should be used as references to build upon. Utility functions are located in the <code class="docutils literal notranslate"><span class="pre">utility</span></code> folder.</p>
 </section>
 <hr class="docutils" />
 <section class="tex2jax_ignore mathjax_ignore" id="additional-information">
@@ -498,6 +495,14 @@ pytest<span class="w"> </span>-k<span class="w"> </span><span class="o">[</span>
 </li>
 </ul>
 </section>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="unit-testing">
+<h1>Unit Testing<a class="headerlink" href="#unit-testing" title="Link to this heading">#</a></h1>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;s~REPLACE_FOLDER_LOCATION~</span><span class="nv">$REPO_HOME</span><span class="s2">/tests/samples/SIMPLE_EXAMPLE~&quot;</span><span class="w"> </span><span class="nv">$REPO_HOME</span>/tests/samples/SIMPLE_EXAMPLE/fit.cfg<span class="w"> </span><span class="c1"># update path</span>
+pytest<span class="w"> </span>-v<span class="w"> </span><span class="c1"># -s to not hide stdout</span>
+pytest<span class="w"> </span>-k<span class="w"> </span><span class="o">[</span>marked-test<span class="o">]</span><span class="w"> </span><span class="c1"># to run a specific marked test defined in pytest.ini</span>
+</pre></div>
+</div>
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="building-documentation">
 <h1>Building documentation<a class="headerlink" href="#building-documentation" title="Link to this heading">#</a></h1>
@@ -573,12 +578,13 @@ pytest<span class="w"> </span>-k<span class="w"> </span><span class="o">[</span>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">PyAmpTools</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-information">Additional Information</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jupyter-notebooks-in-vscode">Jupyter notebooks in VSCode</a></li>
 </ul>
 </li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-testing">Unit Testing</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#building-documentation">Building documentation</a><ul class="visible nav section-nav flex-column">
 </ul>
 </li>
