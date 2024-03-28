@@ -16,10 +16,14 @@ class mcmcManager:
     This class manages the MCMC sampling process and the interaction with AmpToolsInterface instances
     '''
     def __init__(self, atis, LoadParametersSamplers, ofile):
-        self.atis = atis
-        self.LoadParametersSamplers = LoadParametersSamplers
         self.ofile = ofile
         self.finishedSetup = False
+        self.samples = None
+
+        ## These three attributes are lists of the same size, one for each amptools config file
+        ## NOTE: WE ASSUME THAT THE AMPLITUDES ARE THE SAME ACROSS ALL CONFIG FILES
+        self.atis = atis
+        self.LoadParametersSamplers = LoadParametersSamplers
 
     def Prior(self,
               par_values,
@@ -79,6 +83,7 @@ class mcmcManager:
             burnIn:    int = 100,
             nwalkers:  int = 32,
             nsamples:  int = 1000,
+            intensity_dump: str = '',
             ### Non-CLI arguments Below ###
             params_dict: dict = {},
             moves_mixture = [ emcee.moves.StretchMove() ],
@@ -92,6 +97,7 @@ class mcmcManager:
             burnIn (int): number of burn-in steps
             nwalkers (int): number of walkers
             nsamples (int): number of samples
+            intensity_dump (str): file to dump intensities map into (numpy feather file output)
             params_dict (dict): Dictionary of parameter names (complex production coeffs and amplitude params) and values.
             moves_mixture [ (emcee.moves.{move}(kwargs), probability) ]: List of tuples of moves (with kwargs pluggin in) and their probability
             sampler_kwargs (dict): Additional keyword arguments to pass to emcee.EnsembleSampler()
@@ -216,11 +222,160 @@ class mcmcManager:
         self.map_estimate = map_estimate
         self.paramPartitions = paramPartitions # list of indices to re-group par_names_flat into each cfg file
         self.par_names_flat = par_names_flat
+        self.keys = keys
         self.elapsed_fit_time = fit_end_time - fit_start_time
+        # Convert sample parameter values to intensities
+        self.amplitudeMap = self.getAmplitudeMaps()
+        self.intensities = self.getIntensity(self.amplitudeMap, accCorrected=True)
+
+        ################### DUMP INTENSITIES IF REQUESTED ###################
+        # Enough information in the intensites array to calculate fit fractions
+        if intensity_dump != '':
+            if '.' not in intensity_dump: intensity_dump += '.feather'
+            import pandas as pd
+            columns = list(self.amplitudeMap.keys())
+            if len(self.atis) > 1:
+                columns = [ f'{ampName}_{i}' for i in range(len(self.atis)) for ampName in columns ]
+            dump = np.concatenate( self.intensities, axis=1 )
+            dump = pd.DataFrame( dump, columns=columns )
+            dump.to_feather(intensity_dump)
+            print(f'\nMCMC intensity samples saved to {intensity_dump}\n')
+
+    def getIntensity(
+        self,
+        amplitudeMap,
+        accCorrected=True
+    ):
+        '''
+        Get intensity from a dictionary of a list of amplitudes
+
+        Args:
+            amplitudeMap: see getIntensity_singleATI()
+            accCorrected (bool): whether to use acceptance corrected intensities (or not)
+
+        Returns:
+            intensities (List[array]): List of intensity arrays for each ATI instance
+        '''
+        intensities = []
+        for ati_index in range(len(self.atis)):
+            intensities.append( self.getIntensity_singleATI( ati_index, amplitudeMap, accCorrected) )
+        return intensities
+
+    def getIntensity_singleATI(
+        self,
+        ati_index,
+        amplitudeMap,
+        accCorrected=True
+    ):
+        '''
+        Calculate intensity given an amplitude list and AmpToolsInterface instance.
+        Follows implementation in AmpTools' FitResults.ccintensity = sum_a sum_a' s_a s_a' V_a V*_a' NI( a, a' )
+
+        Args:
+            ati_index (int): index of AmpToolsInterface instance to use
+            amplitudeMap (dict[str, list]): Dictionary to calculate intensity with. Keys are amp names, values are lists of amplitudes belonging to that amp. Set to None to use the predetermined amplitudeMap attribute
+            accCorrected (bool): whether to use acceptance corrected intensities (or not)
+
+        Returns:
+            intensity (np.array): intensity of coherent sum of amplitudes across amptools interface instances and samples
+        '''
+
+        print(f'\nCalculating intensity with amplitudes dictionary:')
+        for k, v in amplitudeMap.items():
+            print(f'  {k} -> {v}')
+
+        # TODO:
+        # 1. Get scale factor between datasets
+
+        ## AmpTools should update normalization integral interface every call to likelihood()
+        ## NOTE! The normalization integrals is the same between fit iterations if amplitudes
+        ##       do not have any free parameters.
+        ##       WE MAKE THE ASSUMPTION THAT THE NORMALIZATION INTEGRALS ARE CONSTANT TO
+        ##       SIMPLIFY THE CALCULATIONS
+        ##       We reload the params and use the ATI manager to handle constraints, etc
+
+        if self.samples is None:
+            print("No samples to calculate intensity. Run perform_mcmc() first")
+            return
+
+        ## LOOP OVER ATI INSTANCES (cfg files) to create a list of structured intensity arrays
+        # where the columns are the keys of amplitudeMap and the rows are the samples
+        intensities = np.empty( (len(self.samples), len(amplitudeMap)) )
+
+        for i, (ampName, amplitudes) in enumerate(amplitudeMap.items()):
+
+            normIntMap = dict(self.atis[ati_index].normIntMap())
+            ati_parMgr = self.atis[ati_index].parameterManager()
+
+            ## FOR ALL SAMPLES, RELOAD VALUES
+            samples_intensity = np.empty( len(self.samples) )
+            for j in range( len(self.samples) ):
+
+                _par_values = self.samples[j, self.paramPartitions[ati_index]:self.paramPartitions[ati_index+1]]
+                _keys       = self.keys[      self.paramPartitions[ati_index]:self.paramPartitions[ati_index+1]]
+
+                for name, value in zip(_keys, _par_values):
+                    # remove tag from name if multiple cfg files were passed
+                    name = name[ :name.rfind('_') ] if len(self.atis) > 1 else name
+                    ati_parMgr[name] = value
+
+                ## CALCULATE INTENSITY WITH GIVEN AMPLITUDE LIST
+                intensity = 0
+                for ampName in amplitudes:
+
+                    amp = ati_parMgr.findParameter(ampName).value()
+                    reaction = ampName.split('::')[0]
+
+                    for conjAmpName in amplitudes:
+
+                        conjAmp = ati_parMgr.findParameter(conjAmpName).value().conjugate()
+                        conjReaction = conjAmpName.split('::')[0]
+
+                        # Amps from different reactions are not coherent
+                        if reaction == conjReaction:
+                            if accCorrected:
+                                ampInt = normIntMap[reaction].ampInt( ampName, conjAmpName)
+                            else:
+                                ampInt = normIntMap[reaction].normInt(ampName, conjAmpName)
+                        else:
+                            ampInt = complex(0, 0)
+
+                        intensity += ( amp*conjAmp*ampInt ).real
+
+                samples_intensity[j] = intensity
+
+            intensities[:, i] = samples_intensity
+
+        return intensities
+
+
+    def getAmplitudeMaps(self):
+        '''
+        Each amplitude map is a dictionary for a UNIQUE amplitude name matching to a list of full name amptools amplitudes
+        This can be used to calculate the intensity for each amplitude integrating over some contributions
+        Example key, value pair: Sp0+ -> [reaction_pol000::PositiveRe::Sp0+, reaction_pol000::PositiveIm::Sp0+, reaction_pol045::PositiveRe::Sp0+, ... ]
+        '''
+        print(f'\nGetting amplitude map:')
+        parMgr = self.LoadParametersSamplers[0]
+        fullAmpNames = parMgr.allProdPars
+        amplitudeMap = {}
+        for fullAmpName in fullAmpNames:
+            ampName = fullAmpName.split('::')[-1]
+            if ampName not in amplitudeMap:
+                amplitudeMap[ampName] = [fullAmpName]
+            else:
+                amplitudeMap[ampName].append(fullAmpName)
+        for k, v in amplitudeMap.items():
+            print(f'  {k} -> {v}')
+
+        amplitudeMap['total'] = fullAmpNames
+
+        return amplitudeMap
 
     def draw_corner(
         self,
         corner_ofile = '',
+        format = 'cartesian',
         save = True,
         kwargs = {},
     ):
@@ -229,8 +384,8 @@ class mcmcManager:
 
         Args:
             corner_ofile (str): Output file name
+            format (str): plot real/imag parts (cartesian), intensities, or fit fractions. {cartesian, intensity, fitfrac}
             save (bool): Save the figure to a file or return figure. Default True = Save
-            safe_draw (bool):
             kwargs (dict): Keyword arguments to pass to corner.corner()
 
         Returns:
@@ -240,6 +395,13 @@ class mcmcManager:
         if corner_ofile == '':
             print("No corner plot output file specified. Not drawing corner plot")
             return
+
+        if self.samples is None:
+            print("No samples to draw corner plot. Run perform_mcmc() first")
+            return
+
+        format = format.lower()
+        assert( format in ['cartesian', 'intensity', 'fitfrac'] ), f'Invalid format {format}. Must be one of [cartesian, intensity, fitfrac]'
 
         def plot_axvh_fit_params( # Yes, some function inception going on
                 values,  # [real1, imag1, real2, imag2, ...]
@@ -256,15 +418,36 @@ class mcmcManager:
         ####### DRAW CORNER PLOT #######
         corner_kwargs = {"color": "black", "show_titles": True }
         corner_kwargs.update(kwargs)
-        labels_ReIm = [f'{l.split("::")[-1]}' for l in self.par_names_flat]
-        nDim = self.samples.shape[1]
-        fig = corner.corner( self.samples, labels=labels_ReIm, **corner_kwargs )
+
+        if format=='cartesian':
+            labels = [f'{l.split("::")[-1]}' for l in self.par_names_flat]
+            samples = self.samples
+        else:
+            amplitudeMap = self.amplitudeMap
+            intensities  = self.intensities
+
+            labels = []
+            tag = 'FF' if format=='fitfrac' else 'I'
+
+            if format=='fitfrac':
+                for i in range(len(intensities)):
+                    intensities[i] /= intensities[i][:, -1][:, None] # divide each amplitude column by total intensity
+
+            samples = np.concatenate( [intensity[:, :-1] for intensity in intensities], axis=1 )
+            natis = len(self.atis)
+            labels = [ f'{tag}[{ampName}]_{iati}' for iati in range(natis) for ampName in list(amplitudeMap.keys())[:-1] ] # ignore last key is 'total'
+            assert( samples.shape[1] == len(labels) ), f'Cols in samples must match labels length. Got {samples.shape[1]} cols, {len(labels)} labels'
+
+        fig = corner.corner( samples, labels=labels, **corner_kwargs )
+
+        nDim = samples.shape[1]
         axes = np.array(fig.axes).reshape((nDim, nDim))
         plot_axvh_fit_params(self.map_estimate, nDim, color='royalblue')
         plot_axvh_fit_params(self.mle_values, nDim, color='tab:green')
 
         if save: plt.savefig(f"{corner_ofile}")
         else:    return fig
+
 
 def _cli_mcmc():
 
@@ -279,15 +462,18 @@ def _cli_mcmc():
     parser.add_argument('--nsamples', type=int, default=1000, help='Number of samples. Default 1000')
     parser.add_argument('--overwrite', action='store_true', help='Overwrite existing output file if exists')
     parser.add_argument('--accelerator', type=str, default='mpigpu', help='Use accelerator if available ~ [cpu, gpu, mpi, mpigpu, gpumpi]')
-    parser.add_argument('--ofile', type=str, default='mcmc/mcmc.h5', help='Output file name. Default "mcmc/mcmc.h5"')
+    parser.add_argument('--ofile', type=str, default='mcmc/emcee_state.h5', help='Output file name. Default "mcmc/emcee_state.h5"')
+    parser.add_argument('--intensity_dump', type=str, default='mcmc/samples_intensity.feather', help='Output file name for intensity dump. Default "mcmc/samples_intensity.feather". "" = do not dump')
     parser.add_argument('--corner_ofile', type=str, default='', help='Corner plot output file name. Default empty str = do not draw')
+    parser.add_argument('--corner_format', type=str, default='cartesian', help='Corner plot format. Default "cartesian" to plot Real/Imag parts. Options: [cartesian, intensity, fitfrac]')
     parser.add_argument('--seed', type=int, default=42, help='RNG seed for consistent walker random initialization. Default 42')
-    parser.add_argument('--yaml_override', type=str, default={}, help='Path to YAML file containing parameter overrides. Default "" = no override')
+    parser.add_argument('--yaml_override', type=str, default='', help='Path to YAML file containing parameter overrides. Default "" = no override')
 
     args = parser.parse_args(sys.argv[1:])
 
-    yaml_override = {}
-    if args.yaml_override != {}:
+    if args.yaml_override == '':
+        yaml_override = {}
+    if args.yaml_override != '':
         with open(args.yaml_override, 'r') as f:
             yaml_override = yaml.safe_load(f)
 
@@ -295,9 +481,11 @@ def _cli_mcmc():
     cfgfiles  = args.cfgfiles if 'cfgfiles' not in yaml_override else yaml_override['cfgfiles']
     ofile    = args.ofile if 'ofile' not in yaml_override else yaml_override['ofile']
     corner_ofile = args.corner_ofile if 'corner_ofile' not in yaml_override else yaml_override['corner_ofile']
+    corner_format = args.corner_format if 'corner_format' not in yaml_override else yaml_override['corner_format']
     nwalkers = args.nwalkers if 'nwalkers' not in yaml_override else yaml_override['nwalkers']
     burnIn   = args.burnin if 'burnin' not in yaml_override else yaml_override['burnin']
     nsamples = args.nsamples if 'nsamples' not in yaml_override else yaml_override['nsamples']
+    intensity_dump = args.intensity_dump if 'intensity_dump' not in yaml_override else yaml_override['intensity_dump']
     overwrite_ofile = args.overwrite if 'overwrite' not in yaml_override else yaml_override['overwrite']
     seed     = args.seed if 'seed' not in yaml_override else yaml_override['seed']
     params_dict = {} if 'params_dict' not in yaml_override else yaml_override['params_dict']
@@ -342,9 +530,11 @@ def _cli_mcmc():
         print(f" cfgfiles: {cfgfiles}")
         print(f" ofile: {ofile}")
         print(f" corner_ofile: {corner_ofile}")
+        print(f" corner_format: {corner_format}")
         print(f" nwalkers: {nwalkers}")
         print(f" burnIn: {burnIn}")
         print(f" nsamples: {nsamples}")
+        print(f" intensity_dump: {intensity_dump}")
         print(f" overwrite_ofile: {overwrite_ofile}")
         print(f" seed: {seed}")
         print(f" params_dict: {params_dict}")
@@ -375,11 +565,12 @@ def _cli_mcmc():
             nwalkers = nwalkers,
             burnIn   = burnIn,
             nsamples = nsamples,
-            params_dict   = params_dict,
-            moves_mixture = moves_mixture,
+            intensity_dump = intensity_dump,
+            params_dict    = params_dict,
+            moves_mixture  = moves_mixture,
         )
 
-        mcmcMgr.draw_corner(f'{corner_ofile}')
+        mcmcMgr.draw_corner(f'{corner_ofile}', format=corner_format)
 
         print(f"Fit time: {mcmcMgr.elapsed_fit_time} seconds")
         print(f"Total time: {time.time() - start_time} seconds")

@@ -19,6 +19,7 @@ dependencies = [
     "IPython",
     "ipykernel",
     "jupyter",
+    "pyarrow",    # storage format
     "tbb",        # for FSROOT, multiprocessing/threading
     "psutil",     # check process information
     "pdf2image",  # convert pdf to image for plotGen tutorial documentation
