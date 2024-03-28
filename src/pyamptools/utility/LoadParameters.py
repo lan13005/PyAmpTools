@@ -119,21 +119,26 @@ class LoadParameters:
             List to Dictionary
 
         Args:
-            parameters (list): list of flattened parameters
-            keys (list): list of keys (parameter names) corresponding to parameters
+            parameters (list): list of flattened parameters. Arrays work also, ensure you loop over parameters (columns of the mcmc samples)
+            keys (list): list of keys (parameter names) corresponding to parameters. When empty will load from last flatten_parameters call
 
         Returns:
             paramDict (dict): dictionary of parameters
         '''
 
         if len(keys)==0 and len(parameters)!=0 and len(parameters) == len(self.parmameters):
-            # if no keys passed then use keys from last call to flatten_parameters
+            print(f'Bool 1 {len(keys)==0 and len(parameters)!=0}')
+            print(f'Bool 2 {len(parameters) == len(self.parmameters)} {len(parameters)} {len(self.parmameters)}')
             keys = self.keys
 
         paramDict = {}
         for k, param in zip(keys,parameters):
-            if   k[:-3] == '_re': paramDict[k[:-3]] =    param
-            elif k[:-3] == '_im': paramDict[k[:-3]] = 1j*param
+            amp = k[:-3]
+            part = 1 if k[-3:] == '_re' else 1j
+            if amp not in paramDict: paramDict[amp]  = np.complex64(part*param)
+            else:                    paramDict[amp] += np.complex64(part*param)
+        for k in paramDict.keys():
+            paramDict[k] = np.round(paramDict[k], 10)
         return paramDict
 
 def createMovesMixtureFromDict(moves_dict):
