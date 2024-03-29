@@ -113,7 +113,7 @@ class mcmcManager:
         print(f'params_dict: {params_dict}')
         print(f'moves_mixture: {moves_mixture}')
         print(f'sampler_kwargs: {sampler_kwargs}')
-        print(f' =================================================================== \n')
+        print(f' ========================================================================= \n')
 
         ########## SETUP PARAMETERS ############
         ## AmpTools config files are assumed to contain the MLE values already
@@ -220,6 +220,7 @@ class mcmcManager:
         self.samples = samples
         self.mle_values = mle_values
         self.map_estimate = map_estimate
+        self.map_sample_idx = map_idx
         self.paramPartitions = paramPartitions # list of indices to re-group par_names_flat into each cfg file
         self.par_names_flat = par_names_flat
         self.keys = keys
@@ -355,7 +356,7 @@ class mcmcManager:
         This can be used to calculate the intensity for each amplitude integrating over some contributions
         Example key, value pair: Sp0+ -> [reaction_pol000::PositiveRe::Sp0+, reaction_pol000::PositiveIm::Sp0+, reaction_pol045::PositiveRe::Sp0+, ... ]
         '''
-        print(f'\nGetting amplitude map:')
+        print(f'\nGetting amplitude map, grouping amps for intensity calcuation:')
         parMgr = self.LoadParametersSamplers[0]
         fullAmpNames = parMgr.allProdPars
         amplitudeMap = {}
@@ -403,7 +404,8 @@ class mcmcManager:
         format = format.lower()
         assert( format in ['cartesian', 'intensity', 'fitfrac'] ), f'Invalid format {format}. Must be one of [cartesian, intensity, fitfrac]'
 
-        def plot_axvh_fit_params( # Yes, some function inception going on
+        def plot_axvh_fit_params(
+                axes,    # axes object
                 values,  # [real1, imag1, real2, imag2, ...]
                 nDim,    # number of parameters
                 color='black'
@@ -419,31 +421,39 @@ class mcmcManager:
         corner_kwargs = {"color": "black", "show_titles": True }
         corner_kwargs.update(kwargs)
 
+        natis = len(self.atis)
         if format=='cartesian':
-            labels = [f'{l.split("::")[-1]}' for l in self.par_names_flat]
+            if natis == 1:
+                labels = [f'{l.split("::")[-1]}' for l in self.par_names_flat]
+            else:
+                labels = [f'{l.split("::")[-1]}_{iati}' for iati in range(natis) for l in self.par_names_flat]
             samples = self.samples
         else:
             amplitudeMap = self.amplitudeMap
             intensities  = self.intensities
 
-            labels = []
-            tag = 'FF' if format=='fitfrac' else 'I'
-
             if format=='fitfrac':
                 for i in range(len(intensities)):
                     intensities[i] /= intensities[i][:, -1][:, None] # divide each amplitude column by total intensity
-
             samples = np.concatenate( [intensity[:, :-1] for intensity in intensities], axis=1 )
-            natis = len(self.atis)
-            labels = [ f'{tag}[{ampName}]_{iati}' for iati in range(natis) for ampName in list(amplitudeMap.keys())[:-1] ] # ignore last key is 'total'
+
+            tag = 'FF' if format=='fitfrac' else 'I'
+            if natis == 1:
+                labels = [ f'{tag}[{ampName}]' for ampName in list(amplitudeMap.keys())[:-1] ]
+            else:
+                labels = [ f'{tag}[{ampName}]_{iati}' for iati in range(natis) for ampName in list(amplitudeMap.keys())[:-1] ] # ignore last key is 'total'
+
             assert( samples.shape[1] == len(labels) ), f'Cols in samples must match labels length. Got {samples.shape[1]} cols, {len(labels)} labels'
 
         fig = corner.corner( samples, labels=labels, **corner_kwargs )
 
         nDim = samples.shape[1]
         axes = np.array(fig.axes).reshape((nDim, nDim))
-        plot_axvh_fit_params(self.map_estimate, nDim, color='royalblue')
-        plot_axvh_fit_params(self.mle_values, nDim, color='tab:green')
+        plot_axvh_fit_params(axes, samples[self.map_sample_idx], nDim, color='royalblue')
+        if format=='cartesian':
+            plot_axvh_fit_params(axes, self.mle_values, nDim, color='tab:green')
+        else:
+            print(f'Not overlaying MLE values, have not implemented conversion from Real/Imag parts to intensities or fit fractions')
 
         if save: plt.savefig(f"{corner_ofile}")
         else:    return fig
