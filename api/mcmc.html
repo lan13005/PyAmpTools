@@ -398,6 +398,9 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.mcmc.mcmcManager.LogProb"><code class="docutils literal notranslate"><span class="pre">mcmcManager.LogProb()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.mcmc.mcmcManager.Prior"><code class="docutils literal notranslate"><span class="pre">mcmcManager.Prior()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.mcmc.mcmcManager.draw_corner"><code class="docutils literal notranslate"><span class="pre">mcmcManager.draw_corner()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.mcmc.mcmcManager.getAmplitudeMaps"><code class="docutils literal notranslate"><span class="pre">mcmcManager.getAmplitudeMaps()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.mcmc.mcmcManager.getIntensity"><code class="docutils literal notranslate"><span class="pre">mcmcManager.getIntensity()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.mcmc.mcmcManager.getIntensity_singleATI"><code class="docutils literal notranslate"><span class="pre">mcmcManager.getIntensity_singleATI()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.mcmc.mcmcManager.perform_mcmc"><code class="docutils literal notranslate"><span class="pre">mcmcManager.perform_mcmc()</span></code></a></li>
 </ul>
 </li>
@@ -473,14 +476,14 @@ If multiple config files were passed, the parameter names will be appended with 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyamptools.mcmc.mcmcManager.draw_corner">
-<span class="sig-name descname"><span class="pre">draw_corner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corner_ofile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyamptools/mcmc.html#mcmcManager.draw_corner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyamptools.mcmc.mcmcManager.draw_corner" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">draw_corner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corner_ofile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cartesian'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyamptools/mcmc.html#mcmcManager.draw_corner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyamptools.mcmc.mcmcManager.draw_corner" title="Link to this definition">#</a></dt>
 <dd><p>Draws a corner plot to visualize sampling and parameter correlations</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>corner_ofile</strong> (<em>str</em>) – Output file name</p></li>
+<li><p><strong>format</strong> (<em>str</em>) – plot real/imag parts (cartesian), intensities, or fit fractions. {cartesian, intensity, fitfrac}</p></li>
 <li><p><strong>save</strong> (<em>bool</em>) – Save the figure to a file or return figure. Default True = Save</p></li>
-<li><p><strong>safe_draw</strong> (<em>bool</em>) – </p></li>
 <li><p><strong>kwargs</strong> (<em>dict</em>) – Keyword arguments to pass to corner.corner()</p></li>
 </ul>
 </dd>
@@ -494,8 +497,58 @@ If multiple config files were passed, the parameter names will be appended with 
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="pyamptools.mcmc.mcmcManager.getAmplitudeMaps">
+<span class="sig-name descname"><span class="pre">getAmplitudeMaps</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyamptools/mcmc.html#mcmcManager.getAmplitudeMaps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyamptools.mcmc.mcmcManager.getAmplitudeMaps" title="Link to this definition">#</a></dt>
+<dd><p>Each amplitude map is a dictionary for a UNIQUE amplitude name matching to a list of full name amptools amplitudes
+This can be used to calculate the intensity for each amplitude integrating over some contributions
+Example key, value pair: Sp0+ -&gt; [reaction_pol000::PositiveRe::Sp0+, reaction_pol000::PositiveIm::Sp0+, reaction_pol045::PositiveRe::Sp0+, … ]</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyamptools.mcmc.mcmcManager.getIntensity">
+<span class="sig-name descname"><span class="pre">getIntensity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amplitudeMap</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accCorrected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyamptools/mcmc.html#mcmcManager.getIntensity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyamptools.mcmc.mcmcManager.getIntensity" title="Link to this definition">#</a></dt>
+<dd><p>Get intensity from a dictionary of a list of amplitudes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amplitudeMap</strong> – see getIntensity_singleATI()</p></li>
+<li><p><strong>accCorrected</strong> (<em>bool</em>) – whether to use acceptance corrected intensities (or not)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of intensity arrays for each ATI instance</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>intensities (List[array])</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyamptools.mcmc.mcmcManager.getIntensity_singleATI">
+<span class="sig-name descname"><span class="pre">getIntensity_singleATI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ati_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitudeMap</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accCorrected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyamptools/mcmc.html#mcmcManager.getIntensity_singleATI"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyamptools.mcmc.mcmcManager.getIntensity_singleATI" title="Link to this definition">#</a></dt>
+<dd><p>Calculate intensity given an amplitude list and AmpToolsInterface instance.
+Follows implementation in AmpTools’ FitResults.ccintensity = sum_a sum_a’ s_a s_a’ V_a V*_a’ NI( a, a’ )</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ati_index</strong> (<em>int</em>) – index of AmpToolsInterface instance to use</p></li>
+<li><p><strong>amplitudeMap</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>list</em><em>]</em>) – Dictionary to calculate intensity with. Keys are amp names, values are lists of amplitudes belonging to that amp. Set to None to use the predetermined amplitudeMap attribute</p></li>
+<li><p><strong>accCorrected</strong> (<em>bool</em>) – whether to use acceptance corrected intensities (or not)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>intensity of coherent sum of amplitudes across amptools interface instances and samples</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>intensity (np.array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pyamptools.mcmc.mcmcManager.perform_mcmc">
-<span class="sig-name descname"><span class="pre">perform_mcmc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">burnIn:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">100,</span> <span class="pre">nwalkers:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">32,</span> <span class="pre">nsamples:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1000,</span> <span class="pre">params_dict:</span> <span class="pre">dict</span> <span class="pre">=</span> <span class="pre">{},</span> <span class="pre">moves_mixture=[&lt;emcee.moves.stretch.StretchMove</span> <span class="pre">object&gt;],</span> <span class="pre">sampler_kwargs={}</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyamptools/mcmc.html#mcmcManager.perform_mcmc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyamptools.mcmc.mcmcManager.perform_mcmc" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">perform_mcmc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">burnIn:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">100,</span> <span class="pre">nwalkers:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">32,</span> <span class="pre">nsamples:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1000,</span> <span class="pre">intensity_dump:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'',</span> <span class="pre">params_dict:</span> <span class="pre">dict</span> <span class="pre">=</span> <span class="pre">{},</span> <span class="pre">moves_mixture=[&lt;emcee.moves.stretch.StretchMove</span> <span class="pre">object&gt;],</span> <span class="pre">sampler_kwargs={}</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyamptools/mcmc.html#mcmcManager.perform_mcmc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyamptools.mcmc.mcmcManager.perform_mcmc" title="Link to this definition">#</a></dt>
 <dd><p>Performs MCMC sampling</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -503,6 +556,7 @@ If multiple config files were passed, the parameter names will be appended with 
 <li><p><strong>burnIn</strong> (<em>int</em>) – number of burn-in steps</p></li>
 <li><p><strong>nwalkers</strong> (<em>int</em>) – number of walkers</p></li>
 <li><p><strong>nsamples</strong> (<em>int</em>) – number of samples</p></li>
+<li><p><strong>intensity_dump</strong> (<em>str</em>) – file to dump intensities map into (numpy feather file output)</p></li>
 <li><p><strong>params_dict</strong> (<em>dict</em>) – Dictionary of parameter names (complex production coeffs and amplitude params) and values.</p></li>
 <li><p><strong>[</strong> (<em>moves_mixture</em>) – List of tuples of moves (with kwargs pluggin in) and their probability</p></li>
 <li><p><strong>sampler_kwargs</strong> (<em>dict</em>) – Additional keyword arguments to pass to emcee.EnsembleSampler()</p></li>
@@ -592,6 +646,9 @@ If multiple config files were passed, the parameter names will be appended with 
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.mcmc.mcmcManager.LogProb"><code class="docutils literal notranslate"><span class="pre">mcmcManager.LogProb()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.mcmc.mcmcManager.Prior"><code class="docutils literal notranslate"><span class="pre">mcmcManager.Prior()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.mcmc.mcmcManager.draw_corner"><code class="docutils literal notranslate"><span class="pre">mcmcManager.draw_corner()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.mcmc.mcmcManager.getAmplitudeMaps"><code class="docutils literal notranslate"><span class="pre">mcmcManager.getAmplitudeMaps()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.mcmc.mcmcManager.getIntensity"><code class="docutils literal notranslate"><span class="pre">mcmcManager.getIntensity()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.mcmc.mcmcManager.getIntensity_singleATI"><code class="docutils literal notranslate"><span class="pre">mcmcManager.getIntensity_singleATI()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.mcmc.mcmcManager.perform_mcmc"><code class="docutils literal notranslate"><span class="pre">mcmcManager.perform_mcmc()</span></code></a></li>
 </ul>
 </li>

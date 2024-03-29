@@ -465,8 +465,8 @@ names (list): list of parameter names expanding complex parameters into Re[par] 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>parameters</strong> (<em>list</em>) – list of flattened parameters</p></li>
-<li><p><strong>keys</strong> (<em>list</em>) – list of keys (parameter names) corresponding to parameters</p></li>
+<li><p><strong>parameters</strong> (<em>list</em>) – list of flattened parameters. Arrays work also, ensure you loop over parameters (columns of the mcmc samples)</p></li>
+<li><p><strong>keys</strong> (<em>list</em>) – list of keys (parameter names) corresponding to parameters. When empty will load from last flatten_parameters call</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>

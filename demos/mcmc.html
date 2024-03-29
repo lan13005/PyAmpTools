@@ -443,11 +443,11 @@ atiSetup| GPU is disabled
 
 
 atiSetup| Loading library libAmpTools.so ..............  ON
-atiSetup| Loading library libAmpPlotter.so ............
+atiSetup| Loading library libAmpPlotter.so ............  ON
+atiSetup| Loading library libAmpsDataIO.so ............
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  ON
-atiSetup| Loading library libAmpsDataIO.so ............  ON
 atiSetup| Loading library libFSRoot.so ................  OFF
 atiSetup| Loading library libAmpsGen.so ...............  ON
 
@@ -466,7 +466,8 @@ Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cfgfile</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">REPO_HOME</span><span class="si">}</span><span class="s1">/tests/samples/SIMPLE_EXAMPLE/fit.cfg&#39;</span>
 <span class="n">overwrite_ofile</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="n">ofile</span> <span class="o">=</span> <span class="s1">&#39;mcmc/mcmc.h5&#39;</span>
+<span class="n">ofile</span> <span class="o">=</span> <span class="s1">&#39;mcmc/emcee_state.h5&#39;</span>
+<span class="n">intensity_dump</span> <span class="o">=</span> <span class="s1">&#39;mcmc/samples_intensity.feather&#39;</span>
 <span class="n">corner_ofile</span> <span class="o">=</span> <span class="s1">&#39;corner.png&#39;</span>
 </pre></div>
 </div>
@@ -492,6 +493,7 @@ Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> ====================================================================================&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; cfgfile: </span><span class="si">{</span><span class="n">cfgfile</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; ofile: </span><span class="si">{</span><span class="n">ofile</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; intensity_dump: </span><span class="si">{</span><span class="n">intensity_dump</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; corner_ofile: </span><span class="si">{</span><span class="n">corner_ofile</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; nwalkers: </span><span class="si">{</span><span class="n">nwalkers</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; burnIn: </span><span class="si">{</span><span class="n">burnIn</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -505,7 +507,8 @@ Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> ====================================================================================
  cfgfile: /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/fit.cfg
- ofile: mcmc/mcmc.h5
+ ofile: mcmc/emcee_state.h5
+ intensity_dump: mcmc/samples_intensity.feather
  corner_ofile: corner.png
  nwalkers: 32
  burnIn: 0
@@ -874,6 +877,7 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
     <span class="n">nwalkers</span> <span class="o">=</span> <span class="n">nwalkers</span><span class="p">,</span>
     <span class="n">burnIn</span>   <span class="o">=</span> <span class="n">burnIn</span><span class="p">,</span>
     <span class="n">nsamples</span> <span class="o">=</span> <span class="n">nsamples</span><span class="p">,</span>
+    <span class="n">intensity_dump</span> <span class="o">=</span> <span class="n">intensity_dump</span><span class="p">,</span>
     <span class="n">sampler_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>  <span class="c1"># turn off progress bar for cleaner output</span>
 <span class="p">)</span>
 
@@ -887,9 +891,9 @@ nwalkers: 32
 burnIn: 0
 nsamples: 200
 params_dict: {}
-moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7feb624ee430&gt;]
+moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7fcd06837400&gt;]
 sampler_kwargs: {&#39;progress&#39;: False}
- =================================================================== 
+ ========================================================================= 
 
  ================== RUNNING MCMC ================== 
 Initializing walkers in an N-ball around the MLE estimate
@@ -912,8 +916,24 @@ MAP Estimates from 6400 samples obtained over 32 walkers:
    Re[resAmp3]          = -193.365
    Im[resAmp3]          = 106.786
  =============================================== 
-Fit time: 10.472931146621704 seconds
+
+Getting amplitude map, grouping amps for intensity calcuation:
+  resAmp1 -&gt; [&#39;etapi::imZ::resAmp1&#39;, &#39;etapi::reZ::resAmp1&#39;]
+  resAmp2 -&gt; [&#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp2&#39;]
+  resAmp3 -&gt; [&#39;etapi::reZ::resAmp3&#39;, &#39;etapi::imZ::resAmp3&#39;]
+
+Calculating intensity with amplitudes dictionary:
+  resAmp1 -&gt; [&#39;etapi::imZ::resAmp1&#39;, &#39;etapi::reZ::resAmp1&#39;]
+  resAmp2 -&gt; [&#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp2&#39;]
+  resAmp3 -&gt; [&#39;etapi::reZ::resAmp3&#39;, &#39;etapi::imZ::resAmp3&#39;]
+  total -&gt; [&#39;etapi::imZ::resAmp1&#39;, &#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp3&#39;, &#39;etapi::reZ::resAmp2&#39;, &#39;etapi::reZ::resAmp1&#39;, &#39;etapi::imZ::resAmp3&#39;]
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MCMC intensity samples saved to mcmc/samples_intensity.feather
+
+Fit time: 9.456027269363403 seconds
 Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
+	Perfect acceptance -- generated and accepted MC are the same
 </pre></div>
 </div>
 </div>
