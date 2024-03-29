@@ -18,7 +18,13 @@ SRC_DIRS := Distribution
 SUB_DIRS := IUAmpTools IUAmpToolsMPI MinuitInterface UpRootMinuit
 GPU_DIRS := GPUManager
 
+# run_default acts as a guard for default recipe to prevent double executions, I think
+.PHONY: run_default
+run_default: default
+	@echo " === Default target already executed ==="
+
 # Default target: Distribute Makefiles and run 'make'
+.PHONY: default
 default: distribute_makefiles
 	@echo " === Running 'make' in the target directory... ==="
 	@cd AmpTools/AmpTools; make
@@ -26,14 +32,15 @@ default: distribute_makefiles
 	@cd FSRoot; make
 	@cd FSRoot/Executables; make
 	@cd AMPTOOLS_AMPS_DATAIO; make
+	@cd AMPTOOLS_GENERATORS; make
 
-mpi: | default
+mpi: | run_default
 	@echo " === Running 'make mpi' in the target directory... ==="
 	@cd AmpTools/AmpTools; make MPI=1
 	@cd AmpTools/AmpPlotter; make
 	@cd AMPTOOLS_AMPS_DATAIO; make MPI=1
 
-gpu: | default
+gpu: | run_default
 # gpu: distribute_makefiles
 	@echo " === Running 'make gpu' in the target directory... ==="
 	@cd AmpTools/AmpTools; make GPU=1
@@ -103,3 +110,4 @@ clean:
 	@cd AMPTOOLS_AMPS_DATAIO; make clean
 	@cd FSRoot; git reset --hard; make clean
 	@cd FSRoot/Executables; make clean
+	@cd AMPTOOLS_GENERATORS; make clean
