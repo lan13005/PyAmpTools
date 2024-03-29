@@ -5,7 +5,7 @@ import re
 
 def fit(accelerator):
 	REPO_HOME = os.environ['REPO_HOME']
-	cmd=f"amp_fit {REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/fit.cfg --accelerator '{accelerator}'"
+	cmd=f"pa_fit {REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/fit.cfg --accelerator '{accelerator}'"
 	print(cmd)
 	output = subprocess.check_output(cmd, shell=True)
 	output = output.decode('utf-8')

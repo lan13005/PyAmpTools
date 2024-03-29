@@ -9,7 +9,7 @@ ofolder = f'{REPO_HOME}/tests/mcmc'
 
 @pytest.mark.mcmc
 def test_mcmc():
-   cmd=f"amp_mcmc --cfgfile {cfgfile} \
+   cmd=f"pa_mcmc --cfgfile {cfgfile} \
             --ofile '{ofolder}/emcee_state.h5' \
             --nwalkers 20 \
             --burnin 10 \
