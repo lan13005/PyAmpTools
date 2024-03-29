@@ -18,7 +18,7 @@ nfits_converged = args.nfits_converged
 
 REPO_HOME = os.environ['REPO_HOME']
 
-baseCmd = f"python {REPO_HOME}/EXAMPLES/python"
+baseCmd = f"python {REPO_HOME}/src/pyamptools"
 baseDir = f"{REPO_HOME}/tests/samples/"
 cfgs = ['REAL_MI_EXAMPLE/fit', 'SDME_EXAMPLE/sdme', 'REAL_MD_EXAMPLE/etapi_result_src_samePhaseD']
 mcmc_extra_flags = '--overwrite'

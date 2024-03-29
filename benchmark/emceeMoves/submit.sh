@@ -29,5 +29,5 @@ cd /w/halld-scshelf2101/lng/WORK/PyAmpTools/benchmark/emceeMoves
 ################# RUN BEST FIT MODEL #################
 ###### Requires modifying mcmcOptimalMoves.py to use the best fit
 ###### parameters determined in first step
-python $REPO_HOME/EXAMPLES/python/mcmcOptimalMoves.py $REPO_HOME/tests/samples/SDME_EXAMPLE/sdme.cfg \
+python $REPO_HOME/src/pyamptools/mcmcOptimalMoves.py $REPO_HOME/tests/samples/SDME_EXAMPLE/sdme.cfg \
         --ofolder studies_best_fit --nwalkers 50 --burnin 1000 --nsamples 100000 --ntrials 1

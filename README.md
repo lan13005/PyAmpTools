@@ -6,7 +6,7 @@ Features:
 
 - Access to PyROOT ecosystem
 - [Pythonization](https://root.cern/manual/python/#pythonizing-c-user-classes) of c++ objects: simplify interactions with c++ source code
-- Dynamically load appopriate libraries / (re)compilation of high level scripts (like fits and plotters) are time consuming and distracting
+- Dynamically load appropriate libraries / (re)compilation of high level scripts (like fits and plotters) are time consuming and distracting
 - Python ecosystem:
   - Improved scripting, string parsing (regex)
   - Markov Chain Monte Carlo: [emcee](https://emcee.readthedocs.io/en/stable/)

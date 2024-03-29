@@ -12,19 +12,19 @@ sample = "SDME_EXAMPLE/sdme.cfg"
 def run_test(program, args=""):
     for nproc, ngpu in zip(nprocs, ngpus):
         tag = program.split(".")[0]
-        cmd  = f"mpiexec -np {nproc} python $REPO_HOME/EXAMPLES/python/{program} $REPO_HOME/tests/samples/{sample} {args}"
+        cmd  = f"mpiexec -np {nproc} python $REPO_HOME/src/pyamptools/{program} $REPO_HOME/tests/samples/{sample} {args}"
         cmd += f" >> results/{tag}_nproc{ngpu}.log 2>&1"
 
         print(cmd)
         os.system(cmd)
 
-        if program == "fit.py":
+        if program == "mle.py":
             os.system(f'rm -f result_0.fit seed_0.txt')
 
-# #################### RUN TESTS ON fit.py ####################
-# program = "fit.py"
+# #################### RUN TESTS ON mle.py ####################
+# program = "mle.py"
 # for nproc, ngpu in zip(nprocs, ngpus):
-#     cmd  = f"mpiexec -np {nproc} python $REPO_HOME/EXAMPLES/python/fit.py $REPO_HOME/tests/samples/{sample}"
+#     cmd  = f"mpiexec -np {nproc} python $REPO_HOME/src/pyamptools/mle.py $REPO_HOME/tests/samples/{sample}"
 #     cmd += f" >> results/fit_nproc{ngpu}.log 2>&1"
 #     print(cmd)
 #     os.system(cmd)
@@ -34,7 +34,7 @@ def run_test(program, args=""):
 # program = "mcmc.py"
 # args = f" --burnin 0 --nsamples 100 --overwrite"
 # for nproc, ngpu in zip(nprocs, ngpus):
-#     cmd  = f"mpiexec -np {nproc} python $REPO_HOME/EXAMPLES/python/mcmc.py --cfgfiles $REPO_HOME/tests/samples/{sample} {args}"
+#     cmd  = f"mpiexec -np {nproc} python $REPO_HOME/src/pyamptools/mcmc.py --cfgfiles $REPO_HOME/tests/samples/{sample} {args}"
 #     cmd += f" >> results/mcmc_nproc{ngpu}.log 2>&1"
 #     print(cmd)
 #     os.system(cmd)
@@ -61,7 +61,7 @@ mcmc_times /= mcmc_times[0]
 
 fig = plt.figure(figsize=(6,4))
 
-plt.plot(ngpus, fit_times,  "o-",  c='royalblue',   markerfacecolor='none', markeredgewidth=2, label="fit.py scaling")
+plt.plot(ngpus, fit_times,  "o-",  c='royalblue',   markerfacecolor='none', markeredgewidth=2, label="mle.py scaling")
 plt.plot(ngpus, mcmc_times, "o--", c='orange', markerfacecolor='none', markeredgewidth=2, label="mcmc.py scaling")
 
 f_gpus = np.linspace(ngpus.min(), ngpus.max(), 100)
