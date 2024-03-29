@@ -60,54 +60,29 @@ gen_vec_ps::~gen_vec_ps()
 {
 }
 
-// void
-// gen_amp::print_help(){
-// 	cout << endl << "Simulation attributes:" << endl << endl;
-// 	cout << "----- General -----" << endl;
-// 	cout << "configfile:    Configuration file" << endl;
-// 	cout << "outname:       Output file name" << endl;
-// 	cout << "nEvents:       Number of events to generate" << endl;
-// 	cout << "----- Kinematics -----" << endl;
-// 	cout << "genFlat:       Generate flat in M(X) (no physics)" << endl;
-// 	cout << "lowMass:       Lower edge of mass range (GeV)" << endl;
-// 	cout << "highMass:      Upper edge of mass range (GeV)" << endl;
-// 	cout << "beamMaxE:      Electron beam energy (or photon energy endpoint)" << endl;
-// 	cout << "beamPeakE:     Coherent peak photon energy" << endl;
-// 	cout << "beamLowE:      Minimum photon energy to simulate events" << endl;
-// 	cout << "beamHighE:     Maximum photon energy to simulate events" << endl;
-// 	cout << "slope:         Momentum transfer slope" << endl;
-// 	cout << "lowT:          Minimum momentum transfer" << endl;
-// 	cout << "highT:         Maximum momentum transfer" << endl;
-// 	cout << "----- Output and Conditioning -----" << endl;
-// 	cout << "runNum:        Run number assigned to generated events" << endl;
-// 	cout << "seed:          Random number seed initialization" << endl;
-// 	cout << "diag:          Plot only diagnostic histograms" << endl;
-// 	cout << "fsRootFormat:  Enable output in FSRoot format" << endl;
-// }
-
 void
 gen_vec_ps::print_help(){
     cout << endl << " GEN_VEC_PS: Simulation attributes:" << endl << endl;
 	cout << "----- General -----" << endl;
-    cout << "configfile:    Configuration file" << endl;
-    cout << "outname:       Output file name" << endl;
-    cout << "nEvents:       Number of events to generate" << endl;
-    cout << "----- Kinematics -----" << endl;
-    cout << "genFlat:       Generate flat in M(X) (no physics)" << endl;
-    cout << "lowMass:       Lower edge of mass range (GeV)" << endl;
-    cout << "highMass:      Upper edge of mass range (GeV)" << endl;
-    cout << "beamMaxE:      Electron beam energy (or photon energy endpoint)" << endl;
-    cout << "beamPeakE:     Coherent peak photon energy" << endl;
-    cout << "beamLowE:      Minimum photon energy to simulate events" << endl;
-    cout << "beamHighE:     Maximum photon energy to simulate events" << endl;
-    cout << "slope:         Momentum transfer slope" << endl;
-    cout << "lowT:          Minimum momentum transfer" << endl;
-    cout << "highT:         Maximum momentum transfer" << endl;
-    cout << "----- Output and Conditioning -----" << endl;
-    cout << "runNum:        Run number assigned to generated events" << endl;
-    cout << "seed:          Random number seed initialization" << endl;
-    cout << "diag:          Plot only diagnostic histograms" << endl;
-    cout << "fsRootFormat:  Enable output in FSRoot format" << endl;
+	cout << "configfile:    Configuration file" << endl;
+	cout << "outname:       Output file name" << endl;
+	cout << "nEvents:       Number of events to generate" << endl;
+	cout << "----- Kinematics -----" << endl;
+	cout << "genFlat:       Generate flat in M(X) (no physics)" << endl;
+	cout << "lowMass:       Lower edge of mass range (GeV)" << endl;
+	cout << "highMass:      Upper edge of mass range (GeV)" << endl;
+	cout << "beamMaxE:      Electron beam energy (or photon energy endpoint)" << endl;
+	cout << "beamPeakE:     Coherent peak photon energy" << endl;
+	cout << "beamLowE:      Minimum photon energy to simulate events" << endl;
+	cout << "beamHighE:     Maximum photon energy to simulate events" << endl;
+	cout << "slope:         Momentum transfer slope" << endl;
+	cout << "lowT:          Minimum momentum transfer" << endl;
+	cout << "highT:         Maximum momentum transfer" << endl;
+	cout << "----- Output and Conditioning -----" << endl;
+	cout << "runNum:        Run number assigned to generated events" << endl;
+	cout << "seed:          Random number seed initialization" << endl;
+	cout << "diag:          Plot only diagnostic histograms" << endl;
+	cout << "fsRootFormat:  Enable output in FSRoot format" << endl;
 }
 
 void
@@ -125,10 +100,10 @@ gen_vec_ps::generate(){
 	ReactionInfo* reaction = cfgInfo->reactionList()[0];
 
 	// check for unstable particle at lower vertex
-    vector<Particle_t> ParticlesLowerVertex;
-    vector<double> massesLowerVertex;
-    double thresholdLowerVertex = 0;
-    vector< BreitWignerGenerator > bwGenLowerVertex;
+	vector<Particle_t> ParticlesLowerVertex;
+	vector<double> massesLowerVertex;
+	double thresholdLowerVertex = 0;
+	vector< BreitWignerGenerator > bwGenLowerVertex;
 	vector< vector<string> > lowerVertexKeywords = cfgInfo->userKeywordArguments("lowerVertex");
 	if(lowerVertexKeywords.size() == 1) {
 	  vector<string> keywordArgs = lowerVertexKeywords[0];
@@ -149,15 +124,15 @@ gen_vec_ps::generate(){
 	vector<Particle_t> Particles;
 	// don't include non-nucleon lower vertex decay particles in meson decay
 	unsigned int maxUpperVertexChild = reaction->particleList().size();
-    if(bwGenLowerVertex.size() == 1) maxUpperVertexChild -= (ParticlesLowerVertex.size()-1);
-    for (unsigned int i = 0; i < maxUpperVertexChild; i++){
-	  TString particleName = reaction->particleList()[i].c_str();
-	  particleName.ReplaceAll("1","");  particleName.ReplaceAll("2",""); // ignore distinguishable particle notation
-	  Particle_t locEnum = ParticleEnum(particleName.Data());
-	  // Beam particle is always photon
-	  if (locEnum == 0 && i > 0)
-	    cout << "ConfigFileParser WARNING:  unknown particle type \"" << particleName.Data() << "\"" << endl;
-      Particles.push_back(ParticleEnum(particleName.Data()));
+	if(bwGenLowerVertex.size() == 1) maxUpperVertexChild -= (ParticlesLowerVertex.size()-1);
+	for (unsigned int i = 0; i < maxUpperVertexChild; i++){
+		TString particleName = reaction->particleList()[i].c_str();
+		particleName.ReplaceAll("1","");  particleName.ReplaceAll("2",""); // ignore distinguishable particle notation
+		Particle_t locEnum = ParticleEnum(particleName.Data());
+		// Beam particle is always photon
+		if (locEnum == 0 && i > 0)
+			cout << "ConfigFileParser WARNING:  unknown particle type \"" << particleName.Data() << "\"" << endl;
+		Particles.push_back(ParticleEnum(particleName.Data()));
     }
 
 	// set vector masses from particle list
@@ -173,10 +148,9 @@ gen_vec_ps::generate(){
 	const vector<ConfigFileLine> configFileLines = parser.getConfigFileLines();
 	double resonance[]={1.235, 1.0};
 	bool foundResonance = false;
-
 	for (vector<ConfigFileLine>::const_iterator it=configFileLines.begin(); it!=configFileLines.end(); it++) {
 	  if ((*it).keyword() == "define") {
-	    if ((*it).arguments()[0] == "b1" || (*it).arguments()[0] == "K1"){
+		if ((*it).arguments()[0] == "b1" || (*it).arguments()[0] == "K1"){
 	      if ( (*it).arguments().size() != 3 )
 		continue;
 	      resonance[0]=atof((*it).arguments()[1].c_str());
@@ -188,25 +162,25 @@ gen_vec_ps::generate(){
 	  }
 	}
 	if (!foundResonance)
-	  cout << "ConfigFileParser WARNING:  no known resonance found, seed with flat mass distribution" << endl;
+		cout << "ConfigFileParser WARNING:  no known resonance found, seed with flat mass distribution" << endl;
 
 	// find vector parameters from config file
 	double vecMass = 0;
-    double vecWidth = 0;
+	double vecWidth = 0;
 	double threshold = childMasses[0];
 	bool foundVector = false;
 	for (vector<ConfigFileLine>::const_iterator it=configFileLines.begin(); it!=configFileLines.end(); it++) {
-        if ((*it).keyword() == "define" && (*it).arguments()[0] == "vector" && (*it).arguments().size() == 3) {
-	    vecMass = atof((*it).arguments()[1].c_str());
-	    vecWidth = atof((*it).arguments()[2].c_str());
-	    childMasses.push_back(vecMass);
-        threshold += vecMass;
-	    foundVector = true;
-	  }
+		if ((*it).keyword() == "define" && (*it).arguments()[0] == "vector" && (*it).arguments().size() == 3) {
+			vecMass = atof((*it).arguments()[1].c_str());
+			vecWidth = atof((*it).arguments()[2].c_str());
+			childMasses.push_back(vecMass);
+			threshold += vecMass;
+			foundVector = true;
+		}
 	}
 	if (!foundVector) {
-	  cout << "ConfigFileParser ERROR: no vector found, cannot continue" << endl;
-	  return;
+		cout << "ConfigFileParser ERROR: no vector found, cannot continue" << endl;
+		return;
 	}
 
 	// random number initialization (set to 0 by default)
@@ -217,28 +191,28 @@ gen_vec_ps::generate(){
 
 	// setup AmpToolsInterface
 	AmpToolsInterface::registerAmplitude( Vec_ps_refl() );
-    AmpToolsInterface::registerAmplitude( BreitWigner() );
-    AmpToolsInterface::registerAmplitude( Uniform() );
+	AmpToolsInterface::registerAmplitude( BreitWigner() );
+	AmpToolsInterface::registerAmplitude( Uniform() );
 	AmpToolsInterface::registerAmplitude( OmegaDalitz() );
-    AmpToolsInterface::registerAmplitude( PhaseOffset() );
+	AmpToolsInterface::registerAmplitude( PhaseOffset() );
 	AmpToolsInterface::registerAmplitude( ComplexCoeff() );
 
 	AmpToolsInterface ati( cfgInfo, AmpToolsInterface::kMCGeneration );
 
 	double polAngle = -1;//amorphous
 	// loop to look for beam configuration file
-    TString beamConfigFile;
-    const vector<ConfigFileLine> configFileLinesBeam = parser.getConfigFileLines();
-    for (vector<ConfigFileLine>::const_iterator it=configFileLinesBeam.begin(); it!=configFileLinesBeam.end(); it++) {
-            if ((*it).keyword() == "define") {
-                    TString beamArgument =  (*it).arguments()[0].c_str();
-                    if(beamArgument.Contains("beamconfig")) {
-                            beamConfigFile = (*it).arguments()[1].c_str();
-	  		BeamProperties beamProp(beamConfigFile);
-			polAngle = beamProp.GetPolAngle();
-                    }
-            }
-    }
+	TString beamConfigFile;
+	const vector<ConfigFileLine> configFileLinesBeam = parser.getConfigFileLines();
+	for (vector<ConfigFileLine>::const_iterator it=configFileLinesBeam.begin(); it!=configFileLinesBeam.end(); it++) {
+		if ((*it).keyword() == "define") {
+			TString beamArgument =  (*it).arguments()[0].c_str();
+			if(beamArgument.Contains("beamconfig")) {
+				beamConfigFile = (*it).arguments()[1].c_str();
+				BeamProperties beamProp(beamConfigFile);
+				polAngle = beamProp.GetPolAngle();
+			}
+		}
+	}
 	if(beamConfigFile.Length() == 0) {
 		cout<<"WARNING: Couldn't find beam configuration file -- write local version"<<endl;
 
@@ -252,7 +226,7 @@ gen_vec_ps::generate(){
 		locBeamConfigFile.close();
 	}
 
-		ProductionMechanism::Type type =
+	ProductionMechanism::Type type =
 		( (genFlat || !foundResonance) ? ProductionMechanism::kFlat : ProductionMechanism::kResonant );
 
 	// generate over a range of mass
@@ -260,7 +234,7 @@ gen_vec_ps::generate(){
 	GammaPToNPartP resProd = GammaPToNPartP( threshold<lowMass ? lowMass : threshold, highMass, childMasses, ProductionMechanism::kProton, type, slope, lowT, highT, seed, beamConfigFile );
 
 	vector< BreitWignerGenerator > m_bwGen;
-    m_bwGen.push_back( BreitWignerGenerator(vecMass, vecWidth) );
+	m_bwGen.push_back( BreitWignerGenerator(vecMass, vecWidth) );
 
 	// seed the distribution with a sum of noninterfering Breit-Wigners
 	// we can easily compute the PDF for this and divide by that when

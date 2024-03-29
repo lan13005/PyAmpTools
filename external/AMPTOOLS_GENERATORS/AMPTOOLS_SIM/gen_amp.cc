@@ -169,7 +169,7 @@ gen_amp::generate(){
 	bool foundResonance = false;
 	for (vector<ConfigFileLine>::const_iterator it=configFileLines.begin(); it!=configFileLines.end(); it++) {
 	  if ((*it).keyword() == "define") {
-	    if ((*it).arguments()[0] == "rho" || (*it).arguments()[0] == "omega" || (*it).arguments()[0] == "phi" || (*it).arguments()[0] == "b1" || (*it).arguments()[0] == "a1" || (*it).arguments()[0] == "Lambda1520"){
+		if ((*it).arguments()[0] == "rho" || (*it).arguments()[0] == "omega" || (*it).arguments()[0] == "phi" || (*it).arguments()[0] == "b1" || (*it).arguments()[0] == "a1" || (*it).arguments()[0] == "Lambda1520"){
 	      if ( (*it).arguments().size() != 3 )
 		continue;
 	      resonance[0]=atof((*it).arguments()[1].c_str());
@@ -181,7 +181,7 @@ gen_amp::generate(){
 	  }
 	}
 	if (!foundResonance)
-	  cout << "ConfigFileParser WARNING:  no known resonance found, seed with mass = width = 1GeV" << endl;
+		cout << "ConfigFileParser WARNING:  no known resonance found, seed with mass = width = 1GeV" << endl;
 
 	// random number initialization (set to 0 by default)
 	TRandom3* gRandom = new TRandom3();
@@ -198,16 +198,16 @@ gen_amp::generate(){
 	AmpToolsInterface ati( cfgInfo, AmpToolsInterface::kMCGeneration );
 
 	// loop to look for beam configuration file
-        TString beamConfigFile;
-        const vector<ConfigFileLine> configFileLinesBeam = parser.getConfigFileLines();
-        for (vector<ConfigFileLine>::const_iterator it=configFileLinesBeam.begin(); it!=configFileLinesBeam.end(); it++) {
-                if ((*it).keyword() == "define") {
-                        TString beamArgument =  (*it).arguments()[0].c_str();
-                        if(beamArgument.Contains("beamconfig")) {
-                                beamConfigFile = (*it).arguments()[1].c_str();
-                        }
-                }
-        }
+	TString beamConfigFile;
+	const vector<ConfigFileLine> configFileLinesBeam = parser.getConfigFileLines();
+	for (vector<ConfigFileLine>::const_iterator it=configFileLinesBeam.begin(); it!=configFileLinesBeam.end(); it++) {
+		if ((*it).keyword() == "define") {
+			TString beamArgument =  (*it).arguments()[0].c_str();
+			if(beamArgument.Contains("beamconfig")) {
+				beamConfigFile = (*it).arguments()[1].c_str();
+			}
+		}
+	}
 	if(beamConfigFile.Length() == 0) {
 		cout<<"WARNING: Couldn't find beam configuration file -- write local version"<<endl;
 
@@ -231,8 +231,8 @@ gen_amp::generate(){
 	resProd = GammaPToNPartP( minMass, highMass, childMasses, recoil, type, slope, lowT, highT, seed, beamConfigFile );
 
 	if (childMasses.size() < 2){
-	  cout << "ConfigFileParser ERROR:  single particle production is not yet implemented" << endl;
-	  return;
+		cout << "ConfigFileParser ERROR:  single particle production is not yet implemented" << endl;
+		return;
 	}
 
 	double targetMass = ParticleMass(ParticleEnum("Proton"));
@@ -241,11 +241,11 @@ gen_amp::generate(){
 	double recMass = ParticleMass(Particles[1]);
 	double cmEnergy = sqrt(targetMass*(targetMass + 2*beamLowE));
 	if ( cmEnergy < minMass + recMass ){
-	  cout << "ConfigFileParser ERROR:  Minimum photon energy not high enough to create resonance!" << endl;
-	  return;
+		cout << "ConfigFileParser ERROR:  Minimum photon energy not high enough to create resonance!" << endl;
+		return;
 	}
 	else if ( cmEnergy < highMass + recMass )
-	  cout << "ConfigFileParser WARNING:  Minimum photon energy not high enough to guarantee flat mass distribution!" << endl;
+		cout << "ConfigFileParser WARNING:  Minimum photon energy not high enough to guarantee flat mass distribution!" << endl;
 
 	// seed the distribution with a sum of noninterfering Breit-Wigners
 	// we can easily compute the PDF for this and divide by that when
@@ -262,10 +262,10 @@ gen_amp::generate(){
 
 	vector< int > pTypes;
 	for (unsigned int i=0; i<Particles.size(); i++)
-	  pTypes.push_back( Particles[i] );
+		pTypes.push_back( Particles[i] );
 	for (unsigned int i=0; i<ParticlesLowerVertex.size(); i++) {
-	  if(ParticlesLowerVertex[i] == Proton || ParticlesLowerVertex[i] == Neutron) continue;
-          pTypes.push_back( ParticlesLowerVertex[i] );
+		if(ParticlesLowerVertex[i] == Proton || ParticlesLowerVertex[i] == Neutron) continue;
+        	pTypes.push_back( ParticlesLowerVertex[i] );
 	}
 
 	#ifdef HDDM
@@ -313,7 +313,6 @@ gen_amp::generate(){
 	while( eventCounter < nEvents ){
 
 		if( batchSize < 1E4 ){
-
 			cout << "WARNING:  small batches could have batch-to-batch variations\n"
 			     << "          due to different maximum intensities!" << endl;
 		}
@@ -322,7 +321,7 @@ gen_amp::generate(){
 
 		ati.clearEvents();
 		int i=0;
-                while( i < batchSize ){
+        while( i < batchSize ){
 
 			double weight = 1.;
 

@@ -72,12 +72,14 @@ $(info CCDB_HOME is $(CCDB_HOME))
 # Targets
 all: CCDB_LOAD $(TARGET_LIBRARY)
 
+# CCDB scons print statements written for python2. recursively update for python3
 CCDB_INSTALL:
 	@echo " ==== Installing CCDB ==== "
 	@if [ ! -d "$(CCDB_HOME)" ]; then \
 		echo "CCDB_HOME directory does not exist, cloning from github"; \
 		$(Q)git clone https://github.com/JeffersonLab/ccdb.git --branch v1.06.09; \
 		$(Q)cp Distribution/PthreadMutex.h ccdb/include/CCDB; \
+		$(Q)find . -type f -name 'SCon*' -exec sed -Ei 's/\bprint\s+"([^"]*)"\s*/print("\1")/g' {} +; \
 		$(Q)cd $(CCDB_HOME) && export CCDB_HOME=$(CCDB_HOME) && scons; \
 	fi
 

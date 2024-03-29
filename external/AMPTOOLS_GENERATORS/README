@@ -6,3 +6,5 @@ gen_amp / gen_vec_ps requires some modifications since the original version requ
         - these values can be overwritten by the setatrr() python method when wrapped
     - create a void print_help method
     - create a void generate method which is likely the rest of code in the original compiled version
+
+Why generators as classes? Original intention was to allow for more flexibility and potentially repeated calls without reloading. Also, instead of compiling gen_amp as an executable if I made it as a class, I can import it into python and parse the command line arguments there. The big downside with this approach is that I cannot simply copy from halld_sim to keep things up to date.

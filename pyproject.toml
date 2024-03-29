@@ -56,6 +56,9 @@ black = ["--line-length=85"]
 amp_fit = "pyamptools.mle:_cli_runFits" # variable name will be the executable name in conda env bin
 amp_fitfrac = "pyamptools.extract_ff:_cli_extract_ff"
 amp_mcmc = "pyamptools.mcmc:_cli_mcmc"
+gen_amp = "pyamptools.generate:gen_amp"
+gen_vec_ps = "pyamptools.generate:gen_vec_ps"
+
 
 # [tool.setuptools]
 # py-modules = []
