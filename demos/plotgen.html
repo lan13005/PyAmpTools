@@ -431,17 +431,14 @@ atiSetup| GPU is disabled
 atiSetup| Loading library libAmpTools.so ..............  ON
 atiSetup| Loading library libAmpPlotter.so ............  ON
 atiSetup| Loading library libAmpsDataIO.so ............  ON
-atiSetup| Loading library libFSRoot.so ................
+atiSetup| Loading library libFSRoot.so ................  ON
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  ON
-atiSetup| Loading library libAmpsGen.so ...............  OFF
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>atiSetup| Loading library libAmpsGen.so ...............  OFF
 
 
 ------------------------------------------------
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
+Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 ------------------------------------------------
 
 Initializing FSRoot for PyROOT...
@@ -475,6 +472,30 @@ Initializing FSRoot for PyROOT...
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">AttributeError</span><span class="g g-Whitespace">                            </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">line</span> <span class="mi">3</span>
+<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="c1">### IF USING ROOT TO PLOT - CAN SET GLUEX STYLE HERE ###</span>
+<span class="g g-Whitespace">      </span><span class="mi">2</span> <span class="n">gInterpreter</span><span class="o">.</span><span class="n">ProcessLine</span><span class="p">(</span><span class="s1">&#39;#include &quot;gluex_style.h&quot;&#39;</span><span class="p">)</span>
+<span class="ne">----&gt; </span><span class="mi">3</span> <span class="n">gluex_style</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">gluex_style</span><span class="p">()</span> <span class="c1"># Returns TStyle</span>
+<span class="g g-Whitespace">      </span><span class="mi">4</span> <span class="n">gluex_style</span><span class="o">.</span><span class="n">SetPadRightMargin</span><span class="p">(</span><span class="mf">0.08</span><span class="p">)</span>
+<span class="g g-Whitespace">      </span><span class="mi">5</span> <span class="n">gluex_style</span><span class="o">.</span><span class="n">cd</span><span class="p">()</span>
+
+<span class="nn">File /w/halld-scshelf2101/lng/WORK/PyAmpTools/external/root/root-6.28.06-gcc9.3.0/lib/ROOT/_facade.py:196,</span> in <span class="ni">ROOTFacade._fallback_getattr</span><span class="nt">(self, name)</span>
+<span class="g g-Whitespace">    </span><span class="mi">194</span>     <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">195</span>         <span class="k">return</span> <span class="n">res</span>
+<span class="ne">--&gt; </span><span class="mi">196</span> <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Failed to get attribute </span><span class="si">{}</span><span class="s2"> from ROOT&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+
+<span class="ne">AttributeError</span>: Failed to get attribute gluex_style from ROOT
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>input_line_90:1:10: fatal error: &#39;gluex_style.h&#39; file not found
+#include &quot;gluex_style.h&quot;
+         ^~~~~~~~~~~~~~~
+</pre></div>
+</div>
+</div>
 </div>
 <p>Lets set some additional alias and enable multi-threading for faster results</p>
 <p>Lets define the location of the <code class="docutils literal notranslate"><span class="pre">.fit</span></code> file and the name of a <code class="docutils literal notranslate"><span class="pre">.pdf</span></code> file to dump drawn histograms to</p>
@@ -496,21 +517,6 @@ Initializing FSRoot for PyROOT...
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   =================================================================
-   |        ^                                                      |
-   |       / \             Version:  v0.15.1-5-g4c36-dirty         |
-   |      /---\                                                    |
-   |     /     \           GDouble:  8 bytes                       |
-   |    /       \ MP           MPI:  NO                            |
-   |     -------               GPU:  NO                            |
-   |        |                                                      |
-   |        |              doi.org/10.5281/zenodo.5039377          |
-   |        | OOLS                                                 |
-   =================================================================
-</pre></div>
-</div>
-</div>
 </div>
 <p>As always, we have to register the requested amplitudes and the datareaders. We can then create a <code class="docutils literal notranslate"><span class="pre">PlotGenerator</span></code> instance. The order matters as <code class="docutils literal notranslate"><span class="pre">PlotGenerator</span></code> uses these amplitudes and datareaders.</p>
 <div class="cell docutils container">
@@ -519,20 +525,6 @@ Initializing FSRoot for PyROOT...
 <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReader</span><span class="p">()</span> <span class="p">)</span>
 
 <span class="n">plotGen</span> <span class="o">=</span> <span class="n">PlotGenerator</span><span class="p">(</span> <span class="n">results</span> <span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[ AmplitudeManager ]:
-
-	Creating AmplitudeManager for the reaction:  etapi
-		 particle index assignment:  Beam -&gt; 0
-		 particle index assignment:  Proton -&gt; 1
-		 particle index assignment:  Eta -&gt; 2
-		 particle index assignment:  Pi0 -&gt; 3
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
 </pre></div>
 </div>
 </div>
@@ -574,46 +566,6 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: all
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt;   Keeping all amplitudes: { &quot;resAmp1&quot;, &quot;resAmp2&quot;, &quot;resAmp3&quot; }
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: resAmp1
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: resAmp2
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: resAmp3
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: resAmp1;resAmp2
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>	Creating AmplitudeManager for the reaction:  etapi
-		 particle index assignment:  Beam -&gt; 0
-		 particle index assignment:  Proton -&gt; 1
-		 particle index assignment:  Eta -&gt; 2
-		 particle index assignment:  Pi0 -&gt; 3
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Info in &lt;TCanvas::Print&gt;: png file result_all.png has been created
-Info in &lt;TCanvas::Print&gt;: png file result_resAmp1.png has been created
-Info in &lt;TCanvas::Print&gt;: png file result_resAmp2.png has been created
-Info in &lt;TCanvas::Print&gt;: png file result_resAmp3.png has been created
-Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been created
-</pre></div>
-</div>
-</div>
 </div>
 <p>Overall Fit results</p>
 <div class="cell docutils container">
@@ -621,9 +573,6 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;result_all.png&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="cell_output docutils container">
-<img alt="../_images/cbfa858b77e5b87949685099783f8f4bfbd974c4618314d72fd7f66fa99a356d.png" src="../_images/cbfa858b77e5b87949685099783f8f4bfbd974c4618314d72fd7f66fa99a356d.png" />
 </div>
 </div>
 <p>Only the L=2 M=0 wave</p>
@@ -633,9 +582,6 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<img alt="../_images/b4642417141c841c7367a4e58919327761b4941b134fbb9fd9c40ccc26c19d0e.png" src="../_images/b4642417141c841c7367a4e58919327761b4941b134fbb9fd9c40ccc26c19d0e.png" />
-</div>
 </div>
 <p>Only the L=2 M=2 wave</p>
 <div class="cell docutils container">
@@ -643,9 +589,6 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;result_resAmp2.png&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="cell_output docutils container">
-<img alt="../_images/330d852199a9c2ae206d532219dea6235797b52b929ebc8622ea189f906105c4.png" src="../_images/330d852199a9c2ae206d532219dea6235797b52b929ebc8622ea189f906105c4.png" />
 </div>
 </div>
 <p>Only the L=0 M=0 wave</p>
@@ -655,9 +598,6 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<img alt="../_images/367fd349ff85093a42dc229be15a3bd8e576c9ee35566b755bbef3046b8bc225.png" src="../_images/367fd349ff85093a42dc229be15a3bd8e576c9ee35566b755bbef3046b8bc225.png" />
-</div>
 </div>
 <p>Coherent sum of (L=2, M=0) (L=2, M=0) waves</p>
 <div class="cell docutils container">
@@ -665,9 +605,6 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;result_resAmp1;resAmp2.png&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="cell_output docutils container">
-<img alt="../_images/9e1fbd1b13a01b32329887088fb377bb13feb40c94372d0d5277003d06f3a128.png" src="../_images/9e1fbd1b13a01b32329887088fb377bb13feb40c94372d0d5277003d06f3a128.png" />
 </div>
 </div>
 <div class="cell docutils container">
