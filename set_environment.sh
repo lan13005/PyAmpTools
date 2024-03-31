@@ -43,3 +43,5 @@ else
     echo ""
     echo "ROOT not found. Please go into root and run build_root.sh to your specifications."
 fi
+
+python $REPO_HOME/utility/link_modules.py # symlink C header files so it can be found by ROOT
