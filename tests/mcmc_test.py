@@ -21,5 +21,5 @@ def test_mcmc():
    return_code = subprocess.call(cmd, shell=True)
    print(return_code)
    assert return_code == 0, f"Command '{cmd}' returned a non-zero exit code: {return_code}"
-   # subprocess.call(f"rm -rf {ofolder}", shell=True) # clean up
-   # assert not os.path.exists(ofolder), f"Folder {ofolder} was not deleted!"
+   subprocess.call(f"rm -rf {ofolder}", shell=True) # clean up
+   assert not os.path.exists(ofolder), f"Folder {ofolder} was not deleted!"
