@@ -8,7 +8,7 @@ output_file = f'{REPO_HOME}/tests/ff.txt'
 
 @pytest.mark.extract_ff
 def test_extract_ff():
-   cmd = [f'pa_fitfrac',
+   cmd = [f'pa fitfrac',
           fit_results,
           '--outputfileName', output_file,
           '--regex_merge', "'.*::(.*)::.*~>\\1'", "'.*(.)$~>\\1'"
