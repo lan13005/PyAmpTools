@@ -10,7 +10,17 @@ This repository contains Python bindings for AmpTools. Under the hood, it uses [
 
 AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in `external` directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in `external/AMPTOOLS_AMPS_DATAIO`. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of `gen_amp`, a program to produce simulations with AmpTools, is provided in `external/AMPTOOLS_GENERATORS` but is not built by the main makefile, a separate makefile is included with that directory.
 
-Currently there exists **executables** for maximimum likelihood fitting (`pa_fit`), extracting fit fractions from MLE fit results (`pa_fitfrac`), and Markov chain Monte Carlo (`pa_mcmc`), and simulation generation (`pa_gen_amp`, `pa_gen_vec_ps`). Additional files in the `scripts` folder are provided that perform `amptools` configuration file generation and plotting of the MLE fit results. These scripts are reaction dependent, therefore should be used as references to build upon. Utility functions are located in the `utility` folder.
+`pa` is an **executable** that dispatches various functions for: maximimum likelihood fitting (`fit`), extracting fit fractions from MLE fit results (`fitfrac`), and Markov chain Monte Carlo (`mcmc`), and simulation generation (`gen_amp`, `gen_vec_ps`). Example usage:
+
+```
+pa -h # for usage
+pa fit my_amptools.cfg # to run MLE fit
+pa mcmc -h # for usage of mcmc
+pa fitfrac amptools_results.fit # extract fit fractions
+pa gen_amp my_amptools.cfg # to generate simulations
+```
+
+Additional files in the `scripts` folder are provided that perform `amptools` configuration file generation and plotting of the MLE fit results. These scripts are reaction dependent, therefore should be used as references to build upon. Utility functions are located in the `utility` folder.
 
 ---
 

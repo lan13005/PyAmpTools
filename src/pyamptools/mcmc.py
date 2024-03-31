@@ -3,12 +3,12 @@ import emcee
 import os
 from typing import List
 import matplotlib.pyplot as plt
-from pyamptools.utility.LoadParameters import LoadParameters, createMovesMixtureFromDict
 import corner
 import argparse
 import time
 import sys
 import yaml
+from pyamptools.utility.LoadParameters import LoadParameters, createMovesMixtureFromDict
 from pyamptools.utility.utils import glob_sort_captured, safe_getsize
 
 class mcmcManager:
@@ -116,11 +116,11 @@ class mcmcManager:
         print(f' ========================================================================= \n')
 
         ########## SETUP PARAMETERS ############
-        ## AmpTools config files are assumed to contain the MLE values already
-        ##   this can be acheived by running fit.py with --seedfile
+        ## AmpTools config files can be initialized to MLE values
+        ##   this can be acheived by running a MLE fit with --seedfile
         ##   and using the include directive in the config file to add the seedfile
         ##   to override values
-        ## doNotScatter = True  will initialize walkers in an N-ball around the MLE estimate
+        ## doNotScatter = True  will initialize walkers in an N-ball around the initial values
         ## doNotScatter = False will uniformly sample (or scatter) on user-specified interval
         params = {}
         doNotScatter = True
@@ -130,24 +130,24 @@ class mcmcManager:
             params = params_dict if doNotScatter else {k:v[0] for k,v in params_dict.items()}
 
         ####### LOAD PARAMETERS #####
-        mle_values, keys, par_names_flat = [], [], []
+        initial_values, keys, par_names_flat = [], [], []
         paramPartitions = [0]
         for i, LoadParametersSampler in enumerate(self.LoadParametersSamplers):
-            mles, ks, pars = LoadParametersSampler.flatten_parameters(params)
-            mle_values.extend(mles)
+            values, ks, pars = LoadParametersSampler.flatten_parameters(params)
+            initial_values.extend(values)
             tag = f'_{i}' if len(self.LoadParametersSamplers) > 1 else ''
             keys.extend( [ f'{k}{tag}' for k in ks ] )
             par_names_flat.extend( [ f'{par}{tag}' for par in pars ] )
-            paramPartitions.append( len(mles) + paramPartitions[-1] )
+            paramPartitions.append( len(values) + paramPartitions[-1] )
         self.paramPartitions = paramPartitions
 
         ####### ADDITIONAL BASIC SETUP ########
-        if nwalkers < 2*len(mle_values):
+        if nwalkers < 2*len(initial_values):
             print(f"\n[emcee req.] Number of walkers must be at least twice the number of \
-                  parameters. Overwriting nwalkers to 2*len(mle_values) = 2*{len(mle_values)}\n")
-            nwalkers = 2*len(mle_values)
+                  parameters. Overwriting nwalkers to 2*len(initial_values) = 2*{len(initial_values)}\n")
+            nwalkers = 2*len(initial_values)
 
-        nDim = len(mle_values)
+        nDim = len(initial_values)
 
         ############## RUN MCMC IF RESULTS DOES NOT ALREADY EXIST ##############
         fit_start_time = time.time()
@@ -159,8 +159,8 @@ class mcmcManager:
 
             print(f' ================== RUNNING MCMC ================== ')
             if doNotScatter:
-                print("Initializing walkers in an N-ball around the MLE estimate")
-                par_values = np.array(mle_values)
+                print("Initializing walkers in an N-ball around the initial estimate")
+                par_values = np.array(initial_values)
                 par_values = np.repeat(par_values, nwalkers).reshape(nDim, nwalkers).T
                 par_values[par_values==0] += 1e-2 # avoid 0 values, leads to large condition number for sampler
                 par_values *= ( 1 + 0.01 * np.random.normal(0, 1, size=(nwalkers, nDim)) )
@@ -218,7 +218,7 @@ class mcmcManager:
         ################### TRACK SOME ATTRIBUTES ###################
         self.nwalkers = nwalkers
         self.samples = samples
-        self.mle_values = mle_values
+        self.initial_values = initial_values
         self.map_estimate = map_estimate
         self.map_sample_idx = map_idx
         self.paramPartitions = paramPartitions # list of indices to re-group par_names_flat into each cfg file
@@ -451,9 +451,9 @@ class mcmcManager:
         axes = np.array(fig.axes).reshape((nDim, nDim))
         plot_axvh_fit_params(axes, samples[self.map_sample_idx], nDim, color='royalblue')
         if format=='cartesian':
-            plot_axvh_fit_params(axes, self.mle_values, nDim, color='tab:green')
+            plot_axvh_fit_params(axes, self.initial_values, nDim, color='tab:green')
         else:
-            print(f'Not overlaying MLE values, have not implemented conversion from Real/Imag parts to intensities or fit fractions')
+            print(f'Not overlaying initial values, have not implemented conversion from Real/Imag parts to intensities or fit fractions')
 
         if save: plt.savefig(f"{corner_ofile}")
         else:    return fig
@@ -463,10 +463,16 @@ def _cli_mcmc():
 
     ''' Command line interface for performing mcmc fits '''
 
+    # NOTE: YAML file can be supplied to override the command line args and is
+    # the only way to construct different emcee moves and initialization of parameters
+    # as this process can be quite complex and is not easily done through the CLI.
+    # Without YAML override, emcee will be initialized to a N-ball around the
+    # amptools cfg file's values
+
     start_time = time.time()
 
     parser = argparse.ArgumentParser(description='emcee fitter')
-    parser.add_argument('--cfgfiles', type=str, default='', help='Config file name or glob pattern')
+    parser.add_argument('cfgfiles', type=str, help='Config file name or glob pattern')
     parser.add_argument('--nwalkers', type=int, default=32, help='Number of walkers. Default 32')
     parser.add_argument('--burnin', type=int, default=100, help='Number of burn-in steps. Default 100')
     parser.add_argument('--nsamples', type=int, default=1000, help='Number of samples. Default 1000')
@@ -501,8 +507,6 @@ def _cli_mcmc():
     params_dict = {} if 'params_dict' not in yaml_override else yaml_override['params_dict']
     moves_mixture = [ emcee.moves.StretchMove() ] if 'moves_mixture' not in yaml_override else \
                         createMovesMixtureFromDict(yaml_override['moves_mixture'])
-
-    assert( cfgfiles != '' ), 'You must specify a config file'
 
     cfgfiles = glob_sort_captured(cfgfiles) # list of sorted config files based on captured number
     for cfgfile in cfgfiles:

@@ -94,6 +94,15 @@ def _cli_extract_ff():
 
     ''' Command line interface for extracting fit fractions from an amptools fit results '''
 
+    ############## PARSE COMMANDLINE ARGUMENTS ##############
+    parser = argparse.ArgumentParser(description='Extract Fit Fractions from FitResults')
+    parser.add_argument('fitFile', type=str, default='', help='Amptools FitResults file name')
+    parser.add_argument('--outputfileName', type=str, default='', help='Output file name')
+    parser.add_argument('--a', type=bool, default=True, help='Calculate acceptance corrected values')
+    parser.add_argument('--fmt', type=str, default='.5f', help='Format string for printing')
+    parser.add_argument('--regex_merge', type=str, nargs='+', help='Merge amplitudes: Regex pair (pattern, replace) separated by ~>')
+    args = parser.parse_args(sys.argv[1:])
+
     ############## SET ENVIRONMENT VARIABLES ##############
     REPO_HOME     = os.environ['REPO_HOME']
 
@@ -101,27 +110,18 @@ def _cli_extract_ff():
     from pyamptools import atiSetup
     atiSetup.setup(globals())
 
-    ############## PARSE COMMANDLINE ARGUMENTS ##############
-    parser = argparse.ArgumentParser(description='Extract Fit Fractions from FitResults')
-    parser.add_argument('fitName', type=str, default='', help='Fit file name')
-    parser.add_argument('--outputfileName', type=str, default='', help='Output file name')
-    parser.add_argument('--a', type=bool, default=True, help='Acceptance correct values')
-    parser.add_argument('--fmt', type=str, default='.5f', help='Format string for printing')
-    parser.add_argument('--regex_merge', type=str, nargs='+', help='Merge amplitudes: Regex pair (pattern, replace) separated by ~>')
-    args = parser.parse_args(sys.argv[1:])
-
     ############## LOAD FIT RESULTS ##############
-    fitName = args.fitName
+    fitFile = args.fitFile
     outfileName = args.outputfileName
     acceptanceCorrect = args.a
     fmt=args.fmt
     regex_merge = args.regex_merge
-    assert( os.path.isfile(fitName) ), f'Fit file does not exist at specified path'
+    assert( os.path.isfile(fitFile) ), f'Fit Results file does not exist at specified path'
 
     ############## LOAD FIT RESULTS OBJECT ##############
-    results = FitResults( fitName )
+    results = FitResults( fitFile )
     if not results.valid():
-        print(f'Invalid fit result in file: {fitName}')
+        print(f'Invalid fit result in file: {fitFile}')
         exit()
 
     ############## REGISTER OBJECTS FOR AMPTOOLS ##############

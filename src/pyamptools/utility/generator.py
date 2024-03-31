@@ -1,20 +1,12 @@
+
 import argparse
 
-def gen_amp():
-    ''' generate simulations using gen_amp '''
-    generator = _setup_generator("gen_amp")
-    generator.generate()
+def setup_generator(generator_name):
 
-def gen_vec_ps():
-    ''' generate simulations using gen_vec_ps '''
-    generator = _setup_generator("gen_vec_ps")
-    generator.generate()
-
-def _setup_generator(generator_name):
-    '''Setup the generator and its conditions'''
+    ''' Parse command line arguments (argparse) and load conditions for the generator '''
     # Parse command line args first in case help is requested
 
-    conditions = _load_conditions(generator_name)
+    conditions = load_conditions(generator_name)
 
     import ROOT
     from pyamptools import atiSetup
@@ -25,11 +17,11 @@ def _setup_generator(generator_name):
         setattr(generator, k, v)
     return generator
 
-def _load_conditions(generator_name):
+def load_conditions(generator_name):
     parser = argparse.ArgumentParser(description="Description of your program")
 
     # Define command line arguments
-    parser.add_argument('-c', '--configfile', default="", help='Config file')
+    parser.add_argument('configfile', help='AmpTools Config file')
     parser.add_argument('-o', '--outname', default=f"{generator_name}.root", help='ROOT file output name')
     parser.add_argument('-hd', '--hddmname', default="", help='HDDM file output name [optional]')
     parser.add_argument('-l', '--lowMass', type=float, default=0.2, help='Low edge of mass range (GeV) [optional]')
