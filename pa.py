@@ -5,6 +5,12 @@ import subprocess
 import os
 import sys
 
+##################################################################
+# This script attempts to be a dispatch system that organizes the
+# various scripts in the repository to be accessible under a single
+# executable
+##################################################################
+
 class HelpOnErrorParser(argparse.ArgumentParser):
     def error(self, message):
         self.print_help()  # Print the full help message
