@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
 import argparse
+import argcomplete
 import subprocess
 import os
 import sys
 
 ##################################################################
+# pa = pyamptools...
 # This script attempts to be a dispatch system that organizes the
 # various scripts in the repository to be accessible under a single
 # executable
@@ -34,9 +36,15 @@ def main():
         'gen_vec_ps' : f'{REPO_HOME}/scripts/gen_vec_ps.py',
     }
 
+    choices = func_map.keys()
+
     parser = HelpOnErrorParser(description="Dispatch pyamptools commands")
-    parser.add_argument('command', help=f'Command to run: [ {" | ".join(func_map.keys())} ]')
+    parser.add_argument('command', choices=choices, help=f'Command to run: [ {" | ".join(func_map.keys())} ]')
     parser.add_argument('command_args', nargs=argparse.REMAINDER, help='Remaining arguments that will be passed to command')
+
+    # tab-autocomplete so you can type 'pa ' into terminal and tab for available functions
+    #   help is implicit
+    argcomplete.autocomplete(parser, exclude=['-h', '--help'])
 
     _args = parser.parse_args()
 

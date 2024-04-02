@@ -45,3 +45,6 @@ else
 fi
 
 python $REPO_HOME/utility/link_modules.py # symlink C header files so it can be found by ROOT
+
+# Register pa (pyamptools dispatch system) for tab auto-completion of avaiable commands
+eval "$(register-python-argcomplete pa)"
