@@ -484,7 +484,7 @@ def _cli_mcmc():
 
     parser = argparse.ArgumentParser(description='emcee fitter')
     parser.add_argument('cfgfiles', type=str, help='Config file name or glob pattern')
-    parser.add_argument('-n', '--nwalkers', type=int, default=32, help='Number of walkers. Default 32')
+    parser.add_argument('-nw','--nwalkers', type=int, default=32, help='Number of walkers. Default 32')
     parser.add_argument('-b', '--burnin', type=int, default=100, help='Number of burn-in steps. Default 100')
     parser.add_argument('-n', '--nsamples', type=int, default=1000, help='Number of samples. Default 1000')
     parser.add_argument('-w', '--overwrite', action='store_true', help='Overwrite existing output file if exists')
