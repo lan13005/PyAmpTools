@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import emcee
 import os
 from typing import List
@@ -139,15 +140,22 @@ class mcmcManager:
             keys.extend( [ f'{k}{tag}' for k in ks ] )
             par_names_flat.extend( [ f'{par}{tag}' for par in pars ] )
             paramPartitions.append( len(values) + paramPartitions[-1] )
-        self.paramPartitions = paramPartitions
 
-        ####### ADDITIONAL BASIC SETUP ########
+        ####### CHECK FOR MINIMUM WALKERS ########
         if nwalkers < 2*len(initial_values):
             print(f"\n[emcee req.] Number of walkers must be at least twice the number of \
                   parameters. Overwriting nwalkers to 2*len(initial_values) = 2*{len(initial_values)}\n")
             nwalkers = 2*len(initial_values)
 
         nDim = len(initial_values)
+
+        ################### TRACK SOME ATTRIBUTES ###################
+        self.nwalkers = nwalkers
+        self.paramPartitions = paramPartitions # list of indices to re-group par_names_flat into each cfg file
+        self.par_names_flat = par_names_flat
+        self.keys = keys
+        self.initial_values = initial_values
+        self.amplitudeMap = self.getAmplitudeMaps()
 
         ############## RUN MCMC IF RESULTS DOES NOT ALREADY EXIST ##############
         fit_start_time = time.time()
@@ -184,19 +192,27 @@ class mcmcManager:
                 state = sampler.run_mcmc(par_values, burnIn)
                 sampler.reset()
                 print(f'\n[Burn-in complete. Running sampler]\n')
-                sampler.run_mcmc(state, nsamples, **_sampler_kwargs);
+                sampler.run_mcmc(state, nsamples, **_sampler_kwargs)
             else:
-                sampler.run_mcmc(par_values, nsamples, **_sampler_kwargs);
+                sampler.run_mcmc(par_values, nsamples, **_sampler_kwargs)
 
+            self.samples = sampler.get_chain(flat=True)
+            self.intensities = self.getIntensity(self.amplitudeMap, accCorrected=True)
             print(f'\n[Sampler complete]\n')
 
         else: # Found already existing HDF5 file, will just load it
             print(f' ================== LOADING MCMC ================== ')
             sampler = emcee.backends.HDFBackend(output_file)
+            self.samples = sampler.get_chain(flat=True)
+            if not os.path.exists(intensity_dump):
+                self.intensities = None
+            else:
+                self.intensities = pd.read_feather(intensity_dump).values
+                self.intensities = self.intensities.reshape( (len(self.atis), nsamples*nwalkers, len(self.amplitudeMap)) )
+
         fit_end_time = time.time()
 
         ################# CALCULATE AUTOCORR AND ACCEPTANCE FRACTION #################
-        samples = sampler.get_chain(flat=True) # returns (nsamples*nwalkers, 5) flattened array
         if isinstance(sampler, emcee.EnsembleSampler):
             acceptance_fraction = np.mean(sampler.acceptance_fraction)
         else: # HDF5 backend
@@ -208,39 +224,30 @@ class mcmcManager:
 
         ################### COMPUTE MAP ESTIMATE ###################
         map_idx = np.argmax(sampler.get_log_prob(flat=True)) # maximum a posteriori (MAP) location
-        map_estimate = samples[map_idx,:]
+        map_estimate = self.samples[map_idx,:]
 
         print(' =================== RESULTS =================== ')
-        print(f'MAP Estimates from {len(samples)} samples obtained over {nwalkers} walkers:')
+        print(f'MAP Estimates from {len(self.samples)} samples obtained over {nwalkers} walkers:')
         [print(f'   {l:20} = {v:0.3f}') for l, v in zip(par_names_flat, map_estimate)]
         print(' =============================================== ')
 
-        ################### TRACK SOME ATTRIBUTES ###################
-        self.nwalkers = nwalkers
-        self.samples = samples
-        self.initial_values = initial_values
+        ################### TRACK SOME ADDITIONAL ATTRIBUTES ###################
         self.map_estimate = map_estimate
         self.map_sample_idx = map_idx
-        self.paramPartitions = paramPartitions # list of indices to re-group par_names_flat into each cfg file
-        self.par_names_flat = par_names_flat
-        self.keys = keys
         self.elapsed_fit_time = fit_end_time - fit_start_time
-        # Convert sample parameter values to intensities
-        self.amplitudeMap = self.getAmplitudeMaps()
-        self.intensities = self.getIntensity(self.amplitudeMap, accCorrected=True)
 
         ################### DUMP INTENSITIES IF REQUESTED ###################
         # Enough information in the intensites array to calculate fit fractions
         if intensity_dump != '':
             if '.' not in intensity_dump: intensity_dump += '.feather'
-            import pandas as pd
             columns = list(self.amplitudeMap.keys())
             if len(self.atis) > 1:
                 columns = [ f'{ampName}_{i}' for i in range(len(self.atis)) for ampName in columns ]
             dump = np.concatenate( self.intensities, axis=1 )
             dump = pd.DataFrame( dump, columns=columns )
             dump.to_feather(intensity_dump)
-            print(f'\nMCMC intensity samples saved to {intensity_dump}\n')
+            print(f'\nMCMC intensity samples saved to {intensity_dump}')
+            print(f'  shape: {dump.shape}\n')
 
     def getIntensity(
         self,
@@ -255,7 +262,7 @@ class mcmcManager:
             accCorrected (bool): whether to use acceptance corrected intensities (or not)
 
         Returns:
-            intensities (List[array]): List of intensity arrays for each ATI instance
+            intensities (List[array]): List of intensity arrays for each ATI instance. Shape ~ [ati, samples, amplitudes]
         '''
         intensities = []
         for ati_index in range(len(self.atis)):
@@ -270,7 +277,7 @@ class mcmcManager:
     ):
         '''
         Calculate intensity given an amplitude list and AmpToolsInterface instance.
-        Follows implementation in AmpTools' FitResults.ccintensity = sum_a sum_a' s_a s_a' V_a V*_a' NI( a, a' )
+        Follows implementation in AmpTools' FitResults.intensity = sum_a sum_a' s_a s_a' V_a V*_a' NI( a, a' )
 
         Args:
             ati_index (int): index of AmpToolsInterface instance to use
@@ -278,7 +285,7 @@ class mcmcManager:
             accCorrected (bool): whether to use acceptance corrected intensities (or not)
 
         Returns:
-            intensity (np.array): intensity of coherent sum of amplitudes across amptools interface instances and samples
+            intensity (np.array): intensity of coherent sum of amplitudes (defined by amplitudeMap) across mcmc samples. Shape ~ [samples, amplitudes]
         '''
 
         print(f'\nCalculating intensity with amplitudes dictionary:')
@@ -335,7 +342,10 @@ class mcmcManager:
                         # Amps from different reactions are not coherent
                         if reaction == conjReaction:
                             if accCorrected:
-                                ampInt = normIntMap[reaction].ampInt( ampName, conjAmpName)
+                                # TODO: AmpTools does not like touching the generated MC (used for
+                                # acceptance correction) when it thinks it is fitting, because generally
+                                # this is not needed. We force it to do so by passing forceUseCache = True to ampInt
+                                ampInt = normIntMap[reaction].ampInt( ampName, conjAmpName, True)
                             else:
                                 ampInt = normIntMap[reaction].normInt(ampName, conjAmpName)
                         else:
@@ -356,7 +366,6 @@ class mcmcManager:
         This can be used to calculate the intensity for each amplitude integrating over some contributions
         Example key, value pair: Sp0+ -> [reaction_pol000::PositiveRe::Sp0+, reaction_pol000::PositiveIm::Sp0+, reaction_pol045::PositiveRe::Sp0+, ... ]
         '''
-        print(f'\nGetting amplitude map, grouping amps for intensity calcuation:')
         parMgr = self.LoadParametersSamplers[0]
         fullAmpNames = parMgr.allProdPars
         amplitudeMap = {}
@@ -366,8 +375,6 @@ class mcmcManager:
                 amplitudeMap[ampName] = [fullAmpName]
             else:
                 amplitudeMap[ampName].append(fullAmpName)
-        for k, v in amplitudeMap.items():
-            print(f'  {k} -> {v}')
 
         amplitudeMap['total'] = fullAmpNames
 
@@ -393,6 +400,9 @@ class mcmcManager:
             fig (matplotlib.figure.Figure): Figure object if save=False
         '''
 
+        format = format.lower()
+        assert( format in ['cartesian', 'intensity', 'fitfrac'] ), f'Invalid format {format}. Must be one of [cartesian, intensity, fitfrac]'
+
         if corner_ofile == '':
             print("No corner plot output file specified. Not drawing corner plot")
             return
@@ -401,8 +411,9 @@ class mcmcManager:
             print("No samples to draw corner plot. Run perform_mcmc() first")
             return
 
-        format = format.lower()
-        assert( format in ['cartesian', 'intensity', 'fitfrac'] ), f'Invalid format {format}. Must be one of [cartesian, intensity, fitfrac]'
+        if self.intensities is None and format != 'cartesian':
+            print("No intensity samples to draw corner plot")
+            return
 
         def plot_axvh_fit_params(
                 axes,    # axes object
@@ -473,17 +484,17 @@ def _cli_mcmc():
 
     parser = argparse.ArgumentParser(description='emcee fitter')
     parser.add_argument('cfgfiles', type=str, help='Config file name or glob pattern')
-    parser.add_argument('--nwalkers', type=int, default=32, help='Number of walkers. Default 32')
-    parser.add_argument('--burnin', type=int, default=100, help='Number of burn-in steps. Default 100')
-    parser.add_argument('--nsamples', type=int, default=1000, help='Number of samples. Default 1000')
-    parser.add_argument('--overwrite', action='store_true', help='Overwrite existing output file if exists')
-    parser.add_argument('--accelerator', type=str, default='mpigpu', help='Use accelerator if available ~ [cpu, gpu, mpi, mpigpu, gpumpi]')
-    parser.add_argument('--ofile', type=str, default='mcmc/emcee_state.h5', help='Output file name. Default "mcmc/emcee_state.h5"')
-    parser.add_argument('--intensity_dump', type=str, default='mcmc/samples_intensity.feather', help='Output file name for intensity dump. Default "mcmc/samples_intensity.feather". "" = do not dump')
-    parser.add_argument('--corner_ofile', type=str, default='', help='Corner plot output file name. Default empty str = do not draw')
-    parser.add_argument('--corner_format', type=str, default='cartesian', help='Corner plot format. Default "cartesian" to plot Real/Imag parts. Options: [cartesian, intensity, fitfrac]')
-    parser.add_argument('--seed', type=int, default=42, help='RNG seed for consistent walker random initialization. Default 42')
-    parser.add_argument('--yaml_override', type=str, default='', help='Path to YAML file containing parameter overrides. Default "" = no override')
+    parser.add_argument('-n', '--nwalkers', type=int, default=32, help='Number of walkers. Default 32')
+    parser.add_argument('-b', '--burnin', type=int, default=100, help='Number of burn-in steps. Default 100')
+    parser.add_argument('-n', '--nsamples', type=int, default=1000, help='Number of samples. Default 1000')
+    parser.add_argument('-w', '--overwrite', action='store_true', help='Overwrite existing output file if exists')
+    parser.add_argument('-a', '--accelerator', type=str, default='mpigpu', help='Use accelerator if available ~ [cpu, gpu, mpi, mpigpu, gpumpi]')
+    parser.add_argument('-o', '--ofile', type=str, default='mcmc/emcee_state.h5', help='Output file name. Default "mcmc/emcee_state.h5"')
+    parser.add_argument('-i', '--intensity_dump', type=str, default='mcmc/samples_intensity.feather', help='Output file name for intensity dump. Default "mcmc/samples_intensity.feather". "" = do not dump')
+    parser.add_argument('-c', '--corner_ofile', type=str, default='', help='Corner plot output file name. Default empty str = do not draw')
+    parser.add_argument('-cf','--corner_format', type=str, default='cartesian', help='Corner plot format. Default "cartesian" to plot Real/Imag parts. Options: [cartesian, intensity, fitfrac]')
+    parser.add_argument('-s', '--seed', type=int, default=42, help='RNG seed for consistent walker random initialization. Default 42')
+    parser.add_argument('-y', '--yaml_override', type=str, default='', help='Path to YAML file containing parameter overrides. Default "" = no override')
 
     args = parser.parse_args(sys.argv[1:])
 
