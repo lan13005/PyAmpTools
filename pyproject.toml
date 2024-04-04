@@ -24,22 +24,6 @@ dependencies = [
     "psutil",     # check process information
     "pdf2image",  # convert pdf to image for plotGen tutorial documentation
     "scons",      # needed to 'make' AMPTOOLS_GENERATORS
-    ### CI
-    "pytest",
-    "pre-commit",
-    ### Fun stuff
-    "termcolor",
-    ### Docs
-    "jupyter-book",
-    "ghp-import",
-
-    # Requirements for NIFTy
-    # "nifty8",
-    # "ducc0",
-    # "h5py",
-    # "jax",
-    # matplotlib removed function needed by pygtc (corner plot alternative), install 3.7.0 if you want
-    # "pygtc",
 ]
 name = "pyamptools"
 requires-python = ">=3.9"
@@ -48,6 +32,18 @@ version = "0.1.0"
 [tool.isort]
 known_third_party = "THIRDPARTY,sympy"
 profile = "black"
+
+[project.optional-dependencies]
+dev = [
+  "pyamptools[doc]",
+  "pytest",
+  "pre-commit",
+  "ruff",
+]
+doc = [
+    "jupyter-book",
+    "ghp-import",
+]
 
 [tool.nbqa.addopts]
 black = ["--line-length=85"]
