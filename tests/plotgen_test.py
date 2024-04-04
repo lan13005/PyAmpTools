@@ -1,7 +1,6 @@
 import os
 import pytest
 
-@pytest.mark.plotgen
 def test_plotgen():
    REPO_HOME = os.environ["REPO_HOME"]
    fit_results = f'{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/result.fit'

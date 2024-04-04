@@ -45,7 +45,6 @@ def performCheck(input, truths):
     assert( flat_params == [1.2, 100.0, -200.0] ) # etapi::imZ::resAmp1 was set as real
 
 
-@pytest.mark.loadparameters
 def test_cfg_LoadParameters():
     print('\nTesting config input:\n===========================')
     file = f'{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/fit_fakeParams.cfg'
@@ -63,7 +62,6 @@ def test_cfg_LoadParameters():
     truths = [true_params, true_paramsIsReal, true_flat_params, true_names]
     performCheck(input_cfg, truths)
 
-@pytest.mark.loadparameters
 def test_result_LoadParameters():
     print('\nTesting fit result input:\n===========================')
     file = f'{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/result_fakeParams.fit'

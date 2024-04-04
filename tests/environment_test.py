@@ -1,7 +1,6 @@
 import pytest
 import os
 
-@pytest.mark.environment
 def test_environ_is_set():
 	assert ( os.environ['REPO_HOME'] != "" )
 	assert ( os.environ['AMPTOOLS_HOME'] != "" )

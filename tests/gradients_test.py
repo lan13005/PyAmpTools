@@ -8,7 +8,6 @@ import pytest
 # at the MLE value
 ##########################################################
 
-@pytest.mark.grad
 def test_gradients():
     REPO_HOME = os.environ['REPO_HOME']
     cfgfile = f'{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/fit.cfg'

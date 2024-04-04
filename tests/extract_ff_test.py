@@ -6,7 +6,6 @@ SRC = f'{REPO_HOME}/src/pyamptools'
 fit_results = f'{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/result.fit'
 output_file = f'{REPO_HOME}/tests/ff.txt'
 
-@pytest.mark.extract_ff
 def test_extract_ff():
    cmd = [f'pa fitfrac',
           fit_results,

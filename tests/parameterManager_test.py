@@ -4,8 +4,8 @@ from typing import List
 from pyamptools import atiSetup
 import pytest
 
-@pytest.mark.parmgr
 def test_parMgr():
+    
     ############## SET ENVIRONMENT VARIABLES ##############
     REPO_HOME     = os.environ['REPO_HOME']
     atiSetup.setup(globals())

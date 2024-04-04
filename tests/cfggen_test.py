@@ -1,7 +1,6 @@
 import os
 import pytest
 
-@pytest.mark.cfggenerator
 def test_cfgGenerator():
    REPO_HOME = os.environ["REPO_HOME"]
    SCRIPTS = f'{REPO_HOME}/scripts'
