@@ -50,3 +50,11 @@ black = ["--line-length=85"]
 
 [project.scripts]
 pa = "pa:main"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+ignore = [
+  "F821", # ignore undefined names, we use atiSetup to load into globals
+]
