@@ -52,9 +52,10 @@ black = ["--line-length=85"]
 pa = "pa:main"
 
 [tool.ruff]
-line-length = 120
+line-length = 300 # Allow long lines, user discretion
 
 [tool.ruff.lint]
 ignore = [
-  "F821", # ignore undefined names, we use atiSetup to load into globals
+  "F821", # Allow undefined names, we use atiSetup to load into globals
+  "E701", # Allow Multiple statements on one line
 ]
