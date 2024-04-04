@@ -607,8 +607,8 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">par_values</span><span class="p">,</span>
         <span class="n">keys</span><span class="p">,</span>
-        <span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Definition of the (Log) Posterior distribution</span>
 
 <span class="sd">        Args:</span>
@@ -618,17 +618,17 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 
 <span class="sd">        Returns:</span>
 <span class="sd">            log_prob (float): Log posterior probability</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1">## Calculate Log likelihood</span>
         <span class="n">log_prob</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">n_atis</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">atis</span> <span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ati</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_atis</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">atis</span> <span class="p">):</span>
-            <span class="n">_par_values</span> <span class="o">=</span> <span class="n">par_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]]</span>
-            <span class="n">_keys</span> <span class="o">=</span> <span class="n">keys</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">n_atis</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atis</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ati</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_atis</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">atis</span><span class="p">):</span>
+            <span class="n">_par_values</span> <span class="o">=</span> <span class="n">par_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]]</span>
+            <span class="n">_keys</span> <span class="o">=</span> <span class="n">keys</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">paramPartitions</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]]</span>
             <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">_keys</span><span class="p">,</span> <span class="n">_par_values</span><span class="p">):</span>
                 <span class="c1"># remove tag from name if multiple cfg files were passed</span>
-                <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[</span> <span class="p">:</span><span class="n">name</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="p">]</span> <span class="k">if</span> <span class="n">n_atis</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">name</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[:</span> <span class="n">name</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)]</span> <span class="k">if</span> <span class="n">n_atis</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">name</span>
                 <span class="n">ati</span><span class="o">.</span><span class="n">parameterManager</span><span class="p">()[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
         <span class="n">log_prob</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Likelihood</span><span class="p">(</span><span class="n">ati</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Prior</span><span class="p">(</span><span class="n">par_values</span><span class="p">,</span> <span class="n">keys</span><span class="p">)</span>
@@ -892,12 +892,19 @@ nwalkers: 32
 burnIn: 0
 nsamples: 200
 params_dict: {}
-moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7fa29e90d430&gt;]
+moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7f8910efdc10&gt;]
 sampler_kwargs: {&#39;progress&#39;: False}
  ========================================================================= 
 
  ================== RUNNING MCMC ================== 
 Initializing walkers in an N-ball around the initial estimate
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Calculating intensity with amplitudes dictionary:
+  resAmp1 -&gt; [&#39;etapi::imZ::resAmp1&#39;, &#39;etapi::reZ::resAmp1&#39;]
+  resAmp2 -&gt; [&#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp2&#39;]
+  resAmp3 -&gt; [&#39;etapi::reZ::resAmp3&#39;, &#39;etapi::imZ::resAmp3&#39;]
+  total -&gt; [&#39;etapi::imZ::resAmp1&#39;, &#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp3&#39;, &#39;etapi::reZ::resAmp2&#39;, &#39;etapi::reZ::resAmp1&#39;, &#39;etapi::imZ::resAmp3&#39;]
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The chain is shorter than 50 times the integrated autocorrelation time for 5 parameter(s). Use this estimate with caution and run a longer chain!
@@ -909,30 +916,23 @@ tau: [15.92587787 16.44973334 17.51905651 16.73390776 15.60765933]
 
 Mean acceptance fraction: 0.564
 Autocorrelation time: 16.447 steps
- =================== RESULTS =================== 
-MAP Estimates from 6400 samples obtained over 32 walkers:
-   Re[resAmp1]          = -140.188
-   Re[resAmp2]          = -80.310
-   Im[resAmp2]          = 134.706
-   Re[resAmp3]          = -193.365
-   Im[resAmp3]          = 106.786
- =============================================== 
 
-Getting amplitude map, grouping amps for intensity calcuation:
-  resAmp1 -&gt; [&#39;etapi::imZ::resAmp1&#39;, &#39;etapi::reZ::resAmp1&#39;]
-  resAmp2 -&gt; [&#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp2&#39;]
-  resAmp3 -&gt; [&#39;etapi::reZ::resAmp3&#39;, &#39;etapi::imZ::resAmp3&#39;]
+# ====================================== RESULTS ====================================== 
+#
+# Estimates from 6400 samples obtained over 32 walkers:
+#                             MAP        16%        50%        84%    
+#   Re[resAmp1]          = -140.188   -141.497   -139.880   -138.319   -139.875   1.634     
+#   Re[resAmp2]          = -80.310    -84.430    -80.680    -76.728    -80.634    4.134     
+#   Im[resAmp2]          = 134.706    131.846    134.832    137.696    134.760    3.133     
+#   Re[resAmp3]          = -193.365   -195.907   -193.304   -190.706   -193.379   2.845     
+#   Im[resAmp3]          = 106.786    103.457    106.491    109.742    106.480    3.366     
+# ======================================================================================
 
-Calculating intensity with amplitudes dictionary:
-  resAmp1 -&gt; [&#39;etapi::imZ::resAmp1&#39;, &#39;etapi::reZ::resAmp1&#39;]
-  resAmp2 -&gt; [&#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp2&#39;]
-  resAmp3 -&gt; [&#39;etapi::reZ::resAmp3&#39;, &#39;etapi::imZ::resAmp3&#39;]
-  total -&gt; [&#39;etapi::imZ::resAmp1&#39;, &#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp3&#39;, &#39;etapi::reZ::resAmp2&#39;, &#39;etapi::reZ::resAmp1&#39;, &#39;etapi::imZ::resAmp3&#39;]
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MCMC intensity samples saved to mcmc/samples_intensity.feather
 
-Fit time: 9.182076930999756 seconds
+MCMC intensity samples saved to mcmc/samples_intensity.feather
+  shape: (6400, 4)
+
+Fit time: 12.688017129898071 seconds
 Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
 	Perfect acceptance -- generated and accepted MC are the same
 </pre></div>

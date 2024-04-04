@@ -399,8 +399,7 @@ document.write(`
 <p>The standard way to load libraries is through the <code class="docutils literal notranslate"><span class="pre">atiSetup</span></code> module. Some environment variables can be set (like MPI/GPU) to specify which libraries should be loaded. Some aliasing and pythonization of the c++ wrapped class is performed to simplify syntax as they all live within the <code class="docutils literal notranslate"><span class="pre">PyROOT</span></code> namespace.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">pyamptools</span> <span class="kn">import</span> <span class="n">atiSetup</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyamptools</span> <span class="kn">import</span> <span class="n">atiSetup</span>
 <span class="kn">import</span> <span class="nn">ROOT</span>
 </pre></div>
 </div>
@@ -411,11 +410,13 @@ document.write(`
 </div>
 </div>
 </div>
-<p>The main module to load the necessary libraries is <code class="docutils literal notranslate"><span class="pre">atiSetup</span></code>, in particular its <code class="docutils literal notranslate"><span class="pre">setup</span></code> function. We can load mpi /gpu libraries by passing an accelerator string. We can also decide to load FSRoot or gen_amp (simulation program) now. See <a class="reference external" href="https://lan13005.github.io/PyAmpTools/api/atiSetup.html">atiSetup</a> for API and source code.</p>
+<p>The main module to load the necessary libraries is <code class="docutils literal notranslate"><span class="pre">atiSetup</span></code>, in particular its <code class="docutils literal notranslate"><span class="pre">setup</span></code> function.</p>
+<p><strong>Dynamic loading</strong> - Depending on who calls the python function (i.e. <code class="docutils literal notranslate"><span class="pre">bash</span></code>, <code class="docutils literal notranslate"><span class="pre">mpiexec</span></code>, …) CPU or MPI libraries will be loaded. GPU libraries will be loaded if <code class="docutils literal notranslate"><span class="pre">nvidia-smi</span></code> can be found in <code class="docutils literal notranslate"><span class="pre">PATH</span></code>. We can also explictly load a particular cpu/mpi/gpu/mpi+gpu libraries by passing an accelerator string.</p>
+<p>We can also decide to load FSRoot or gen_amp (simulation program) now. See <a class="reference external" href="https://lan13005.github.io/PyAmpTools/api/atiSetup.html">atiSetup</a> for API and source code.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
-<span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span> <span class="c1"># RANK_MPI defaults to 0 even if not using MPI</span>
+<span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span>  <span class="c1"># RANK_MPI defaults to 0 even if not using MPI</span>
 </pre></div>
 </div>
 </div>
@@ -449,7 +450,7 @@ Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
-<span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># RANK_MPI defaults to 0 even if not using MPI</span>
+<span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># RANK_MPI defaults to 0 even if not using MPI</span>
 </pre></div>
 </div>
 </div>
@@ -485,7 +486,7 @@ Initializing FSRoot for PyROOT...
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">################ SET ADDITIONAL ALIAS ###################</span>
 <span class="n">AmplitudeInfo</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">AmplitudeInfo</span>
-<span class="n">TH1</span>           <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TH1</span>
+<span class="n">TH1</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TH1</span>
 </pre></div>
 </div>
 </div>

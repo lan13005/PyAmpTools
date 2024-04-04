@@ -516,7 +516,7 @@ Example key, value pair: Sp0+ -&gt; [reaction_pol000::PositiveRe::Sp0+, reaction
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>List of intensity arrays for each ATI instance</p>
+<dd class="field-even"><p>List of intensity arrays for each ATI instance. Shape ~ [ati, samples, amplitudes]</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>intensities (List[array])</p>
@@ -528,7 +528,7 @@ Example key, value pair: Sp0+ -&gt; [reaction_pol000::PositiveRe::Sp0+, reaction
 <dt class="sig sig-object py" id="pyamptools.mcmc.mcmcManager.getIntensity_singleATI">
 <span class="sig-name descname"><span class="pre">getIntensity_singleATI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ati_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitudeMap</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accCorrected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyamptools/mcmc.html#mcmcManager.getIntensity_singleATI"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyamptools.mcmc.mcmcManager.getIntensity_singleATI" title="Link to this definition">#</a></dt>
 <dd><p>Calculate intensity given an amplitude list and AmpToolsInterface instance.
-Follows implementation in AmpTools’ FitResults.ccintensity = sum_a sum_a’ s_a s_a’ V_a V*_a’ NI( a, a’ )</p>
+Follows implementation in AmpTools’ FitResults.intensity = sum_a sum_a’ s_a s_a’ V_a V*_a’ NI( a, a’ )</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -538,7 +538,7 @@ Follows implementation in AmpTools’ FitResults.ccintensity = sum_a sum_a’ s_
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>intensity of coherent sum of amplitudes across amptools interface instances and samples</p>
+<dd class="field-even"><p>intensity of coherent sum of amplitudes (defined by amplitudeMap) across mcmc samples. Shape ~ [samples, amplitudes]</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>intensity (np.array)</p>
