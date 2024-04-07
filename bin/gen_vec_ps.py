@@ -1,4 +1,4 @@
-from pyamptools.utility.generator import setup_generator
+from pyamptools.utility.simulation import setup_generator
 
 if __name__ == "__main__":
     # Parses commandline arguments to condition the generator

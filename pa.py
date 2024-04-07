@@ -57,7 +57,7 @@ def main():
             command_help = "\nCommands:\n"
             for command, (path, description) in func_map.items():
                 command_help += f"  * {command:15} {description}\n"
-            command_help += "  ==== YAML based commands below (takes a single YAML file argument to configure setup) ====\n"
+            command_help += "\n  ==== YAML based commands below (takes a single YAML file argument to configure setup) ====\n"
             for command, (path, description) in analysis_map.items():
                 command_help += f"  * {command:15} {description}\n"
             return help_message + "\n" + command_help
