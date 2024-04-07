@@ -302,21 +302,25 @@ def raiseError(errorType, msg):
 
 def get_captured_number(filename, captured_loc, prefix, suffix):
     """
-    Extracts the numeric part from a filename based on a specific pattern.
+    Extracts the numeric part from a filename at a given location.
 
     Args:
         filename (str): The file name from which to extract the number.
+        captured_loc (str): location of capture in filename split by "/"
+        prefix/suffix (str): strings immediately before/after the capture
 
     Returns:
-        int: The extracted number.
+        float: The extracted number, or last number of several
     """
-    # Assuming the number is located between the last underscore and the file extension
 
     _filename = filename.split("/")[captured_loc]
+    _filename = _filename.replace(prefix, "").replace(suffix, "")
 
-    match = re.search(rf"{prefix}(\d+){suffix}", _filename)
-    if match:
-        return int(match.group(1))
+    # creates a list of all individual floats found at the capture point
+    match = re.findall(r"[0-9]*[.]?[0-9]+", _filename)
+
+    if len(match) != 0:
+        return float(match[-1])
     else:
         # Return a default value if no number is found, to avoid sorting errors
         return float("inf")
@@ -336,7 +340,7 @@ def glob_sort_captured(files):
     """
 
     # return input if no sorting is necessary
-    if "[]" not in files or "*" not in files:
+    if "[]" not in files and "*" not in files:
         return [files]
 
     files = files.rstrip("/")  # Remove right trailing slashes
