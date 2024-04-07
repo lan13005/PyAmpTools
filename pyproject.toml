@@ -53,6 +53,8 @@ ift = [
   "scikit-learn",
   "scipy",
   "numdifftools",
+  "jax",
+  "jaxlib",
 ]
 
 [tool.nbqa.addopts]
