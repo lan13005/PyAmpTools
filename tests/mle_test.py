@@ -15,9 +15,7 @@ def fit(accelerator, cfgfile):
     output = output.decode("utf-8")
     print(output)
 
-    assert os.path.exists("result_0.fit") and os.path.exists(
-        "seed_0.txt"
-    ), "MLE fit failed to produce result_0.fit and/or seed_0.txt file"
+    assert os.path.exists("result_0.fit") and os.path.exists("seed_0.txt"), "MLE fit failed to produce result_0.fit and/or seed_0.txt file"
 
     os.system(r"rm -f *.fit normint* *seed*")  # clean up
     # use regex search output for a line that starts with Final Likelihood and extract the number at the end

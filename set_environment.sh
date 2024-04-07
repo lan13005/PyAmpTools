@@ -48,3 +48,7 @@ python $REPO_HOME/utility/link_modules.py # symlink C header files so it can be 
 
 # Register pa (pyamptools dispatch system) for tab auto-completion of avaiable commands
 eval "$(register-python-argcomplete pa)"
+
+# setup auto-load for next time
+mkdir -p $CONDA_PREFIX/etc/conda/activate.d/
+ln -snfr set_environment.sh $CONDA_PREFIX/etc/conda/activate.d/

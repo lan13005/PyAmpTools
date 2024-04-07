@@ -168,7 +168,7 @@ protected:
 
   map< string, MinuitParameter* > parMap; // remember maps are sorted! use parNameList to access names of parValueList
   vector< MinuitParameter* > parValueList;
-  vector< string > parNameList; 
+  vector< string > parNameList;
   static bool m_doCovarianceUpdate; // Set false if not using internal Minuit. No fit = no covariance
 
   static const char* kModule;

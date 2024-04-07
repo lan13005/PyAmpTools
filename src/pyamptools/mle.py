@@ -7,14 +7,15 @@ from datetime import datetime
 import random
 import sys
 
+
 def _performFit(
-        ati,
-        seed_file_tag,
-        seedfile: str = "seed",
-        useMinos: bool = False,
-        hesse: bool = False,
-    ):
-    '''
+    ati,
+    seed_file_tag,
+    seedfile: str = "seed",
+    useMinos: bool = False,
+    hesse: bool = False,
+):
+    """
     Performs a single fit
 
     Args:
@@ -24,7 +25,7 @@ def _performFit(
     Returns:
         bFitFailed (bool): flag indicating if fit failed
         NLL (double): Negative log likelihood
-    '''
+    """
     fitManager: MinuitMinimizationManager = ati.minuitMinimizationManager()
 
     if useMinos:
@@ -45,20 +46,21 @@ def _performFit(
     ati.finalizeFit(seed_file_tag)
 
     if seedfile is not None:
-        ati.fitResults().writeSeed(f'{seedfile}_{seed_file_tag}.txt')
+        ati.fitResults().writeSeed(f"{seedfile}_{seed_file_tag}.txt")
 
     return bFitFailed, NLL
 
+
 ############### PERFORM FIT #############
 def runFits(
-        ati,
-        N: int = 0,
-        maxIter = 100000,
-        seedfile: str = "seed",
-        useMinos: bool = False,
-        hesse: bool = False,
-    ):
-    '''
+    ati,
+    N: int = 0,
+    maxIter=100000,
+    seedfile: str = "seed",
+    useMinos: bool = False,
+    hesse: bool = False,
+):
+    """
     Performs N randomized fits by calling _performFit(), if N=0 then a single fit with no randomization is performed
 
     Args:
@@ -72,32 +74,32 @@ def runFits(
 
     Returns:
         minNLL (double): Minimum negative log likelihood
-    '''
+    """
 
     minNLL = 1e6
     fitargs = (seedfile, useMinos, hesse)
 
-    print(f'LIKELIHOOD BEFORE MINIMIZATION: {ati.likelihood()}')
+    print(f"LIKELIHOOD BEFORE MINIMIZATION: {ati.likelihood()}")
     fitManager: MinuitMinimizationManager = ati.minuitMinimizationManager()
     fitManager.setMaxIterations(maxIter)
 
     cfgInfo = ati.configurationInfo()
 
-    if N == 0: # No randomization
-        bFitFailed, minNLL = _performFit( ati, '0', *fitargs )
-        print(f'LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): {minNLL}')
+    if N == 0:  # No randomization
+        bFitFailed, minNLL = _performFit(ati, "0", *fitargs)
+        print(f"LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): {minNLL}")
 
-    else: # Randomized parameters
-        fitName     = cfgInfo.fitName()
+    else:  # Randomized parameters
+        fitName = cfgInfo.fitName()
         maxFraction = 0.5
-        minNLL       = sys.float_info.max
-        minFitTag   = -1
+        minNLL = sys.float_info.max
+        minFitTag = -1
 
         parRangeKeywords = cfgInfo.userKeywordArguments("parRange")
 
         for i in range(N):
             print("\n###############################################")
-            print(f'#############   FIT {i} OF {N} ###############')
+            print(f"#############   FIT {i} OF {N} ###############")
             print("###############################################\n")
 
             ati.reinitializePars()
@@ -105,53 +107,54 @@ def runFits(
             for ipar in range(len(parRangeKeywords)):
                 ati.randomizeParameter(parRangeKeywords[ipar][0], float(parRangeKeywords[ipar][1]), float(parRangeKeywords[ipar][2]))
 
-            bFitFailed, NLL = _performFit( ati, f'{i}', *fitargs )
+            bFitFailed, NLL = _performFit(ati, f"{i}", *fitargs)
             if not bFitFailed and NLL < minNLL:
                 minNLL = NLL
                 minFitTag = i
 
-            print(f'LIKELIHOOD AFTER MINIMIZATION: {NLL}\n')
+            print(f"LIKELIHOOD AFTER MINIMIZATION: {NLL}\n")
 
         if minFitTag < 0:
             print("ALL FITS FAILED!")
         else:
-            print(f'MINIMUM LIKELHOOD FROM ITERATION {minFitTag} of {N} RANDOM PRODUCTION PARS = {minNLL}')
-            print(f'cp {fitName}_{minFitTag}.fit {fitName}.fit')
-            os.system(f'cp {fitName}_{minFitTag}.fit {fitName}.fit')
+            print(f"MINIMUM LIKELHOOD FROM ITERATION {minFitTag} of {N} RANDOM PRODUCTION PARS = {minNLL}")
+            print(f"cp {fitName}_{minFitTag}.fit {fitName}.fit")
+            os.system(f"cp {fitName}_{minFitTag}.fit {fitName}.fit")
             if seedfile is not None:
-                print(f'cp {seedfile}_{minFitTag}.txt {seedfile}.txt')
-                os.system(f'cp {seedfile}_{minFitTag}.txt {seedfile}.txt')
+                print(f"cp {seedfile}_{minFitTag}.txt {seedfile}.txt")
+                os.system(f"cp {seedfile}_{minFitTag}.txt {seedfile}.txt")
 
     return minNLL
 
-def _cli_runFits():
 
-    ''' Command line interface for performing maximum likelihood fits '''
+def _cli_runFits():
+    """Command line interface for performing maximum likelihood fits"""
 
     start_time = time.time()
 
     ############## PARSE COMMANDLINE ARGUMENTS #############
     parser = argparse.ArgumentParser(description="Perform MLE fits")
     rndSeed = random.seed(datetime.now().timestamp())
-    parser.add_argument('cfgfile',       type=str,                   help='AmpTools Configuration file')
-    parser.add_argument('--seedfile',    type=str, default="seed",   help='Output file for seeding next fit based on this fit. Do not include extension')
-    parser.add_argument('--numRnd',      type=int, default=0,        help='Perform N fits each seeded with random parameters')
-    parser.add_argument('--randomSeed',  type=int, default=rndSeed,  help='Sets the random seed used by the random number generator for the fits with randomized initial parameters. If not set, will use the current time.')
-    parser.add_argument('--maxIter',     type=int, default=100000,   help='Maximum number of fit iterations')
-    parser.add_argument('--useMinos',    action='store_true',        help='Use MINOS instead of MIGRAD')
-    parser.add_argument('--hesse',       action='store_true',        help='Evaluate HESSE matrix after minimization')
-    parser.add_argument('--scanPar',     type=str, default=None,     help='Perform a scan of the given parameter. Stepsize, min, max are to be set in the config file')
-    parser.add_argument('--accelerator', type=str, default='mpigpu', help='Use accelerator if available ~ [cpu, gpu, mpi, mpigpu, gpumpi]')
+    parser.add_argument("cfgfile", type=str, help="AmpTools Configuration file")
+    parser.add_argument("--seedfile", type=str, default="seed", help="Output file for seeding next fit based on this fit. Do not include extension")
+    parser.add_argument("--numRnd", type=int, default=0, help="Perform N fits each seeded with random parameters")
+    parser.add_argument("--randomSeed", type=int, default=rndSeed, help="Sets the random seed used by the random number generator for the fits with randomized initial parameters. If not set, will use the current time.")
+    parser.add_argument("--maxIter", type=int, default=100000, help="Maximum number of fit iterations")
+    parser.add_argument("--useMinos", action="store_true", help="Use MINOS instead of MIGRAD")
+    parser.add_argument("--hesse", action="store_true", help="Evaluate HESSE matrix after minimization")
+    parser.add_argument("--scanPar", type=str, default=None, help="Perform a scan of the given parameter. Stepsize, min, max are to be set in the config file")
+    parser.add_argument("--accelerator", type=str, default="mpigpu", help="Use accelerator if available ~ [cpu, gpu, mpi, mpigpu, gpumpi]")
 
     args = parser.parse_args(sys.argv[1:])
     if args.randomSeed is None:
         args.randomSeed = int(time.time())
 
     cfgfile = args.cfgfile
-    assert( os.path.isfile(cfgfile) ), f'Config file does not exist at specified path'
+    assert os.path.isfile(cfgfile), "Config file does not exist at specified path"
 
     ################### LOAD LIBRARIES ##################
     from pyamptools import atiSetup
+
     USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals(), args.accelerator)
 
     ############## LOAD CONFIGURATION FILE ##############
@@ -159,19 +162,19 @@ def _cli_runFits():
     cfgInfo: ConfigurationInfo = parser.getConfigurationInfo()
 
     # ############## REGISTER OBJECTS FOR AMPTOOLS ##############
-    AmpToolsInterface.registerAmplitude( Zlm() )
-    AmpToolsInterface.registerAmplitude( Vec_ps_refl() )
-    AmpToolsInterface.registerAmplitude( OmegaDalitz() )
-    AmpToolsInterface.registerAmplitude( BreitWigner() )
-    AmpToolsInterface.registerAmplitude( Piecewise() )
-    AmpToolsInterface.registerAmplitude( PhaseOffset() )
-    AmpToolsInterface.registerAmplitude( TwoPiAngles() )
-    AmpToolsInterface.registerDataReader( DataReader() )
-    AmpToolsInterface.registerDataReader( DataReaderTEM() )
-    AmpToolsInterface.registerDataReader( DataReaderFilter() )
-    AmpToolsInterface.registerDataReader( DataReaderBootstrap() )
+    AmpToolsInterface.registerAmplitude(Zlm())
+    AmpToolsInterface.registerAmplitude(Vec_ps_refl())
+    AmpToolsInterface.registerAmplitude(OmegaDalitz())
+    AmpToolsInterface.registerAmplitude(BreitWigner())
+    AmpToolsInterface.registerAmplitude(Piecewise())
+    AmpToolsInterface.registerAmplitude(PhaseOffset())
+    AmpToolsInterface.registerAmplitude(TwoPiAngles())
+    AmpToolsInterface.registerDataReader(DataReader())
+    AmpToolsInterface.registerDataReader(DataReaderTEM())
+    AmpToolsInterface.registerDataReader(DataReaderFilter())
+    AmpToolsInterface.registerDataReader(DataReaderBootstrap())
 
-    ati = AmpToolsInterface( cfgInfo )
+    ati = AmpToolsInterface(cfgInfo)
 
     AmpToolsInterface.setRandomSeed(args.randomSeed)
 
@@ -191,20 +194,16 @@ def _cli_runFits():
 
         fit_start_time = time.time()
 
-        nll = runFits( ati,
-                        N = args.numRnd, \
-                        seedfile = args.seedfile, \
-                        useMinos = args.useMinos, \
-                        hesse = args.hesse, \
-                        maxIter = args.maxIter )
+        nll = runFits(ati, N=args.numRnd, seedfile=args.seedfile, useMinos=args.useMinos, hesse=args.hesse, maxIter=args.maxIter)
 
         print("\nDone! MPI.Finalize() / MPI.Init() automatically called at script end / start\n") if USE_MPI else print("\nDone!")
         print(f"Fit time: {time.time() - fit_start_time} seconds")
         print(f"Total time: {time.time() - start_time} seconds")
-        print(f"Final Likelihood: {nll}") # Need this for for unit-tests
+        print(f"Final Likelihood: {nll}")  # Need this for for unit-tests
 
     if USE_MPI:
-       ati.exitMPI()
+        ati.exitMPI()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     _cli_runFits()

@@ -8,10 +8,11 @@ import ROOT
 #          FSBasic/FSTree.C
 #############################################
 
+
 def loadMacros():
-    '''
+    """
     Load Macros that mirror FSRoot's FSMath
-    '''
+    """
 
     ROOT.gInterpreter.Declare("""
     #include "FSBasic/FSMath.h"

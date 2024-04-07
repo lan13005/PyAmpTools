@@ -1,7 +1,7 @@
 import os
 from pyamptools import atiSetup
-from pyamptools.utility.LoadParameters import LoadParameters
-from pyamptools.utility.utils import testKnownFailure
+from pyamptools.utility.load_parameters import LoadParameters
+from pyamptools.utility.general import testKnownFailure
 
 ############## SET ENVIRONMENT VARIABLES ##############
 REPO_HOME = os.environ["REPO_HOME"]

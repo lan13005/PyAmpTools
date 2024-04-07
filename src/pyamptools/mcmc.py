@@ -8,8 +8,8 @@ import argparse
 import time
 import sys
 import yaml
-from pyamptools.utility.LoadParameters import LoadParameters, createMovesMixtureFromDict
-from pyamptools.utility.utils import glob_sort_captured, safe_getsize
+from pyamptools.utility.load_parameters import LoadParameters, createMovesMixtureFromDict
+from pyamptools.utility.general import glob_sort_captured, safe_getsize
 
 
 class mcmcManager:
