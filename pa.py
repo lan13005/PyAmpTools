@@ -33,8 +33,8 @@ def main():
 
     analysis_map = {
         # 'command' : (path, description)
-        "run_cfgGen": (f"{REPO_HOME}/bin/run_cfgGen.py", "Generate configuration files"),
-        "run_divideData": (f"{REPO_HOME}/bin/run_divideData.py", "Binned analysis: Divide data into mass bins"),
+        "run_cfgGen": (f"{REPO_HOME}/bin/run_cfgGen.py", "Generate AmpTools fit configuration files"),
+        "run_divideData": (f"{REPO_HOME}/bin/run_divideData.py", "Binned analysis: Divide data into mass bins (separate folders)"),
         "run_mle": (f"{REPO_HOME}/bin/run_mle.py", "Binned analysis: Run MLE fits over bins"),
         "run_ift": (f"{REPO_HOME}/bin/run_ift.py", "(IN DEVELOPMENT) Binned analysis: Run IFT fit over bins"),
         "run_iftsyst": (f"{REPO_HOME}/bin/run_systematics.py", "(IN DEVELOPMENT) Binned analysis: Run IFT systematic variations"),
