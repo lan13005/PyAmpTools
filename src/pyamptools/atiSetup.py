@@ -12,7 +12,7 @@ kModule = "atiSetup"
 ########################################################
 
 
-def setup(calling_globals, accelerator="mpigpu", use_fsroot=False, use_genamp=False):
+def setup(calling_globals, accelerator="mpigpu", use_fsroot=False, use_genamp=False, verbose=True):
     """
     Performs basic setup, loading libraries and setting aliases
 
@@ -22,7 +22,7 @@ def setup(calling_globals, accelerator="mpigpu", use_fsroot=False, use_genamp=Fa
         use_fsroot (bool): True if FSRoot library should be loaded
         use_genamp (bool): True if GenAmp library should be loaded
     """
-    USE_MPI, USE_GPU, RANK_MPI = loadLibraries(accelerator, use_fsroot, use_genamp)
+    USE_MPI, USE_GPU, RANK_MPI = loadLibraries(accelerator, use_fsroot, use_genamp, verbose=verbose)
     set_aliases(calling_globals, USE_MPI, USE_GPU)
 
     # VSCode will load an environment but not run the scripts in activate.d
@@ -33,44 +33,44 @@ def setup(calling_globals, accelerator="mpigpu", use_fsroot=False, use_genamp=Fa
     return USE_MPI, USE_GPU, RANK_MPI
 
 
-def loadLibraries(accelerator, use_fsroot=False, use_genamp=False):
+def loadLibraries(accelerator, use_fsroot=False, use_genamp=False, verbose=True):
     """Load all libraries"""
-    USE_MPI, USE_GPU, RANK_MPI = prepare_mpigpu(accelerator)
+    USE_MPI, USE_GPU, RANK_MPI = prepare_mpigpu(accelerator, verbose=verbose)
     SUFFIX = "_GPU" if USE_GPU else ""
     SUFFIX += "_MPI" if USE_MPI else ""
 
-    if RANK_MPI == 0:
+    if RANK_MPI == 0 and verbose:
         print("\n------------------------------------------------")
         print(f'{kModule}| MPI is {"enabled" if USE_MPI else "disabled"}')
         print(f'{kModule}| GPU is {"enabled" if USE_GPU else "disabled"}')
         print("------------------------------------------------\n\n")
     #################### LOAD LIBRARIES (ORDER MATTERS!) ###################
 
-    loadLibrary(f"libAmpTools{SUFFIX}.so", RANK_MPI)
-    loadLibrary("libAmpPlotter.so", RANK_MPI)
-    loadLibrary(f"libAmpsDataIO{SUFFIX}.so", RANK_MPI)  # Depends on AmpPlotter!
-    loadLibrary("libFSRoot.so", RANK_MPI, use_fsroot)
-    loadLibrary("libAmpsGen.so", RANK_MPI, use_genamp)
+    loadLibrary(f"libAmpTools{SUFFIX}.so", RANK_MPI, verbose=verbose)
+    loadLibrary("libAmpPlotter.so", RANK_MPI, verbose=verbose)
+    loadLibrary(f"libAmpsDataIO{SUFFIX}.so", RANK_MPI, verbose=verbose)  # Depends on AmpPlotter!
+    loadLibrary("libFSRoot.so", RANK_MPI, use_fsroot, verbose=verbose)
+    loadLibrary("libAmpsGen.so", RANK_MPI, use_genamp, verbose=verbose)
 
     # Dummy functions that just prints "initialization"
     #  This is to make sure the libraries are loaded
     #  as python is interpreted.
-    if RANK_MPI == 0:
+    if RANK_MPI == 0 and verbose:
         print("\n\n------------------------------------------------")
     ROOT.initialize(RANK_MPI == 0)
     if use_fsroot:
         ROOT.initialize_fsroot(RANK_MPI == 0)
-    if RANK_MPI == 0:
+    if RANK_MPI == 0 and verbose:
         print("------------------------------------------------\n")
 
     return USE_MPI, USE_GPU, RANK_MPI
 
 
-def loadLibrary(libName, RANK_MPI=0, IS_REQUESTED=True):
+def loadLibrary(libName, RANK_MPI=0, IS_REQUESTED=True, verbose=True):
     """Load a shared library and print IS_REQUESTED"""
     statement = f"Loading library {libName} "
     libExists = check_shared_lib_exists(libName)
-    if RANK_MPI == 0:
+    if RANK_MPI == 0 and verbose:
         print(f"{kModule}| {statement:.<45}", end="")
     if IS_REQUESTED:
         if libExists:
@@ -80,7 +80,7 @@ def loadLibrary(libName, RANK_MPI=0, IS_REQUESTED=True):
             status = "NOT FOUND, SKIPPING"
     else:
         status = "OFF"
-    if RANK_MPI == 0:
+    if RANK_MPI == 0 and verbose:
         print(f"  {status}")
 
 
@@ -129,7 +129,7 @@ def set_aliases(called_globals, USE_MPI, USE_GPU):
     called_globals.update(aliases)
 
 
-def prepare_mpigpu(accelerator):
+def prepare_mpigpu(accelerator, verbose=True):
     """
     Sets environment variables to use MPI and/or GPU if requested.
         Checks who called the python script. If bash (single process). If mpiexec/mpirun (then MPI)
@@ -144,7 +144,8 @@ def prepare_mpigpu(accelerator):
     """
     assert accelerator in ["cpu", "mpi", "gpu", "mpigpu", "gpumpi"], f"Invalid accelerator flag: {accelerator}"
     called, parent = get_pid_family()
-    print(f"{kModule}| {parent} called {called}")
+    if verbose:
+        print(f"{kModule}| {parent} called {called}")
 
     USE_MPI = False
     USE_GPU = False
@@ -166,7 +167,8 @@ def prepare_mpigpu(accelerator):
         MPI.Init()
         RANK_MPI = MPI.COMM_WORLD.Get_rank()
         SIZE_MPI = MPI.COMM_WORLD.Get_size()
-        print(f"{kModule}| Found Task with Rank: {RANK_MPI} of {SIZE_MPI}")
+        if verbose:
+            print(f"{kModule}| Found Task with Rank: {RANK_MPI} of {SIZE_MPI}")
         assert USE_MPI and (SIZE_MPI > 1)
     else:
         RANK_MPI = 0

@@ -51,4 +51,4 @@ eval "$(register-python-argcomplete pa)"
 
 # setup auto-load for next time
 mkdir -p $CONDA_PREFIX/etc/conda/activate.d/
-ln -snfr set_environment.sh $CONDA_PREFIX/etc/conda/activate.d/
+ln -sf "$(readlink -f set_environment.sh)" $CONDA_PREFIX/etc/conda/activate.d/
