@@ -57,11 +57,11 @@ ift = [
   "jaxlib",
 ]
 
+[project.scripts]
+pa = "pyamptools.pa:main"
+
 [tool.nbqa.addopts]
 black = ["--line-length=85"]
-
-[project.scripts]
-pa = "pa:main"
 
 [tool.ruff]
 line-length = 300 # Allow long lines, user discretion

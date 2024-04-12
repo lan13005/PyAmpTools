@@ -17,6 +17,18 @@ import sys
 def main():
     """Dispatch function that calls the appropriate script and passes remaining arguments to it"""
 
+    # check if full path
+    if "REPO_HOME" not in os.environ:
+        print("REPO_HOME environment variable not set. Please try to set it again using set_environment.sh")
+        sys.exit(1)
+    else:
+        if not os.path.isabs(os.environ["REPO_HOME"]):
+            print(f"REPO_HOME environment variable is not an absolute path. REPO_HOME={os.environ['REPO_HOME']}")
+            sys.exit(1)
+        if not os.path.exists(os.environ["REPO_HOME"]):
+            print(f"REPO_HOME environment variable does not exist. REPO_HOME={os.environ['REPO_HOME']}")
+            sys.exit(1)
+
     REPO_HOME = os.environ["REPO_HOME"]
 
     print(f"REPO_HOME: {REPO_HOME}")
