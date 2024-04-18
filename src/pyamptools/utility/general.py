@@ -9,7 +9,10 @@ import psutil
 from IPython.display import Code
 import math
 import time
+
 from omegaconf import OmegaConf
+from omegaconf._utils import _ensure_container, OmegaConfDumper
+import yaml
 
 # ===================================================================================================
 # ===================================================================================================
@@ -74,46 +77,79 @@ for e, refl in zip([-1, 1], refls):
 # ===================================================================================================
 
 
-class ConfigLoader:
-    def __init__(self, cfg):
-        """
-        Search cfg for value and return it if found, else return default.
-            Modified call function to load nested values from cfg or return specific default.
+def load_yaml(path_to_yaml, resolve=True):
+    """
+    Load a yaml file into a dictionary. If default_yaml field exists, overwrite default yaml with current yaml
 
-        Example:
-            cfg = ConfigLoader(cfg)
-            cfg('model.var1', 0.1) # <- returns cfg['model']['var1'] if it exists, else 0.1
+    Args:
+        path_to_yaml (str): Path to the yaml file
+        resolve (bool): Whether to resolve (variable interpolation) the yaml file
+    """
+    try:
+        yaml = OmegaConf.load(path_to_yaml)
+        yaml = OmegaConf.to_container(yaml, resolve=resolve)
+        if "default_yaml" in yaml:
+            default = OmegaConf.load(yaml["default_yaml"])
+            yaml = OmegaConf.merge(default, yaml)  # Merge working yaml INTO the default yaml, ORDER MATTERS!
+        return yaml
+    except Exception as e:
+        print(f"Error loading yaml file: {e}")
+        return None
 
-        Args:
-            cfg (Dict): dictionary of configuration values
-        """
-        self.cfg = cfg
 
-    def __call__(self, value: str, default=None):
-        _cfg = self.cfg
-        parts = value.split(".")
-        for part in parts:
-            if part in _cfg:
-                _cfg = _cfg[part]
-            else:
-                # if key is not there return default if provided. Else raise error
-                if default is not None:
-                    print(f"ConfigLoader| {value} not found in cfg file. Using user-supplied default: {default}")
-                    return default
-                else:
-                    raise ValueError(f"ConfigLoader: {value} not found in config!")
+class YamlDumper(OmegaConfDumper):
+    """
+    yaml.dump accepts a custom dumper class. We keep lists (for leaf nodes) in flow style, i.e. : [1, 2, 3] instead of multi-line indented dashes
+    """
 
-        print(f"ConfigLoader| {value} found in cfg file: {_cfg}")
+    def represent_sequence(self, tag, sequence, flow_style=False):
+        # Check if the current node being represented is a list
+        if isinstance(sequence, list):
+            return super().represent_sequence(tag, sequence, flow_style=True)
+        else:
+            return super().represent_sequence(tag, sequence, flow_style=flow_style)
 
-        # YAML's None is treated as a string. null is treated as None
-        #   We will enforce the string to return None also
-        if _cfg == "None":
-            return None
 
-        return _cfg
+def get_yaml_dumper():
+    # Taken from omegaconf._utils.py
+    if not YamlDumper.str_representer_added:
+        YamlDumper.add_representer(str, YamlDumper.str_representer)
+        YamlDumper.str_representer_added = True
+    return YamlDumper
 
-    def __repr__(self):
-        return OmegaConf.to_yaml(self.cfg)
+
+def dump_yaml(cfg, output_file_path, indent=4, resolve=False):
+    """
+    Function enforcing flow style for lists
+
+    Parameters
+    ----------
+    cfg : OmegaConf / dict
+        Configuration object to be dumped. OmegaConf or dict that can be converted
+    output_file_path : str
+        Path to dump the configuration file to
+    indent : int, optional
+        Indentation (how many spaces per level), by default 4
+    resolve : bool, optional
+        Resolve variables (intepolation) in cfg before dumping, by default False
+    """
+    if not isinstance(cfg, OmegaConf):
+        try:
+            cfg = OmegaConf.create(cfg)
+        except Exception:
+            raise ValueError("cfg could not be converted to OmegaConf object")
+    _ensure_container(cfg)
+    container = OmegaConf.to_container(cfg, resolve=resolve, enum_to_str=True)
+    with open(output_file_path, "w") as f:
+        yaml.dump(  # type: ignore
+            container,
+            f,
+            indent=indent,
+            default_flow_style=False,
+            allow_unicode=True,
+            sort_keys=False,
+            Dumper=get_yaml_dumper(),
+        )
 
 
 class Timer:

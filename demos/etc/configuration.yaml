@@ -1,0 +1,33 @@
+base_directory: /w/halld-scshelf2101/lng/WORK/PyAmpTools/TESTING
+data_folder: /w/halld-scshelf2101/lng/WORK/GlueX_NIFTy/website/DATA_SOURCES/etapi0/
+polarizations:
+    '000': 0.3519
+    '045': 0.3374
+    '090': 0.3303
+    '135': 0.3375
+waveset: Sp0+_Sp0-_Dp0+_Dp1+_Dp2+_Dm1-_Dp0-_Dp1-
+phase_reference: Sp0+_Sp0-
+reaction: Beam Proton Pi0 Eta
+min_mass: 0.88
+max_mass: 2.0
+n_mass_bins: 5
+evenly_distribute: true
+datareader: ROOTDataReader
+coordinate_system: cartesian
+real_waves: ''
+fixed_waves: ''
+add_amp_factor: ''
+append_to_decay: ''
+append_to_cfg: ''
+amptools:
+    output_directory: ${base_directory}/AmpToolsFits
+    n_randomizations: 5
+    regex_merge: --regex_merge 'reaction_(000|045|090|135)::(Pos|Neg)(?:Im|Re)::'
+nifty:
+    yaml: ${base_directory}/nifty.yaml
+    synchronize: true
+processing:
+    slurm_mem_per_cpu: 2000
+    accelerator: gpu:A100:2
+    n_processes: 28
+mass_edges: [0.80004, 1.02762, 1.15722, 1.2916, 1.49467, 2.38006]

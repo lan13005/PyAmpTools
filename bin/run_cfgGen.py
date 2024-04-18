@@ -4,8 +4,7 @@ from pyamptools import atiSetup
 import array
 import ROOT
 import argparse
-from omegaconf import OmegaConf
-from pyamptools.utility.general import zlm_amp_name, vps_amp_name, converter, example_zlm_names, example_vps_names
+from pyamptools.utility.general import zlm_amp_name, vps_amp_name, converter, example_zlm_names, example_vps_names, load_yaml
 
 help_header = """#####################################
 ####	THIS IS A CONFIG FILE	 ####
@@ -227,7 +226,7 @@ def generate_amptools_cfg(
     return data
 
 
-def generate_amptools_cfg_from_dict(content):
+def generate_amptools_cfg_from_dict(yaml_file):
     #####################################################
     ################ GENERAL SPECIFICATION ##############
     #####################################################
@@ -236,10 +235,10 @@ def generate_amptools_cfg_from_dict(content):
     perform_config_checks = True
 
     fitName = "PLACEHOLDER_FITNAME"
-    cfgFileOutputName = f'{content["base_directory"]}/amptools.cfg'
+    cfgFileOutputName = f'{yaml_file["base_directory"]}/amptools.cfg'
     basereactName = "reaction"
-    data_folder = content["data_folder"]
-    particles = content["reaction"].split(" ")
+    data_folder = yaml_file["data_folder"]
+    particles = yaml_file["reaction"].split(" ")
     print("Particles in reaction: ", particles)
 
     cfgFileOutputFolder = os.path.dirname(cfgFileOutputName)
@@ -256,10 +255,10 @@ def generate_amptools_cfg_from_dict(content):
 
     # If user supplies waveset string we will parse and use that
     #   otherwise we will check if buttons have been clicked.
-    if content["waveset"] == "":
+    if yaml_file["waveset"] == "":
         check_string = "You did not select any partial waves... \n Please enter a waveset string and try again."
     else:
-        waveset = content["waveset"].split("_")
+        waveset = yaml_file["waveset"].split("_")
         print("Using waveset string: ", waveset)
         # Using waveset string:  Sp0+_Dp2+
         for wave in waveset:
@@ -271,17 +270,17 @@ def generate_amptools_cfg_from_dict(content):
                 check_string += f"\n\nExample partial vector pseudoscalar wave names: {example_vps_names[:10]}"
                 return check_string, generate_success
 
-    if content["real_waves"] == "":
-        realAmps = content["real_waves"].split("_")
+    if yaml_file["real_waves"] == "" or yaml_file["fixed_waves"] is None:
+        realAmps = yaml_file["real_waves"].split("_")
         print(f"Using real waves: {realAmps}")
 
-    if content["fixed_waves"] == "":
-        fixedAmps = content["fixed_waves"].split("_")
+    if yaml_file["fixed_waves"] == "" or yaml_file["fixed_waves"] is None:
+        fixedAmps = yaml_file["fixed_waves"].split("_")
         print(f"Using fixed waves: {fixedAmps}")
 
     if len(used_quantum_numbers) == 0:
         check_string = "You did not select any partial waves... \n Please go make some selections or enter a waveset string and try again."
-        check_string += f'\nYour waveset string: {content["waveset"]}'
+        check_string += f'\nYour waveset string: {yaml_file["waveset"]}'
         check_string += f"\n\nExample partial wave names: {example_zlm_names}"
         return check_string, generate_success
 
@@ -294,7 +293,7 @@ def generate_amptools_cfg_from_dict(content):
 
     used_pols = []
     used_polMags = []
-    pols = content["polarizations"]
+    pols = yaml_file["polarizations"]
     for angle, mag in pols.items():
         used_pols.append(angle)
         used_polMags.append(f"{mag}")
@@ -371,10 +370,10 @@ def generate_amptools_cfg_from_dict(content):
             basereactName,
             particles,
             header=help_header,
-            datareader=content["datareader"],
-            add_amp_factor=content["add_amp_factor"].strip(),
-            append_to_cfg=content["append_to_cfg"].strip(),
-            append_to_decay=content["append_to_decay"].strip(),
+            datareader=yaml_file["datareader"],
+            add_amp_factor=yaml_file["add_amp_factor"].strip(),
+            append_to_cfg=yaml_file["append_to_cfg"].strip(),
+            append_to_decay=yaml_file["append_to_decay"].strip(),
         )
 
         generate_success = True
@@ -403,11 +402,11 @@ if __name__ == "__main__":
     cwd = os.getcwd()
 
     print("\n---------------------")
-    print("Running divide_data.py")
+    print(f"Running {__file__}")
     print(f"  yaml location: {yaml_name}")
     print("---------------------\n")
 
-    yaml_file = OmegaConf.load(yaml_name)
+    yaml_file = load_yaml(yaml_name)
 
     result, generate_success = generate_amptools_cfg_from_dict(yaml_file)
 
