@@ -143,7 +143,17 @@ def prepare_mpigpu(accelerator, verbose=True):
         USE_GPU (bool): True if GPU is to be used
         RANK_MPI (int): MPI rank of the process (0 by default even if MPI is not used)
     """
-    assert accelerator in ["cpu", "mpi", "gpu", "mpigpu", "gpumpi"], f"Invalid accelerator flag: {accelerator}"
+
+    if accelerator not in ["cpu", "mpi", "gpu", "mpigpu", "gpumpi"]:
+        if ":" in accelerator:
+            if verbose:
+                print(f"{kModule}|  accelerator might be in SLURM form 'accelerator:device'. Attempting use of only the initial accelerator part")
+            accelerator = accelerator.split(":")[0]
+            if accelerator not in ["cpu", "mpi", "gpu", "mpigpu", "gpumpi"]:
+                raise ValueError(f"{kModule}| Unable to parse remaining accelerator flag: {accelerator}")
+        else:
+            raise ValueError(f"{kModule}| accelerator flag: {accelerator}, must be one of ['cpu', 'mpi', 'gpu', 'mpigpu', 'gpumpi']")
+
     called, parent = get_pid_family()
     if verbose:
         print(f"{kModule}| {parent} called {called}")
