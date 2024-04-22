@@ -3,6 +3,8 @@ import itertools
 import numpy as np
 import pandas as pd
 
+pd.options.mode.chained_assignment = None  # default='warn'
+
 
 def loadAmpToolsResults(cfgfiles, masses, niters, mle_query_1, mle_query_2):
     """
