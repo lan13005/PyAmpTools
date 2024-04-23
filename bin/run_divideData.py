@@ -1,11 +1,14 @@
-# Yes python, because why are people using perl...
-
 import os
 import argparse
 from pyamptools.utility.general import Timer, load_yaml, dump_yaml
 from omegaconf import OmegaConf
 from pyamptools.split_mass import split_mass
 
+############################################################################
+# This makes calls to pyamptools' split_mass function to divide the data
+# sources into separate mass bins and copies over the amptools configuration
+# file. A flag can be used to distribute the data evenly across the mass bins
+############################################################################
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Divide data into mass bins")
@@ -32,6 +35,7 @@ if __name__ == "__main__":
     output_directory = yaml_file["amptools"]["output_directory"]
     data_folder = yaml_file["data_folder"]
     pols = yaml_file["polarizations"]
+    prepare_for_nifty = bool(yaml_file["amptools"]["prepare_for_nifty"])
     amptools_cfg = f"{base_directory}/amptools.cfg"
     print("<<<<<<<<<<<<<< ConfigLoader <<<<<<<<<<<<<<\n\n")
 
@@ -84,8 +88,10 @@ if __name__ == "__main__":
                 search = f"PLACEHOLDER_{ftype.upper()}_{pol}"
                 replace = f"{output_directory}/bin_{i}/{ftype}{pol}.root"
                 os.system(replace_cmd.format(search, replace, i, i))
-        os.system(f"touch bin_{i}/seed.txt")
-        os.system(f"echo '\ninclude {output_directory}/bin_{i}/seed.txt' >> bin_{i}/bin_{i}.cfg")
+
+        if prepare_for_nifty:
+            os.system(f"touch bin_{i}/seed_nifty.txt")
+            os.system(f"echo '\ninclude {output_directory}/bin_{i}/seed_nifty.txt' >> bin_{i}/bin_{i}.cfg")
 
     ################################
     # Append timing info to metadata

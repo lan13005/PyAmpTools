@@ -6,6 +6,11 @@ import ROOT
 import argparse
 from pyamptools.utility.general import zlm_amp_name, vps_amp_name, converter, example_zlm_names, example_vps_names, load_yaml
 
+############################################################################
+# This script generates AmpTools configuration files with knobs/flags to
+# append additional information to the generated file
+############################################################################
+
 help_header = """#####################################
 ####	THIS IS A CONFIG FILE	 ####
 #####################################

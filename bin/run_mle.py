@@ -8,6 +8,11 @@ import argparse
 pyamptools_fit_cmd = "pa fit"
 pyamptools_ff_cmd = "pa fitfrac"
 
+############################################################################
+# This function performs maximum likelihood fits using AmpTools on all cfg files
+# by calling pyamptools' fit and fitfrac commands on each of them.
+############################################################################
+
 
 class MLE:
     def __init__(self, yaml_file):
@@ -20,6 +25,7 @@ class MLE:
         self.output_directory = yaml_file["amptools"]["output_directory"]
         self.n_randomizations = yaml_file["amptools"]["n_randomizations"]
         self.ff_args = yaml_file["amptools"]["regex_merge"]
+        self.prepare_for_nifty = bool(yaml_file["amptools"]["prepare_for_nifty"])
         print("<<<<<<<<<<<<<< ConfigLoader <<<<<<<<<<<<<<\n\n")
 
     def __call__(self, cfgfile):
@@ -60,24 +66,19 @@ class MLE:
             os.system(f"mv intensities_bin{binNum}_{i}.txt {folder}/intensities_{i}.txt")
             os.system(f"mv {base_fname}_{i}.fit {folder}/{base_fname}_{i}.fit")
 
-        # Clean extra seed files
-        os.system(f"mv seed_bin{binNum}.txt {folder}/seed.txt")
-        os.system(f"rm seed_bin{binNum}_*.txt")
-
-        ## Some parameters (like scaling between polarized datasets) need to be fixed so that
-        # NIFTy does not pick it up as a free parameter. We handle this by taking the amptools
-        # seed file of the best fit remove all lines related to production coefficients and
-        # append "fixed" to every line that is associated with these scale parameters.
-
-        cmd = f"sed -i '/^initialize.*$/d' {folder}/seed.txt"  # delete whole line for initializing production coefficients
-        os.system(cmd)
-
-        cmd = f"sed -i 's|$| fixed|' {folder}/seed.txt"  # append fixed to the remaning lines
-        os.system(cmd)
+        if self.prepare_for_nifty:
+            ## Some parameters (like scaling between polarized datasets) need to be fixed so that
+            # NIFTy does not pick it up as a free parameter. We handle this by taking the amptools
+            # seed file of the best fit remove all lines related to production coefficients and
+            # append "fixed" to every line that is associated with these scale parameters.
+            os.system(f"cp seed_bin{binNum}.txt {folder}/seed_nifty.txt")
+            os.system(f"mv seed_bin{binNum}*.txt {folder}")  # move all seed files to the folder
+            os.system(f"sed -i '/^initialize.*$/d' {folder}/seed_nifty.txt")  # delete whole line for initializing production coefficients
+            os.system(f"sed -i 's|$| fixed|' {folder}/seed_nifty.txt")  # append fixed to the remaning lines
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Divide data into mass bins")
+    parser = argparse.ArgumentParser(description="Perform maximum likelihood fits (using AmpTools) on all cfg files")
     parser.add_argument("yaml_name", type=str, default="conf/configuration.yaml", help="Path a configuration yaml file")
     args = parser.parse_args()
     yaml_name = args.yaml_name
@@ -121,3 +122,5 @@ if __name__ == "__main__":
 
     with multiprocessing.Pool(n_processes) as pool:
         pool.map(mle, cfgfiles)
+
+    print(f"mle| Elapsed time {timer.read()[2]}\n\n")
