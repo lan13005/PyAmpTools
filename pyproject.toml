@@ -20,6 +20,7 @@ dependencies = [
     "IPython",
     "ipykernel",
     "jupyter",
+    "mpi4py",     # (mpi has not been well tested, but it has worked before. There was also a linking error if not manually installing it after conda env created)
     "pyarrow",    # storage format
     "tbb",        # for FSROOT, multiprocessing/threading
     "psutil",     # check process information
