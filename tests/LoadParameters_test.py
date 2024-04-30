@@ -4,7 +4,7 @@ from pyamptools.utility.load_parameters import LoadParameters
 from pyamptools.utility.general import testKnownFailure
 
 ############## SET ENVIRONMENT VARIABLES ##############
-REPO_HOME = os.environ["REPO_HOME"]
+PYAMPTOOLS_HOME = os.environ["PYAMPTOOLS_HOME"]
 atiSetup.setup(globals())
 
 
@@ -52,7 +52,7 @@ def performCheck(input, truths):
 
 def test_cfg_LoadParameters():
     print("\nTesting config input:\n===========================")
-    file = f"{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/fit_fakeParams.cfg"
+    file = f"{PYAMPTOOLS_HOME}/tests/samples/SIMPLE_EXAMPLE/fit_fakeParams.cfg"
     parser = ConfigFileParser(file)
     input_cfg = parser.getConfigurationInfo()
     true_params = {
@@ -91,7 +91,7 @@ def test_cfg_LoadParameters():
 
 def test_result_LoadParameters():
     print("\nTesting fit result input:\n===========================")
-    file = f"{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/result_fakeParams.fit"
+    file = f"{PYAMPTOOLS_HOME}/tests/samples/SIMPLE_EXAMPLE/result_fakeParams.fit"
     results = FitResults(file)
     true_params = {
         "etapi::imZ::resAmp1": (462.405000586143 + 0j),

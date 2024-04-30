@@ -28,7 +28,7 @@ def setup(calling_globals, accelerator="mpigpu", use_fsroot=False, use_genamp=Fa
 
     # VSCode will load an environment but not run the scripts in activate.d
     #    If this appears to be the case, activate it now
-    if "REPO_HOME" not in os.environ and "CONDA_PREFIX" in os.environ:
+    if "PYAMPTOOLS_HOME" not in os.environ and "CONDA_PREFIX" in os.environ:
         os.system(f'source {os.environ["CONDA_PREFIX"]}/etc/conda/activate.d/set_environment.sh')
 
     return USE_MPI, USE_GPU, RANK_MPI

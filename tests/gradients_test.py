@@ -9,8 +9,8 @@ import os
 
 
 def test_gradients():
-    REPO_HOME = os.environ["REPO_HOME"]
-    cfgfile = f"{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/fit.cfg"
+    PYAMPTOOLS_HOME = os.environ["PYAMPTOOLS_HOME"]
+    cfgfile = f"{PYAMPTOOLS_HOME}/tests/samples/SIMPLE_EXAMPLE/fit.cfg"
     assert os.path.isfile(cfgfile), "Config file does not exist at specified path"
 
     ################### LOAD LIBRARIES ##################

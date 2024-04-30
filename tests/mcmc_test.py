@@ -1,10 +1,10 @@
 import os
 import subprocess
 
-REPO_HOME = os.environ["REPO_HOME"]
-cfgfile = f"{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/fit.cfg"
-mle_fit = f"{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/result.fit"
-ofolder = f"{REPO_HOME}/tests/mcmc"
+PYAMPTOOLS_HOME = os.environ["PYAMPTOOLS_HOME"]
+cfgfile = f"{PYAMPTOOLS_HOME}/tests/samples/SIMPLE_EXAMPLE/fit.cfg"
+mle_fit = f"{PYAMPTOOLS_HOME}/tests/samples/SIMPLE_EXAMPLE/result.fit"
+ofolder = f"{PYAMPTOOLS_HOME}/tests/mcmc"
 
 
 def test_mcmc():

@@ -5,7 +5,7 @@ import re
 
 pmp = pytest.mark.parametrize
 
-REPO_HOME = os.environ["REPO_HOME"]
+PYAMPTOOLS_HOME = os.environ["PYAMPTOOLS_HOME"]
 
 
 def fit(accelerator, cfgfile):
@@ -32,8 +32,8 @@ def fit(accelerator, cfgfile):
 @pmp(
     "args",
     [
-        ("cpu", f"{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/fit.cfg"),
-        ("gpu", f"{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/fit.cfg"),
+        ("cpu", f"{PYAMPTOOLS_HOME}/tests/samples/SIMPLE_EXAMPLE/fit.cfg"),
+        ("gpu", f"{PYAMPTOOLS_HOME}/tests/samples/SIMPLE_EXAMPLE/fit.cfg"),
     ],
 )
 def test_fit_cpu(args):

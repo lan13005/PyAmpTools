@@ -18,39 +18,39 @@ def main():
     """Dispatch function that calls the appropriate script and passes remaining arguments to it"""
 
     # check if full path
-    if "REPO_HOME" not in os.environ:
-        print("REPO_HOME environment variable not set. Please try to set it again using set_environment.sh")
+    if "PYAMPTOOLS_HOME" not in os.environ:
+        print("PYAMPTOOLS_HOME environment variable not set. Please try to set it again using set_environment.sh")
         sys.exit(1)
     else:
-        if not os.path.isabs(os.environ["REPO_HOME"]):
-            print(f"REPO_HOME environment variable is not an absolute path. REPO_HOME={os.environ['REPO_HOME']}")
+        if not os.path.isabs(os.environ["PYAMPTOOLS_HOME"]):
+            print(f"PYAMPTOOLS_HOME environment variable is not an absolute path. PYAMPTOOLS_HOME={os.environ['PYAMPTOOLS_HOME']}")
             sys.exit(1)
-        if not os.path.exists(os.environ["REPO_HOME"]):
-            print(f"REPO_HOME environment variable does not exist. REPO_HOME={os.environ['REPO_HOME']}")
+        if not os.path.exists(os.environ["PYAMPTOOLS_HOME"]):
+            print(f"PYAMPTOOLS_HOME environment variable does not exist. PYAMPTOOLS_HOME={os.environ['PYAMPTOOLS_HOME']}")
             sys.exit(1)
 
-    REPO_HOME = os.environ["REPO_HOME"]
+    PYAMPTOOLS_HOME = os.environ["PYAMPTOOLS_HOME"]
 
-    print(f"REPO_HOME: {REPO_HOME}")
+    print(f"PYAMPTOOLS_HOME: {PYAMPTOOLS_HOME}")
 
     func_map = {
         # 'command' : (path, description)
-        "fit": (f"{REPO_HOME}/src/pyamptools/mle.py", "Perform a set of MLE fits given an amptools config file"),
-        "fitfrac": (f"{REPO_HOME}/src/pyamptools/extract_ff.py", "Extract fit fractions from a given amptools FitResults file"),
-        "mcmc": (f"{REPO_HOME}/src/pyamptools/mcmc.py", "Perform a MCMC fit given an amptools config file"),
-        "gen_amp": (f"{REPO_HOME}/bin/gen_amp.py", "Generate data for a given configuration file"),
-        "gen_vec_ps": (f"{REPO_HOME}/bin/gen_vec_ps.py", "Generate vector-pseduoscalar data for a given configuration file"),
-        "nentries": (f"{REPO_HOME}/bin/get_nentries.py", "Print number of entries in a list of ROOT files (* wildcard supported)"),
+        "fit": (f"{PYAMPTOOLS_HOME}/src/pyamptools/mle.py", "Perform a set of MLE fits given an amptools config file"),
+        "fitfrac": (f"{PYAMPTOOLS_HOME}/src/pyamptools/extract_ff.py", "Extract fit fractions from a given amptools FitResults file"),
+        "mcmc": (f"{PYAMPTOOLS_HOME}/src/pyamptools/mcmc.py", "Perform a MCMC fit given an amptools config file"),
+        "gen_amp": (f"{PYAMPTOOLS_HOME}/bin/gen_amp.py", "Generate data for a given configuration file"),
+        "gen_vec_ps": (f"{PYAMPTOOLS_HOME}/bin/gen_vec_ps.py", "Generate vector-pseduoscalar data for a given configuration file"),
+        "nentries": (f"{PYAMPTOOLS_HOME}/bin/get_nentries.py", "Print number of entries in a list of ROOT files (* wildcard supported)"),
     }
 
     analysis_map = {
         # 'command' : (path, description)
-        "run_cfgGen": (f"{REPO_HOME}/bin/run_cfgGen.py", "Generate AmpTools fit configuration files"),
-        "run_divideData": (f"{REPO_HOME}/bin/run_divideData.py", "Binned analysis: Divide data into mass bins (separate folders)"),
-        "run_mle": (f"{REPO_HOME}/bin/run_mle.py", "Binned analysis: Run MLE fits over bins"),
-        "run_ift": (f"{REPO_HOME}/bin/run_ift.py", "(IN DEVELOPMENT) Binned analysis: Run IFT fit over bins"),
-        "run_iftsyst": (f"{REPO_HOME}/bin/run_systematics.py", "(IN DEVELOPMENT) Binned analysis: Run IFT systematic variations"),
-        "run_submit": (f"{REPO_HOME}/bin/run_submit.py", "Binned analysis: Submit jobs to the batch system to perform complete binned analysis"),
+        "run_cfgGen": (f"{PYAMPTOOLS_HOME}/bin/run_cfgGen.py", "Generate AmpTools fit configuration files"),
+        "run_divideData": (f"{PYAMPTOOLS_HOME}/bin/run_divideData.py", "Binned analysis: Divide data into mass bins (separate folders)"),
+        "run_mle": (f"{PYAMPTOOLS_HOME}/bin/run_mle.py", "Binned analysis: Run MLE fits over bins"),
+        "run_ift": (f"{PYAMPTOOLS_HOME}/bin/run_ift.py", "(IN DEVELOPMENT) Binned analysis: Run IFT fit over bins"),
+        "run_iftsyst": (f"{PYAMPTOOLS_HOME}/bin/run_systematics.py", "(IN DEVELOPMENT) Binned analysis: Run IFT systematic variations"),
+        "run_submit": (f"{PYAMPTOOLS_HOME}/bin/run_submit.py", "Binned analysis: Submit jobs to the batch system to perform complete binned analysis"),
     }
 
     availability_map = {**func_map, **analysis_map}

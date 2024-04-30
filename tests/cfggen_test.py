@@ -2,8 +2,8 @@ import os
 
 
 def test_cfgGenerator():
-    REPO_HOME = os.environ["REPO_HOME"]
-    SCRIPTS = f"{REPO_HOME}/scripts"
+    PYAMPTOOLS_HOME = os.environ["PYAMPTOOLS_HOME"]
+    SCRIPTS = f"{PYAMPTOOLS_HOME}/scripts"
     cmd = [f"python {SCRIPTS}/cfggen.py"]
     output_file = "EtaPi.cfg"
     cmd = " ".join(cmd)

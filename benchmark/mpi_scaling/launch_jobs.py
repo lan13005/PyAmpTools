@@ -14,7 +14,7 @@ sample = "SDME_EXAMPLE/sdme.cfg"
 def run_test(program, args=""):
     for nproc, ngpu in zip(nprocs, ngpus):
         tag = program.split(".")[0]
-        cmd = f"mpiexec -np {nproc} python $REPO_HOME/src/pyamptools/{program} $REPO_HOME/tests/samples/{sample} {args}"
+        cmd = f"mpiexec -np {nproc} python $PYAMPTOOLS_HOME/src/pyamptools/{program} $PYAMPTOOLS_HOME/tests/samples/{sample} {args}"
         cmd += f" >> results/{tag}_nproc{ngpu}.log 2>&1"
 
         print(cmd)
@@ -27,7 +27,7 @@ def run_test(program, args=""):
 # #################### RUN TESTS ON mle.py ####################
 # program = "mle.py"
 # for nproc, ngpu in zip(nprocs, ngpus):
-#     cmd  = f"mpiexec -np {nproc} python $REPO_HOME/src/pyamptools/mle.py $REPO_HOME/tests/samples/{sample}"
+#     cmd  = f"mpiexec -np {nproc} python $PYAMPTOOLS_HOME/src/pyamptools/mle.py $PYAMPTOOLS_HOME/tests/samples/{sample}"
 #     cmd += f" >> results/fit_nproc{ngpu}.log 2>&1"
 #     print(cmd)
 #     os.system(cmd)
@@ -37,7 +37,7 @@ def run_test(program, args=""):
 # program = "mcmc.py"
 # args = f" --burnin 0 --nsamples 100 --overwrite"
 # for nproc, ngpu in zip(nprocs, ngpus):
-#     cmd  = f"mpiexec -np {nproc} python $REPO_HOME/src/pyamptools/mcmc.py --cfgfiles $REPO_HOME/tests/samples/{sample} {args}"
+#     cmd  = f"mpiexec -np {nproc} python $PYAMPTOOLS_HOME/src/pyamptools/mcmc.py --cfgfiles $PYAMPTOOLS_HOME/tests/samples/{sample} {args}"
 #     cmd += f" >> results/mcmc_nproc{ngpu}.log 2>&1"
 #     print(cmd)
 #     os.system(cmd)

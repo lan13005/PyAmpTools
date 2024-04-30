@@ -22,10 +22,10 @@ def recursive_link_if_not_exist(source_folders, destination_folder, ftype, verbo
         print("-- Added above modules to conda environment... ---")
 
 
-REPO_HOME = expandvars("$REPO_HOME")
+PYAMPTOOLS_HOME = expandvars("$PYAMPTOOLS_HOME")
 
 source_folders = [
-    f"{REPO_HOME}/utility/",
+    f"{PYAMPTOOLS_HOME}/utility/",
 ]
 
 ####################################

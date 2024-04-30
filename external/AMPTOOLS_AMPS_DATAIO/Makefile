@@ -9,16 +9,16 @@ include $(AMPTOOLS_HOME)/Makefile.settings
 Q := @
 
 ####### SET ENVIORNMENT VARIALBES ########
-REPO_HOME := $(shell echo $$REPO_HOME)
-ifndef REPO_HOME
-$(error Please set REPO_HOME by running set_environment.py in the base directory)
+PYAMPTOOLS_HOME := $(shell echo $$PYAMPTOOLS_HOME)
+ifndef PYAMPTOOLS_HOME
+$(error Please set PYAMPTOOLS_HOME by running set_environment.py in the base directory)
 endif
 ifndef ROOTSYS
 $(error ROOTSYS is not set. Please load your root environment first)
 endif
-AMPTOOLS_DATAIO := $(REPO_HOME)/external/AMPTOOLS_AMPS_DATAIO
+AMPTOOLS_DATAIO := $(PYAMPTOOLS_HOME)/external/AMPTOOLS_AMPS_DATAIO
 ifndef AMPTOOLS_HOME
-  AMPTOOLS_HOME := $($REPO_HOME)/external/AmpTools
+  AMPTOOLS_HOME := $($PYAMPTOOLS_HOME)/external/AmpTools
 endif
 AMPTOOLS := $(AMPTOOLS_HOME)/AmpTools
 AMPPLOTTER := $(AMPTOOLS_HOME)/AmpPlotter

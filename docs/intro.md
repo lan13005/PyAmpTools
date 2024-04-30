@@ -98,7 +98,7 @@ make [mpi/gpu/mpigpu/gpumpi] # distributes modified Makefiles and makes librarie
 # Unit Testing
 
 ```shell
-sed -i "s~REPLACE_FOLDER_LOCATION~$REPO_HOME/tests/samples/SIMPLE_EXAMPLE~" $REPO_HOME/tests/samples/SIMPLE_EXAMPLE/fit.cfg # update path
+sed -i "s~REPLACE_FOLDER_LOCATION~$PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE~" $PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE/fit.cfg # update path
 pytest -v # -s to not hide stdout
 pytest -k [marked-test] # to run a specific marked test defined in pytest.ini
 ```

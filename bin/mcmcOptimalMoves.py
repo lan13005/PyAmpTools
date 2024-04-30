@@ -165,7 +165,7 @@ if __name__ == "__main__":
     os.system(f"mkdir -p {ofolder}")
 
     ############## SET ENVIRONMENT VARIABLES ##############
-    REPO_HOME = os.environ["REPO_HOME"]
+    PYAMPTOOLS_HOME = os.environ["PYAMPTOOLS_HOME"]
 
     ################### LOAD LIBRARIES ##################
     atiSetup.setup(globals(), args.accelerator)

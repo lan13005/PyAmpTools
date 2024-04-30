@@ -1,9 +1,9 @@
 import os
 
-REPO_HOME = os.environ["REPO_HOME"]
-SRC = f"{REPO_HOME}/src/pyamptools"
-fit_results = f"{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/result.fit"
-output_file = f"{REPO_HOME}/tests/ff.txt"
+PYAMPTOOLS_HOME = os.environ["PYAMPTOOLS_HOME"]
+SRC = f"{PYAMPTOOLS_HOME}/src/pyamptools"
+fit_results = f"{PYAMPTOOLS_HOME}/tests/samples/SIMPLE_EXAMPLE/result.fit"
+output_file = f"{PYAMPTOOLS_HOME}/tests/ff.txt"
 
 
 def test_extract_ff():

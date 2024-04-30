@@ -4,11 +4,11 @@ from pyamptools import atiSetup
 
 def test_parMgr():
     ############## SET ENVIRONMENT VARIABLES ##############
-    REPO_HOME = os.environ["REPO_HOME"]
+    PYAMPTOOLS_HOME = os.environ["PYAMPTOOLS_HOME"]
     atiSetup.setup(globals())
 
     ############## LOAD CONFIGURATION FILE ##############
-    cfgfile = f"{REPO_HOME}/tests/samples/SIMPLE_EXAMPLE/fit.cfg"
+    cfgfile = f"{PYAMPTOOLS_HOME}/tests/samples/SIMPLE_EXAMPLE/fit.cfg"
     parser = ConfigFileParser(cfgfile)
     cfgInfo: ConfigurationInfo = parser.getConfigurationInfo()
     cfgInfo.display()

@@ -107,7 +107,7 @@ def generate_zlm_cfg(
 
 if __name__ == "__main__":
     ############## SET ENVIRONMENT VARIABLES ##############
-    REPO_HOME = os.environ["REPO_HOME"]
+    PYAMPTOOLS_HOME = os.environ["PYAMPTOOLS_HOME"]
 
     ################### LOAD LIBRARIES ##################
     atiSetup.setup(globals())
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     fixedAmps = []
 
     ## Load datasets
-    baseFolder = f"{REPO_HOME}/tests/samples/REAL_MI_EXAMPLE/samples"
+    baseFolder = f"{PYAMPTOOLS_HOME}/tests/samples/REAL_MI_EXAMPLE/samples"
 
     ## Polarization related, reactNames are scaled by the scales parameters
     ##   Default: parScale0 is fixed to 1.0
