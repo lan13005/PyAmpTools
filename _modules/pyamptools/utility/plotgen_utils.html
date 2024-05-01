@@ -346,14 +346,15 @@ document.write(`
                 <article class="bd-article">
                   
   <h1>Source code for pyamptools.utility.plotgen_utils</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">pyamptools.utility.utils</span> <span class="kn">import</span> <span class="n">remove_all_whitespace</span>
+<span></span><span class="kn">from</span> <span class="nn">pyamptools.utility.general</span> <span class="kn">import</span> <span class="n">remove_all_whitespace</span>
 <span class="kn">import</span> <span class="nn">ROOT</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
 
 <div class="viewcode-block" id="define_if_not_observed">
 <a class="viewcode-back" href="../../../api/plotgen.html#pyamptools.utility.plotgen_utils.define_if_not_observed">[docs]</a>
 <span class="k">def</span> <span class="nf">define_if_not_observed</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">OBSERVED_FORMULAE</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">columns</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    If requested function has not observed, define it and return new name</span>
 <span class="sd">    If requested function has been observed, return the name associated with the observed function</span>
 
@@ -367,20 +368,21 @@ document.write(`
 <span class="sd">    Returns:</span>
 <span class="sd">        df: RDataFrame</span>
 <span class="sd">        name: string</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">OBSERVED_FORMULAE</span><span class="p">:</span> <span class="c1"># check if function observed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">OBSERVED_FORMULAE</span><span class="p">:</span>  <span class="c1"># check if function observed</span>
         <span class="n">old_name</span> <span class="o">=</span> <span class="n">OBSERVED_FORMULAE</span><span class="p">[</span><span class="n">function</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">df</span><span class="p">,</span> <span class="n">old_name</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">OBSERVED_FORMULAE</span><span class="p">[</span><span class="n">function</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">Redefine</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">function</span><span class="p">)</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">columns</span> <span class="k">else</span> <span class="n">df</span><span class="o">.</span><span class="n">Define</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">function</span><span class="p">)</span> <span class="c1"># check if name already exists</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">Redefine</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">function</span><span class="p">)</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">columns</span> <span class="k">else</span> <span class="n">df</span><span class="o">.</span><span class="n">Define</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">function</span><span class="p">)</span>  <span class="c1"># check if name already exists</span>
         <span class="k">return</span> <span class="n">df</span><span class="p">,</span> <span class="n">name</span></div>
+
 
 
 <div class="viewcode-block" id="book_histogram">
 <a class="viewcode-back" href="../../../api/plotgen.html#pyamptools.utility.plotgen_utils.book_histogram">[docs]</a>
 <span class="k">def</span> <span class="nf">book_histogram</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">HISTS_TO_BOOK</span><span class="p">,</span> <span class="n">columns</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Book histograms for a given type (data, bkgnd, accMC, genMC)</span>
 
 <span class="sd">    Args:</span>
@@ -390,12 +392,12 @@ document.write(`
 <span class="sd">    Returns:</span>
 <span class="sd">        BOOKED_HISTOGRAMS: list of booked Histos</span>
 <span class="sd">        DRAW_OPTIONS: list of draw options</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">## ALL HISTOGRAMS FOR A SOURCE FILES</span>
     <span class="n">BOOKED_HISTOGRAMS</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="n">OBSERVED_FORMULAE</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># Track observed functions matching to defined variable names: {function: variable_name}</span>
-    <span class="n">DRAW_OPTIONS</span>      <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">OBSERVED_FORMULAE</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># Track observed functions matching to defined variable names: {function: variable_name}</span>
+    <span class="n">DRAW_OPTIONS</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="c1"># Booking hists are lazy! Book all of them first, then run filling/Drawing</span>
     <span class="k">for</span> <span class="n">hname</span><span class="p">,</span> <span class="n">booked_hist</span> <span class="ow">in</span> <span class="n">HISTS_TO_BOOK</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -404,14 +406,14 @@ document.write(`
             <span class="n">xname</span><span class="p">,</span> <span class="n">xfunction</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">nx_bins</span><span class="p">,</span> <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">drawOptions</span> <span class="o">=</span> <span class="n">booked_hist</span>
             <span class="n">xfunction</span> <span class="o">=</span> <span class="n">remove_all_whitespace</span><span class="p">(</span><span class="n">xfunction</span><span class="p">)</span>
             <span class="n">df</span><span class="p">,</span> <span class="n">xname</span> <span class="o">=</span> <span class="n">define_if_not_observed</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">xfunction</span><span class="p">,</span> <span class="n">OBSERVED_FORMULAE</span><span class="p">,</span> <span class="n">xname</span><span class="p">,</span> <span class="n">columns</span><span class="p">)</span>
-            <span class="n">BOOKED_HISTOGRAMS</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">df</span><span class="o">.</span><span class="n">Histo1D</span><span class="p">((</span><span class="n">hname</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">nx_bins</span><span class="p">,</span> <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">),</span> <span class="n">xname</span><span class="p">,</span> <span class="s2">&quot;weight&quot;</span><span class="p">)</span> <span class="p">)</span>
+            <span class="n">BOOKED_HISTOGRAMS</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">Histo1D</span><span class="p">((</span><span class="n">hname</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">nx_bins</span><span class="p">,</span> <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">),</span> <span class="n">xname</span><span class="p">,</span> <span class="s2">&quot;weight&quot;</span><span class="p">))</span>
             <span class="n">DRAW_OPTIONS</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">drawOptions</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span> <span class="c1"># assume 2D</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># assume 2D</span>
             <span class="n">xname</span><span class="p">,</span> <span class="n">xfunction</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">nx_bins</span><span class="p">,</span> <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">yname</span><span class="p">,</span> <span class="n">yfunction</span><span class="p">,</span> <span class="n">ny_bins</span><span class="p">,</span> <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">,</span> <span class="n">drawOptions</span> <span class="o">=</span> <span class="n">booked_hist</span>
             <span class="n">xfunction</span><span class="p">,</span> <span class="n">yfunction</span> <span class="o">=</span> <span class="n">remove_all_whitespace</span><span class="p">(</span><span class="n">xfunction</span><span class="p">),</span> <span class="n">remove_all_whitespace</span><span class="p">(</span><span class="n">yfunction</span><span class="p">)</span>
             <span class="n">df</span><span class="p">,</span> <span class="n">xname</span> <span class="o">=</span> <span class="n">define_if_not_observed</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">xfunction</span><span class="p">,</span> <span class="n">OBSERVED_FORMULAE</span><span class="p">,</span> <span class="n">xname</span><span class="p">,</span> <span class="n">columns</span><span class="p">)</span>
             <span class="n">df</span><span class="p">,</span> <span class="n">yname</span> <span class="o">=</span> <span class="n">define_if_not_observed</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">yfunction</span><span class="p">,</span> <span class="n">OBSERVED_FORMULAE</span><span class="p">,</span> <span class="n">yname</span><span class="p">,</span> <span class="n">columns</span><span class="p">)</span>
-            <span class="n">BOOKED_HISTOGRAMS</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">df</span><span class="o">.</span><span class="n">Histo2D</span><span class="p">((</span><span class="n">hname</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">nx_bins</span><span class="p">,</span> <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">ny_bins</span><span class="p">,</span> <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">),</span> <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span><span class="p">,</span> <span class="s2">&quot;weight&quot;</span> <span class="p">)</span> <span class="p">)</span>
+            <span class="n">BOOKED_HISTOGRAMS</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">Histo2D</span><span class="p">((</span><span class="n">hname</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">nx_bins</span><span class="p">,</span> <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">ny_bins</span><span class="p">,</span> <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">),</span> <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span><span class="p">,</span> <span class="s2">&quot;weight&quot;</span><span class="p">))</span>
             <span class="n">DRAW_OPTIONS</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">drawOptions</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">BOOKED_HISTOGRAMS</span><span class="p">,</span> <span class="n">DRAW_OPTIONS</span></div>
@@ -421,7 +423,7 @@ document.write(`
 <div class="viewcode-block" id="turn_on_specifc_waveset">
 <a class="viewcode-back" href="../../../api/plotgen.html#pyamptools.utility.plotgen_utils.turn_on_specifc_waveset">[docs]</a>
 <span class="k">def</span> <span class="nf">turn_on_specifc_waveset</span><span class="p">(</span><span class="n">plotGen</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">waveset</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Turn on a specific waveset which is an semicolon separated list of amplitude names.</span>
 <span class="sd">       If waveset = all, then turn on all amplitudes</span>
 
@@ -433,21 +435,22 @@ document.write(`
 <span class="sd">        results: FitResults</span>
 <span class="sd">        waveset: string</span>
 <span class="sd">        verbose: bool</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">keepAllAmps</span> <span class="o">=</span> <span class="n">waveset</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">keepAllAmps</span> <span class="o">=</span> <span class="n">waveset</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span>
 
-    <span class="n">reactionList</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">reactionList</span><span class="p">()</span> <span class="c1"># vector&lt;string&gt;</span>
-    <span class="n">sums</span> <span class="o">=</span> <span class="n">plotGen</span><span class="o">.</span><span class="n">uniqueSums</span><span class="p">()</span> <span class="c1"># vector&lt;string&gt;</span>
-    <span class="n">amps</span> <span class="o">=</span> <span class="n">plotGen</span><span class="o">.</span><span class="n">uniqueAmplitudes</span><span class="p">()</span> <span class="c1"># vector&lt;string&gt;</span>
+    <span class="n">reactionList</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">reactionList</span><span class="p">()</span>  <span class="c1"># vector&lt;string&gt;</span>
+    <span class="n">sums</span> <span class="o">=</span> <span class="n">plotGen</span><span class="o">.</span><span class="n">uniqueSums</span><span class="p">()</span>  <span class="c1"># vector&lt;string&gt;</span>
+    <span class="n">amps</span> <span class="o">=</span> <span class="n">plotGen</span><span class="o">.</span><span class="n">uniqueAmplitudes</span><span class="p">()</span>  <span class="c1"># vector&lt;string&gt;</span>
 
     <span class="n">amp_map</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; &gt;&gt; Plotting waveset: </span><span class="si">{</span><span class="n">waveset</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="n">waves</span> <span class="o">=</span> <span class="n">waveset</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; &gt;&gt; Plotting waveset: </span><span class="si">{</span><span class="n">waveset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">waves</span> <span class="o">=</span> <span class="n">waveset</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">keepAllAmps</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; &gt;&gt;   Keeping all amplitudes: </span><span class="si">{</span><span class="n">amps</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; &gt;&gt;   Keeping all amplitudes: </span><span class="si">{</span><span class="n">amps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">_waves</span> <span class="o">=</span> <span class="n">amps</span> <span class="k">if</span> <span class="n">keepAllAmps</span> <span class="k">else</span> <span class="n">waves</span>
     <span class="k">for</span> <span class="n">wave</span> <span class="ow">in</span> <span class="n">_waves</span><span class="p">:</span>
-        <span class="n">amp_map</span><span class="p">[</span><span class="n">wave</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="c1"># Placeholder</span>
+        <span class="n">amp_map</span><span class="p">[</span><span class="n">wave</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># Placeholder</span>
 
     <span class="c1"># Re-enable all amplitudes in all reactions</span>
     <span class="k">for</span> <span class="n">reaction</span> <span class="ow">in</span> <span class="n">reactionList</span><span class="p">:</span>
@@ -461,7 +464,9 @@ document.write(`
         <span class="k">if</span> <span class="n">amp</span> <span class="ow">in</span> <span class="n">amp_map</span> <span class="ow">or</span> <span class="n">keepAllAmps</span><span class="p">:</span>
             <span class="n">amp_map</span><span class="p">[</span><span class="n">amp</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
     <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">amp_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; &gt;&gt; WARNING: Amplitude </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1"> not found in fit results. Exiting...&#39;</span><span class="p">);</span> <span class="n">exit</span><span class="p">();</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; &gt;&gt; WARNING: Amplitude </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2"> not found in fit results. Exiting...&quot;</span><span class="p">)</span>
+            <span class="n">exit</span><span class="p">()</span>
 
     <span class="c1"># Turn on only the requested amplitudes</span>
     <span class="k">if</span> <span class="n">keepAllAmps</span><span class="p">:</span>
@@ -474,6 +479,7 @@ document.write(`
             <span class="n">plotGen</span><span class="o">.</span><span class="n">enableAmp</span><span class="p">(</span><span class="n">i</span><span class="p">)</span></div>
 
 
+
 <div class="viewcode-block" id="draw_histograms">
 <a class="viewcode-back" href="../../../api/plotgen.html#pyamptools.utility.plotgen_utils.draw_histograms">[docs]</a>
 <span class="k">def</span> <span class="nf">draw_histograms</span><span class="p">(</span>
@@ -481,9 +487,9 @@ document.write(`
     <span class="n">hist_output_name</span><span class="p">,</span>
     <span class="n">particles</span><span class="p">,</span>
     <span class="n">HISTS_TO_BOOK</span><span class="p">,</span>
-    <span class="n">amplitudes</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span><span class="p">,</span>
+    <span class="n">amplitudes</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Draw histograms from a FitResults object. Histograms are booked using the book_histogram() function that uses macros to compute</span>
 <span class="sd">    kinematic quantities to plot. Booked histograms are lazily evaluated / filled with RDataFrame.</span>
 
@@ -496,40 +502,36 @@ document.write(`
 
 <span class="sd">    Returns:</span>
 <span class="sd">        None, dumps a pdf file based on hist_output_name</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">THStack</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">THStack</span>
     <span class="n">TCanvas</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TCanvas</span>
-    <span class="n">plotGen</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">PlotGenerator</span><span class="p">(</span> <span class="n">results</span> <span class="p">)</span>
+    <span class="n">plotGen</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">PlotGenerator</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
 
-    <span class="k">assert</span><span class="p">(</span> <span class="s1">&#39;.&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">hist_output_name</span> <span class="p">),</span> <span class="s2">&quot;Do not include file type in the output name ( -o flag )&quot;</span>
+    <span class="k">assert</span> <span class="s2">&quot;.&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">hist_output_name</span><span class="p">,</span> <span class="s2">&quot;Do not include file type in the output name ( -o flag )&quot;</span>
 
     <span class="n">N_BOOKED_HISTS</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">HISTS_TO_BOOK</span><span class="p">)</span>
     <span class="n">N_PARTICLES</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">particles</span><span class="p">)</span>
 
-    <span class="n">kData</span><span class="p">,</span> <span class="n">kBkgnd</span><span class="p">,</span> <span class="n">kGenMC</span><span class="p">,</span> <span class="n">kAccMC</span><span class="p">,</span> <span class="n">kNumTypes</span> <span class="o">=</span> <span class="n">plotGen</span><span class="o">.</span><span class="n">kData</span><span class="p">,</span> <span class="n">plotGen</span><span class="o">.</span><span class="n">kBkgnd</span><span class="p">,</span> <span class="n">plotGen</span><span class="o">.</span><span class="n">kGenMC</span><span class="p">,</span> <span class="n">plotGen</span><span class="o">.</span><span class="n">kAccMC</span><span class="p">,</span> <span class="n">plotGen</span><span class="o">.</span><span class="n">kNumTypes</span>
-    <span class="n">kColors</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">kData</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">kBlack</span><span class="p">,</span>
-        <span class="n">kBkgnd</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="o">-</span><span class="mi">9</span><span class="p">,</span>
-        <span class="n">kAccMC</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">kGreen</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span>
-        <span class="n">kGenMC</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">kAzure</span><span class="o">-</span><span class="mi">4</span><span class="p">}</span> <span class="c1"># for the 4 data sources</span>
+    <span class="n">kData</span><span class="p">,</span> <span class="n">kBkgnd</span><span class="p">,</span> <span class="n">kGenMC</span><span class="p">,</span> <span class="n">kAccMC</span> <span class="o">=</span> <span class="n">plotGen</span><span class="o">.</span><span class="n">kData</span><span class="p">,</span> <span class="n">plotGen</span><span class="o">.</span><span class="n">kBkgnd</span><span class="p">,</span> <span class="n">plotGen</span><span class="o">.</span><span class="n">kGenMC</span><span class="p">,</span> <span class="n">plotGen</span><span class="o">.</span><span class="n">kAccMC</span>
+    <span class="c1"># kNumTypes = plotGen.kNumTypes</span>
+    <span class="n">kColors</span> <span class="o">=</span> <span class="p">{</span><span class="n">kData</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">kBlack</span><span class="p">,</span> <span class="n">kBkgnd</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span> <span class="o">-</span> <span class="mi">9</span><span class="p">,</span> <span class="n">kAccMC</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">kGreen</span> <span class="o">-</span> <span class="mi">8</span><span class="p">,</span> <span class="n">kGenMC</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">kAzure</span> <span class="o">-</span> <span class="mi">4</span><span class="p">}</span>  <span class="c1"># for the 4 data sources</span>
 
-    <span class="n">reactionNames</span> <span class="o">=</span>  <span class="nb">list</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">reactionList</span><span class="p">())</span>
+    <span class="n">reactionNames</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">reactionList</span><span class="p">())</span>
 
     <span class="c1">### FOR EACH WAVESET, PLOT THE HISTOGRAMS ###</span>
-    <span class="n">amplitudes</span> <span class="o">=</span> <span class="n">amplitudes</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+    <span class="n">amplitudes</span> <span class="o">=</span> <span class="n">amplitudes</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">amp</span> <span class="ow">in</span> <span class="n">amplitudes</span><span class="p">:</span>
         <span class="n">turn_on_specifc_waveset</span><span class="p">(</span><span class="n">plotGen</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">amp</span><span class="p">)</span>
 
-        <span class="n">HISTOGRAM_STORAGE</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># {type: [hist1, hist2, ...]}</span>
+        <span class="n">HISTOGRAM_STORAGE</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># {type: [hist1, hist2, ...]}</span>
         <span class="n">DRAW_OPT_STORAGE</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">srctype</span> <span class="ow">in</span> <span class="p">[</span><span class="n">kData</span><span class="p">,</span> <span class="n">kBkgnd</span><span class="p">,</span> <span class="n">kGenMC</span><span class="p">,</span> <span class="n">kAccMC</span><span class="p">]:</span>
-
             <span class="c1">########### LOAD THE DATA ###########</span>
             <span class="c1"># Reaction: { Variable: [Values] } }</span>
             <span class="n">value_map</span> <span class="o">=</span> <span class="n">plotGen</span><span class="o">.</span><span class="n">projected_values</span><span class="p">(</span><span class="n">reactionNames</span><span class="p">,</span> <span class="n">srctype</span><span class="p">,</span> <span class="n">N_PARTICLES</span><span class="p">)</span>
             <span class="n">value_map</span> <span class="o">=</span> <span class="n">value_map</span><span class="p">[</span><span class="n">srctype</span><span class="p">]</span>
-            <span class="n">value_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">value_map</span><span class="p">}</span>
+            <span class="n">value_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value_map</span><span class="p">}</span>
 
             <span class="n">df</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RDF</span><span class="o">.</span><span class="n">FromNumpy</span><span class="p">(</span><span class="n">value_map</span><span class="p">)</span>
             <span class="n">columns</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">GetColumnNames</span><span class="p">()</span>
@@ -551,7 +553,7 @@ document.write(`
         <span class="c1">### HERE IS AN EXAMPLE... BUT IMPOSSIBLE TO MAKE GENERIC #</span>
 
         <span class="n">nrows</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">HISTS_TO_BOOK</span><span class="p">))))</span>
-        <span class="n">ncols</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">HISTS_TO_BOOK</span><span class="p">)</span><span class="o">/</span><span class="n">nrows</span><span class="p">))</span>
+        <span class="n">ncols</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">HISTS_TO_BOOK</span><span class="p">)</span> <span class="o">/</span> <span class="n">nrows</span><span class="p">))</span>
 
         <span class="n">canvas</span> <span class="o">=</span> <span class="n">TCanvas</span><span class="p">(</span><span class="s2">&quot;canvas&quot;</span><span class="p">,</span> <span class="s2">&quot;canvas&quot;</span><span class="p">,</span> <span class="mi">1440</span><span class="p">,</span> <span class="mi">1080</span><span class="p">)</span>
         <span class="n">canvas</span><span class="o">.</span><span class="n">Clear</span><span class="p">()</span>
@@ -561,23 +563,24 @@ document.write(`
         <span class="c1"># canvas.Print(f&quot;{output_name}.pdf[&quot;)</span>
         <span class="n">stacks</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">ihist</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_BOOKED_HISTS</span><span class="p">):</span>
-            <span class="n">canvas</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="n">ihist</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">canvas</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="n">ihist</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
             <span class="n">data_hist</span> <span class="o">=</span> <span class="n">HISTOGRAM_STORAGE</span><span class="p">[</span><span class="n">kData</span><span class="p">][</span><span class="n">ihist</span><span class="p">]</span>
             <span class="n">data_hist</span><span class="o">.</span><span class="n">SetMarkerStyle</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kFullCircle</span><span class="p">)</span>
             <span class="n">data_hist</span><span class="o">.</span><span class="n">SetMinimum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">data_hist</span><span class="o">.</span><span class="n">SetMarkerSize</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
-            <span class="n">data_hist</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s1">&#39;E&#39;</span><span class="p">)</span> <span class="c1"># Draw first to set labels and y-limits</span>
-            <span class="n">stacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">THStack</span><span class="p">(</span><span class="s2">&quot;stack&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
+            <span class="n">data_hist</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;E&quot;</span><span class="p">)</span>  <span class="c1"># Draw first to set labels and y-limits</span>
+            <span class="n">stacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">THStack</span><span class="p">(</span><span class="s2">&quot;stack&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">srctype</span> <span class="ow">in</span> <span class="p">[</span><span class="n">kBkgnd</span><span class="p">,</span> <span class="n">kAccMC</span><span class="p">]:</span>
                 <span class="n">booked_hist</span> <span class="o">=</span> <span class="n">HISTOGRAM_STORAGE</span><span class="p">[</span><span class="n">srctype</span><span class="p">][</span><span class="n">ihist</span><span class="p">]</span>
-                <span class="n">drawOptions</span> <span class="o">=</span> <span class="n">DRAW_OPT_STORAGE</span><span class="p">[</span><span class="n">srctype</span><span class="p">][</span><span class="n">ihist</span><span class="p">]</span>
-                <span class="n">booked_hist</span><span class="o">.</span><span class="n">SetFillColorAlpha</span><span class="p">(</span><span class="n">kColors</span><span class="p">[</span><span class="n">srctype</span><span class="p">],</span><span class="mf">1.0</span><span class="p">)</span>
+                <span class="c1"># drawOptions not used ATM but will probably need to be turned back on?</span>
+                <span class="c1"># drawOptions = DRAW_OPT_STORAGE[srctype][ihist]</span>
+                <span class="n">booked_hist</span><span class="o">.</span><span class="n">SetFillColorAlpha</span><span class="p">(</span><span class="n">kColors</span><span class="p">[</span><span class="n">srctype</span><span class="p">],</span> <span class="mf">1.0</span><span class="p">)</span>
                 <span class="n">booked_hist</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
                 <span class="n">booked_hist</span>
                 <span class="n">hist_ptr</span> <span class="o">=</span> <span class="n">booked_hist</span><span class="o">.</span><span class="n">GetPtr</span><span class="p">()</span>
                 <span class="n">stacks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">hist_ptr</span><span class="p">)</span>
-            <span class="n">stacks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s1">&#39;HIST SAME&#39;</span><span class="p">)</span>
-            <span class="n">data_hist</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s1">&#39;E SAME&#39;</span><span class="p">)</span> <span class="c1"># Redraw data</span>
+            <span class="n">stacks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;HIST SAME&quot;</span><span class="p">)</span>
+            <span class="n">data_hist</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;E SAME&quot;</span><span class="p">)</span>  <span class="c1"># Redraw data</span>
 
         <span class="n">canvas</span><span class="o">.</span><span class="n">Print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_name</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">)</span>
         <span class="c1"># canvas.Print(f&quot;{output_name}.pdf&quot;)</span>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>pyamptools.utility.LoadParameters &#8212; PyAmpTools</title>
+    <title>pyamptools.utility.load_parameters &#8212; PyAmpTools</title>
   
   
   
@@ -56,7 +56,7 @@
     <script async="async" src="../../../_static/sphinx-thebe.js?v=c100c467"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/pyamptools/utility/LoadParameters';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/pyamptools/utility/load_parameters';</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -267,7 +267,7 @@
       
       
       
-      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2F_modules/pyamptools/utility/LoadParameters.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2F_modules/pyamptools/utility/load_parameters.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -345,88 +345,90 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for pyamptools.utility.LoadParameters</h1><div class="highlight"><pre>
+  <h1>Source code for pyamptools.utility.load_parameters</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="c1">############################################################</span>
 <span class="c1"># This file holds scripts to load in amptools information</span>
 <span class="c1">############################################################</span>
 
+
 <div class="viewcode-block" id="LoadParameters">
-<a class="viewcode-back" href="../../../api/loadParameters.html#pyamptools.utility.LoadParameters.LoadParameters">[docs]</a>
+<a class="viewcode-back" href="../../../api/loadParameters.html#pyamptools.utility.load_parameters.LoadParameters">[docs]</a>
 <span class="k">class</span> <span class="nc">LoadParameters</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class to extract amplitude parameters from an AmpTools FitResults or ConfigurationInfo object</span>
 <span class="sd">       Parameters (like production coefficients) can then be formatted (complex -&gt; real, imag) for input to other minimization algorithms</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">load_cfg</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LoadParameters.load_cfg">
-<a class="viewcode-back" href="../../../api/loadParameters.html#pyamptools.utility.LoadParameters.LoadParameters.load_cfg">[docs]</a>
-    <span class="k">def</span> <span class="nf">load_cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">):</span> <span class="c1"># cfg: [FitResults, ConfigurationInfo]</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<a class="viewcode-back" href="../../../api/loadParameters.html#pyamptools.utility.load_parameters.LoadParameters.load_cfg">[docs]</a>
+    <span class="k">def</span> <span class="nf">load_cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">):</span>  <span class="c1"># cfg: [FitResults, ConfigurationInfo]</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a map of unique (parameter: value) pairs excluding redundant constrained ones</span>
 <span class="sd">            These include production parameters and amplitude parameters</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            cfg: If cfg is a FitResults object set values to fitted results. For a ConfigurationInfo object set values to initial values</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1">######## GET UNIQUE AMPLITUDES&#39; PRODUCTION PARAMETERS ########</span>
         <span class="n">results</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="s1">&#39;configInfo&#39;</span><span class="p">):</span> <span class="c1"># input was a FitResults object</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="s2">&quot;configInfo&quot;</span><span class="p">):</span>  <span class="c1"># input was a FitResults object</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Input was a FitResults object. Take actions accordingly...&quot;</span><span class="p">)</span>
             <span class="n">results</span><span class="p">,</span> <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">configInfo</span><span class="p">()</span>
             <span class="n">ftype</span> <span class="o">=</span> <span class="s2">&quot;FitResults&quot;</span>
-        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="s1">&#39;constraintMap&#39;</span><span class="p">):</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="s2">&quot;constraintMap&quot;</span><span class="p">):</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Input was a ConfigurationInfo object. Take actions accordingly...&quot;</span><span class="p">)</span>
-            <span class="n">ftype</span> <span class="o">=</span> <span class="s2">&quot;ConfigurationInfo&quot;</span> <span class="c1"># input was a ConfigurationInfo object</span>
+            <span class="n">ftype</span> <span class="o">=</span> <span class="s2">&quot;ConfigurationInfo&quot;</span>  <span class="c1"># input was a ConfigurationInfo object</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input must be a FitResults or ConfigurationInfo object&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">results</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span>     <span class="o">=</span> <span class="n">cfg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span>
 
         <span class="n">constraintMap</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">constraintMap</span><span class="p">()</span>
         <span class="n">constraintIndex</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">uniqueProdPars</span>   <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">allProdPars</span>      <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">uniqueProdPars</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">allProdPars</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">vs</span> <span class="ow">in</span> <span class="n">constraintMap</span><span class="p">:</span>
             <span class="n">allProdPars</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">constraintIndex</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">cfg</span><span class="o">.</span><span class="n">amplitude</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">fixed</span><span class="p">():</span>
                 <span class="n">uniqueProdPars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
-                <span class="n">constraintIndex</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span> <span class="c1">#uniqueProdPars[i]</span>
+                <span class="n">constraintIndex</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>  <span class="c1"># uniqueProdPars[i]</span>
             <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vs</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">constraintIndex</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">cfg</span><span class="o">.</span><span class="n">amplitude</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">fixed</span><span class="p">():</span>
                     <span class="c1"># str(v) needed! appears that inserting v alone will go out of scope</span>
-                    <span class="n">constraintIndex</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)]</span> <span class="o">=</span> <span class="n">i</span> <span class="c1">#uniqueProdPars[i]</span>
+                    <span class="n">constraintIndex</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)]</span> <span class="o">=</span> <span class="n">i</span>  <span class="c1"># uniqueProdPars[i]</span>
             <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="c1">######## GET VALUES / REALNESS OF UNIQUE AMPLITUDES&#39; PRODUCTION PARAMETERS ########</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdPars</span>   <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">ampProdParMap</span><span class="p">()[</span><span class="n">k</span><span class="p">]</span> <span class="k">if</span> <span class="n">ftype</span><span class="o">==</span><span class="s2">&quot;FitResults&quot;</span> <span class="k">else</span> <span class="n">cfg</span><span class="o">.</span><span class="n">amplitude</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">())</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">uniqueProdPars</span><span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdIsReal</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">amplitude</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">uniqueProdPars</span><span class="p">}</span> <span class="c1"># check if amplitude is set to be real</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdPars</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">ampProdParMap</span><span class="p">()[</span><span class="n">k</span><span class="p">]</span> <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s2">&quot;FitResults&quot;</span> <span class="k">else</span> <span class="n">cfg</span><span class="o">.</span><span class="n">amplitude</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">())</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">uniqueProdPars</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdIsReal</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">amplitude</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">uniqueProdPars</span><span class="p">}</span>  <span class="c1"># check if amplitude is set to be real</span>
 
         <span class="c1">####### GET AMPLITUDE PARAMETERS ########</span>
         <span class="c1"># parameters associated with amplitudes (i.e. masses, widths, etc)</span>
-        <span class="n">ampPars</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">parameterList</span><span class="p">()</span> <span class="c1"># ParameterInfo*</span>
+        <span class="n">ampPars</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">parameterList</span><span class="p">()</span>  <span class="c1"># ParameterInfo*</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ampPars</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">ampPars</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">par</span><span class="o">.</span><span class="n">fixed</span><span class="p">():</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">ampPars</span><span class="p">[</span><span class="n">par</span><span class="o">.</span><span class="n">parName</span><span class="p">()]</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">ampParMap</span><span class="p">()[</span><span class="n">par</span><span class="o">.</span><span class="n">parName</span><span class="p">()]</span> <span class="k">if</span> <span class="n">ftype</span><span class="o">==</span><span class="s2">&quot;FitResults&quot;</span> <span class="k">else</span> <span class="n">par</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ampPars</span><span class="p">[</span><span class="n">par</span><span class="o">.</span><span class="n">parName</span><span class="p">()]</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">ampParMap</span><span class="p">()[</span><span class="n">par</span><span class="o">.</span><span class="n">parName</span><span class="p">()]</span> <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s2">&quot;FitResults&quot;</span> <span class="k">else</span> <span class="n">par</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nAmpPars</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ampPars</span><span class="p">)</span>
 
         <span class="c1">####### MERGE DICTIONARIES ########</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">params</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdPars</span>   <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">ampPars</span> <span class="c1"># python 3.9 - merge dictionaries</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">paramsIsReal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdIsReal</span> <span class="o">|</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="kc">True</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ampPars</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span> <span class="c1"># all amp params are real</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdPars</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">ampPars</span>  <span class="c1"># python 3.9 - merge dictionaries</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paramsIsReal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdIsReal</span> <span class="o">|</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="kc">True</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ampPars</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>  <span class="c1"># all amp params are real</span>
 
         <span class="c1">####### ADDITIONAL TRACKING #######</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">allProdPars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">allProdPars</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="LoadParameters.flatten_parameters">
-<a class="viewcode-back" href="../../../api/loadParameters.html#pyamptools.utility.LoadParameters.LoadParameters.flatten_parameters">[docs]</a>
+<a class="viewcode-back" href="../../../api/loadParameters.html#pyamptools.utility.load_parameters.LoadParameters.flatten_parameters">[docs]</a>
     <span class="k">def</span> <span class="nf">flatten_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{}):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Flatten amplitude parameters (complex-&gt; real, imag) skipping imaginary parts of amplitudes fixed to be real. If no arguments are passed, use the uniqueProdPars and uniqueProdIsReal from the last call to load_cfg(). Can also format any dictionary pair into flat format.</span>
 <span class="sd">            Dictionary to List</span>
 
@@ -437,42 +439,42 @@ document.write(`
 <span class="sd">            parameters (list): list of flattened parameters</span>
 <span class="sd">            keys (list): list of keys (parameter names) corresponding to parameters</span>
 <span class="sd">            names (list): list of parameter names expanding complex parameters into Re[par] and Im[par]</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">parameters</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">keys</span>       <span class="o">=</span> <span class="p">[]</span> <span class="c1"># lose information on flatten, use key to keep track of provenance</span>
-        <span class="n">names</span>      <span class="o">=</span> <span class="p">[]</span> <span class="c1"># track parameters in a prettier format</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># lose information on flatten, use key to keep track of provenance</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># track parameters in a prettier format</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">assert</span><span class="p">(</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">paramsIsReal</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="p">),</span> <span class="sa">f</span><span class="s1">&#39;Parameter </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1"> not found in parameter list! Is parameter fixed?&#39;</span>
-            <span class="n">pk</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;::&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># Production amplitudes take form &quot;Reaction::Sum::Amp&quot; grab Amp, pretty_k = pk</span>
-            <span class="n">real_value</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">real</span>      <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdPars</span> <span class="k">else</span> <span class="n">v</span>
-            <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Re[</span><span class="si">{</span><span class="n">pk</span><span class="si">}</span><span class="s1">]&#39;</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdPars</span> <span class="k">else</span> <span class="n">pk</span><span class="p">)</span>
-            <span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">real_value</span> <span class="p">)</span>
+            <span class="k">assert</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">paramsIsReal</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2"> not found in parameter list! Is parameter fixed?&quot;</span>
+            <span class="n">pk</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;::&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># Production amplitudes take form &quot;Reaction::Sum::Amp&quot; grab Amp, pretty_k = pk</span>
+            <span class="n">real_value</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">real</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdPars</span> <span class="k">else</span> <span class="n">v</span>
+            <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Re[</span><span class="si">{</span><span class="n">pk</span><span class="si">}</span><span class="s2">]&quot;</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">uniqueProdPars</span> <span class="k">else</span> <span class="n">pk</span><span class="p">)</span>
+            <span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">real_value</span><span class="p">)</span>
 
             <span class="c1"># Production coefficients will have :: in their name. Normal parameters will not</span>
-            <span class="k">if</span> <span class="s1">&#39;::&#39;</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
-                <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="s2">&quot;_re&quot;</span><span class="p">)</span> <span class="c1"># MUST match notation in AmpTools&#39; parameterManager</span>
+            <span class="k">if</span> <span class="s2">&quot;::&quot;</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
+                <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="s2">&quot;_re&quot;</span><span class="p">)</span>  <span class="c1"># MUST match notation in AmpTools&#39; parameterManager</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
 
             <span class="c1"># If parameters are complex, we will include their imaginary components</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">paramsIsReal</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
                 <span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
-                <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="s2">&quot;_im&quot;</span><span class="p">)</span>
-                <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Im[</span><span class="si">{</span><span class="n">pk</span><span class="si">}</span><span class="s1">]&#39;</span><span class="p">)</span>
+                <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="s2">&quot;_im&quot;</span><span class="p">)</span>
+                <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Im[</span><span class="si">{</span><span class="n">pk</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span>        <span class="o">=</span> <span class="n">keys</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">names</span>       <span class="o">=</span> <span class="n">names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="n">keys</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="n">names</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parmameters</span> <span class="o">=</span> <span class="n">parameters</span>
 
         <span class="k">return</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">names</span></div>
 
 
 <div class="viewcode-block" id="LoadParameters.unflatten_parameters">
-<a class="viewcode-back" href="../../../api/loadParameters.html#pyamptools.utility.LoadParameters.LoadParameters.unflatten_parameters">[docs]</a>
+<a class="viewcode-back" href="../../../api/loadParameters.html#pyamptools.utility.load_parameters.LoadParameters.unflatten_parameters">[docs]</a>
     <span class="k">def</span> <span class="nf">unflatten_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="p">[]):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Unflatten parameters forming complex values (for production parameters) when requested.</span>
 <span class="sd">            List to Dictionary</span>
 
@@ -482,27 +484,30 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            paramDict (dict): dictionary of parameters</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span><span class="o">!=</span><span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parmameters</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Bool 1 </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span><span class="o">!=</span><span class="mi">0</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Bool 2 </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parmameters</span><span class="p">)</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parmameters</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parmameters</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Bool 1 </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span><span class="o">!=</span><span class="mi">0</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Bool 2 </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parmameters</span><span class="p">)</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parmameters</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span>
 
         <span class="n">paramDict</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span><span class="n">parameters</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
             <span class="n">amp</span> <span class="o">=</span> <span class="n">k</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
-            <span class="n">part</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">k</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span> <span class="o">==</span> <span class="s1">&#39;_re&#39;</span> <span class="k">else</span> <span class="mi">1</span><span class="n">j</span>
-            <span class="k">if</span> <span class="n">amp</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">paramDict</span><span class="p">:</span> <span class="n">paramDict</span><span class="p">[</span><span class="n">amp</span><span class="p">]</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">(</span><span class="n">part</span><span class="o">*</span><span class="n">param</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>                    <span class="n">paramDict</span><span class="p">[</span><span class="n">amp</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">(</span><span class="n">part</span><span class="o">*</span><span class="n">param</span><span class="p">)</span>
+            <span class="n">part</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">k</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span> <span class="o">==</span> <span class="s2">&quot;_re&quot;</span> <span class="k">else</span> <span class="mi">1</span><span class="n">j</span>
+            <span class="k">if</span> <span class="n">amp</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">paramDict</span><span class="p">:</span>
+                <span class="n">paramDict</span><span class="p">[</span><span class="n">amp</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">(</span><span class="n">part</span> <span class="o">*</span> <span class="n">param</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">paramDict</span><span class="p">[</span><span class="n">amp</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">(</span><span class="n">part</span> <span class="o">*</span> <span class="n">param</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">paramDict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">paramDict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">paramDict</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="mi">10</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">paramDict</span></div>
 </div>
 
 
+
 <span class="k">def</span> <span class="nf">createMovesMixtureFromDict</span><span class="p">(</span><span class="n">moves_dict</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Creates a mixture of moves for the emcee sampler</span>
 
 <span class="sd">    Args:</span>
@@ -510,13 +515,13 @@ document.write(`
 
 <span class="sd">    Returns:</span>
 <span class="sd">        moves_mixture [ (emcee.moves.{move}(kwargs), probability) ]: List of tuples of moves (with kwargs pluggin in) and their probability</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">moves_mixture</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">move</span><span class="p">,</span> <span class="n">moveDict</span> <span class="ow">in</span> <span class="n">moves_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">move</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;emcee.moves.</span><span class="si">{</span><span class="n">move</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="c1"># convert string to class</span>
-        <span class="n">kwargs</span> <span class="o">=</span> <span class="n">moveDict</span><span class="p">[</span><span class="s1">&#39;kwargs&#39;</span><span class="p">]</span>
-        <span class="n">prob</span> <span class="o">=</span> <span class="n">moveDict</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span>
-        <span class="n">moves_mixture</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">(</span><span class="n">move</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">prob</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">move</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;emcee.moves.</span><span class="si">{</span><span class="n">move</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># convert string to class</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="n">moveDict</span><span class="p">[</span><span class="s2">&quot;kwargs&quot;</span><span class="p">]</span>
+        <span class="n">prob</span> <span class="o">=</span> <span class="n">moveDict</span><span class="p">[</span><span class="s2">&quot;prob&quot;</span><span class="p">]</span>
+        <span class="n">moves_mixture</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">move</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">prob</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">moves_mixture</span>
 </pre></div>
 

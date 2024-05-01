@@ -395,7 +395,10 @@ document.write(`
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">PyAmpTools</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-external-libraries-amptools-root">Building External Libraries (AmpTools, ROOT) <a id="Sourcing"></a></a></li>
+</ul>
+</li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-information">Additional Information</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jupyter-notebooks-in-vscode">Jupyter notebooks in VSCode</a></li>
 </ul>
@@ -424,7 +427,7 @@ document.write(`
 <hr class="docutils" />
 <section class="tex2jax_ignore mathjax_ignore" id="usage-design">
 <h1>Usage / Design<a class="headerlink" href="#usage-design" title="Link to this heading">#</a></h1>
-<p>AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in <code class="docutils literal notranslate"><span class="pre">external</span></code> directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_AMPS_DATAIO</span></code>. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code>, a program to produce simulations with AmpTools, is provided in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_GENERATORS</span></code> but is not built by the main makefile, a separate makefile is included with that directory.</p>
+<p>AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in <code class="docutils literal notranslate"><span class="pre">external</span></code> directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_AMPS_DATAIO</span></code>. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code>, a program to produce simulations with AmpTools, is provided in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_GENERATORS</span></code>. This distribution system will unfortunately lag behind the sources from <code class="docutils literal notranslate"><span class="pre">halld_sim</span></code> and <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> repos.</p>
 <p><code class="docutils literal notranslate"><span class="pre">pa</span></code> is an <strong>executable</strong> that dispatches various functions for: maximimum likelihood fitting (<code class="docutils literal notranslate"><span class="pre">fit</span></code>), extracting fit fractions from MLE fit results (<code class="docutils literal notranslate"><span class="pre">fitfrac</span></code>), and Markov chain Monte Carlo (<code class="docutils literal notranslate"><span class="pre">mcmc</span></code>), and simulation generation (<code class="docutils literal notranslate"><span class="pre">gen_amp</span></code>, <code class="docutils literal notranslate"><span class="pre">gen_vec_ps</span></code>). Example usage:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pa</span> <span class="o">-</span><span class="n">h</span> <span class="c1"># for usage</span>
 <span class="n">pa</span> <span class="n">fit</span> <span class="n">my_amptools</span><span class="o">.</span><span class="n">cfg</span> <span class="c1"># to run MLE fit</span>
@@ -438,41 +441,36 @@ document.write(`
 <hr class="docutils" />
 <section class="tex2jax_ignore mathjax_ignore" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
-<p>The following setup uses the <code class="docutils literal notranslate"><span class="pre">Bash</span></code> Shell. All major dependencies (ROOT, AmpTools, FSRoot) are built from source.
-<a class="reference external" href="https://root.cern/install/">ROOT</a> &gt;v6.26 is a required dependency (build steps are shown below) requiring at least some version of <code class="docutils literal notranslate"><span class="pre">gcc</span></code> (9.3.0 works). For JLab installations one should run the following bash commands or append to <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code> file</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Append to bashrc file</span>
-<span class="nb">source</span><span class="w"> </span>/etc/profile.d/modules.sh
-module<span class="w"> </span>use<span class="w"> </span>/apps/modulefiles
-module<span class="w"> </span>load<span class="w"> </span>mpi/openmpi3-x86_64
-module<span class="w"> </span>load<span class="w"> </span>gcc/9.3.0
-</pre></div>
-</div>
-<p>Install AmpTools and FSRoot as a submodule:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/lan13005/PyAmpTools<span class="w"> </span>--recurse-submodules
+<p>The following setup uses the <code class="docutils literal notranslate"><span class="pre">Bash</span></code> Shell and Anaconda. <code class="docutils literal notranslate"><span class="pre">conda</span></code> can be very slow to resolve dependencies for ROOT. Use <a class="reference external" href="https://github.com/conda-forge/miniforge#mambaforge">Mamba</a> or <a class="reference external" href="https://docs.anaconda.com/free/miniconda/index.html">Miniconda</a> instead of conda for faster dependency resolution</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># No need for recuse-submodules flag if using pre-compiled libraries at JLab</span>
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/lan13005/PyAmpTools<span class="w"> </span>--recurse-submodules
 <span class="nb">cd</span><span class="w"> </span>PyAmpTools
+<span class="nb">source</span><span class="w"> </span>set_environment.sh<span class="w"> </span><span class="c1"># detects if on JLab and loads some envs, else does nothing for now</span>
 </pre></div>
 </div>
-<p>Environment setup. <code class="docutils literal notranslate"><span class="pre">conda</span></code> can be very slow to resolve dependencies for ROOT. Use <a class="reference external" href="https://github.com/conda-forge/miniforge#mambaforge">Mamba</a> or <a class="reference external" href="https://docs.anaconda.com/free/miniconda/index.html">Miniconda</a> instead of conda for faster dependency resolution</p>
+<p>All major dependencies (ROOT, AmpTools, FSRoot) are built from source.
+<a class="reference external" href="https://root.cern/install/">ROOT</a> &gt;v6.26 is a required dependency (build steps are shown below) requiring at least some version of <code class="docutils literal notranslate"><span class="pre">gcc</span></code> (9.3.0 works).  See <a class="reference internal" href="#Sourcing"><span class="xref myst">Building External Libraries</span></a> to build these libraries first. <strong>Note: If you are running on the Jefferson Lab system the setup script will detect it and will load the default pre-compiled external libraries for a more streamlined experience.</strong></p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w">  </span><span class="c1"># Creates environment specified by environment.yml and pyproject.toml</span>
 conda<span class="w"> </span>activate<span class="w"> </span>pyamptools<span class="w"> </span><span class="c1"># activate the environment</span>
-pip<span class="w"> </span>install<span class="w"> </span>mpi4py<span class="w"> </span><span class="c1"># MPI (if available), mamba will link it against the wrong executables.</span>
-<span class="c1"># if installing mpi4py fails, see bottom of page</span>
 pre-commit<span class="w"> </span>install<span class="w"> </span>--install-hooks<span class="w"> </span><span class="c1"># (Optional) commit hooks to perform loose formatting</span>
 </pre></div>
 </div>
-<p>There is a known conflict between AmpTools’ GPU usage and RooFit/TMVA which comes with the conda-forge binaries of ROOT. Currently, ROOT has to be built from source with roofit and tmva off. A build script is included to download ROOT from source with the appropriate cmake flags to achieve this</p>
+<p>Then create the necessary directory and link the main environment script, allowing for <code class="docutils literal notranslate"><span class="pre">set_environment.sh</span></code> to be sourced everytime <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">pyamptools</span></code> is executed. <strong>Note:</strong> VSCode loads the environment but does not appear to run <code class="docutils literal notranslate"><span class="pre">activate.d</span></code> and therefore requires manual activation.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Modify set_environment.sh for your setup</span>
+mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/
+<span class="nb">source</span><span class="w"> </span>set_environment.sh<span class="w"> </span><span class="c1"># manually source for now</span>
+ln<span class="w"> </span>-snfr<span class="w"> </span>set_environment.sh<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/<span class="w"> </span><span class="c1"># setup auto-load for next time</span>
+</pre></div>
+</div>
+<section id="building-external-libraries-amptools-root">
+<h2>Building External Libraries (AmpTools, ROOT) <a id="Sourcing"></a><a class="headerlink" href="#building-external-libraries-amptools-root" title="Link to this heading">#</a></h2>
+<p>If you are not on the JLab system or do not want to use the default pre-compiled libraries on the JLab file system then you are in the right section.</p>
+<p>There is a known conflict between AmpTools’ GPU usage and RooFit/TMVA which comes with the conda-forge binaries of ROOT. Currently, ROOT has to be built from source with roofit and tmva off. A build script is included to download ROOT from source with the appropriate cmake flags to achieve this. Please modify <code class="docutils literal notranslate"><span class="pre">set_environment.sh</span></code> to match you hardware (GPU, etc) environment</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>external/root
 <span class="c1"># Modify build_root.sh to match your environment (gcc versions, etc))</span>
 <span class="c1"># if you modify the root version and use VSCode please update .vscode/settings.json file&#39;s extraPaths variable accordingly</span>
 <span class="nb">source</span><span class="w"> </span>build_root.sh
 <span class="nb">cd</span><span class="w"> </span>../..<span class="w"> </span><span class="c1"># move back to main directory</span>
-</pre></div>
-</div>
-<p>Modify <code class="docutils literal notranslate"><span class="pre">set_environment.sh</span></code> to match you GPU environment (default: setup for JLab ifarm). Then create the necessary directory and link the environment script, allowing for <code class="docutils literal notranslate"><span class="pre">set_environment.sh</span></code> to be sourced everytime <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">pyamptools</span></code> is executed. <strong>Note:</strong> VSCode loads the environment but does not appear to run <code class="docutils literal notranslate"><span class="pre">activate.d</span></code> and therefore requires manual activation.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Modify set_environment.sh for your setup</span>
-mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/
-<span class="nb">source</span><span class="w"> </span>set_environment.sh<span class="w"> </span><span class="c1"># manually source for now</span>
-ln<span class="w"> </span>-snfr<span class="w"> </span>set_environment.sh<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/<span class="w"> </span><span class="c1"># setup auto-load for next time</span>
 </pre></div>
 </div>
 <p>Build required libraries</p>
@@ -481,6 +479,7 @@ ln<span class="w"> </span>-snfr<span class="w"> </span>set_environment.sh<span c
 make<span class="w"> </span><span class="o">[</span>mpi/gpu/mpigpu/gpumpi<span class="o">]</span><span class="w"> </span><span class="c1"># distributes modified Makefiles and makes libraries</span>
 </pre></div>
 </div>
+</section>
 </section>
 <hr class="docutils" />
 <section class="tex2jax_ignore mathjax_ignore" id="additional-information">
@@ -506,7 +505,7 @@ make<span class="w"> </span><span class="o">[</span>mpi/gpu/mpigpu/gpumpi<span c
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="unit-testing">
 <h1>Unit Testing<a class="headerlink" href="#unit-testing" title="Link to this heading">#</a></h1>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;s~REPLACE_FOLDER_LOCATION~</span><span class="nv">$REPO_HOME</span><span class="s2">/tests/samples/SIMPLE_EXAMPLE~&quot;</span><span class="w"> </span><span class="nv">$REPO_HOME</span>/tests/samples/SIMPLE_EXAMPLE/fit.cfg<span class="w"> </span><span class="c1"># update path</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;s~REPLACE_FOLDER_LOCATION~</span><span class="nv">$PYAMPTOOLS_HOME</span><span class="s2">/tests/samples/SIMPLE_EXAMPLE~&quot;</span><span class="w"> </span><span class="nv">$PYAMPTOOLS_HOME</span>/tests/samples/SIMPLE_EXAMPLE/fit.cfg<span class="w"> </span><span class="c1"># update path</span>
 pytest<span class="w"> </span>-v<span class="w"> </span><span class="c1"># -s to not hide stdout</span>
 pytest<span class="w"> </span>-k<span class="w"> </span><span class="o">[</span>marked-test<span class="o">]</span><span class="w"> </span><span class="c1"># to run a specific marked test defined in pytest.ini</span>
 </pre></div>
@@ -587,7 +586,10 @@ pytest<span class="w"> </span>-k<span class="w"> </span><span class="o">[</span>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">PyAmpTools</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-external-libraries-amptools-root">Building External Libraries (AmpTools, ROOT) <a id="Sourcing"></a></a></li>
+</ul>
+</li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-information">Additional Information</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jupyter-notebooks-in-vscode">Jupyter notebooks in VSCode</a></li>
 </ul>

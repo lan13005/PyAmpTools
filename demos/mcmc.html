@@ -413,28 +413,23 @@ document.write(`
 <p>Markov Chain Monte Carlo (MCMC) is another class of techniques to perform interence by sampling directly from the posterior distribution. In this tutorial we will showcase how to use <a class="reference external" href="https://emcee.readthedocs.io/en/stable/">emcee</a>, an <em>ensemble sampler</em>. Ensemble samplers uses a set of walkers that move around the parameter space generally spending more time in high probablity regions. Several types of moves are implemented in <code class="docutils literal notranslate"><span class="pre">emcee</span></code> and can be mixed together to form a probabilistic mixture, see <a class="reference external" href="https://emcee.readthedocs.io/en/stable/user/moves/">emcee moves documentation</a>. Accepting or rejecting the move is based on the <a class="reference external" href="https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm">Metropolis algorithm</a>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">ROOT</span>
-<span class="kn">import</span> <span class="nn">os</span>
-
-<span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
-<span class="n">REPO_HOME</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
-<span class="kn">from</span> <span class="nn">pyamptools</span> <span class="kn">import</span> <span class="n">atiSetup</span>
-<span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># RANK_MPI defaults to 0 even if not using MPI</span>
-
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">emcee</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">from</span> <span class="nn">pyamptools.utility.LoadParameters</span> <span class="kn">import</span> <span class="n">LoadParameters</span>
-<span class="kn">import</span> <span class="nn">corner</span>
+<span class="kn">from</span> <span class="nn">pyamptools</span> <span class="kn">import</span> <span class="n">atiSetup</span>
+<span class="kn">from</span> <span class="nn">pyamptools.utility.load_parameters</span> <span class="kn">import</span> <span class="n">LoadParameters</span>
 <span class="kn">from</span> <span class="nn">pyamptools.mcmc</span> <span class="kn">import</span> <span class="n">mcmcManager</span>
+<span class="kn">from</span> <span class="nn">pyamptools.utility.general</span> <span class="kn">import</span> <span class="n">PrintSourceCode</span>
 
-<span class="kn">from</span> <span class="nn">pyamptools.utility.utils</span> <span class="kn">import</span> <span class="n">PrintSourceCode</span>
+<span class="n">PYAMPTOOLS_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYAMPTOOLS_HOME&quot;</span><span class="p">]</span>
+<span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># RANK_MPI defaults to 0 even if not using MPI</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Welcome to JupyROOT 6.28/06
-atiSetup| jupyter-book called python
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>atiSetup| jupyter-book called python
 
 ------------------------------------------------
 atiSetup| MPI is disabled
@@ -443,11 +438,11 @@ atiSetup| GPU is disabled
 
 
 atiSetup| Loading library libAmpTools.so ..............  ON
-atiSetup| Loading library libAmpPlotter.so ............  ON
-atiSetup| Loading library libAmpsDataIO.so ............
+atiSetup| Loading library libAmpPlotter.so ............
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  ON
+atiSetup| Loading library libAmpsDataIO.so ............  ON
 atiSetup| Loading library libFSRoot.so ................  OFF
 atiSetup| Loading library libAmpsGen.so ...............  ON
 
@@ -456,7 +451,6 @@ atiSetup| Loading library libAmpsGen.so ...............  ON
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
-
 Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 </pre></div>
 </div>
@@ -465,11 +459,11 @@ Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 <p>Lets start with the general setup first. We first have to define the location of the <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> configuration file that defines the fit model and datasets. We also need to define some folder names and file names to dump the results to.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cfgfile</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">REPO_HOME</span><span class="si">}</span><span class="s1">/tests/samples/SIMPLE_EXAMPLE/fit.cfg&#39;</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cfgfile</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PYAMPTOOLS_HOME</span><span class="si">}</span><span class="s2">/tests/samples/SIMPLE_EXAMPLE/fit.cfg&quot;</span>
 <span class="n">overwrite_ofile</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="n">ofile</span> <span class="o">=</span> <span class="s1">&#39;mcmc/emcee_state.h5&#39;</span>
-<span class="n">intensity_dump</span> <span class="o">=</span> <span class="s1">&#39;mcmc/samples_intensity.feather&#39;</span>
-<span class="n">corner_ofile</span> <span class="o">=</span> <span class="s1">&#39;corner.png&#39;</span>
+<span class="n">ofile</span> <span class="o">=</span> <span class="s2">&quot;mcmc/emcee_state.h5&quot;</span>
+<span class="n">intensity_dump</span> <span class="o">=</span> <span class="s2">&quot;mcmc/samples_intensity.feather&quot;</span>
+<span class="n">corner_ofile</span> <span class="o">=</span> <span class="s2">&quot;corner.png&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -483,8 +477,8 @@ Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">nwalkers</span> <span class="o">=</span> <span class="mi">32</span>
 <span class="n">burnIn</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="n">nsamples</span> <span class="o">=</span> <span class="mi">200</span>
-<span class="n">overwrite_ofile</span> <span class="o">=</span> <span class="kc">True</span> <span class="c1"># whether we should always overwrite the output file</span>
-<span class="n">seed</span> <span class="o">=</span> <span class="mi">42</span> <span class="c1"># for reproducibility</span>
+<span class="n">overwrite_ofile</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># whether we should always overwrite the output file</span>
+<span class="n">seed</span> <span class="o">=</span> <span class="mi">42</span>  <span class="c1"># for reproducibility</span>
 </pre></div>
 </div>
 </div>
@@ -640,13 +634,13 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">############## PREPARE FOR SAMPLER ##############</span>
-<span class="k">assert</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cfgfile</span><span class="p">)</span> <span class="p">),</span> <span class="s1">&#39;Config file does not exist at specified path&#39;</span>
-<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ofile</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">overwrite_ofile</span><span class="p">:</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rm </span><span class="si">{</span><span class="n">ofile</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cfgfile</span><span class="p">),</span> <span class="s2">&quot;Config file does not exist at specified path&quot;</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ofile</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">overwrite_ofile</span><span class="p">:</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;rm </span><span class="si">{</span><span class="n">ofile</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Overwriting existing output file!&quot;</span><span class="p">)</span>
-<span class="k">if</span> <span class="s1">&#39;/&#39;</span> <span class="ow">in</span> <span class="n">ofile</span><span class="p">:</span>
-    <span class="n">ofolder</span> <span class="o">=</span> <span class="n">ofile</span><span class="p">[:</span><span class="n">ofile</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)]</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;mkdir -p </span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="k">if</span> <span class="s2">&quot;/&quot;</span> <span class="ow">in</span> <span class="n">ofile</span><span class="p">:</span>
+    <span class="n">ofolder</span> <span class="o">=</span> <span class="n">ofile</span><span class="p">[:</span> <span class="n">ofile</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)]</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;mkdir -p </span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -660,10 +654,10 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <span class="n">cfgInfo</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
 
 <span class="c1">############## REGISTER OBJECTS FOR AMPTOOLS ##############</span>
-<span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">Zlm</span><span class="p">()</span> <span class="p">)</span>
-<span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReader</span><span class="p">()</span> <span class="p">)</span>
+<span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="n">Zlm</span><span class="p">())</span>
+<span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span><span class="n">DataReader</span><span class="p">())</span>
 
-<span class="n">ati</span> <span class="o">=</span> <span class="n">AmpToolsInterface</span><span class="p">(</span> <span class="n">cfgInfo</span> <span class="p">)</span>
+<span class="n">ati</span> <span class="o">=</span> <span class="n">AmpToolsInterface</span><span class="p">(</span><span class="n">cfgInfo</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -867,19 +861,19 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">############## RUN MCMC ##############</span>
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
 
-<span class="n">atis</span> <span class="o">=</span> <span class="p">[</span><span class="n">ati</span><span class="p">]</span> <span class="c1"># list of AmpToolsInterface objects to run MCMC on</span>
-<span class="n">LoadParametersSamplers</span> <span class="o">=</span> <span class="p">[</span><span class="n">LoadParametersSampler</span><span class="p">]</span> <span class="c1"># list of LoadParameters objects to run MCMC on</span>
+<span class="n">atis</span> <span class="o">=</span> <span class="p">[</span><span class="n">ati</span><span class="p">]</span>  <span class="c1"># list of AmpToolsInterface objects to run MCMC on</span>
+<span class="n">LoadParametersSamplers</span> <span class="o">=</span> <span class="p">[</span><span class="n">LoadParametersSampler</span><span class="p">]</span>  <span class="c1"># list of LoadParameters objects to run MCMC on</span>
 
-<span class="p">[</span> <span class="n">ati</span><span class="o">.</span><span class="n">parameterManager</span><span class="p">()</span><span class="o">.</span><span class="n">setDoCovarianceUpdate</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">ati</span> <span class="ow">in</span> <span class="n">atis</span> <span class="p">]</span> <span class="c1"># No internal Minuit fit = no covariance matrix</span>
+<span class="p">[</span><span class="n">ati</span><span class="o">.</span><span class="n">parameterManager</span><span class="p">()</span><span class="o">.</span><span class="n">setDoCovarianceUpdate</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">ati</span> <span class="ow">in</span> <span class="n">atis</span><span class="p">]</span>  <span class="c1"># No internal Minuit fit = no covariance matrix</span>
 
 <span class="n">mcmcMgr</span> <span class="o">=</span> <span class="n">mcmcManager</span><span class="p">(</span><span class="n">atis</span><span class="p">,</span> <span class="n">LoadParametersSamplers</span><span class="p">,</span> <span class="n">ofile</span><span class="p">)</span>
 
 <span class="n">mcmcMgr</span><span class="o">.</span><span class="n">perform_mcmc</span><span class="p">(</span>
-    <span class="n">nwalkers</span> <span class="o">=</span> <span class="n">nwalkers</span><span class="p">,</span>
-    <span class="n">burnIn</span>   <span class="o">=</span> <span class="n">burnIn</span><span class="p">,</span>
-    <span class="n">nsamples</span> <span class="o">=</span> <span class="n">nsamples</span><span class="p">,</span>
-    <span class="n">intensity_dump</span> <span class="o">=</span> <span class="n">intensity_dump</span><span class="p">,</span>
-    <span class="n">sampler_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>  <span class="c1"># turn off progress bar for cleaner output</span>
+    <span class="n">nwalkers</span><span class="o">=</span><span class="n">nwalkers</span><span class="p">,</span>
+    <span class="n">burnIn</span><span class="o">=</span><span class="n">burnIn</span><span class="p">,</span>
+    <span class="n">nsamples</span><span class="o">=</span><span class="n">nsamples</span><span class="p">,</span>
+    <span class="n">intensity_dump</span><span class="o">=</span><span class="n">intensity_dump</span><span class="p">,</span>
+    <span class="n">sampler_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;progress&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>  <span class="c1"># turn off progress bar for cleaner output</span>
 <span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fit time: </span><span class="si">{</span><span class="n">mcmcMgr</span><span class="o">.</span><span class="n">elapsed_fit_time</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
@@ -892,7 +886,7 @@ nwalkers: 32
 burnIn: 0
 nsamples: 200
 params_dict: {}
-moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7f8910efdc10&gt;]
+moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7fe21b02a970&gt;]
 sampler_kwargs: {&#39;progress&#39;: False}
  ========================================================================= 
 
@@ -932,7 +926,7 @@ Autocorrelation time: 16.447 steps
 MCMC intensity samples saved to mcmc/samples_intensity.feather
   shape: (6400, 4)
 
-Fit time: 12.688017129898071 seconds
+Fit time: 11.953816175460815 seconds
 Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
 	Perfect acceptance -- generated and accepted MC are the same
 </pre></div>
@@ -943,12 +937,12 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 <p>The configuration file has been seeded with the MLE fit (using the <em>include</em> keyword at the bottom of the cfg file pointing to the <em>seed</em> file outputted by <code class="docutils literal notranslate"><span class="pre">fit</span></code>). By running the <code class="docutils literal notranslate"><span class="pre">emcee</span></code> sampler this way gives an estimate of the local posterior distribution</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mcmcMgr</span><span class="o">.</span><span class="n">draw_corner</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">corner_ofile</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mcmcMgr</span><span class="o">.</span><span class="n">draw_corner</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ofolder</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">corner_ofile</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/02359415a002aa35cb7e7c0df9695731e170dde1cfe0d2e66f21ad3c6212fa68.png" src="../_images/02359415a002aa35cb7e7c0df9695731e170dde1cfe0d2e66f21ad3c6212fa68.png" />
+<img alt="../_images/51f1f9e94de720150fa5046fccb2bff3548f4815a8dcac8c636de35ab74f4f80.png" src="../_images/51f1f9e94de720150fa5046fccb2bff3548f4815a8dcac8c636de35ab74f4f80.png" />
 </div>
 </div>
 <p>We can see that the parameters are correlated. In this cfg file <code class="docutils literal notranslate"><span class="pre">resAmp1</span></code> is set to be real while <code class="docutils literal notranslate"><span class="pre">resAmp2</span></code> and <code class="docutils literal notranslate"><span class="pre">resAmp3</span></code> are freely floating complex numbers. It can be seen that resAmp1 is negatively correlated with the other parameters. The other parameters are uniformly positively correlated with each other.</p>

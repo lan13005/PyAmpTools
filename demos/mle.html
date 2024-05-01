@@ -399,11 +399,7 @@ document.write(`
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
-<span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">pyamptools</span> <span class="kn">import</span> <span class="n">atiSetup</span>
 
 <span class="kn">from</span> <span class="nn">pyamptools.mle</span> <span class="kn">import</span> <span class="n">runFits</span>
@@ -419,12 +415,12 @@ document.write(`
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
-<span class="n">REPO_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
+<span class="n">PYAMPTOOLS_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYAMPTOOLS_HOME&quot;</span><span class="p">]</span>
 <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span>
 
-<span class="n">cfgfile</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">REPO_HOME</span><span class="si">}</span><span class="s1">/tests/samples/SIMPLE_EXAMPLE/fitInit.cfg&#39;</span>
+<span class="n">cfgfile</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PYAMPTOOLS_HOME</span><span class="si">}</span><span class="s2">/tests/samples/SIMPLE_EXAMPLE/fitInit.cfg&quot;</span>
 <span class="n">randomSeed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
-<span class="n">seedfile</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;seed_file&#39;</span>
+<span class="n">seedfile</span> <span class="o">=</span> <span class="s2">&quot;seed_file&quot;</span>
 <span class="n">numRnd</span> <span class="o">=</span> <span class="mi">0</span>
 </pre></div>
 </div>
@@ -449,9 +445,8 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
+
+Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 </pre></div>
 </div>
 </div>
@@ -472,7 +467,7 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 Config file: /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/fitInit.cfg
 Seed file: seed_file
 Number of random fits: 0
-Random seed: 1712266071
+Random seed: 1714570062
  ============================= 
 </pre></div>
 </div>
@@ -650,8 +645,8 @@ Random seed: 1712266071
 <p>The confirguation file specifies a datareader called <code class="docutils literal notranslate"><span class="pre">ROOTDataReader</span></code> and the amplitude called <code class="docutils literal notranslate"><span class="pre">Zlm</span></code>. There are many datareaders (i.e. for <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> and another for <code class="docutils literal notranslate"><span class="pre">Bootstrapping</span></code>) and amplitudes (i.e. <code class="docutils literal notranslate"><span class="pre">BreitWigner</span></code> and <code class="docutils literal notranslate"><span class="pre">Piecewise</span></code>). Below, <code class="docutils literal notranslate"><span class="pre">DataReader</span></code> is an alias for <code class="docutils literal notranslate"><span class="pre">ROOTDataReader</span></code> or its <code class="docutils literal notranslate"><span class="pre">MPI</span></code> implementation. These aliases are created by <code class="docutils literal notranslate"><span class="pre">atiSetup</span></code>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">Zlm</span><span class="p">()</span> <span class="p">)</span>
-<span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReader</span><span class="p">()</span> <span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="n">Zlm</span><span class="p">())</span>
+<span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span><span class="n">DataReader</span><span class="p">())</span>
 <span class="c1"># AmpToolsInterface.registerAmplitude( BreitWigner() )</span>
 <span class="c1"># AmpToolsInterface.registerAmplitude( Piecewise() )</span>
 <span class="c1"># AmpToolsInterface.registerDataReader( DataReaderBootstrap() )</span>
@@ -662,7 +657,7 @@ Random seed: 1712266071
 <p><code class="docutils literal notranslate"><span class="pre">AmpToolsInterface</span></code> is the primary way to interact with the <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> minimization library. From this <code class="docutils literal notranslate"><span class="pre">object</span></code> we can access things like a <code class="docutils literal notranslate"><span class="pre">ParameterManager</span></code> and a <code class="docutils literal notranslate"><span class="pre">MinimizationManager</span></code>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ati</span> <span class="o">=</span> <span class="n">AmpToolsInterface</span><span class="p">(</span> <span class="n">cfgInfo</span> <span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ati</span> <span class="o">=</span> <span class="n">AmpToolsInterface</span><span class="p">(</span><span class="n">cfgInfo</span><span class="p">)</span>
 <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">setRandomSeed</span><span class="p">(</span><span class="n">randomSeed</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -752,8 +747,8 @@ LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): 14346.408126566832
 
 [ MinuitMinimizationManager ]:
 
-	MIGRAD evaluation total wall time:  3.38064e-01 s.
-	   average time per function call:  1.11942e+00 ms.
+	MIGRAD evaluation total wall time:  3.04522e-01 s.
+	   average time per function call:  1.00835e+00 ms.
 
 [ NormIntInterface ]:
 

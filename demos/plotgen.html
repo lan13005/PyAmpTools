@@ -399,20 +399,14 @@ document.write(`
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">ROOT</span>
-<span class="n">ROOT</span><span class="o">.</span><span class="n">ROOT</span><span class="o">.</span><span class="n">EnableImplicitMT</span><span class="p">()</span> <span class="c1"># REMOVE THIS WHEN DEBUGGING</span>
-
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
-<span class="kn">import</span> <span class="nn">argparse</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">pyamptools.utility.utils</span> <span class="kn">import</span> <span class="n">remove_all_whitespace</span>
-<span class="kn">from</span> <span class="nn">pyamptools.utility.plotgen_utils</span> <span class="kn">import</span> <span class="n">book_histogram</span><span class="p">,</span> <span class="n">turn_on_specifc_waveset</span><span class="p">,</span> <span class="n">draw_histograms</span>
+<span class="kn">from</span> <span class="nn">pyamptools.utility.plotgen_utils</span> <span class="kn">import</span> <span class="n">draw_histograms</span>
 <span class="kn">from</span> <span class="nn">pyamptools</span> <span class="kn">import</span> <span class="n">atiSetup</span>
-
 <span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span>
 
-<span class="n">REPO_HOME</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REPO_HOME&#39;</span><span class="p">]</span>
+<span class="n">PYAMPTOOLS_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYAMPTOOLS_HOME&quot;</span><span class="p">]</span>
 <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ROOT</span><span class="o">.</span><span class="n">ROOT</span><span class="o">.</span><span class="n">EnableImplicitMT</span><span class="p">()</span>  <span class="c1"># REMOVE THIS WHEN DEBUGGING</span>
 </pre></div>
 </div>
 </div>
@@ -447,9 +441,6 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 Initializing FSRoot for PyROOT...
 </pre></div>
 </div>
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(False, False, 0)
-</pre></div>
-</div>
 </div>
 </div>
 <p>After performing a MLE fit a <code class="docutils literal notranslate"><span class="pre">FitResults</span></code> object is created with a <code class="docutils literal notranslate"><span class="pre">.fit</span></code> extension. This file can be read in using the <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> <a class="reference external" href="https://github.com/mashephe/AmpTools/blob/master/AmpTools/IUAmpTools/PlotGenerator.h">PlotGenerator</a> class. In this class, Amplitudes can be turned on/off and amplitude weights can be extracted for a particular amplitude combination. These weights can then be used for plotting purposes.</p>
@@ -458,7 +449,8 @@ Initializing FSRoot for PyROOT...
 <p>Some <em>macros</em> can be loaded ( mirroring <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> <a class="reference external" href="https://github.com/remitche66/FSRoot/blob/72959ffdc223546377c690873c7759e4e6b901a0/FSBasic/FSTree.h">macros</a> / <a class="reference external" href="https://github.com/remitche66/FSRoot/blob/master/FSBasic/FSMath.h">math</a> ) that calculates various kinematic quantites (i.e. <em>mass</em> and <em>helicity angles</em>). We can load them as follows. We will return to their definitions in a bit.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyamptools.utility.RDFmacros</span> <span class="kn">import</span> <span class="n">loadMacros</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyamptools.utility.rdf_macros</span> <span class="kn">import</span> <span class="n">loadMacros</span>
+
 <span class="n">loadMacros</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -469,7 +461,7 @@ Initializing FSRoot for PyROOT...
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">### IF USING ROOT TO PLOT - CAN SET GLUEX STYLE HERE ###</span>
 <span class="n">gInterpreter</span><span class="o">.</span><span class="n">ProcessLine</span><span class="p">(</span><span class="s1">&#39;#include &quot;gluex_style.h&quot;&#39;</span><span class="p">)</span>
-<span class="n">gluex_style</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">gluex_style</span><span class="p">()</span> <span class="c1"># Returns TStyle</span>
+<span class="n">gluex_style</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">gluex_style</span><span class="p">()</span>  <span class="c1"># Returns TStyle</span>
 <span class="n">gluex_style</span><span class="o">.</span><span class="n">SetPadRightMargin</span><span class="p">(</span><span class="mf">0.08</span><span class="p">)</span>
 <span class="n">gluex_style</span><span class="o">.</span><span class="n">cd</span><span class="p">()</span>
 </pre></div>
@@ -480,8 +472,8 @@ Initializing FSRoot for PyROOT...
 <p>Lets define the location of the <code class="docutils literal notranslate"><span class="pre">.fit</span></code> file and the name of a <code class="docutils literal notranslate"><span class="pre">.pdf</span></code> file to dump drawn histograms to</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit_results</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">REPO_HOME</span><span class="si">}</span><span class="s1">/tests/samples/SIMPLE_EXAMPLE/result.fit&#39;</span>
-<span class="n">hist_output_name</span> <span class="o">=</span> <span class="s1">&#39;result&#39;</span> <span class="c1"># dumps results to a pdf file with this name, extension will be appended</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit_results</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PYAMPTOOLS_HOME</span><span class="si">}</span><span class="s2">/tests/samples/SIMPLE_EXAMPLE/result.fit&quot;</span>
+<span class="n">hist_output_name</span> <span class="o">=</span> <span class="s2">&quot;result&quot;</span>  <span class="c1"># dumps results to a pdf file with this name, extension will be appended</span>
 </pre></div>
 </div>
 </div>
@@ -489,9 +481,9 @@ Initializing FSRoot for PyROOT...
 <p>Lets load the <code class="docutils literal notranslate"><span class="pre">.fit</span></code> file into a <code class="docutils literal notranslate"><span class="pre">FitResults</span></code> object</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">FitResults</span><span class="p">(</span> <span class="n">fit_results</span> <span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">FitResults</span><span class="p">(</span><span class="n">fit_results</span><span class="p">)</span>
 <span class="k">if</span> <span class="ow">not</span> <span class="n">results</span><span class="o">.</span><span class="n">valid</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Invalid fit result in file: </span><span class="si">{</span><span class="n">fit_results</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid fit result in file: </span><span class="si">{</span><span class="n">fit_results</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">exit</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -515,10 +507,10 @@ Initializing FSRoot for PyROOT...
 <p>As always, we have to register the requested amplitudes and the datareaders. We can then create a <code class="docutils literal notranslate"><span class="pre">PlotGenerator</span></code> instance. The order matters as <code class="docutils literal notranslate"><span class="pre">PlotGenerator</span></code> uses these amplitudes and datareaders.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">Zlm</span><span class="p">()</span> <span class="p">)</span>
-<span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReader</span><span class="p">()</span> <span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="n">Zlm</span><span class="p">())</span>
+<span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span><span class="n">DataReader</span><span class="p">())</span>
 
-<span class="n">plotGen</span> <span class="o">=</span> <span class="n">PlotGenerator</span><span class="p">(</span> <span class="n">results</span> <span class="p">)</span>
+<span class="n">plotGen</span> <span class="o">=</span> <span class="n">PlotGenerator</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -548,20 +540,19 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 <span class="n">HISTS_TO_BOOK</span> <span class="o">=</span> <span class="p">{</span>
     <span class="c1"># 1D Hists</span>
     <span class="c1"># HistName: [ xname, Function, title, n_bins, x-min, x-max, drawOptions]</span>
-    <span class="s2">&quot;Metapi&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="s2">&quot;Metapi&quot;</span><span class="p">,</span> <span class="s2">&quot;MASS(ETA,PI0)&quot;</span><span class="p">,</span> <span class="s2">&quot;;M(#eta#pi);Events&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mf">1.04</span><span class="p">,</span> <span class="mf">1.72</span><span class="p">,</span> <span class="s2">&quot;&quot;</span> <span class="p">],</span>
-    <span class="s2">&quot;Meta&quot;</span><span class="p">:</span>   <span class="p">[</span> <span class="s2">&quot;Meta&quot;</span><span class="p">,</span> <span class="s2">&quot;MASS(ETA)&quot;</span><span class="p">,</span> <span class="s2">&quot;;M(#eta);Events&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mf">0.49</span><span class="p">,</span> <span class="mf">0.61</span><span class="p">,</span> <span class="s2">&quot;&quot;</span> <span class="p">],</span>
-    <span class="s2">&quot;Mpi0&quot;</span><span class="p">:</span>   <span class="p">[</span> <span class="s2">&quot;Mpi0&quot;</span><span class="p">,</span> <span class="s2">&quot;MASS(PI0)&quot;</span><span class="p">,</span> <span class="s2">&quot;;M(#pi^</span><span class="si">{0}</span><span class="s2">);Events&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.18</span><span class="p">,</span> <span class="s2">&quot;&quot;</span> <span class="p">],</span>
-    <span class="s2">&quot;cosGJ&quot;</span><span class="p">:</span>  <span class="p">[</span> <span class="s2">&quot;cosGJ&quot;</span><span class="p">,</span> <span class="s2">&quot;GJCOSTHETA(ETA,PI0,RECOIL)&quot;</span><span class="p">,</span> <span class="s2">&quot;;cos(#theta_</span><span class="si">{GJ}</span><span class="s2">);Events&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;&quot;</span> <span class="p">],</span>
-    <span class="s2">&quot;cosHel&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="s2">&quot;cosHel&quot;</span><span class="p">,</span><span class="s2">&quot;HELCOSTHETA(ETA,PI0,RECOIL)&quot;</span><span class="p">,</span> <span class="s2">&quot;;cos(#theta_</span><span class="si">{HEL}</span><span class="s2">);Events&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;&quot;</span> <span class="p">],</span>
-    <span class="s2">&quot;phiHel&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="s2">&quot;phiHel&quot;</span><span class="p">,</span><span class="s2">&quot;HELPHI(ETA,PI0,RECOIL,GLUEXBEAM)&quot;</span><span class="p">,</span> <span class="s2">&quot;;#phi_</span><span class="si">{HEL}</span><span class="s2">;Events&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;&quot;</span> <span class="p">],</span>
-
+    <span class="s2">&quot;Metapi&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Metapi&quot;</span><span class="p">,</span> <span class="s2">&quot;MASS(ETA,PI0)&quot;</span><span class="p">,</span> <span class="s2">&quot;;M(#eta#pi);Events&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mf">1.04</span><span class="p">,</span> <span class="mf">1.72</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;Meta&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Meta&quot;</span><span class="p">,</span> <span class="s2">&quot;MASS(ETA)&quot;</span><span class="p">,</span> <span class="s2">&quot;;M(#eta);Events&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mf">0.49</span><span class="p">,</span> <span class="mf">0.61</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;Mpi0&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Mpi0&quot;</span><span class="p">,</span> <span class="s2">&quot;MASS(PI0)&quot;</span><span class="p">,</span> <span class="s2">&quot;;M(#pi^</span><span class="si">{0}</span><span class="s2">);Events&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.18</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;cosGJ&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;cosGJ&quot;</span><span class="p">,</span> <span class="s2">&quot;GJCOSTHETA(ETA,PI0,RECOIL)&quot;</span><span class="p">,</span> <span class="s2">&quot;;cos(#theta_</span><span class="si">{GJ}</span><span class="s2">);Events&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;cosHel&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;cosHel&quot;</span><span class="p">,</span> <span class="s2">&quot;HELCOSTHETA(ETA,PI0,RECOIL)&quot;</span><span class="p">,</span> <span class="s2">&quot;;cos(#theta_</span><span class="si">{HEL}</span><span class="s2">);Events&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;phiHel&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;phiHel&quot;</span><span class="p">,</span> <span class="s2">&quot;HELPHI(ETA,PI0,RECOIL,GLUEXBEAM)&quot;</span><span class="p">,</span> <span class="s2">&quot;;#phi_</span><span class="si">{HEL}</span><span class="s2">;Events&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">],</span>
     <span class="c1"># 2D Hists</span>
     <span class="c1"># HistName:     [ xname, xfunction, title, nx_bins, x_min, x_max, yname, yfunction, ny_bins, y_min, y_max, drawOptions]</span>
     <span class="c1"># &quot;cosHelvsMass&quot;: [ &quot;Metapi&quot;, &quot;MASS(ETA,PI0)&quot;, &quot;M(#eta#pi) vs cos(#theta_{hel})&quot;, 100, 1.04, 1.72, &quot;cosHel&quot;, &quot;GJCOSTHETA(ETA,PI0,GLUEXBEAM)&quot;, 100, -1, 1, &quot;COLZ&quot;],</span>
 <span class="p">}</span>
 
 <span class="c1">############## SETUP ##############</span>
-<span class="n">particles</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;GLUEXBEAM&#39;</span><span class="p">,</span><span class="s1">&#39;RECOIL&#39;</span><span class="p">,</span><span class="s1">&#39;ETA&#39;</span><span class="p">,</span><span class="s1">&#39;PI0&#39;</span><span class="p">]</span>
+<span class="n">particles</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;GLUEXBEAM&quot;</span><span class="p">,</span> <span class="s2">&quot;RECOIL&quot;</span><span class="p">,</span> <span class="s2">&quot;ETA&quot;</span><span class="p">,</span> <span class="s2">&quot;PI0&quot;</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
@@ -613,7 +604,7 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
 <p>Overall Fit results</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;result_all.png&#39;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;result_all.png&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -624,7 +615,7 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
 <p>Only the L=2 M=0 wave</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;result_resAmp1.png&#39;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;result_resAmp1.png&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -635,7 +626,7 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
 <p>Only the L=2 M=2 wave</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;result_resAmp2.png&#39;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;result_resAmp2.png&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -646,7 +637,7 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
 <p>Only the L=0 M=0 wave</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;result_resAmp3.png&#39;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;result_resAmp3.png&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -657,7 +648,7 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
 <p>Coherent sum of (L=2, M=0) (L=2, M=0) waves</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;result_resAmp1;resAmp2.png&#39;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;result_resAmp1;resAmp2.png&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

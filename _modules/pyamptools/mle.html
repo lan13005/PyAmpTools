@@ -355,14 +355,15 @@ document.write(`
 <span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 
+
 <span class="k">def</span> <span class="nf">_performFit</span><span class="p">(</span>
-        <span class="n">ati</span><span class="p">,</span>
-        <span class="n">seed_file_tag</span><span class="p">,</span>
-        <span class="n">seedfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;seed&quot;</span><span class="p">,</span>
-        <span class="n">useMinos</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">hesse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+    <span class="n">ati</span><span class="p">,</span>
+    <span class="n">seed_file_tag</span><span class="p">,</span>
+    <span class="n">seedfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;seed&quot;</span><span class="p">,</span>
+    <span class="n">useMinos</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">hesse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Performs a single fit</span>
 
 <span class="sd">    Args:</span>
@@ -372,7 +373,7 @@ document.write(`
 <span class="sd">    Returns:</span>
 <span class="sd">        bFitFailed (bool): flag indicating if fit failed</span>
 <span class="sd">        NLL (double): Negative log likelihood</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">fitManager</span><span class="p">:</span> <span class="n">MinuitMinimizationManager</span> <span class="o">=</span> <span class="n">ati</span><span class="o">.</span><span class="n">minuitMinimizationManager</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="n">useMinos</span><span class="p">:</span>
@@ -393,22 +394,23 @@ document.write(`
     <span class="n">ati</span><span class="o">.</span><span class="n">finalizeFit</span><span class="p">(</span><span class="n">seed_file_tag</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">seedfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">ati</span><span class="o">.</span><span class="n">fitResults</span><span class="p">()</span><span class="o">.</span><span class="n">writeSeed</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">seedfile</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">seed_file_tag</span><span class="si">}</span><span class="s1">.txt&#39;</span><span class="p">)</span>
+        <span class="n">ati</span><span class="o">.</span><span class="n">fitResults</span><span class="p">()</span><span class="o">.</span><span class="n">writeSeed</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">seedfile</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">seed_file_tag</span><span class="si">}</span><span class="s2">.txt&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">bFitFailed</span><span class="p">,</span> <span class="n">NLL</span>
+
 
 <span class="c1">############### PERFORM FIT #############</span>
 <div class="viewcode-block" id="runFits">
 <a class="viewcode-back" href="../../api/mle.html#pyamptools.mle.runFits">[docs]</a>
 <span class="k">def</span> <span class="nf">runFits</span><span class="p">(</span>
-        <span class="n">ati</span><span class="p">,</span>
-        <span class="n">N</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-        <span class="n">maxIter</span> <span class="o">=</span> <span class="mi">100000</span><span class="p">,</span>
-        <span class="n">seedfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;seed&quot;</span><span class="p">,</span>
-        <span class="n">useMinos</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">hesse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+    <span class="n">ati</span><span class="p">,</span>
+    <span class="n">N</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">maxIter</span><span class="o">=</span><span class="mi">100000</span><span class="p">,</span>
+    <span class="n">seedfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;seed&quot;</span><span class="p">,</span>
+    <span class="n">useMinos</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">hesse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Performs N randomized fits by calling _performFit(), if N=0 then a single fit with no randomization is performed</span>
 
 <span class="sd">    Args:</span>
@@ -422,32 +424,32 @@ document.write(`
 
 <span class="sd">    Returns:</span>
 <span class="sd">        minNLL (double): Minimum negative log likelihood</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">minNLL</span> <span class="o">=</span> <span class="mf">1e6</span>
     <span class="n">fitargs</span> <span class="o">=</span> <span class="p">(</span><span class="n">seedfile</span><span class="p">,</span> <span class="n">useMinos</span><span class="p">,</span> <span class="n">hesse</span><span class="p">)</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;LIKELIHOOD BEFORE MINIMIZATION: </span><span class="si">{</span><span class="n">ati</span><span class="o">.</span><span class="n">likelihood</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;LIKELIHOOD BEFORE MINIMIZATION: </span><span class="si">{</span><span class="n">ati</span><span class="o">.</span><span class="n">likelihood</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">fitManager</span><span class="p">:</span> <span class="n">MinuitMinimizationManager</span> <span class="o">=</span> <span class="n">ati</span><span class="o">.</span><span class="n">minuitMinimizationManager</span><span class="p">()</span>
     <span class="n">fitManager</span><span class="o">.</span><span class="n">setMaxIterations</span><span class="p">(</span><span class="n">maxIter</span><span class="p">)</span>
 
     <span class="n">cfgInfo</span> <span class="o">=</span> <span class="n">ati</span><span class="o">.</span><span class="n">configurationInfo</span><span class="p">()</span>
 
-    <span class="k">if</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># No randomization</span>
-        <span class="n">bFitFailed</span><span class="p">,</span> <span class="n">minNLL</span> <span class="o">=</span> <span class="n">_performFit</span><span class="p">(</span> <span class="n">ati</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">fitargs</span> <span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): </span><span class="si">{</span><span class="n">minNLL</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># No randomization</span>
+        <span class="n">bFitFailed</span><span class="p">,</span> <span class="n">minNLL</span> <span class="o">=</span> <span class="n">_performFit</span><span class="p">(</span><span class="n">ati</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">fitargs</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): </span><span class="si">{</span><span class="n">minNLL</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="k">else</span><span class="p">:</span> <span class="c1"># Randomized parameters</span>
-        <span class="n">fitName</span>     <span class="o">=</span> <span class="n">cfgInfo</span><span class="o">.</span><span class="n">fitName</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># Randomized parameters</span>
+        <span class="n">fitName</span> <span class="o">=</span> <span class="n">cfgInfo</span><span class="o">.</span><span class="n">fitName</span><span class="p">()</span>
         <span class="n">maxFraction</span> <span class="o">=</span> <span class="mf">0.5</span>
-        <span class="n">minNLL</span>       <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">float_info</span><span class="o">.</span><span class="n">max</span>
-        <span class="n">minFitTag</span>   <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">minNLL</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">float_info</span><span class="o">.</span><span class="n">max</span>
+        <span class="n">minFitTag</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
 
         <span class="n">parRangeKeywords</span> <span class="o">=</span> <span class="n">cfgInfo</span><span class="o">.</span><span class="n">userKeywordArguments</span><span class="p">(</span><span class="s2">&quot;parRange&quot;</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">###############################################&quot;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;#############   FIT </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1"> OF </span><span class="si">{</span><span class="n">N</span><span class="si">}</span><span class="s1"> ###############&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;#############   FIT </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> OF </span><span class="si">{</span><span class="n">N</span><span class="si">}</span><span class="s2"> ###############&quot;</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;###############################################</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
             <span class="n">ati</span><span class="o">.</span><span class="n">reinitializePars</span><span class="p">()</span>
@@ -455,54 +457,55 @@ document.write(`
             <span class="k">for</span> <span class="n">ipar</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">parRangeKeywords</span><span class="p">)):</span>
                 <span class="n">ati</span><span class="o">.</span><span class="n">randomizeParameter</span><span class="p">(</span><span class="n">parRangeKeywords</span><span class="p">[</span><span class="n">ipar</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">(</span><span class="n">parRangeKeywords</span><span class="p">[</span><span class="n">ipar</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">parRangeKeywords</span><span class="p">[</span><span class="n">ipar</span><span class="p">][</span><span class="mi">2</span><span class="p">]))</span>
 
-            <span class="n">bFitFailed</span><span class="p">,</span> <span class="n">NLL</span> <span class="o">=</span> <span class="n">_performFit</span><span class="p">(</span> <span class="n">ati</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">fitargs</span> <span class="p">)</span>
+            <span class="n">bFitFailed</span><span class="p">,</span> <span class="n">NLL</span> <span class="o">=</span> <span class="n">_performFit</span><span class="p">(</span><span class="n">ati</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">fitargs</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">bFitFailed</span> <span class="ow">and</span> <span class="n">NLL</span> <span class="o">&lt;</span> <span class="n">minNLL</span><span class="p">:</span>
                 <span class="n">minNLL</span> <span class="o">=</span> <span class="n">NLL</span>
                 <span class="n">minFitTag</span> <span class="o">=</span> <span class="n">i</span>
 
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;LIKELIHOOD AFTER MINIMIZATION: </span><span class="si">{</span><span class="n">NLL</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;LIKELIHOOD AFTER MINIMIZATION: </span><span class="si">{</span><span class="n">NLL</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">minFitTag</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ALL FITS FAILED!&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;MINIMUM LIKELHOOD FROM ITERATION </span><span class="si">{</span><span class="n">minFitTag</span><span class="si">}</span><span class="s1"> of </span><span class="si">{</span><span class="n">N</span><span class="si">}</span><span class="s1"> RANDOM PRODUCTION PARS = </span><span class="si">{</span><span class="n">minNLL</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;cp </span><span class="si">{</span><span class="n">fitName</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">minFitTag</span><span class="si">}</span><span class="s1">.fit </span><span class="si">{</span><span class="n">fitName</span><span class="si">}</span><span class="s1">.fit&#39;</span><span class="p">)</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;cp </span><span class="si">{</span><span class="n">fitName</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">minFitTag</span><span class="si">}</span><span class="s1">.fit </span><span class="si">{</span><span class="n">fitName</span><span class="si">}</span><span class="s1">.fit&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MINIMUM LIKELHOOD FROM ITERATION </span><span class="si">{</span><span class="n">minFitTag</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">N</span><span class="si">}</span><span class="s2"> RANDOM PRODUCTION PARS = </span><span class="si">{</span><span class="n">minNLL</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cp </span><span class="si">{</span><span class="n">fitName</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">minFitTag</span><span class="si">}</span><span class="s2">.fit </span><span class="si">{</span><span class="n">fitName</span><span class="si">}</span><span class="s2">.fit&quot;</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cp </span><span class="si">{</span><span class="n">fitName</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">minFitTag</span><span class="si">}</span><span class="s2">.fit </span><span class="si">{</span><span class="n">fitName</span><span class="si">}</span><span class="s2">.fit&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">seedfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;cp </span><span class="si">{</span><span class="n">seedfile</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">minFitTag</span><span class="si">}</span><span class="s1">.txt </span><span class="si">{</span><span class="n">seedfile</span><span class="si">}</span><span class="s1">.txt&#39;</span><span class="p">)</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;cp </span><span class="si">{</span><span class="n">seedfile</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">minFitTag</span><span class="si">}</span><span class="s1">.txt </span><span class="si">{</span><span class="n">seedfile</span><span class="si">}</span><span class="s1">.txt&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cp </span><span class="si">{</span><span class="n">seedfile</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">minFitTag</span><span class="si">}</span><span class="s2">.txt </span><span class="si">{</span><span class="n">seedfile</span><span class="si">}</span><span class="s2">.txt&quot;</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cp </span><span class="si">{</span><span class="n">seedfile</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">minFitTag</span><span class="si">}</span><span class="s2">.txt </span><span class="si">{</span><span class="n">seedfile</span><span class="si">}</span><span class="s2">.txt&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">minNLL</span></div>
 
 
-<span class="k">def</span> <span class="nf">_cli_runFits</span><span class="p">():</span>
 
-<span class="w">    </span><span class="sd">&#39;&#39;&#39; Command line interface for performing maximum likelihood fits &#39;&#39;&#39;</span>
+<span class="k">def</span> <span class="nf">_cli_runFits</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Command line interface for performing maximum likelihood fits&quot;&quot;&quot;</span>
 
     <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
     <span class="c1">############## PARSE COMMANDLINE ARGUMENTS #############</span>
     <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Perform MLE fits&quot;</span><span class="p">)</span>
     <span class="n">rndSeed</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;cfgfile&#39;</span><span class="p">,</span>       <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>                   <span class="n">help</span><span class="o">=</span><span class="s1">&#39;AmpTools Configuration file&#39;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--seedfile&#39;</span><span class="p">,</span>    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;seed&quot;</span><span class="p">,</span>   <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Output file for seeding next fit based on this fit. Do not include extension&#39;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--numRnd&#39;</span><span class="p">,</span>      <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Perform N fits each seeded with random parameters&#39;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--randomSeed&#39;</span><span class="p">,</span>  <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">rndSeed</span><span class="p">,</span>  <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Sets the random seed used by the random number generator for the fits with randomized initial parameters. If not set, will use the current time.&#39;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--maxIter&#39;</span><span class="p">,</span>     <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">100000</span><span class="p">,</span>   <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Maximum number of fit iterations&#39;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--useMinos&#39;</span><span class="p">,</span>    <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Use MINOS instead of MIGRAD&#39;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--hesse&#39;</span><span class="p">,</span>       <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Evaluate HESSE matrix after minimization&#39;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--scanPar&#39;</span><span class="p">,</span>     <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>     <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Perform a scan of the given parameter. Stepsize, min, max are to be set in the config file&#39;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--accelerator&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;mpigpu&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Use accelerator if available ~ [cpu, gpu, mpi, mpigpu, gpumpi]&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;cfgfile&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;AmpTools Configuration file&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--seedfile&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;seed&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output file for seeding next fit based on this fit. Do not include extension&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--numRnd&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Perform N fits each seeded with random parameters&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--randomSeed&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">rndSeed</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Sets the random seed used by the random number generator for the fits with randomized initial parameters. If not set, will use the current time.&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--maxIter&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">100000</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Maximum number of fit iterations&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--useMinos&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Use MINOS instead of MIGRAD&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--hesse&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Evaluate HESSE matrix after minimization&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--scanPar&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Perform a scan of the given parameter. Stepsize, min, max are to be set in the config file&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--accelerator&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;mpigpu&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Use accelerator if available ~ [cpu, gpu, mpi, mpigpu, gpumpi]&quot;</span><span class="p">)</span>
 
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">randomSeed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">args</span><span class="o">.</span><span class="n">randomSeed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
 
     <span class="n">cfgfile</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">cfgfile</span>
-    <span class="k">assert</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">cfgfile</span><span class="p">)</span> <span class="p">),</span> <span class="sa">f</span><span class="s1">&#39;Config file does not exist at specified path&#39;</span>
+    <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">cfgfile</span><span class="p">),</span> <span class="s2">&quot;Config file does not exist at specified path&quot;</span>
 
     <span class="c1">################### LOAD LIBRARIES ##################</span>
     <span class="kn">from</span> <span class="nn">pyamptools</span> <span class="kn">import</span> <span class="n">atiSetup</span>
+
     <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">args</span><span class="o">.</span><span class="n">accelerator</span><span class="p">)</span>
 
     <span class="c1">############## LOAD CONFIGURATION FILE ##############</span>
@@ -510,19 +513,19 @@ document.write(`
     <span class="n">cfgInfo</span><span class="p">:</span> <span class="n">ConfigurationInfo</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getConfigurationInfo</span><span class="p">()</span>
 
     <span class="c1"># ############## REGISTER OBJECTS FOR AMPTOOLS ##############</span>
-    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">Zlm</span><span class="p">()</span> <span class="p">)</span>
-    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">Vec_ps_refl</span><span class="p">()</span> <span class="p">)</span>
-    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">OmegaDalitz</span><span class="p">()</span> <span class="p">)</span>
-    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">BreitWigner</span><span class="p">()</span> <span class="p">)</span>
-    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">Piecewise</span><span class="p">()</span> <span class="p">)</span>
-    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">PhaseOffset</span><span class="p">()</span> <span class="p">)</span>
-    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span> <span class="n">TwoPiAngles</span><span class="p">()</span> <span class="p">)</span>
-    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReader</span><span class="p">()</span> <span class="p">)</span>
-    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReaderTEM</span><span class="p">()</span> <span class="p">)</span>
-    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReaderFilter</span><span class="p">()</span> <span class="p">)</span>
-    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span> <span class="n">DataReaderBootstrap</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="n">Zlm</span><span class="p">())</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="n">Vec_ps_refl</span><span class="p">())</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="n">OmegaDalitz</span><span class="p">())</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="n">BreitWigner</span><span class="p">())</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="n">Piecewise</span><span class="p">())</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="n">PhaseOffset</span><span class="p">())</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="n">TwoPiAngles</span><span class="p">())</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span><span class="n">DataReader</span><span class="p">())</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span><span class="n">DataReaderTEM</span><span class="p">())</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span><span class="n">DataReaderFilter</span><span class="p">())</span>
+    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span><span class="n">DataReaderBootstrap</span><span class="p">())</span>
 
-    <span class="n">ati</span> <span class="o">=</span> <span class="n">AmpToolsInterface</span><span class="p">(</span> <span class="n">cfgInfo</span> <span class="p">)</span>
+    <span class="n">ati</span> <span class="o">=</span> <span class="n">AmpToolsInterface</span><span class="p">(</span><span class="n">cfgInfo</span><span class="p">)</span>
 
     <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">setRandomSeed</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">randomSeed</span><span class="p">)</span>
 
@@ -542,22 +545,18 @@ document.write(`
 
         <span class="n">fit_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
-        <span class="n">nll</span> <span class="o">=</span> <span class="n">runFits</span><span class="p">(</span> <span class="n">ati</span><span class="p">,</span>
-                        <span class="n">N</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">numRnd</span><span class="p">,</span> \
-                        <span class="n">seedfile</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">seedfile</span><span class="p">,</span> \
-                        <span class="n">useMinos</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">useMinos</span><span class="p">,</span> \
-                        <span class="n">hesse</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">hesse</span><span class="p">,</span> \
-                        <span class="n">maxIter</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">maxIter</span> <span class="p">)</span>
+        <span class="n">nll</span> <span class="o">=</span> <span class="n">runFits</span><span class="p">(</span><span class="n">ati</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">numRnd</span><span class="p">,</span> <span class="n">seedfile</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">seedfile</span><span class="p">,</span> <span class="n">useMinos</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">useMinos</span><span class="p">,</span> <span class="n">hesse</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">hesse</span><span class="p">,</span> <span class="n">maxIter</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">maxIter</span><span class="p">)</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Done! MPI.Finalize() / MPI.Init() automatically called at script end / start</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Done!&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fit time: </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">fit_start_time</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total time: </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start_time</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Final Likelihood: </span><span class="si">{</span><span class="n">nll</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="c1"># Need this for for unit-tests</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Final Likelihood: </span><span class="si">{</span><span class="n">nll</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># Need this for for unit-tests</span>
 
     <span class="k">if</span> <span class="n">USE_MPI</span><span class="p">:</span>
-       <span class="n">ati</span><span class="o">.</span><span class="n">exitMPI</span><span class="p">()</span>
+        <span class="n">ati</span><span class="o">.</span><span class="n">exitMPI</span><span class="p">()</span>
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">_cli_runFits</span><span class="p">()</span>
 </pre></div>
 

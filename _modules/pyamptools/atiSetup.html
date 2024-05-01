@@ -348,10 +348,10 @@ document.write(`
   <h1>Source code for pyamptools.atiSetup</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">ROOT</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">pyamptools.utility.utils</span> <span class="kn">import</span> <span class="n">check_shared_lib_exists</span><span class="p">,</span> <span class="n">get_pid_family</span><span class="p">,</span> <span class="n">check_nvidia_devices</span>
-<span class="kn">from</span> <span class="nn">pyamptools.utility.pythonization</span> <span class="kn">import</span> <span class="n">pythonize_parMgr</span>
+<span class="kn">from</span> <span class="nn">pyamptools.utility.general</span> <span class="kn">import</span> <span class="n">check_shared_lib_exists</span><span class="p">,</span> <span class="n">get_pid_family</span><span class="p">,</span> <span class="n">check_nvidia_devices</span>
+<span class="kn">from</span> <span class="nn">pyamptools.utility.pythonization</span> <span class="kn">import</span> <span class="n">pythonize_parMgr</span>  <span class="c1"># noqa</span>
 
-<span class="n">kModule</span> <span class="o">=</span> <span class="s1">&#39;atiSetup&#39;</span>
+<span class="n">kModule</span> <span class="o">=</span> <span class="s2">&quot;atiSetup&quot;</span>
 
 <span class="c1">########################################################</span>
 <span class="c1">#  This file is used to setup the amptools environment #</span>
@@ -360,10 +360,11 @@ document.write(`
 <span class="c1">#  functions are called.                               #</span>
 <span class="c1">########################################################</span>
 
+
 <div class="viewcode-block" id="setup">
 <a class="viewcode-back" href="../../api/atiSetup.html#pyamptools.atiSetup.setup">[docs]</a>
-<span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">accelerator</span><span class="o">=</span><span class="s1">&#39;mpigpu&#39;</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">accelerator</span><span class="o">=</span><span class="s2">&quot;mpigpu&quot;</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Performs basic setup, loading libraries and setting aliases</span>
 
 <span class="sd">    Args:</span>
@@ -371,115 +372,128 @@ document.write(`
 <span class="sd">        accelerator (str): accelerator flag from argparse ~ [&#39;cpu&#39;, &#39;mpi&#39;, &#39;gpu&#39;, &#39;mpigpu&#39;, &#39;gpumpi&#39;]</span>
 <span class="sd">        use_fsroot (bool): True if FSRoot library should be loaded</span>
 <span class="sd">        use_genamp (bool): True if GenAmp library should be loaded</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">loadLibraries</span><span class="p">(</span> <span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="p">,</span> <span class="n">use_genamp</span> <span class="p">)</span>
-    <span class="n">set_aliases</span><span class="p">(</span> <span class="n">calling_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span> <span class="p">)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">loadLibraries</span><span class="p">(</span><span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="p">,</span> <span class="n">use_genamp</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="n">set_aliases</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">)</span>
+
+    <span class="c1"># VSCode will load an environment but not run the scripts in activate.d</span>
+    <span class="c1">#    If this appears to be the case, activate it now</span>
+    <span class="k">if</span> <span class="s2">&quot;PYAMPTOOLS_HOME&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="ow">and</span> <span class="s2">&quot;CONDA_PREFIX&quot;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;source </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;CONDA_PREFIX&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">/etc/conda/activate.d/set_environment.sh&#39;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span></div>
 
 
+
 <div class="viewcode-block" id="loadLibraries">
 <a class="viewcode-back" href="../../api/atiSetup.html#pyamptools.atiSetup.loadLibraries">[docs]</a>
-<span class="k">def</span> <span class="nf">loadLibraries</span><span class="p">(</span><span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39; Load all libraries &#39;&#39;&#39;</span>
-    <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">prepare_mpigpu</span><span class="p">(</span><span class="n">accelerator</span><span class="p">)</span>
-    <span class="n">SUFFIX</span>  <span class="o">=</span> <span class="s2">&quot;_GPU&quot;</span> <span class="k">if</span> <span class="n">USE_GPU</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+<span class="k">def</span> <span class="nf">loadLibraries</span><span class="p">(</span><span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load all libraries&quot;&quot;&quot;</span>
+    <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">prepare_mpigpu</span><span class="p">(</span><span class="n">accelerator</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="n">SUFFIX</span> <span class="o">=</span> <span class="s2">&quot;_GPU&quot;</span> <span class="k">if</span> <span class="n">USE_GPU</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
     <span class="n">SUFFIX</span> <span class="o">+=</span> <span class="s2">&quot;_MPI&quot;</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
 
-    <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">------------------------------------------------&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s1">| MPI is </span><span class="si">{</span><span class="s2">&quot;enabled&quot;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">USE_MPI</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s2">&quot;disabled&quot;</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s1">| GPU is </span><span class="si">{</span><span class="s2">&quot;enabled&quot;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">USE_GPU</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s2">&quot;disabled&quot;</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;------------------------------------------------</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="c1">#################### LOAD LIBRARIES (ORDER MATTERS!) ###################</span>
 
-    <span class="n">loadLibrary</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;libAmpTools</span><span class="si">{</span><span class="n">SUFFIX</span><span class="si">}</span><span class="s1">.so&#39;</span><span class="p">,</span> <span class="n">RANK_MPI</span><span class="p">)</span>
-    <span class="n">loadLibrary</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;libAmpPlotter.so&#39;</span><span class="p">,</span> <span class="n">RANK_MPI</span><span class="p">)</span>
-    <span class="n">loadLibrary</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;libAmpsDataIO</span><span class="si">{</span><span class="n">SUFFIX</span><span class="si">}</span><span class="s1">.so&#39;</span><span class="p">,</span> <span class="n">RANK_MPI</span><span class="p">)</span> <span class="c1"># Depends on AmpPlotter!</span>
-    <span class="n">loadLibrary</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;libFSRoot.so&#39;</span><span class="p">,</span> <span class="n">RANK_MPI</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="p">)</span>
-    <span class="n">loadLibrary</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;libAmpsGen.so&#39;</span><span class="p">,</span> <span class="n">RANK_MPI</span><span class="p">,</span> <span class="n">use_genamp</span><span class="p">)</span>
+    <span class="n">loadLibrary</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;libAmpTools</span><span class="si">{</span><span class="n">SUFFIX</span><span class="si">}</span><span class="s2">.so&quot;</span><span class="p">,</span> <span class="n">RANK_MPI</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="n">loadLibrary</span><span class="p">(</span><span class="s2">&quot;libAmpPlotter.so&quot;</span><span class="p">,</span> <span class="n">RANK_MPI</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="n">loadLibrary</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;libAmpsDataIO</span><span class="si">{</span><span class="n">SUFFIX</span><span class="si">}</span><span class="s2">.so&quot;</span><span class="p">,</span> <span class="n">RANK_MPI</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>  <span class="c1"># Depends on AmpPlotter!</span>
+    <span class="n">loadLibrary</span><span class="p">(</span><span class="s2">&quot;libFSRoot.so&quot;</span><span class="p">,</span> <span class="n">RANK_MPI</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="n">loadLibrary</span><span class="p">(</span><span class="s2">&quot;libAmpsGen.so&quot;</span><span class="p">,</span> <span class="n">RANK_MPI</span><span class="p">,</span> <span class="n">use_genamp</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
 
     <span class="c1"># Dummy functions that just prints &quot;initialization&quot;</span>
     <span class="c1">#  This is to make sure the libraries are loaded</span>
     <span class="c1">#  as python is interpreted.</span>
-    <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">------------------------------------------------&quot;</span><span class="p">)</span>
-    <span class="n">ROOT</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span>
-    <span class="k">if</span> <span class="n">use_fsroot</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">initialize_fsroot</span><span class="p">(</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span>
-    <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;------------------------------------------------</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">------------------------------------------------&quot;</span><span class="p">)</span>
+    <span class="n">ROOT</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">use_fsroot</span><span class="p">:</span>
+        <span class="n">ROOT</span><span class="o">.</span><span class="n">initialize_fsroot</span><span class="p">(</span><span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;------------------------------------------------</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span></div>
 
 
+
 <div class="viewcode-block" id="loadLibrary">
 <a class="viewcode-back" href="../../api/atiSetup.html#pyamptools.atiSetup.loadLibrary">[docs]</a>
-<span class="k">def</span> <span class="nf">loadLibrary</span><span class="p">(</span><span class="n">libName</span><span class="p">,</span> <span class="n">RANK_MPI</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">IS_REQUESTED</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39; Load a shared library and print IS_REQUESTED &#39;&#39;&#39;</span>
-    <span class="n">statement</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Loading library </span><span class="si">{</span><span class="n">libName</span><span class="si">}</span><span class="s1"> &#39;</span>
+<span class="k">def</span> <span class="nf">loadLibrary</span><span class="p">(</span><span class="n">libName</span><span class="p">,</span> <span class="n">RANK_MPI</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">IS_REQUESTED</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load a shared library and print IS_REQUESTED&quot;&quot;&quot;</span>
+    <span class="n">statement</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Loading library </span><span class="si">{</span><span class="n">libName</span><span class="si">}</span><span class="s2"> &quot;</span>
     <span class="n">libExists</span> <span class="o">=</span> <span class="n">check_shared_lib_exists</span><span class="p">(</span><span class="n">libName</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s1">| </span><span class="si">{</span><span class="n">statement</span><span class="si">:</span><span class="s1">.&lt;45</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s2">| </span><span class="si">{</span><span class="n">statement</span><span class="si">:</span><span class="s2">.&lt;45</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">IS_REQUESTED</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">libExists</span><span class="p">:</span>
             <span class="n">ROOT</span><span class="o">.</span><span class="n">gSystem</span><span class="o">.</span><span class="n">Load</span><span class="p">(</span><span class="n">libName</span><span class="p">)</span>
             <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;ON&quot;</span>
-        <span class="k">else</span><span class="p">:</span> <span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;NOT FOUND, SKIPPING&#39;</span>
-    <span class="k">else</span><span class="p">:</span> <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;OFF&quot;</span>
-    <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;NOT FOUND, SKIPPING&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;OFF&quot;</span>
+    <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="set_aliases">
 <a class="viewcode-back" href="../../api/atiSetup.html#pyamptools.atiSetup.set_aliases">[docs]</a>
-<span class="k">def</span> <span class="nf">set_aliases</span><span class="p">(</span> <span class="n">called_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span> <span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="k">def</span> <span class="nf">set_aliases</span><span class="p">(</span><span class="n">called_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Due to MPI requiring c++ templates and the fact that all classes live under the ROOT namespace, aliasing can clean up the code significantly.</span>
 <span class="sd">    A dictionary of aliases is appended to the globals() function of the calling function thereby making the aliases available in the calling function.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        called_globals (dict): globals() from the calling function</span>
 
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">aliases</span> <span class="o">=</span> <span class="p">{</span>
         <span class="c1">############### PyROOT RELATED ################</span>
-        <span class="s1">&#39;gInterpreter&#39;</span><span class="p">:</span>               <span class="n">ROOT</span><span class="o">.</span><span class="n">gInterpreter</span><span class="p">,</span>
-
+        <span class="s2">&quot;gInterpreter&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">gInterpreter</span><span class="p">,</span>
         <span class="c1">############### AmpTools RELATED ##############</span>
-        <span class="s1">&#39;AmpToolsInterface&#39;</span><span class="p">:</span>          <span class="n">ROOT</span><span class="o">.</span><span class="n">AmpToolsInterfaceMPI</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">AmpToolsInterface</span><span class="p">,</span>
-        <span class="s1">&#39;ConfigFileParser&#39;</span><span class="p">:</span>           <span class="n">ROOT</span><span class="o">.</span><span class="n">ConfigFileParser</span><span class="p">,</span>
-        <span class="s1">&#39;ConfigurationInfo&#39;</span><span class="p">:</span>          <span class="n">ROOT</span><span class="o">.</span><span class="n">ConfigurationInfo</span><span class="p">,</span>
-        <span class="s1">&#39;Zlm&#39;</span><span class="p">:</span>                        <span class="n">ROOT</span><span class="o">.</span><span class="n">Zlm</span><span class="p">,</span>
-        <span class="s1">&#39;Vec_ps_refl&#39;</span><span class="p">:</span>                <span class="n">ROOT</span><span class="o">.</span><span class="n">Vec_ps_refl</span><span class="p">,</span>
-        <span class="s1">&#39;OmegaDalitz&#39;</span><span class="p">:</span>                <span class="n">ROOT</span><span class="o">.</span><span class="n">OmegaDalitz</span><span class="p">,</span>
-        <span class="s1">&#39;BreitWigner&#39;</span><span class="p">:</span>                <span class="n">ROOT</span><span class="o">.</span><span class="n">BreitWigner</span><span class="p">,</span>
-        <span class="s1">&#39;Piecewise&#39;</span><span class="p">:</span>                  <span class="n">ROOT</span><span class="o">.</span><span class="n">Piecewise</span><span class="p">,</span>
-        <span class="s1">&#39;PhaseOffset&#39;</span><span class="p">:</span>                <span class="n">ROOT</span><span class="o">.</span><span class="n">PhaseOffset</span><span class="p">,</span>
-        <span class="s1">&#39;TwoPiAngles&#39;</span><span class="p">:</span>                <span class="n">ROOT</span><span class="o">.</span><span class="n">TwoPiAngles</span><span class="p">,</span>
-        <span class="s1">&#39;ParameterManager&#39;</span><span class="p">:</span>           <span class="n">ROOT</span><span class="o">.</span><span class="n">ParameterManager</span><span class="p">,</span>
-        <span class="s1">&#39;MinuitMinimizationManager&#39;</span><span class="p">:</span>  <span class="n">ROOT</span><span class="o">.</span><span class="n">MinuitMinimizationManager</span><span class="p">,</span>
-
+        <span class="s2">&quot;AmpToolsInterface&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">AmpToolsInterfaceMPI</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">AmpToolsInterface</span><span class="p">,</span>
+        <span class="s2">&quot;ConfigFileParser&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ConfigFileParser</span><span class="p">,</span>
+        <span class="s2">&quot;ConfigurationInfo&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ConfigurationInfo</span><span class="p">,</span>
+        <span class="s2">&quot;Zlm&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">Zlm</span><span class="p">,</span>
+        <span class="s2">&quot;Vec_ps_refl&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">Vec_ps_refl</span><span class="p">,</span>
+        <span class="s2">&quot;OmegaDalitz&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">OmegaDalitz</span><span class="p">,</span>
+        <span class="s2">&quot;BreitWigner&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">BreitWigner</span><span class="p">,</span>
+        <span class="s2">&quot;Piecewise&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">Piecewise</span><span class="p">,</span>
+        <span class="s2">&quot;PhaseOffset&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">PhaseOffset</span><span class="p">,</span>
+        <span class="s2">&quot;TwoPiAngles&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TwoPiAngles</span><span class="p">,</span>
+        <span class="s2">&quot;ParameterManager&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ParameterManager</span><span class="p">,</span>
+        <span class="s2">&quot;MinuitMinimizationManager&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">MinuitMinimizationManager</span><span class="p">,</span>
         <span class="c1">############## DataReader RELATED ##############</span>
         <span class="c1"># DataReaderMPI is a template; use [] to specify the type</span>
-        <span class="s1">&#39;DataReader&#39;</span><span class="p">:</span>                 <span class="n">ROOT</span><span class="o">.</span><span class="n">DataReaderMPI</span><span class="p">[</span><span class="s1">&#39;ROOTDataReader&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ROOTDataReader</span><span class="p">,</span>
-        <span class="s1">&#39;DataReaderTEM&#39;</span><span class="p">:</span>              <span class="n">ROOT</span><span class="o">.</span><span class="n">DataReaderMPI</span><span class="p">[</span><span class="s1">&#39;ROOTDataReaderTEM&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ROOTDataReaderTEM</span><span class="p">,</span>
-        <span class="s1">&#39;DataReaderFilter&#39;</span><span class="p">:</span>           <span class="n">ROOT</span><span class="o">.</span><span class="n">DataReaderMPI</span><span class="p">[</span><span class="s1">&#39;ROOTDataReaderFilter&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ROOTDataReaderFilter</span><span class="p">,</span>
-        <span class="s1">&#39;DataReaderBootstrap&#39;</span><span class="p">:</span>        <span class="n">ROOT</span><span class="o">.</span><span class="n">DataReaderMPI</span><span class="p">[</span><span class="s1">&#39;ROOTDataReaderBootstrap&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ROOTDataReaderBootstrap</span><span class="p">,</span>
-
+        <span class="s2">&quot;DataReader&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">DataReaderMPI</span><span class="p">[</span><span class="s2">&quot;ROOTDataReader&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ROOTDataReader</span><span class="p">,</span>
+        <span class="s2">&quot;DataReaderTEM&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">DataReaderMPI</span><span class="p">[</span><span class="s2">&quot;ROOTDataReaderTEM&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ROOTDataReaderTEM</span><span class="p">,</span>
+        <span class="s2">&quot;DataReaderFilter&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">DataReaderMPI</span><span class="p">[</span><span class="s2">&quot;ROOTDataReaderFilter&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ROOTDataReaderFilter</span><span class="p">,</span>
+        <span class="s2">&quot;DataReaderBootstrap&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">DataReaderMPI</span><span class="p">[</span><span class="s2">&quot;ROOTDataReaderBootstrap&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ROOTDataReaderBootstrap</span><span class="p">,</span>
         <span class="c1">########### PLOTTER / RESULTS RELATED ###########</span>
-        <span class="s1">&#39;FitResults&#39;</span><span class="p">:</span>                 <span class="n">ROOT</span><span class="o">.</span><span class="n">FitResults</span><span class="p">,</span>
-        <span class="s1">&#39;EtaPiPlotGenerator&#39;</span><span class="p">:</span>         <span class="n">ROOT</span><span class="o">.</span><span class="n">EtaPiPlotGenerator</span><span class="p">,</span>
-        <span class="s1">&#39;PlotGenerator&#39;</span><span class="p">:</span>              <span class="n">ROOT</span><span class="o">.</span><span class="n">PlotGenerator</span><span class="p">,</span>
-        <span class="s1">&#39;TH1&#39;</span><span class="p">:</span>                        <span class="n">ROOT</span><span class="o">.</span><span class="n">TH1</span><span class="p">,</span>
-        <span class="s1">&#39;TFile&#39;</span><span class="p">:</span>                      <span class="n">ROOT</span><span class="o">.</span><span class="n">TFile</span><span class="p">,</span>
-        <span class="s1">&#39;AmplitudeInfo&#39;</span><span class="p">:</span>              <span class="n">ROOT</span><span class="o">.</span><span class="n">AmplitudeInfo</span><span class="p">,</span>
+        <span class="s2">&quot;FitResults&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">FitResults</span><span class="p">,</span>
+        <span class="s2">&quot;EtaPiPlotGenerator&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">EtaPiPlotGenerator</span><span class="p">,</span>
+        <span class="s2">&quot;PlotGenerator&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">PlotGenerator</span><span class="p">,</span>
+        <span class="s2">&quot;TH1&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TH1</span><span class="p">,</span>
+        <span class="s2">&quot;TFile&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TFile</span><span class="p">,</span>
+        <span class="s2">&quot;AmplitudeInfo&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">AmplitudeInfo</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="k">if</span> <span class="n">USE_GPU</span><span class="p">:</span>
-        <span class="n">aliases</span><span class="p">[</span><span class="s1">&#39;GPUManager&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">GPUManager</span>
+        <span class="n">aliases</span><span class="p">[</span><span class="s2">&quot;GPUManager&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">GPUManager</span>
 
     <span class="n">called_globals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">aliases</span><span class="p">)</span></div>
 
 
+
 <div class="viewcode-block" id="prepare_mpigpu">
 <a class="viewcode-back" href="../../api/atiSetup.html#pyamptools.atiSetup.prepare_mpigpu">[docs]</a>
-<span class="k">def</span> <span class="nf">prepare_mpigpu</span><span class="p">(</span><span class="n">accelerator</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="k">def</span> <span class="nf">prepare_mpigpu</span><span class="p">(</span><span class="n">accelerator</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sets environment variables to use MPI and/or GPU if requested.</span>
 <span class="sd">        Checks who called the python script. If bash (single process). If mpiexec/mpirun (then MPI)</span>
 
@@ -490,31 +504,45 @@ document.write(`
 <span class="sd">        USE_MPI (bool): True if MPI is to be used</span>
 <span class="sd">        USE_GPU (bool): True if GPU is to be used</span>
 <span class="sd">        RANK_MPI (int): MPI rank of the process (0 by default even if MPI is not used)</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">assert</span><span class="p">(</span> <span class="n">accelerator</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;cpu&#39;</span><span class="p">,</span> <span class="s1">&#39;mpi&#39;</span><span class="p">,</span> <span class="s1">&#39;gpu&#39;</span><span class="p">,</span> <span class="s1">&#39;mpigpu&#39;</span><span class="p">,</span> <span class="s1">&#39;gpumpi&#39;</span><span class="p">]</span> <span class="p">),</span> <span class="sa">f</span><span class="s1">&#39;Invalid accelerator flag: </span><span class="si">{</span><span class="n">accelerator</span><span class="si">}</span><span class="s1">&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">accelerator</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span> <span class="s2">&quot;mpi&quot;</span><span class="p">,</span> <span class="s2">&quot;gpu&quot;</span><span class="p">,</span> <span class="s2">&quot;mpigpu&quot;</span><span class="p">,</span> <span class="s2">&quot;gpumpi&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="s2">&quot;:&quot;</span> <span class="ow">in</span> <span class="n">accelerator</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s2">|  accelerator might be in SLURM form &#39;accelerator:device&#39;. Attempting use of only the initial accelerator part&quot;</span><span class="p">)</span>
+            <span class="n">accelerator</span> <span class="o">=</span> <span class="n">accelerator</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">accelerator</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span> <span class="s2">&quot;mpi&quot;</span><span class="p">,</span> <span class="s2">&quot;gpu&quot;</span><span class="p">,</span> <span class="s2">&quot;mpigpu&quot;</span><span class="p">,</span> <span class="s2">&quot;gpumpi&quot;</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s2">| Unable to parse remaining accelerator flag: </span><span class="si">{</span><span class="n">accelerator</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s2">| accelerator flag: </span><span class="si">{</span><span class="n">accelerator</span><span class="si">}</span><span class="s2">, must be one of [&#39;cpu&#39;, &#39;mpi&#39;, &#39;gpu&#39;, &#39;mpigpu&#39;, &#39;gpumpi&#39;]&quot;</span><span class="p">)</span>
+
     <span class="n">called</span><span class="p">,</span> <span class="n">parent</span> <span class="o">=</span> <span class="n">get_pid_family</span><span class="p">()</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s1">| </span><span class="si">{</span><span class="n">parent</span><span class="si">}</span><span class="s1"> called </span><span class="si">{</span><span class="n">called</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s2">| </span><span class="si">{</span><span class="n">parent</span><span class="si">}</span><span class="s2"> called </span><span class="si">{</span><span class="n">called</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="n">USE_MPI</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">USE_GPU</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="c1"># mpiexec is executed on the leader node</span>
     <span class="c1"># orted, OpenMPI&#39;s daemon process, is executed on the worker nodes</span>
-    <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;mpi&quot;</span> <span class="ow">in</span> <span class="n">parent</span> <span class="ow">or</span> <span class="n">parent</span> <span class="o">==</span> <span class="s1">&#39;orted&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;mpi&#39;</span> <span class="ow">in</span> <span class="n">accelerator</span><span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;mpi&quot;</span> <span class="ow">in</span> <span class="n">parent</span> <span class="ow">or</span> <span class="n">parent</span> <span class="o">==</span> <span class="s2">&quot;orted&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s2">&quot;mpi&quot;</span> <span class="ow">in</span> <span class="n">accelerator</span><span class="p">):</span>
         <span class="n">USE_MPI</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">check_nvidia_devices</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;gpu&#39;</span> <span class="ow">in</span> <span class="n">accelerator</span><span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">check_nvidia_devices</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span><span class="s2">&quot;gpu&quot;</span> <span class="ow">in</span> <span class="n">accelerator</span><span class="p">):</span>
         <span class="n">USE_GPU</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="c1">## SETUP ENVIRONMENT FOR MPI AND/OR GPU ##</span>
     <span class="k">if</span> <span class="n">USE_MPI</span><span class="p">:</span>
         <span class="kn">from</span> <span class="nn">mpi4py</span> <span class="kn">import</span> <span class="n">rc</span> <span class="k">as</span> <span class="n">mpi4pyrc</span>
+
         <span class="n">mpi4pyrc</span><span class="o">.</span><span class="n">threads</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">mpi4pyrc</span><span class="o">.</span><span class="n">initialize</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="kn">from</span> <span class="nn">mpi4py</span> <span class="kn">import</span> <span class="n">MPI</span>
+
         <span class="n">MPI</span><span class="o">.</span><span class="n">Init</span><span class="p">()</span>
         <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="o">.</span><span class="n">Get_rank</span><span class="p">()</span>
         <span class="n">SIZE_MPI</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="o">.</span><span class="n">Get_size</span><span class="p">()</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s1">| Found Task with Rank: </span><span class="si">{</span><span class="n">RANK_MPI</span><span class="si">}</span><span class="s1"> of </span><span class="si">{</span><span class="n">SIZE_MPI</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="k">assert</span><span class="p">(</span> <span class="p">(</span><span class="n">USE_MPI</span> <span class="ow">and</span> <span class="p">(</span><span class="n">SIZE_MPI</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">))</span> <span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s2">| Found Task with Rank: </span><span class="si">{</span><span class="n">RANK_MPI</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">SIZE_MPI</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">USE_MPI</span> <span class="ow">and</span> <span class="p">(</span><span class="n">SIZE_MPI</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">SIZE_MPI</span> <span class="o">=</span> <span class="mi">1</span>
