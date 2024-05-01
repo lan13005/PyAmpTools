@@ -5,6 +5,7 @@ echo "*******************"
 echo ""
 
 env_name="pyamptools"
+default_env="/w/halld-scshelf2101/lng/WORK/PyAmpTools" # will be compared to PWD so no trailing slash
 
 ####################
 # Check if the hostname contains "jlab.org" if so we perform default setup
@@ -14,7 +15,7 @@ env_name="pyamptools"
 hostname=$(hostname)
 if [[ "$hostname" == *"jlab.org"* ]]; then
 
-    echo "Hostname contains 'jlab.org'. Loading JLab environment..."
+    echo "Hostname contains 'jlab.org'. Loading default JLab environment..."
     echo ""
 
     # Was in .bashrc is this good place now?
@@ -30,8 +31,10 @@ if [[ "$hostname" == *"jlab.org"* ]]; then
 
     # You could build the external libraries from source but since you are
     # on the JLab system you can also just use the pre-built libraries
-    mv external .external # hide default source
-    ln -s /w/halld-scshelf2101/lng/WORK/PyAmpTools/external .
+    if [[ ! "$(readlink -f $PWD)" == "$default_env" ]]; then
+        mv external .external # hide default source
+        ln -s "$default_env/external" .
+    fi
 fi
 ####################
 
@@ -47,6 +50,7 @@ if [ -z "$CONDA_DEFAULT_ENV" ] || [ "$CONDA_DEFAULT_ENV" == "base" ]; then
     echo ""
     return
 fi
+
 # VSCode could create additional environment variables... Checking to see if
 #   PYAMPTOOLS_HOME is a full path is another check to see if it's been set by the user
 if [[ ! $PYAMPTOOLS_HOME == /* ]] || [ -z "$PYAMPTOOLS_HOME" ]; then
@@ -56,6 +60,8 @@ else
     echo "PYAMPTOOLS_HOME is already set. Will not attempt override. PYAMPTOOLS_HOME=$PYAMPTOOLS_HOME"
 fi
 
+
+### Set up environment variables for AmpTools ###
 export AMPTOOLS_HOME=$PYAMPTOOLS_HOME/external/AmpTools
 export AMPTOOLS=$AMPTOOLS_HOME/AmpTools
 export AMPPLOTTER=$AMPTOOLS_HOME/AmpPlotter
@@ -74,6 +80,7 @@ export LD_LIBRARY_PATH=$AMPTOOLS_HOME/AmpPlotter/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$FSROOT/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$PYAMPTOOLS_HOME/external/AMPTOOLS_AMPS_DATAIO:$LD_LIBRARY_PATH
 
+
 ##################### Activate ROOT #################
 if [ -f "$PYAMPTOOLS_HOME/external/root/thisroot.sh" ]; then
     source $PYAMPTOOLS_HOME/external/root/thisroot.sh $PYAMPTOOLS_HOME/external/root # setup ROOT
@@ -89,6 +96,7 @@ eval "$(register-python-argcomplete pa)"
 
 # setup auto-load for next time
 mkdir -p $CONDA_PREFIX/etc/conda/activate.d/
+
 # readlink -f can still return a location even if set_environment.sh is not in the current directory
 #    lets check that it is a valid file first
 if [ -e "$(readlink -f set_environment.sh)" ]; then

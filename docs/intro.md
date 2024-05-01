@@ -8,7 +8,7 @@ This repository contains Python bindings for AmpTools. Under the hood, it uses [
 
 # Usage / Design
 
-AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in `external` directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in `external/AMPTOOLS_AMPS_DATAIO`. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of `gen_amp`, a program to produce simulations with AmpTools, is provided in `external/AMPTOOLS_GENERATORS` but is not built by the main makefile, a separate makefile is included with that directory.
+AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in `external` directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in `external/AMPTOOLS_AMPS_DATAIO`. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of `gen_amp`, a program to produce simulations with AmpTools, is provided in `external/AMPTOOLS_GENERATORS`. This distribution system will unfortunately lag behind the sources from `halld_sim` and `AmpTools` repos.
 
 `pa` is an **executable** that dispatches various functions for: maximimum likelihood fitting (`fit`), extracting fit fractions from MLE fit results (`fitfrac`), and Markov chain Monte Carlo (`mcmc`), and simulation generation (`gen_amp`, `gen_vec_ps`). Example usage:
 
@@ -26,35 +26,38 @@ Additional files in the `scripts` folder are provided that perform `amptools` co
 
 # Installation
 
-The following setup uses the `Bash` Shell. All major dependencies (ROOT, AmpTools, FSRoot) are built from source.
-[ROOT](https://root.cern/install/) >v6.26 is a required dependency (build steps are shown below) requiring at least some version of `gcc` (9.3.0 works). For JLab installations one should run the following bash commands or append to `.bashrc` file
+The following setup uses the `Bash` Shell and Anaconda. `conda` can be very slow to resolve dependencies for ROOT. Use [Mamba](https://github.com/conda-forge/miniforge#mambaforge) or [Miniconda](https://docs.anaconda.com/free/miniconda/index.html) instead of conda for faster dependency resolution
 
 ```shell
-# Append to bashrc file
-source /etc/profile.d/modules.sh
-module use /apps/modulefiles
-module load mpi/openmpi3-x86_64
-module load gcc/9.3.0
-```
-
-Install AmpTools and FSRoot as a submodule:
-
-```shell
+# No need for recuse-submodules flag if using pre-compiled libraries at JLab
 git clone https://github.com/lan13005/PyAmpTools --recurse-submodules
 cd PyAmpTools
+source set_environment.sh # detects if on JLab and loads some envs, else does nothing for now
 ```
 
-Environment setup. `conda` can be very slow to resolve dependencies for ROOT. Use [Mamba](https://github.com/conda-forge/miniforge#mambaforge) or [Miniconda](https://docs.anaconda.com/free/miniconda/index.html) instead of conda for faster dependency resolution
+All major dependencies (ROOT, AmpTools, FSRoot) are built from source.
+[ROOT](https://root.cern/install/) >v6.26 is a required dependency (build steps are shown below) requiring at least some version of `gcc` (9.3.0 works).  See [Building External Libraries](#Sourcing) to build these libraries first. **Note: If you are running on the Jefferson Lab system the setup script will detect it and will load the default pre-compiled external libraries for a more streamlined experience.**
 
 ```shell
 conda env create  # Creates environment specified by environment.yml and pyproject.toml
 conda activate pyamptools # activate the environment
-pip install mpi4py # MPI (if available), mamba will link it against the wrong executables.
-# if installing mpi4py fails, see bottom of page
 pre-commit install --install-hooks # (Optional) commit hooks to perform loose formatting
 ```
 
-There is a known conflict between AmpTools' GPU usage and RooFit/TMVA which comes with the conda-forge binaries of ROOT. Currently, ROOT has to be built from source with roofit and tmva off. A build script is included to download ROOT from source with the appropriate cmake flags to achieve this
+Then create the necessary directory and link the main environment script, allowing for `set_environment.sh` to be sourced everytime `conda activate pyamptools` is executed. **Note:** VSCode loads the environment but does not appear to run `activate.d` and therefore requires manual activation.
+
+```shell
+# Modify set_environment.sh for your setup
+mkdir -p $CONDA_PREFIX/etc/conda/activate.d/
+source set_environment.sh # manually source for now
+ln -snfr set_environment.sh $CONDA_PREFIX/etc/conda/activate.d/ # setup auto-load for next time
+```
+
+## Building External Libraries (AmpTools, ROOT) <a id="Sourcing"></a>
+
+If you are not on the JLab system or do not want to use the default pre-compiled libraries on the JLab file system then you are in the right section.
+
+There is a known conflict between AmpTools' GPU usage and RooFit/TMVA which comes with the conda-forge binaries of ROOT. Currently, ROOT has to be built from source with roofit and tmva off. A build script is included to download ROOT from source with the appropriate cmake flags to achieve this. Please modify `set_environment.sh` to match you hardware (GPU, etc) environment
 
 ```shell
 cd external/root
@@ -62,15 +65,6 @@ cd external/root
 # if you modify the root version and use VSCode please update .vscode/settings.json file's extraPaths variable accordingly
 source build_root.sh
 cd ../.. # move back to main directory
-```
-
-Modify `set_environment.sh` to match you GPU environment (default: setup for JLab ifarm). Then create the necessary directory and link the environment script, allowing for `set_environment.sh` to be sourced everytime `conda activate pyamptools` is executed. **Note:** VSCode loads the environment but does not appear to run `activate.d` and therefore requires manual activation.
-
-```shell
-# Modify set_environment.sh for your setup
-mkdir -p $CONDA_PREFIX/etc/conda/activate.d/
-source set_environment.sh # manually source for now
-ln -snfr set_environment.sh $CONDA_PREFIX/etc/conda/activate.d/ # setup auto-load for next time
 ```
 
 Build required libraries
