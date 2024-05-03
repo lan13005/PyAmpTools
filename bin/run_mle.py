@@ -71,8 +71,8 @@ class MLE:
             # NIFTy does not pick it up as a free parameter. We handle this by taking the amptools
             # seed file of the best fit remove all lines related to production coefficients and
             # append "fixed" to every line that is associated with these scale parameters.
-            os.system(f"cp seed_bin{binNum}.txt {folder}/seed_nifty.txt")
-            os.system(f"mv seed_bin{binNum}*.txt {folder}")  # move all seed files to the folder
+            os.system(f"mv seed_bin{binNum}.txt {folder}/seed_nifty.txt")
+            os.system(f"mv seed_bin{binNum}_*.txt {folder}")  # move all seed files to the folder
             os.system(f"sed -i '/^initialize.*$/d' {folder}/seed_nifty.txt")  # delete whole line for initializing production coefficients
             os.system(f"sed -i 's|$| fixed|' {folder}/seed_nifty.txt")  # append fixed to the remaning lines
 

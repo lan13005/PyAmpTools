@@ -124,7 +124,7 @@ def generate_amptools_cfg(
         reactName = f"{basereactName}_{angle:0>3}"
         scaleName = f"parScale{angle:0>3}"
         parScale = cfgInfo.createParameter(scaleName, 1.0)
-        if angle == "0":
+        if angle == "0" or angle == "00" or angle == "000":
             parScale.setFixed(True)
 
         reactionInfo = cfgInfo.createReaction(reactName, particles)  # ReactionInfo*
