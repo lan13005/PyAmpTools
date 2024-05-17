@@ -1,11 +1,11 @@
 #!/sur/bin/env python
 
-import os
 import argparse
-import time
-from datetime import datetime
+import os
 import random
 import sys
+import time
+from datetime import datetime
 
 
 def _performFit(
@@ -118,11 +118,14 @@ def runFits(
             print("ALL FITS FAILED!")
         else:
             print(f"MINIMUM LIKELHOOD FROM ITERATION {minFitTag} of {N} RANDOM PRODUCTION PARS = {minNLL}")
-            print(f"cp {fitName}_{minFitTag}.fit {fitName}.fit")
-            os.system(f"cp {fitName}_{minFitTag}.fit {fitName}.fit")
-            if seedfile is not None:
-                print(f"cp {seedfile}_{minFitTag}.txt {seedfile}.txt")
-                os.system(f"cp {seedfile}_{minFitTag}.txt {seedfile}.txt")
+
+        # ALWAYS COPY OVER THE BEST FIT (EVEN IF THEY FAIL)
+        # We can also post-process to select on the statuses
+        print(f"cp {fitName}_{minFitTag}.fit {fitName}.fit")
+        os.system(f"cp {fitName}_{minFitTag}.fit {fitName}.fit")
+        if seedfile is not None:
+            print(f"cp {seedfile}_{minFitTag}.txt {seedfile}.txt")
+            os.system(f"cp {seedfile}_{minFitTag}.txt {seedfile}.txt")
 
     return minNLL
 
