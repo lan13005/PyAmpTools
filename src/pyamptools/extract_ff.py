@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import os
 import argparse
+import os
 import re
 import sys
 
@@ -63,8 +63,8 @@ def extract_ff(results, outfileName="", acceptanceCorrect=True, fmt=".5f", regex
                     merged[filterd_amp].append(amps)
 
             for merged_amp, amps in merged.items():
-                if len(amps) <= 1:
-                    continue  # skip if none merged
+                # if len(amps) <= 1:
+                #     continue  # skip if none merged. Turn off since if Pmag = 1 then PosIm will not exist (only PosRe)
                 print(f" -> {merged_amp}")
                 for amp in amps:
                     print(f"     {amp}")
