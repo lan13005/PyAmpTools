@@ -1,9 +1,9 @@
-import glob
-import os
-import multiprocessing
-from pyamptools.utility.general import Timer, load_yaml
-
 import argparse
+import glob
+import multiprocessing
+import os
+
+from pyamptools.utility.general import Timer, load_yaml
 
 pyamptools_fit_cmd = "pa fit"
 pyamptools_ff_cmd = "pa fitfrac"
@@ -44,7 +44,7 @@ class MLE:
         os.system(cmd)
 
         if not os.path.exists(f"{base_fname}.fit"):
-            raise Exception(f"Error: {base_fname}.fit does not exist!")
+            raise Exception(f"run_mle| Error: {base_fname}.fit does not exist!")
 
         os.system(f"rm -f bin_{binNum}_*.ni")
 
@@ -118,7 +118,10 @@ if __name__ == "__main__":
             cfgfiles.append(cfgfile)
             print(f"  {cfgfile}")
 
-    n_processes = len(cfgfiles)
+    n_processes = min(len(cfgfiles), yaml_file["processing"]["n_processes"])
+
+    if n_processes < 1:
+        raise Exception("run_mle| No processes requested! Exiting...")
 
     with multiprocessing.Pool(n_processes) as pool:
         pool.map(mle, cfgfiles)
