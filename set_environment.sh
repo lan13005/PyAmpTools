@@ -20,10 +20,10 @@ if [[ "$hostname" == *"jlab.org"* ]]; then
 
     # Was in .bashrc is this good place now?
     source /etc/profile.d/modules.sh
-    module add cuda
     module use /apps/modulefiles
     module load mpi/openmpi3-x86_64
     module load gcc/9.3.0
+    module load cuda
 
     export CUDA_INSTALL_PATH=/apps/cuda/11.4.2/
     export GPU_ARCH=sm_75
