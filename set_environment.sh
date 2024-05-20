@@ -5,7 +5,17 @@ echo "*******************"
 echo ""
 
 env_name="pyamptools"
-default_env="/w/halld-scshelf2101/lng/WORK/PyAmpTools" # will be compared to PWD so no trailing slash
+default_env="/w/halld-scshelf2101/lng/WORK/PyAmpTools" # Default env location on Jlab farm. Will be compared to PWD so no trailing slash!
+
+
+# VSCode could create additional environment variables...
+#   Checking to see if PYAMPTOOLS_HOME is a full path to see if it's been set by the user
+if [[ ! $PYAMPTOOLS_HOME == /* ]] || [ -z "$PYAMPTOOLS_HOME" ]; then
+    export PYAMPTOOLS_HOME=$( dirname "$( readlink -f "${BASH_SOURCE[0]}" )" ) # absolute location of this script
+    echo "PYAMPTOOLS_HOME was set to $PYAMPTOOLS_HOME"
+# else
+#     echo "PYAMPTOOLS_HOME is already set. Will not attempt override. PYAMPTOOLS_HOME=$PYAMPTOOLS_HOME"
+fi
 
 ####################
 # Check if the hostname contains "jlab.org" if so we perform default setup
@@ -31,9 +41,9 @@ if [[ "$hostname" == *"jlab.org"* ]]; then
 
     # You could build the external libraries from source but since you are
     # on the JLab system you can also just use the pre-built libraries
-    if [[ ! "$(readlink -f $PWD)" == "$default_env" ]]; then
-        mv external .external # hide default source
-        ln -s "$default_env/external" .
+    if [[ ! "$PYAMPTOOLS_HOME" == "$default_env" ]]; then
+        mv $PYAMPTOOLS_HOME/external $PYAMPTOOLS_HOME/.external # hide current external directory
+        ln -s "$default_env/external" $PYAMPTOOLS_HOME # link over the pre-built libraries
     fi
 fi
 ####################
@@ -50,16 +60,6 @@ if [ -z "$CONDA_DEFAULT_ENV" ] || [ "$CONDA_DEFAULT_ENV" == "base" ]; then
     echo ""
     return
 fi
-
-# VSCode could create additional environment variables... Checking to see if
-#   PYAMPTOOLS_HOME is a full path is another check to see if it's been set by the user
-if [[ ! $PYAMPTOOLS_HOME == /* ]] || [ -z "$PYAMPTOOLS_HOME" ]; then
-    export PYAMPTOOLS_HOME=$( dirname "$( readlink -f "${BASH_SOURCE[0]}" )" ) # absolute location of this script
-    echo "Setting PYAMPTOOLS_HOME to $PYAMPTOOLS_HOME"
-else
-    echo "PYAMPTOOLS_HOME is already set. Will not attempt override. PYAMPTOOLS_HOME=$PYAMPTOOLS_HOME"
-fi
-
 
 ### Set up environment variables for AmpTools ###
 export AMPTOOLS_HOME=$PYAMPTOOLS_HOME/external/AmpTools
