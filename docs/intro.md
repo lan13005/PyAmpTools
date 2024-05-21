@@ -65,6 +65,7 @@ cd external/root
 # if you modify the root version and use VSCode please update .vscode/settings.json file's extraPaths variable accordingly
 source build_root.sh
 cd ../.. # move back to main directory
+source set_environment.sh # to load the new ROOT environment before downloading amptools/fsroot
 ```
 
 Build required libraries

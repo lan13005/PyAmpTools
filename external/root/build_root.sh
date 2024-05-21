@@ -67,9 +67,10 @@
 # Specify ROOT, compiler, python, and cmake versions
 conda activate pyamptools # activate the conda environment
 export ROOT_VERS=6.28.06
-export GCC_VERS=9.3.0
-export PYTHON_VERS=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')
-export CMAKE_VERS=3.23.2
+export GCC_VERS=11.4.0
+export PYTHON_VERS=$(python3 -V 2>&1 | grep -Po '(?<=Python )(.+)')
+export PYTHON3_EXECUTABLE=$(readlink -f $(which python3))
+export CMAKE_VERS=3.20.2
 export protbuf_VERSION=21.12
 export CXX_STANDARD=17
 eval `/usr/bin/modulecmd bash load gcc/${GCC_VERS}` # load gcc if on JLab ifarm
@@ -77,6 +78,7 @@ eval `/usr/bin/modulecmd bash load gcc/${GCC_VERS}` # load gcc if on JLab ifarm
 # Extra flags for building ROOT from source
 export EXTRA_CMAKE_FLAGS="-Droofit=Off \
                           -Dtmva=Off \
+                          -Dmathmore=On \
                             "
 
 # Load GPU info, default is for JLab ifarm
@@ -85,19 +87,19 @@ export EXTRA_CMAKE_FLAGS="-Droofit=Off \
 # export GPU_ARCH=75 # Use compute capability matching your GPU, lower than capable versions will have penalized performance
 ### ROOT > v6.20.06 does not require CXX and CUDA to have same standard
 # CUDA_ARCHITECTURES must match
-# export EXTRA_CMAKE_FLAGS="-Dcuda=On \
-#                             -DCMAKE_CXX_STANDARD=17 \
-#                             -DCMAKE_CUDA_STANDARD=17 \
+# export EXTRA_CMAKE_FLAGS+="-Dcuda=On -Dcudnn=On \
+#                             -DCMAKE_CXX_STANDARD=$CXX_STANDARD \
+#                             -DCMAKE_CUDA_STANDARD=$CXX_STANDARD \
 #                             -DCMAKE_CUDA_ARCHITECTURES=$GPU_ARCH \
 #                             -DCMAKE_CUDA_HOST_COMPILER=`which g++` \
-                            # "
+#                             "
 
 #-----------------------------------------------------------------------------
 # Should not need to edit below this line (unless modifying root build flags)
 
 export CXX=`which g++`
 export CC=`which gcc`
-export CMAKE=/u/apps/cmake/${CMAKE_VERS}/bin/cmake
+export CMAKE=/usr/bin/cmake
 
 
 echo "VERSIONS:"
@@ -160,6 +162,7 @@ if [ ! -d root-${ROOT_VERS}-gcc${GCC_VERS}.build ]; then
         -DCMAKE_INSTALL_PREFIX=root-${ROOT_VERS}-gcc${GCC_VERS} \
         -Dbuiltin_glew=ON \
         -DProtobuf_INCLUDE_DIR=${Protobuf_ROOT}/include \
+        -DPython3_EXECUTABLE=${PYTHON3_EXECUTABLE} \
         ${EXTRA_CMAKE_FLAGS} \
         |& tee -a ${LOG}
 else

@@ -4,8 +4,8 @@ echo "Loading environment"
 echo "*******************"
 echo ""
 
-env_name="pyamptools"
-default_env="/w/halld-scshelf2101/lng/WORK/PyAmpTools" # Default env location on Jlab farm. Will be compared to PWD so no trailing slash!
+env_name="pyamptools9"
+default_env="/w/halld-scshelf2101/lng/WORK/PyAmpTools9" # Default env location on Jlab farm. Will be compared to PWD so no trailing slash!
 
 
 # VSCode could create additional environment variables...
@@ -29,21 +29,20 @@ if [[ "$hostname" == *"jlab.org"* ]]; then
     echo ""
 
     # Was in .bashrc is this good place now?
-    source /etc/profile.d/modules.sh
-    module use /apps/modulefiles
-    module load mpi/openmpi3-x86_64
-    module load gcc/9.3.0
-    module load cuda
+    # source /etc/profile.d/modules.sh
+    module use /cvmfs/oasis.opensciencegrid.org/jlab/scicomp/sw/el9/modulefiles
+    module load mpi/openmpi-x86_64
+    module load gcc/11.4.0
+    module load cuda/12.2.2
 
-    export CUDA_INSTALL_PATH=/apps/cuda/11.4.2/
-    export GPU_ARCH=sm_75
-    export LD_LIBRARY_PATH=/usr/lib64:$LD_LIBRARY_PATH # needed for mpi4py
+    export CUDA_INSTALL_PATH=/cvmfs/oasis.opensciencegrid.org/jlab/scicomp/sw/el9/cuda/12.4.1/
+    export GPU_ARCH=sm_80
 
     # You could build the external libraries from source but since you are
     # on the JLab system you can also just use the pre-built libraries
-    if [[ ! "$PYAMPTOOLS_HOME" == "$default_env" ]]; then
-        mv $PYAMPTOOLS_HOME/external $PYAMPTOOLS_HOME/.external # hide current external directory
-        ln -s "$default_env/external" $PYAMPTOOLS_HOME # link over the pre-built libraries
+    if [[ ! "$(readlink -f $PWD)" == "$default_env" ]]; then
+        mv external .external # hide default source
+        ln -s "$default_env/external" .
     fi
 fi
 ####################

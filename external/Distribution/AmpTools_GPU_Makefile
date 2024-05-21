@@ -16,7 +16,7 @@ TARGET_LIBRARY = $(LIB) # Output library name
 TARGET_DICT := $(patsubst lib%,%,$(basename $(LIB)))Dict.cxx
 TARGET_LINKDEF = Linkdef.h
 
-NVCC_FLAGS += --compiler-options '-fPIC' --shared
+NVCC_FLAGS += --compiler-options '-fPIC'
 
 default: $(LIB)
 	$(info TARGET_LIBRARY: $(TARGET_LIBRARY))
@@ -24,7 +24,7 @@ default: $(LIB)
 
 %.so:  $(SRCFILES:%.cc=.%$(SUFFIX).o)  $(CUDAFILES:%.cu=.%$(SUFFIX).o)
 	$(vecho) " === Creating Shared Library $@ ==="
-	$(Q)$(CXX) $(CXX_FLAGS) $(INC_DIR) -o $@ $^ $(ROOTLIBS)
+	$(Q)$(CXX) $(CXX_FLAGS) $(INC_DIR) -o $@ $^ $(ROOTLIBS) -pthread -L/cvmfs/oasis.opensciencegrid.org/jlab/scicomp/sw/el9/cuda/12.2.2/lib64 -lcudart
 
 # $(TARGET_DICT): $(HEADERS)
 # 	@echo " === Creating Dictionary $@ === "

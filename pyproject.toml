@@ -27,7 +27,7 @@ dependencies = [
     "pdf2image",  # convert pdf to image for plotGen tutorial documentation
     "scons",      # needed to 'make' AMPTOOLS_GENERATORS
 ]
-name = "pyamptools"
+name = "pyamptools9"
 requires-python = ">=3.9"
 version = "0.1.0"
 
@@ -37,8 +37,8 @@ profile = "black"
 
 [project.optional-dependencies]
 dev = [
-  "pyamptools[doc]",
-  "pyamptools[ift]",
+  "pyamptools9[doc]",
+  "pyamptools9[ift]",
   "pytest",
   "pre-commit",
   "ruff",
