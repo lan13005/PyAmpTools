@@ -40,9 +40,9 @@ if [[ "$hostname" == *"jlab.org"* ]]; then
 
     # You could build the external libraries from source but since you are
     # on the JLab system you can also just use the pre-built libraries
-    if [[ ! "$(readlink -f $PWD)" == "$default_env" ]]; then
-        mv external .external # hide default source
-        ln -s "$default_env/external" .
+    if [[ ! "$PYAMPTOOLS_HOME" == "$default_env" ]]; then
+        mv $PYAMPTOOLS_HOME/external $PYAMPTOOLS_HOME/.external # hide current external directory
+        ln -s "$default_env/external" $PYAMPTOOLS_HOME # link over the pre-built libraries
     fi
 fi
 ####################
