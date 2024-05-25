@@ -1,5 +1,6 @@
-import os
 import itertools
+import os
+
 import numpy as np
 import pandas as pd
 
@@ -41,6 +42,10 @@ def loadAmpToolsResults(cfgfiles, masses, niters, mle_query_1, mle_query_2):
         basedir = os.path.dirname(cfgfile)
         binTag = basedir.split("/")[-1]
         fit_file = f"{basedir}/{binTag}_{i}.fit"
+
+        if not os.path.exists(fit_file):
+            continue
+    
         value = loadParValueFromFit(fit_file, "bestMinimum")
         _nlls.append(value)
         _masses.append(masses[int(binTag.split("_")[-1])])
@@ -106,6 +111,11 @@ def loadAmpToolsResults(cfgfiles, masses, niters, mle_query_1, mle_query_2):
     df["ematrix"] = _ematrix
 
     df = pd.DataFrame(df)
+
+    # This is the case if there are 0 fit result files loaded
+    if len(df) == 0:
+        print("No amptools MLE fit results loaded! Returning empty DataFrame...")
+        return df
 
     # Apply Query 1
     if mle_query_1 != "":
