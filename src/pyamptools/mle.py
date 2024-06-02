@@ -94,6 +94,7 @@ def runFits(
         maxFraction = 0.5
         minNLL = sys.float_info.max
         minFitTag = -1
+        one_converged = False
 
         parRangeKeywords = cfgInfo.userKeywordArguments("parRange")
 
@@ -108,14 +109,16 @@ def runFits(
                 ati.randomizeParameter(parRangeKeywords[ipar][0], float(parRangeKeywords[ipar][1]), float(parRangeKeywords[ipar][2]))
 
             bFitFailed, NLL = _performFit(ati, f"{i}", *fitargs)
-            if not bFitFailed and NLL < minNLL:
+            if NLL < minNLL:
                 minNLL = NLL
                 minFitTag = i
+            if not bFitFailed:
+                one_converged = True
 
             print(f"LIKELIHOOD AFTER MINIMIZATION: {NLL}\n")
 
-        if minFitTag < 0:
-            print("ALL FITS FAILED!")
+        if not one_converged:
+            print(f"ALL FITS FAILED! Best fit was still iteration {minFitTag} with NLL = {minNLL}")
         else:
             print(f"MINIMUM LIKELHOOD FROM ITERATION {minFitTag} of {N} RANDOM PRODUCTION PARS = {minNLL}")
 
