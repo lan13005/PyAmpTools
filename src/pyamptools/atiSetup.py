@@ -1,6 +1,7 @@
-import ROOT
 import os
-from pyamptools.utility.general import check_shared_lib_exists, get_pid_family, check_nvidia_devices
+
+import ROOT
+from pyamptools.utility.general import check_nvidia_devices, check_shared_lib_exists, get_pid_family
 from pyamptools.utility.pythonization import pythonize_parMgr  # noqa
 
 kModule = "atiSetup"
@@ -99,6 +100,8 @@ def set_aliases(called_globals, USE_MPI, USE_GPU):
         "gInterpreter": ROOT.gInterpreter,
         ############### AmpTools RELATED ##############
         "AmpToolsInterface": ROOT.AmpToolsInterfaceMPI if USE_MPI else ROOT.AmpToolsInterface,
+        "NormIntInterface":  ROOT.NormIntInterface,
+        "AmplitudeManager": ROOT.AmplitudeManager,
         "ConfigFileParser": ROOT.ConfigFileParser,
         "ConfigurationInfo": ROOT.ConfigurationInfo,
         "Zlm": ROOT.Zlm,
