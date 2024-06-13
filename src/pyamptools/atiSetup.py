@@ -111,6 +111,7 @@ def set_aliases(called_globals, USE_MPI, USE_GPU):
         "Piecewise": ROOT.Piecewise,
         "PhaseOffset": ROOT.PhaseOffset,
         "TwoPiAngles": ROOT.TwoPiAngles,
+        "Uniform": ROOT.Uniform,
         "ParameterManager": ROOT.ParameterManager,
         "MinuitMinimizationManager": ROOT.MinuitMinimizationManager,
         ############## DataReader RELATED ##############

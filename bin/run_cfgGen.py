@@ -1,10 +1,11 @@
+import argparse
+import array
 import os
 import random
-from pyamptools import atiSetup
-import array
+
 import ROOT
-import argparse
-from pyamptools.utility.general import zlm_amp_name, vps_amp_name, converter, example_zlm_names, example_vps_names, load_yaml
+from pyamptools import atiSetup
+from pyamptools.utility.general import converter, example_vps_names, example_zlm_names, load_yaml, vps_amp_name, zlm_amp_name
 
 ############################################################################
 # This script generates AmpTools configuration files with knobs/flags to
@@ -264,10 +265,10 @@ def generate_amptools_cfg_from_dict(yaml_file):
         check_string = "You did not select any partial waves... \n Please enter a waveset string and try again."
     else:
         waveset = yaml_file["waveset"].split("_")
-        print("Using waveset string: ", waveset)
         # Using waveset string:  Sp0+_Dp2+
         for wave in waveset:
-            if wave in converter:
+            if wave == "isotropic": continue
+            elif wave in converter:
                 used_quantum_numbers.append(converter[wave])
             else:
                 check_string = f"Wave {wave} not recognized. Please check your waveset string and try again."

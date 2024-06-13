@@ -1,15 +1,16 @@
+import argparse
+import os
+import sys
+import time
+
+import corner
+import emcee
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import emcee
-import os
-import matplotlib.pyplot as plt
-import corner
-import argparse
-import time
-import sys
 import yaml
-from pyamptools.utility.load_parameters import LoadParameters, createMovesMixtureFromDict
 from pyamptools.utility.general import glob_sort_captured, safe_getsize
+from pyamptools.utility.load_parameters import LoadParameters, createMovesMixtureFromDict
 
 
 class mcmcManager:
@@ -535,6 +536,7 @@ def _cli_mcmc():
     AmpToolsInterface.registerAmplitude(Piecewise())
     AmpToolsInterface.registerAmplitude(PhaseOffset())
     AmpToolsInterface.registerAmplitude(TwoPiAngles())
+    AmpToolsInterface.registerAmplitude(Uniform())
     AmpToolsInterface.registerDataReader(DataReader())
     AmpToolsInterface.registerDataReader(DataReaderTEM())
     AmpToolsInterface.registerDataReader(DataReaderFilter())

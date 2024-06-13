@@ -1,8 +1,9 @@
-import os
 import argparse
-from pyamptools.utility.general import Timer, load_yaml, dump_yaml
+import os
+
 from omegaconf import OmegaConf
 from pyamptools.split_mass import split_mass
+from pyamptools.utility.general import Timer, dump_yaml, load_yaml
 
 ############################################################################
 # This makes calls to pyamptools' split_mass function to divide the data

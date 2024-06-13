@@ -175,6 +175,7 @@ def _cli_runFits():
     AmpToolsInterface.registerAmplitude(Piecewise())
     AmpToolsInterface.registerAmplitude(PhaseOffset())
     AmpToolsInterface.registerAmplitude(TwoPiAngles())
+    AmpToolsInterface.registerAmplitude(Uniform())
     AmpToolsInterface.registerDataReader(DataReader())
     AmpToolsInterface.registerDataReader(DataReaderTEM())
     AmpToolsInterface.registerDataReader(DataReaderFilter())

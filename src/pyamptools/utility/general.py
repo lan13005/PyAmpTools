@@ -1,18 +1,17 @@
 import glob
 import inspect
+import math
 import os
 import re
 import subprocess
+import time
 import unittest
 
 import psutil
-from IPython.display import Code
-import math
-import time
-
-from omegaconf import OmegaConf
-from omegaconf._utils import _ensure_container, OmegaConfDumper
 import yaml
+from IPython.display import Code
+from omegaconf import OmegaConf
+from omegaconf._utils import OmegaConfDumper, _ensure_container
 
 # ===================================================================================================
 # ===================================================================================================
@@ -72,6 +71,12 @@ for e, refl in zip([-1, 1], refls):
                 P = "+" if (-1) ** l == +1 else "-"
                 C = "-"  # vector-pseudoscalar is always -1
                 prettyLabels[amp] = rf"${J}^{{{P}{C}}}[{spectroscopic_map[l]}_{{{M}}}^{{{refl}}}]$"
+
+# If there is no prettyLabel version, just pass back the key
+class KeyReturningDict(dict):
+    def __missing__(self, key):
+        return key
+prettyLabels = KeyReturningDict(prettyLabels)
 
 # ===================================================================================================
 # ===================================================================================================
