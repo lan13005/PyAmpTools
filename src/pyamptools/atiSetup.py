@@ -59,9 +59,9 @@ def loadLibraries(accelerator, use_fsroot=False, use_genamp=False, verbose=True)
     #  as python is interpreted.
     if RANK_MPI == 0 and verbose:
         print("\n\n------------------------------------------------")
-    ROOT.initialize(RANK_MPI == 0)
+    ROOT.initialize(False) # (RANK_MPI == 0)
     if use_fsroot:
-        ROOT.initialize_fsroot(RANK_MPI == 0)
+        ROOT.initialize_fsroot(False) # (RANK_MPI == 0)
     if RANK_MPI == 0 and verbose:
         print("------------------------------------------------\n")
 

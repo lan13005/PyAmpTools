@@ -148,8 +148,8 @@ ROOTDataReaderFilter::~ROOTDataReaderFilter()
 void ROOTDataReaderFilter::resetSource()
 {
 
-   cout << "Resetting source " << m_inTree->GetName()
-      << " in " << m_inFile->GetName() << endl;
+   // cout << "Resetting source " << m_inTree->GetName()
+   //    << " in " << m_inFile->GetName() << endl;
 
    // this will cause the read to start back at event 0
    m_eventCounter = 0;
