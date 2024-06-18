@@ -25,11 +25,11 @@ class LoadParameters:
         ######## GET UNIQUE AMPLITUDES' PRODUCTION PARAMETERS ########
         results = None
         if hasattr(cfg, "configInfo"):  # input was a FitResults object
-            print("Input was a FitResults object. Take actions accordingly...")
+            # print("Input was a FitResults object. Take actions accordingly...")
             results, cfg = cfg, cfg.configInfo()
             ftype = "FitResults"
         elif hasattr(cfg, "constraintMap"):
-            print("Input was a ConfigurationInfo object. Take actions accordingly...")
+            # print("Input was a ConfigurationInfo object. Take actions accordingly...")
             ftype = "ConfigurationInfo"  # input was a ConfigurationInfo object
         else:
             raise ValueError("Input must be a FitResults or ConfigurationInfo object")
