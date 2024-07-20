@@ -1,3 +1,5 @@
+import os
+
 import ROOT
 
 #############################################
@@ -14,9 +16,23 @@ def loadMacros():
     Load Macros that mirror FSRoot's FSMath
     """
 
+    # Load /home/lng/WORK/WORK/PyAmpTools9/utility/RDF_userDefFuncs.cc
+    #   which contains the FSMath functions
+    if "PYAMPTOOLS_HOME" not in os.environ:
+        print("PYAMPTOOLS_HOME not set. Cannot load FSMath macros.")
+        return
+    else:
+        PYAMPTOOLS_HOME = os.getenv("PYAMPTOOLS_HOME")
+    print(f"Loading FSMath macros from {PYAMPTOOLS_HOME}/utility/RDF_userDefFuncs.cc")
+    ROOT.gROOT.LoadMacro(f"{PYAMPTOOLS_HOME}/utility/RDF_userDefFuncs.cc")
+
     ROOT.gInterpreter.Declare("""
     #include "FSBasic/FSMath.h"
     using Vec_t = const ROOT::RVec<float>&;
+
+    // PYAMPTOOLS DEFINED - see RDF_userDefFuncs.cc
+    double UNWRAP( double phi ){ return PyAmpToolsMath::unwrap(phi); }
+    double BIGPHI( float polAngle, Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4 ){return PyAmpToolsMath::bigPhi( polAngle, P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3], P4[0], P4[1], P4[2], P4[3]); }
 
     // ANGULAR QUANTITIES
     double HELPHI( Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4 ){return FSMath::helphi( P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3], P4[0], P4[1], P4[2], P4[3]); }
@@ -38,6 +54,9 @@ def loadMacros():
     double MASS2(Vec_t P1, Vec_t P2, Vec_t P3){ return     (pow(P1[3]+P2[3]+P3[3],2) - pow(P1[0]+P2[0]+P3[0],2) - pow(P1[1]+P2[1]+P3[1],2) - pow(P1[2]+P2[2]+P3[2],2)); }
     double MASS2(Vec_t P1, Vec_t P2          ){ return     (pow(P1[3]+P2[3],2)       - pow(P1[0]+P2[0],2)       - pow(P1[1]+P2[1],2)       - pow(P1[2]+P2[2],2)); }
     double MASS2(Vec_t P1                    ){ return     (pow(P1[3],2)             - pow(P1[0],2)             - pow(P1[1],2)             - pow(P1[2],2)); }
+
+    // MANDELSTAM
+    double T(Vec_t P1, Vec_t P2){ return -1 * ( pow(P1[3] - P2[3],2) - pow(P1[0] - P2[0],2) - pow(P1[1] - P2[1],2) - pow(P1[2] - P2[2],2) ); }
 
     // MOMENTUM COMPONENTS
     double MOMENTUMX(Vec_t P1){ return P1[0]; }
