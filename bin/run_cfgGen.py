@@ -311,12 +311,25 @@ def generate_amptools_cfg_from_dict(yaml_file):
 
     # These are the actual locations that we can still check for
     _datas = [f"{data_folder}/data{pol:0>3}.root" for pol in used_pols]
+    _bkgnds = [f"{data_folder}/bkgnd{pol:0>3}.root" for pol in used_pols]
     _gens = [f"{data_folder}/genmc{pol:0>3}.root" for pol in used_pols]
     _accs = [f"{data_folder}/accmc{pol:0>3}.root" for pol in used_pols]
-    _bkgnds = [f"{data_folder}/bkgnd{pol:0>3}.root" for pol in used_pols]
+
+    # Check if these files exist
+    for ftype, sources in zip(["data", "bkgnd", "genmc", "accmc"], [_datas, _bkgnds, _gens, _accs]):
+        for source in sources:
+            if not os.path.isfile(source) and ftype in ["genmc", "accmc"]:
+                if os.path.isfile(f"{data_folder}/{ftype}.root"):
+                    if ftype == "genmc":
+                        _gens = [f"{data_folder}/{ftype}.root" for pol in used_pols]
+                    if ftype == "accmc":
+                        _accs = [f"{data_folder}/{ftype}.root" for pol in used_pols]
+                else:
+                    raise FileNotFoundError(f"File {source} does not exist.")
+            if not os.path.isfile(source) and ftype in ["data", "bkgnd"]:
+                raise FileNotFoundError(f"File {source} does not exist.")
 
     # These are placeholder locations for us to split_mass with
-
     datas = [f"PLACEHOLDER_DATA_{pol:0>3}" for pol in used_pols]
     gens = [f"PLACEHOLDER_GENMC_{pol:0>3}" for pol in used_pols]
     accs = [f"PLACEHOLDER_ACCMC_{pol:0>3}" for pol in used_pols]
