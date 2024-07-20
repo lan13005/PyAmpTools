@@ -289,7 +289,7 @@ AmpToolsInterface::resetConfigurationInfo(ConfigurationInfo* configurationInfo){
 
 
 double
-AmpToolsInterface::likelihood (const string& reactionName) const {
+AmpToolsInterface::likelihood( const string& reactionName ) const {
   LikelihoodCalculator* likCalc = likelihoodCalculator(reactionName);
   if (likCalc) return (*likCalc)();
   return 0.0;
@@ -297,13 +297,12 @@ AmpToolsInterface::likelihood (const string& reactionName) const {
 
 
 double
-AmpToolsInterface::likelihood () const {
-  double L = 0.0;
-  for (unsigned int irct = 0; irct < m_configurationInfo->reactionList().size(); irct++){
-    ReactionInfo* reaction = m_configurationInfo->reactionList()[irct];
-    L += likelihood(reaction->reactionName());
+AmpToolsInterface::likelihood() const {
+  if( m_minuitMinimizationManager ){
+    m_minuitMinimizationManager->parameterManager().synchronizeMinuit();
+    return m_minuitMinimizationManager->evaluateFunction();
   }
-  return L;
+  return 0.0;
 }
 
 pair< double, vector<double> >
@@ -314,6 +313,8 @@ AmpToolsInterface::likelihoodAndGradient(){
 
 void
 AmpToolsInterface::reinitializePars(){
+
+  // is this fully robust for MPI?  what if it is called on lead only? invalidate will be problematic?
 
   // shouldn't be callin' unless you're fittin'
   if( m_functionality != kFull ) return;
@@ -538,8 +539,6 @@ AmpToolsInterface::registerDataReader( const DataReader& dataReader){
 
 }
 
-
-
 void
 AmpToolsInterface::clear(){
   report( DEBUG, kModule ) << "AmpToolsInterface::clear() called by destructor or resetConfigurationInfo" << endl;
@@ -703,6 +702,10 @@ AmpToolsInterface::clear_and_print(){
     m_ampVecs[i].deallocAmpVecs();
     m_ampVecsReactionName[i] = "";
   }
+
+  // NOTE:  order matters here -- the ParameterManagers need to be deleted
+  // before the MinuitMinimizationManager as some types of parameter constraints
+  // like GaussianBound, need to detach themselves from the minimizaiton manager
 
   if (parameterManager()){
     print_boundPtrCache();

@@ -74,10 +74,11 @@ AmpVecs::AmpVecs(){
   m_pdIntegralMatrix = 0 ;
 
   // Bools
-  m_termsValid    = false ;
-  m_integralValid = false ;
-  m_dataLoaded = false;
+  m_termsValid     = false ;
+  m_integralValid  = false ;
+  m_dataLoaded     = false;
   m_usesSharedData = false;
+  m_sharedDataHost = NULL;
 
   m_hasNonUnityWeights = false;
   m_hasMixedSignWeights = false;
@@ -198,12 +199,28 @@ AmpVecs::deallocAmpVecs()
 
 void
 AmpVecs::clearFourVecs(){
-  report( DEBUG, kModule ) << "AmpVecs::clearFourVecs() clearing four-vectors" << endl;
-  // don't do anything if we are using shared data
-  if( m_usesSharedData ) return;
+  report( DEBUG, kModule ) << "AmpVecs::clearFourVecs() clearing four-vectors called" << endl;
 
-  report( DEBUG, kModule ) << "AmpVecs::clearFourVecs() cleaning shared data" << endl;
+  if( m_usesSharedData ){
+    report ( DEBUG, kModule ) << "AmpVecs::clearFourVecs() called on shared data" << endl;
+    // this should always be true because an
+    // object using shared data shouldn't share it
+    // again with another object -- only the host
+    // should do the sharing
+    assert( m_sharedDataFriends.empty() );
+
+    m_sharedDataHost->removeFriend( this );
+    m_sharedDataHost = NULL;
+    m_usesSharedData = false;
+
+    // set the pointer to zero to avoid deleting data
+    // that others need in the steps below
+    m_pdData = 0;
+  }
+
   if( !m_sharedDataFriends.empty() ) {
+
+    report( DEBUG, kModule ) << "AmpVecs::clearFourVecs() m_sharedDataFriends was not empty" << endl;
 
     // transfer the ownership of the data
     // to the first member of the set of
@@ -212,6 +229,7 @@ AmpVecs::clearFourVecs(){
     std::set<AmpVecs*>::iterator avItr = m_sharedDataFriends.begin();
 
     AmpVecs* newDataOwner = *avItr;
+    report( DEBUG, kModule ) << "AmpVecs::clearFourVecs() erasing shared data" << endl;
     m_sharedDataFriends.erase( avItr );
 
     newDataOwner->claimDataOwnership( m_sharedDataFriends );
@@ -228,6 +246,7 @@ AmpVecs::clearFourVecs(){
   // proceed as normal by flushing the four-vectors
   if(m_pdData)
     delete[] m_pdData;
+
   m_pdData=0;
 }
 
@@ -437,6 +456,17 @@ AmpVecs::getEvent( int iEvent ){
 void
 AmpVecs::shareDataWith( AmpVecs* targetAmpVecs ){
   report( DEBUG, kModule ) << "AmpVecs::shareDataWith() sharing data with " << targetAmpVecs << endl;
+
+  // if this object is already using shared data
+  // then it should rely on the host to distribute
+  // the data to the new object in order to keep
+  // the set of shared data friends complete
+  if( m_usesSharedData ){
+    
+    m_sharedDataHost->shareDataWith( targetAmpVecs );
+    return;
+  }
+  
   // the algorithm assumes that the target AmpVecs
   // object is empty to begin with -- if this is not
   // the case there is programming error somewhere
@@ -465,11 +495,26 @@ AmpVecs::shareDataWith( AmpVecs* targetAmpVecs ){
 
   m_sharedDataFriends.insert( targetAmpVecs );
   targetAmpVecs->m_usesSharedData = true;
+  targetAmpVecs->m_sharedDataHost = this; 
+}
+
+void
+AmpVecs::removeFriend( AmpVecs* dataFriend ){
+
+  m_sharedDataFriends.erase( dataFriend );
 }
 
 void
 AmpVecs::claimDataOwnership( set< AmpVecs* > sharedFriends ){
 
   m_usesSharedData = false;
+  m_sharedDataHost = NULL;
   m_sharedDataFriends = sharedFriends;
+
+  // need to tell the friends that this class is the new host
+  for( set< AmpVecs* >::iterator avItr = sharedFriends.begin();
+       avItr != sharedFriends.end(); ++avItr ){
+
+    (*avItr)->m_sharedDataHost = this;
+  }
 }
