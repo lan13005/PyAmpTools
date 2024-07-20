@@ -6,7 +6,7 @@ import re
 import sys
 
 
-def extract_ff(results, outfileName="", acceptanceCorrect=True, fmt=".5f", regex_merge=None):
+def extract_ff(results, outfileName="", acceptanceCorrect=True, fmt=".5f", regex_merge=None, no_phases=False):
     """
     Extract Fit Fractions and phase differences between pairs of waves from a FitResults object
 
@@ -28,12 +28,12 @@ def extract_ff(results, outfileName="", acceptanceCorrect=True, fmt=".5f", regex
     """
 
     def write_ff(amp, intensity, error):
-        outfile.write(f"FIT FRACTION {amp} = {intensity/total_intensity:{fmt}} +/- {error/total_intensity:{fmt}}\n")
+        outfile.write(f"FIT FRACTION {amp} = {intensity/total_intensity:{fmt}} +- {error/total_intensity:{fmt}}\n")
 
-    ############### PLOTTING TIME! ################
+    ############### LOAD RESULTS TIME! ################
     outfile = open(outfileName, "w") if outfileName != "" else sys.stdout
     total_intensity, total_error = results.intensity(acceptanceCorrect)
-    outfile.write(f"TOTAL EVENTS = {total_intensity} +/- {total_error}\n")
+    outfile.write(f"TOTAL EVENTS = {total_intensity} +- {total_error}\n")
 
     uniqueAmps = results.ampList()  # vector<string>
     uniqueAmps = [str(amp) for amp in uniqueAmps]
@@ -56,6 +56,8 @@ def extract_ff(results, outfileName="", acceptanceCorrect=True, fmt=".5f", regex
             print(f"\nMerged Amplitude Groups based on regex sub: r'{pattern}' -> r'{replace}':")
             merged = {}  # dictionary of lists
             for amps in uniqueAmps:
+                if re.search(pattern, amps) is None:
+                    continue
                 filterd_amp = re.sub(pattern, replace, amps)  # regex to remove numbers, r"" force conversion to raw string
                 if filterd_amp not in merged:
                     merged[filterd_amp] = [amps]
@@ -65,7 +67,7 @@ def extract_ff(results, outfileName="", acceptanceCorrect=True, fmt=".5f", regex
             for merged_amp, amps in merged.items():
                 # if len(amps) <= 1:
                 #     continue  # skip if none merged. Turn off since if Pmag = 1 then PosIm will not exist (only PosRe)
-                print(f" -> {merged_amp}")
+                print(f" -> {merged_amp} merged {len(amps)} amplitudes:")
                 for amp in amps:
                     print(f"     {amp}")
 
@@ -74,17 +76,18 @@ def extract_ff(results, outfileName="", acceptanceCorrect=True, fmt=".5f", regex
             merged.clear()
 
     ######### WRITE ALL POSSIBLE PHASE DIFFERENCES ##########
-    for amp1 in uniqueAmps:
-        for amp2 in uniqueAmps:
-            amp1, amp2 = str(amp1), str(amp2)  # amps are TStrings
-            if amp1 == amp2:
-                continue
-            same_reaction = amp1.split("::")[0] == amp2.split("::")[0]
-            same_sum = amp1.split("::")[1] == amp2.split("::")[1]
-            if not same_reaction or not same_sum:
-                continue  # interfence only in same {reaction, sum}
-            phase, error = results.phaseDiff(amp1, amp2)
-            outfile.write(f"PHASE DIFFERENCE {amp1} {amp2} = {phase:{fmt}} +/- {error:{fmt}}\n")
+    if not no_phases:
+        for amp1 in uniqueAmps:
+            for amp2 in uniqueAmps:
+                amp1, amp2 = str(amp1), str(amp2)  # amps are TStrings
+                if amp1 == amp2:
+                    continue
+                same_reaction = amp1.split("::")[0] == amp2.split("::")[0]
+                same_sum = amp1.split("::")[1] == amp2.split("::")[1]
+                if not same_reaction or not same_sum:
+                    continue  # interfence only in same {reaction, sum}
+                phase, error = results.phaseDiff(amp1, amp2)
+                outfile.write(f"PHASE DIFFERENCE {amp1} {amp2} = {phase:{fmt}} +- {error:{fmt}}\n")
 
     outfile.write("\n########### FIT STATUS ###########\n")
     outfile.write(f"# bestMinimum = {results.bestMinimum()}\n")
@@ -101,10 +104,11 @@ def _cli_extract_ff():
     ############## PARSE COMMANDLINE ARGUMENTS ##############
     parser = argparse.ArgumentParser(description="Extract Fit Fractions from FitResults")
     parser.add_argument("fitFile", type=str, default="", help="Amptools FitResults file name")
-    parser.add_argument("--outputfileName", type=str, default="", help="Output file name")
+    parser.add_argument("--outputfileName", type=str, default="extracted_fitfracs.txt", help="Output file name")
     parser.add_argument("--a", type=bool, default=True, help="Calculate acceptance corrected values")
     parser.add_argument("--fmt", type=str, default=".5f", help="Format string for printing")
     parser.add_argument("--regex_merge", type=str, nargs="+", help="Merge amplitudes: Regex pair (pattern, replace) separated by ~>")
+    parser.add_argument("--no_phases", action="store_true", help="Do not dump phase differences")
     args = parser.parse_args(sys.argv[1:])
 
     ################### LOAD LIBRARIES ##################
@@ -118,6 +122,7 @@ def _cli_extract_ff():
     acceptanceCorrect = args.a
     fmt = args.fmt
     regex_merge = args.regex_merge
+    no_phases = args.no_phases
     assert os.path.isfile(fitFile), "Fit Results file does not exist at specified path"
 
     ############## LOAD FIT RESULTS OBJECT ##############
@@ -131,7 +136,7 @@ def _cli_extract_ff():
     AmpToolsInterface.registerDataReader(DataReader())
 
     ############## EXTRACT FIT FRACTIONS ##############
-    extract_ff(results, outfileName, acceptanceCorrect, fmt, regex_merge)
+    extract_ff(results, outfileName, acceptanceCorrect, fmt, regex_merge, no_phases)
 
 
 if __name__ == "__main__":
