@@ -198,17 +198,13 @@ AmpToolsInterface::resetConfigurationInfo(ConfigurationInfo* configurationInfo){
 
       for (unsigned int i = 0; i < m_userDataReaders.size(); i++){
         if (reaction->data().first == m_userDataReaders[i]->name())
-          m_dataReaderMap[reactionName]
-	  = m_userDataReaders[i]->newDataReader(reaction->data().second);
+          m_dataReaderMap[reactionName] = m_userDataReaders[i]->newDataReader(reaction->data().second);
         if (reaction->bkgnd().first == m_userDataReaders[i]->name())
-          m_bkgndReaderMap[reactionName]
-          = m_userDataReaders[i]->newDataReader(reaction->bkgnd().second);
+          m_bkgndReaderMap[reactionName] = m_userDataReaders[i]->newDataReader(reaction->bkgnd().second);
         if (reaction->genMC().first == m_userDataReaders[i]->name())
-          m_genMCReaderMap[reactionName]
-          = m_userDataReaders[i]->newDataReader(reaction->genMC().second);
+          m_genMCReaderMap[reactionName] = m_userDataReaders[i]->newDataReader(reaction->genMC().second);
         if (reaction->accMC().first == m_userDataReaders[i]->name())
-          m_accMCReaderMap[reactionName]
-          = m_userDataReaders[i]->newDataReader(reaction->accMC().second);
+          m_accMCReaderMap[reactionName] = m_userDataReaders[i]->newDataReader(reaction->accMC().second);
       }
       DataReader* dataRdr  =  dataReader(reactionName);
       DataReader* bkgndRdr = bkgndReader(reactionName);
@@ -554,13 +550,15 @@ AmpToolsInterface::clear(){
       ReactionInfo* reaction = m_configurationInfo->reactionList()[irct];
       string reactionName(reaction->reactionName());
 
-      if (likelihoodCalculator(reactionName)){
+    if (likelihoodCalculator(reactionName)){
         report( DEBUG, kModule ) << "Deleting m_likCalcMap for reaction " << reactionName << endl;
         delete m_likCalcMap[reactionName];
+        m_likCalcMap[reactionName] = nullptr;
       }
       if (normIntInterface(reactionName)){
         report( DEBUG, kModule ) << "Deleting normIntInterface for reaction " << reactionName << endl;
         delete normIntInterface(reactionName);
+        m_normIntMap[reactionName] = nullptr;
       }
     }
 
@@ -570,14 +568,18 @@ AmpToolsInterface::clear(){
       if (m_intensityManagers[i]){
         report( DEBUG, kModule ) << "Deleting intensityManager for reaction " << m_intensityManagers[i]->reactionName() << endl;
         delete m_intensityManagers[i];
+        m_intensityManagers[i] = nullptr;
       }
     }
 
+    report( DEBUG, kModule ) << "Clearing m_uniqueDataSets with size " << m_uniqueDataSets.size() << endl;
     for( std::set<DataReader*>::iterator dataReader = m_uniqueDataSets.begin();
         dataReader != m_uniqueDataSets.end(); ++dataReader ){
-        if (*dataReader){
-          report (DEBUG, kModule ) << "Deleting dataReader " << (*dataReader)->name() << endl;
-          delete *dataReader;
+        DataReader* reader = *dataReader;
+        if (reader){
+          report (DEBUG, kModule ) << "Deleting dataReader with ID: " << (reader)->identifier() << endl;
+          delete reader;
+          report (DEBUG, kModule ) << "  ^- Deleted..." << endl;
         }
     }
   }
@@ -606,16 +608,28 @@ AmpToolsInterface::clear(){
   }
 
   report (DEBUG, kModule ) << "Deleting gradientCalculator" << endl;
-  if (gradientCalculator()) delete gradientCalculator();
+  if (gradientCalculator()){
+    delete gradientCalculator();
+    m_gradientCalculator = nullptr;
+  }
 
   report (DEBUG, kModule ) << "Deleting parameterManager" << endl;
-  if (parameterManager()) delete parameterManager();
+  if (parameterManager()){
+    delete parameterManager();
+    m_parameterManager = nullptr;
+  }
 
   report (DEBUG, kModule ) << "Deleting fitResults" << endl;
-  if (fitResults()) delete fitResults();
+  if (fitResults()){
+    delete fitResults();
+    m_fitResults = nullptr;
+  }
 
   report (DEBUG, kModule ) << "Deleting minuitMinimizationManager" << endl;
-  if (minuitMinimizationManager()) delete minuitMinimizationManager();
+  if (minuitMinimizationManager()){
+    delete minuitMinimizationManager();
+    m_minuitMinimizationManager = nullptr;
+  }
 }
 
 void
