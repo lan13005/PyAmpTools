@@ -24,7 +24,7 @@ ROOTDataReaderFilter::ROOTDataReaderFilter( const vector< string >& args ):
    //    This will work even if you wish to select on the same variable multiple times
    set<int> availbleNargs={1};
    for(int i=1; i<maxselects+1; ++i){
-       availbleNargs.insert(1+3*i); }
+         availbleNargs.insert(1+3*i); }
    nargs=(int)args.size();
    nselects=(nargs-1)/3;
    assert( nselects <= maxselects );
@@ -32,22 +32,22 @@ ROOTDataReaderFilter::ROOTDataReaderFilter( const vector< string >& args ):
 
    string tmp;
    for (int i=0; i<nselects; ++i){
-        // if the variable does not start with ! then the defined region is a selection
-        tmp=args[1+3*i];
-        s_min[i] = stof(args[2+3*i]);
-        s_max[i] = stof(args[3+3*i]);
-        if (tmp[0]!='!'){
-            tmp=args[1+3*i];
-            b_isSelection[i]=true;
-        }
-        // if the variable starts with ! then the defined region is a cut
-        else{
+      // if the variable does not start with ! then the defined region is a selection
+      tmp=args[1+3*i];
+      s_min[i] = stof(args[2+3*i]);
+      s_max[i] = stof(args[3+3*i]);
+      if (tmp[0]!='!'){
+         tmp=args[1+3*i];
+         b_isSelection[i]=true;
+      }
+      // if the variable starts with ! then the defined region is a cut
+      else{
             tmp=tmp.substr(1, tmp.size());
             b_isSelection[i]=false;
-        }
-        s_var[i] = tmp;
-        if (mapVars.find(tmp) == mapVars.end())
-            mapVars[tmp]=0;
+      }
+      s_var[i] = tmp;
+      if (mapVars.find(tmp) == mapVars.end())
+         mapVars[tmp]=0;
    }
 
    TH1::AddDirectory( kFALSE );
@@ -55,9 +55,11 @@ ROOTDataReaderFilter::ROOTDataReaderFilter( const vector< string >& args ):
    //this way of opening files works with URLs of the form
    // root://xrootdserver/path/to/myfile.root
    m_inFile = TFile::Open( args[0].c_str() );
+   assert(m_inFile != nullptr);
 
   // The name is always kin for us anyways
    m_inTree = dynamic_cast<TTree*>( m_inFile->Get( "kin" ) );
+   assert(m_inTree != nullptr);
 
    m_numEvents = m_inTree->GetEntries();
 
@@ -72,77 +74,83 @@ ROOTDataReaderFilter::ROOTDataReaderFilter( const vector< string >& args ):
    m_inTree->SetBranchAddress( "Pz_Beam", &m_pzBeam );
 
    if(m_inTree->GetBranch("Weight") != NULL){
-     m_useWeight = true;
-     m_inTree->SetBranchAddress( "Weight", &m_weight );
+      m_useWeight = true;
+      m_inTree->SetBranchAddress( "Weight", &m_weight );
    }
    else{
-     m_useWeight=false;
+      m_useWeight=false;
    }
 
    m_RangeSpecified=false;
-   if ( nselects >0 ){
+   if ( nselects > 0 ){
       m_RangeSpecified=true;
 
       for (auto &p: mapVars){
-          //cout << p.first << ' ' << p.second << endl;
-          m_inTree->SetBranchAddress( p.first.c_str(), &p.second );
+         //cout << p.first << ' ' << p.second << endl;
+         m_inTree->SetBranchAddress( p.first.c_str(), &p.second );
       }
 
+      // Print out the selection/cut criteria
       cout << "*********************************************" << endl;
       cout << "NVARS: " << nselects << endl;
       cout << "Total events: " <<  m_inTree->GetEntries() << endl;
-
       m_numEvents = 0;
       m_weightIntegral = 0;
       for (int i=0; i<nselects; ++i){
-          if (b_isSelection[i])
+         if (b_isSelection[i])
             cout << "Selecting " << s_min[i] << " < " << s_var[i] << " < " << s_max[i] << endl;
-          else
+         else
             cout << "Cutting " << s_min[i] << " < " << s_var[i] << " < " << s_max[i] << endl;
       }
 
       while( m_eventCounter < static_cast< unsigned int >( m_inTree->GetEntries() ) ){
+
          m_inTree->GetEntry( m_eventCounter++ );
          assert( m_nPart < Kinematics::kMaxParticles );
 
-         vector< TLorentzVector > particleList;
-         particleList.push_back( TLorentzVector( m_pxBeam, m_pyBeam, m_pzBeam, m_eBeam ) );
-         for( int i = 0; i < m_nPart; ++i ){
-            particleList.push_back( TLorentzVector( m_px[i], m_py[i], m_pz[i], m_e[i] ) );
-         }
-
          selection=true;
          for (int i=0; i<nselects; ++i){
-            if (b_isSelection[i]){
-                // For a selection: we cut an event if the values are less than the minimum or greater than the maximum
-                if ( ( (mapVars[s_var[i]]<s_min[i]) || (mapVars[s_var[i]]>s_max[i]) ) ){
-                    selection=false;
-                    break;
-                }
+            if (b_isSelection[i]){ // For a selection: we cut an event if the values are less than the minimum or greater than the maximum
+               if ( ( (mapVars[s_var[i]]<s_min[i]) || (mapVars[s_var[i]]>s_max[i]) ) ){
+                  selection=false;
+                  break;
+               }
             }
-            else{
-                // For a cut: we cut an event if the values are in between the maximum and minimum
-                if ( ( (mapVars[s_var[i]]>s_min[i]) && (mapVars[s_var[i]]<s_max[i]) ) ){
-                    selection=false;
-                    break;
-                }
+            else{ // For a cut: we cut an event if the values are in between the maximum and minimum
+               if ( ( (mapVars[s_var[i]]>s_min[i]) && (mapVars[s_var[i]]<s_max[i]) ) ){
+                  selection=false;
+                  break;
+               }
             }
          }
 
-        if (selection){
+         selections.push_back(selection);
+
+         if (selection){
             m_numEvents++;
             m_weightIntegral+=m_weight;
-        }
+         }
       }
       cout << "[" << args[0] << "] Number of events kept    = " << m_numEvents << endl;
       cout << "[" << args[0] << "] Weight Integral    = " << m_weightIntegral << endl;
       cout << "*********************************************" << endl;
    }
+
+   resetSource();
 }
 
 ROOTDataReaderFilter::~ROOTDataReaderFilter()
 {
-   if( m_inFile != NULL ) m_inFile->Close();
+   // For some reason we get a "corrupted size vs. prev_size while consolidating"
+   //    error when destructing this object in AmpToolsInterface.
+   //    This is not a good workaround, we just do not explicitly close the file
+   //    Unsure what the performance impact is
+   m_inFile = nullptr;
+   // if (m_inFile != nullptr){
+   //    if (m_inFile->IsOpen())
+   //       m_inFile->Close();
+   //    m_inFile = nullptr;
+   // }
 }
 
 void ROOTDataReaderFilter::resetSource()
@@ -155,9 +163,10 @@ void ROOTDataReaderFilter::resetSource()
    m_eventCounter = 0;
 }
 
-   Kinematics*
+Kinematics*
 ROOTDataReaderFilter::getEvent()
 {
+   // If no range is specified, we just read the events in order
    if (m_RangeSpecified == false){
       if( m_eventCounter < static_cast< unsigned int >( m_inTree->GetEntries() ) ){
          m_inTree->GetEntry( m_eventCounter++ );
@@ -178,31 +187,13 @@ ROOTDataReaderFilter::getEvent()
          m_inTree->GetEntry( m_eventCounter++ );
          assert( m_nPart < Kinematics::kMaxParticles );
 
+         if (!selections[m_eventCounter-1]) continue; // The eventCounter has already been incremented
+
          vector< TLorentzVector > particleList;
          particleList.push_back( TLorentzVector( m_pxBeam, m_pyBeam, m_pzBeam, m_eBeam ) );
-
          for( int i = 0; i < m_nPart; ++i ){
             particleList.push_back( TLorentzVector( m_px[i], m_py[i], m_pz[i], m_e[i] ) );
          }
-
-         selection=true;
-         for (int i=0; i<nselects; ++i){
-            if (b_isSelection[i]){
-                // For a selection: we cut an event if the values are less than the minimum or greater than the maximum
-                if ( ( (mapVars[s_var[i]]<s_min[i]) || (mapVars[s_var[i]]>s_max[i]) ) ){
-                    selection=false;
-                    break;
-                }
-            }
-            else{
-                // For a cut: we cut an event if the values are in between the maximum and minimum
-                if ( ( (mapVars[s_var[i]]>s_min[i]) && (mapVars[s_var[i]]<s_max[i]) ) ){
-                    selection=false;
-                    break;
-                }
-            }
-         }
-         if (!selection) continue;
 
          return new Kinematics( particleList, m_useWeight ? m_weight : 1.0 );
       }

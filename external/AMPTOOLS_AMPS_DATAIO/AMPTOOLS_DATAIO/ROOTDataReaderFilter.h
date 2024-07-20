@@ -60,6 +60,7 @@ private:
   bool b_isSelection[maxselects];
   string s_var[maxselects];
   bool selection;
+  std::vector<bool> selections;
 
   int m_nPart;
   float m_weightIntegral;
