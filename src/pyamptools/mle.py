@@ -150,6 +150,7 @@ def _cli_runFits():
     parser.add_argument("--hesse", action="store_true", help="Evaluate HESSE matrix after minimization")
     parser.add_argument("--scanPar", type=str, default=None, help="Perform a scan of the given parameter. Stepsize, min, max are to be set in the config file")
     parser.add_argument("--accelerator", type=str, default="mpigpu", help="Use accelerator if available ~ [cpu, gpu, mpi, mpigpu, gpumpi]")
+    parser.add_argument("--device", type=int, default=-1, help="Device number for GPU to force usage. Default is -1 to let AmpTools decide")
 
     args = parser.parse_args(sys.argv[1:])
     if args.randomSeed is None:
@@ -164,10 +165,10 @@ def _cli_runFits():
     USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals(), args.accelerator)
 
     ############## LOAD CONFIGURATION FILE ##############
-    parser = ConfigFileParser(cfgfile)
-    cfgInfo: ConfigurationInfo = parser.getConfigurationInfo()
+    cfgparser = ConfigFileParser(cfgfile)
+    cfgInfo: ConfigurationInfo = cfgparser.getConfigurationInfo()
 
-    # ############## REGISTER OBJECTS FOR AMPTOOLS ##############
+    # # ############## REGISTER OBJECTS FOR AMPTOOLS ##############
     AmpToolsInterface.registerAmplitude(Zlm())
     AmpToolsInterface.registerAmplitude(Vec_ps_refl())
     AmpToolsInterface.registerAmplitude(OmegaDalitz())
@@ -180,6 +181,17 @@ def _cli_runFits():
     AmpToolsInterface.registerDataReader(DataReaderTEM())
     AmpToolsInterface.registerDataReader(DataReaderFilter())
     AmpToolsInterface.registerDataReader(DataReaderBootstrap())
+
+    # print calling python command
+    print(f"Calling python command: {' '.join(sys.argv)}")
+
+    devs = -1
+    if "GPUManager" in globals():
+        devs = GPUManager.getNumDevices()
+    print(f"Trying to set device to {args.device} / {devs}")
+    if args.device >= 0 and args.device < devs:
+        print(f" -> Setting device to {args.device} / {devs}")
+        GPUManager.setThisDevice(args.device)
 
     ati = AmpToolsInterface(cfgInfo)
 
@@ -210,7 +222,6 @@ def _cli_runFits():
 
     if USE_MPI:
         ati.exitMPI()
-
 
 if __name__ == "__main__":
     _cli_runFits()

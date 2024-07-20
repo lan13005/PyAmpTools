@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 import argparse
-import argcomplete
-import subprocess
 import os
+import subprocess
 import sys
+
+import argcomplete
 
 ##################################################################
 # pa = pyamptools...
