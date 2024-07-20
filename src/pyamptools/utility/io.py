@@ -42,7 +42,6 @@ def loadAmpToolsResults(cfgfiles, masses, niters, mle_query_1, mle_query_2):
         basedir = os.path.dirname(cfgfile)
         binTag = basedir.split("/")[-1]
         fit_file = f"{basedir}/{binTag}_{i}.fit"
-
         if not os.path.exists(fit_file):
             continue
     
