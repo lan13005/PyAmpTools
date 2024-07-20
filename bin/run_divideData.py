@@ -3,7 +3,7 @@ import glob
 import os
 
 from omegaconf import OmegaConf
-from pyamptools.split_mass import split_mass
+from pyamptools.split_mass import split_mass_t
 from pyamptools.utility.general import Timer, dump_yaml, load_yaml
 
 ############################################################################
@@ -32,7 +32,9 @@ if __name__ == "__main__":
     min_mass = yaml_file["min_mass"]
     max_mass = yaml_file["max_mass"]
     n_mass_bins = yaml_file["n_mass_bins"]
-    evenly_distribute = yaml_file["evenly_distribute"]
+    min_t = yaml_file["min_t"]
+    max_t = yaml_file["max_t"]
+    n_t_bins = yaml_file["n_t_bins"]
     base_directory = yaml_file["base_directory"]
     output_directory = yaml_file["amptools"]["output_directory"]
     bins_per_group = yaml_file["amptools"]["bins_per_group"] if "bins_per_group" in yaml_file["amptools"] else 1
@@ -46,30 +48,66 @@ if __name__ == "__main__":
     os.system(f"mkdir -p {output_directory}")
     os.chdir(output_directory)
 
+    nBins = n_mass_bins * n_t_bins
+    if nBins % bins_per_group != 0:
+        raise ValueError(f"Number of bins ({nBins}) is not divisible by bins_per_group ({bins_per_group})")
+
     ##########################################
     # SPLIT THE INPUT DATASETS INTO MASS BINS
     ##########################################
 
     # Check if all n_mass_bins folders "bin_{}" have already been created. If not, create them
-    check_for_preexisting = all([os.path.exists(f"bin_{i}") for i in range(n_mass_bins)])
+    check_for_preexisting = all([os.path.exists(f"bin_{i}") for i in range(n_mass_bins * n_t_bins)])
 
+    sharemc = False
+    mc_already_shared = {"data": False, "bkgnd": False, "accmc": False, "genmc": False}
     if check_for_preexisting:
         print("Binned folders already exist, skipping split_mass")
     else:
         mass_edges = None  # Determine mass bin edges based on the first ftype source
-        for pol in pols:
-            print(f"Splitting datasets with pol: {pol}")
-            for ftype in ["data", "accmc", "genmc"]:
-                print(f"Splitting {ftype}{pol}.root")
-                assert os.path.exists(f"{data_folder}/{ftype}{pol}.root"), f"File {data_folder}/{ftype}{pol}.root does not exist"
+        t_edges = None
+        
+        for ftype in ["data", "accmc", "genmc"]:
+            for pol in pols:
+                print(f"Attempting to split {ftype}{pol}.root into mass bins")
+                # AmpTools -f does not include polarization information. We can share all accmc and genmc datasets. Do so if accmc.root exists and acc{pol}.root does not exist 
+                if ftype in ["accmc", "genmc"]: # check to see if we can share the MC datasets
+                    if not os.path.exists(f"{data_folder}/{ftype}{pol}.root"):
+                        if not os.path.exists(f"{data_folder}/{ftype}.root"):
+                            raise FileNotFoundError(f"File {data_folder}/{ftype}{pol}.root does not exist! Nor does {data_folder}/{ftype}.root (unable to share MC across polarized datasets)")
+                        sharemc = True
+                        if mc_already_shared[ftype]:
+                            print("  * Already sharing MC datasets, will run split_mass again")
+                        else:
+                            print(f"  * {ftype}{pol}.root does not exist but {ftype}.root does. Will share {ftype}.root across all polarizations")
+                else:
+                    if not os.path.exists(f"{data_folder}/{ftype}{pol}.root"):
+                        raise FileNotFoundError(f"File {data_folder}/{ftype}{pol}.root does not exist!")
+
+                is_data = ftype not in ["accmc", "genmc"]
+                if is_data or not sharemc:
+                    fname = f"{data_folder}/{ftype}{pol}.root"
+                    oname = f"{ftype}{pol}"
+                else:
+                    fname = f"{data_folder}/{ftype}.root"
+                    oname = f"{ftype}"
 
                 # Perform split_mass
-                mass_edges = split_mass(f"{data_folder}/{ftype}{pol}.root", f"{ftype}{pol}", min_mass, max_mass, n_mass_bins, "kin", mass_edges=mass_edges, evenly_distribute=evenly_distribute)
+                if is_data or not sharemc or (sharemc and not mc_already_shared[ftype]):
+                    mass_edges, t_edges = split_mass_t(fname, oname, 
+                                                min_mass, max_mass, n_mass_bins, 
+                                                min_t, max_t, n_t_bins,
+                                                treeName="kin", mass_edges=mass_edges, t_edges=t_edges)
+                    if sharemc:
+                        mc_already_shared[ftype] = True
 
-            # background file is optional, would assume data is pure weighted signal
+        # background file is optional, would assume data is pure weighted signal
+        for pol in pols:
             if os.path.exists(f"{data_folder}/bkgnd{pol}.root"):
-                print(f"Splitting bkgnd{pol}.root")
-                mass_edges = split_mass(f"{data_folder}/bkgnd{pol}.root", f"bkgnd{pol}", min_mass, max_mass, n_mass_bins, "kin", mass_edges=mass_edges, evenly_distribute=evenly_distribute)
+                mass_edges, t_edges = split_mass_t(f"{data_folder}/bkgnd{pol}.root", f"bkgnd{pol}", 
+                                                    min_mass, max_mass, n_mass_bins, 
+                                                    min_t, max_t, n_t_bins,
+                                                    treeName="kin", mass_edges=mass_edges, t_edges=t_edges)
             else:
                 print(f"No bkgnd{pol}.root found (not required), skipping")
 
@@ -77,28 +115,36 @@ if __name__ == "__main__":
         # # RENAME AND COPY+MODIFY AMPTOOLS CFG FILES
         # ###########################################
 
-        for i in range(n_mass_bins):
-            print(f"Perform final preparation for mass bin: {i}")
-            os.system(f"mkdir -p bin_{i}")
-            os.system(f"cp -f {amptools_cfg} bin_{i}/bin_{i}.cfg")
-            replace_fitname = f"sed -i 's|PLACEHOLDER_FITNAME|bin_{i}|g' bin_{i}/bin_{i}.cfg"
-            os.system(replace_fitname)
-            for pol in pols:
-                for ftype in ["data", "accmc", "genmc", "bkgnd"]:
-                    os.system(f"mv -f {ftype}{pol}_{i}.root bin_{i}/{ftype}{pol}.root > /dev/null 2>&1")  # ignore error
-                    replace_cmd = "sed -i 's|{}|{}|g' bin_{}/bin_{}.cfg"
-                    search = f"PLACEHOLDER_{ftype.upper()}_{pol}"
-                    replace = f"{output_directory}/bin_{i}/{ftype}{pol}.root"
-                    os.system(replace_cmd.format(search, replace, i, i))
+        for j in range(n_t_bins):
+            for i in range(n_mass_bins):
+                k = j * n_mass_bins + i
+                print(f"Perform final preparation for bin: {k}")
+                os.system(f"mkdir -p bin_{k}")
+                os.system(f"cp -f {amptools_cfg} bin_{k}/bin_{k}.cfg")
+                with open(f"bin_{k}/metadata.txt", "w") as f:
+                    f.write("---------------------\n")
+                    f.write(f"bin number: {k}\n")
+                    f.write(f"mass range: {mass_edges[i]:.2f} - {mass_edges[i + 1]:.2f} GeV\n")
+                    f.write(f"t range: {t_edges[j]:.2f} - {t_edges[j + 1]:.2f} GeV^2\n")
+                replace_fitname = f"sed -i 's|PLACEHOLDER_FITNAME|bin_{k}|g' bin_{k}/bin_{k}.cfg"
+                os.system(replace_fitname)
+                for pol in pols:
+                    for ftype in ["data", "accmc", "genmc", "bkgnd"]:
+                        fname = f"{ftype}" if mc_already_shared[ftype] else f"{ftype}{pol}"
+                        os.system(f"mv -f {fname}_{k}.root bin_{k}/{fname}.root > /dev/null 2>&1")  # ignore error
+                        replace_cmd = "sed -i 's|{}|{}|g' bin_{}/bin_{}.cfg"
+                        search = f"PLACEHOLDER_{ftype.upper()}_{pol}"
+                        replace = f"{output_directory}/bin_{k}/{fname}.root"
+                        os.system(replace_cmd.format(search, replace, k, k))
 
-            if prepare_for_nifty:
-                os.system(f"touch bin_{i}/seed_nifty.txt")
-                os.system(f"echo '\ninclude {output_directory}/bin_{i}/seed_nifty.txt' >> bin_{i}/bin_{i}.cfg")
+                if prepare_for_nifty:
+                    os.system(f"touch bin_{k}/seed_nifty.txt")
+                    os.system(f"echo '\ninclude {output_directory}/bin_{k}/seed_nifty.txt' >> bin_{k}/bin_{k}.cfg")
 
         # Read amptools.cfg and append the t-range and mass-range to a metadata section using omegaconf
         os.chdir(cwd)
         output_yaml = OmegaConf.load(yaml_name)
-        output_yaml.update({"mass_edges": mass_edges})
+        output_yaml.update({"mass_edges": mass_edges, "t_edges": t_edges})
         dump_yaml(output_yaml, yaml_name)
 
     ###################################################
@@ -106,15 +152,12 @@ if __name__ == "__main__":
     ###################################################
 
     if bins_per_group > 1:
-        print(f"Merging bins into groups of {bins_per_group}")
         bins = glob.glob(f"{output_directory}/bin_*")
         bins = sorted(bins, key=lambda x: int(x.split("_")[-1]))
         nBins = len(bins)
 
-        if nBins % bins_per_group != 0:
-            raise ValueError(f"Number of bins ({nBins}) is not divisible by bins_per_group ({bins_per_group})")
-
         nGroups = nBins // bins_per_group
+        print(f"Merging bins into {nGroups} groups of {bins_per_group}")
 
         # Get base information by loading in the first bin
         bin_path = bins[0]
@@ -132,20 +175,27 @@ if __name__ == "__main__":
                 if line.startswith("parameter") and "parScale" in line:
                     parameters.append(line.split(" ")[1].strip())
                 if any([line.startswith(source) for source in ["data", "accmc", "genmc", "bkgnd"]]):
-                    sources.append(line.split(" ")[-1].strip().split("/")[-1])
+                    source = line.split(" ")[-1].strip().split("/")[-1]
+                    if source not in sources: # Take care of duplicates in case we share MC datasets
+                        sources.append(source) 
                 if line.startswith("include"):
                     includes.append(line.split(" ")[1].strip().split("/")[-1])
 
+        # Merge some bins into groups on user request
+        # NOTE: For t and mass binning, the mass index cycles faster: i.e. [(m1,t1), (m2,t1), ...]
 
         for i in range(nGroups):
-            bin_group = bins[i * bins_per_group:(i + 1) * bins_per_group]
+            bin_group = bins[i * bins_per_group : (i + 1) * bins_per_group]
             group_name = f"group_{i}"
             os.makedirs(f"{output_directory}/{group_name}", exist_ok=True)
+
+            metadata = open(f"{output_directory}/{group_name}/metadata.txt", "w")
             
             for j, bin in enumerate(bin_group):
                 bin_name = bin.split("/")[-1]
                 cfg_name = f"G{j}_{bin_name}.cfg"
                 os.system(f"cp -r {bin}/{bin_name}.cfg {output_directory}/{group_name}/{cfg_name}")
+                os.system(f"cat {bin}/metadata.txt >> {output_directory}/{group_name}/metadata.txt")
 
                 # Replace all bin names with group names
                 sed_repl = f"sed -i 's|{bin_name}|group_{i}|g' {output_directory}/{group_name}/{cfg_name}"
@@ -155,6 +205,7 @@ if __name__ == "__main__":
                 if j != 0:
                     os.system(f"sed -i '/^fit/d' {output_directory}/{group_name}/{cfg_name}")
                     os.system(f"sed -i '/^#/d' {output_directory}/{group_name}/{cfg_name}")
+                os.system(f"sed -i '/^include/d' {output_directory}/{group_name}/{cfg_name}") # remove all include seed files
 
                 # update naming for reactions
                 for reaction in reactions:
@@ -177,13 +228,16 @@ if __name__ == "__main__":
 
                 # update naming
                 for include in includes:
-                    sed_repl = f"sed -i 's|{include}|G{j}_{include}|g' {output_directory}/{group_name}/{cfg_name}"
-                    os.system(sed_repl)
-                    os.system(f"cp -r {bin}/{include} {output_directory}/{group_name}/G{j}_{include}")
+                    if os.path.exists(f"{output_directory}/{group_name}/{include}"):
+                        os.system(f"rm -f {output_directory}/{group_name}/{include}")
+                    os.system(f"touch {output_directory}/{group_name}/{include}")
 
             # merge config files using cat
             cat_cmd = f"cat {output_directory}/{group_name}/G*bin*.cfg > {output_directory}/{group_name}/bin_{i}.cfg"
             os.system(cat_cmd)
+
+            # append include seed file
+            os.system(f"echo '\ninclude {output_directory}/{group_name}/seed_nifty.txt' >> {output_directory}/{group_name}/bin_{i}.cfg")
 
             # clean up cfg files
             os.system(f"rm -f {output_directory}/{group_name}/G*bin*.cfg")
