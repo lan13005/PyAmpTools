@@ -3,6 +3,7 @@ import glob
 import multiprocessing
 import os
 
+from pyamptools import atiSetup
 from pyamptools.utility.general import Timer, load_yaml
 
 pyamptools_fit_cmd = "pa fit"
@@ -13,6 +14,7 @@ pyamptools_ff_cmd = "pa fitfrac"
 # by calling pyamptools' fit and fitfrac commands on each of them.
 ############################################################################
 
+seed_file = "seed_nifty.txt"
 
 class MLE:
     def __init__(self, yaml_file):
@@ -26,9 +28,14 @@ class MLE:
         self.n_randomizations = yaml_file["amptools"]["n_randomizations"]
         self.ff_args = yaml_file["amptools"]["regex_merge"]
         self.prepare_for_nifty = bool(yaml_file["amptools"]["prepare_for_nifty"])
+        self.devs = None
         print("<<<<<<<<<<<<<< ConfigLoader <<<<<<<<<<<<<<\n\n")
 
+    def set_devs(self, devs):
+        self.devs = int(devs)
+
     def __call__(self, cfgfile):
+
         base_fname = cfgfile.split("/")[-1].split(".")[0]
         binNum = base_fname.split("_")[-1]
 
@@ -38,9 +45,11 @@ class MLE:
         ###############################
         # Perform MLE fit
         ###############################
-
+        device = int(binNum) % self.devs
         cmd = f"{pyamptools_fit_cmd} {cfgfile} --numRnd {self.n_randomizations} --seedfile seed_bin{binNum}"
-        print(cmd)
+        if self.devs is not None and self.devs >= 0:
+            cmd += f" --device {device}"
+        cmd += f" >> slurm/log_{binNum}.txt"
         os.system(cmd)
 
         if not os.path.exists(f"{base_fname}.fit"):
@@ -71,10 +80,10 @@ class MLE:
             # NIFTy does not pick it up as a free parameter. We handle this by taking the amptools
             # seed file of the best fit remove all lines related to production coefficients and
             # append "fixed" to every line that is associated with these scale parameters.
-            os.system(f"mv seed_bin{binNum}.txt {folder}/seed_nifty.txt")
+            os.system(f"mv seed_bin{binNum}.txt {folder}/{seed_file}")
             os.system(f"mv seed_bin{binNum}_*.txt {folder}")  # move all seed files to the folder
-            os.system(f"sed -i '/^initialize.*$/d' {folder}/seed_nifty.txt")  # delete whole line for initializing production coefficients
-            os.system(f"sed -i 's|$| fixed|' {folder}/seed_nifty.txt")  # append fixed to the remaning lines
+            os.system(f"sed -i '/^initialize.*$/d' {folder}/{seed_file}")  # delete whole line for initializing production coefficients
+            os.system(f"sed -i 's|$| fixed|' {folder}/{seed_file}")  # append fixed to the remaning lines
 
 
 if __name__ == "__main__":
@@ -97,6 +106,12 @@ if __name__ == "__main__":
 
     output_directory = mle.output_directory
     n_randomizations = mle.n_randomizations
+    bins_per_group = yaml_file["amptools"]["bins_per_group"]
+    bins_per_group = 1 if bins_per_group < 1 or bins_per_group is None else bins_per_group
+    nBins = yaml_file["n_mass_bins"] * yaml_file["n_t_bins"]
+    if nBins % bins_per_group != 0:
+        raise Exception("run_mle| Number of bins is not divisible by bins_per_group!")
+    nGroups = nBins // bins_per_group
 
     ###########################################
     # Perform MLE fit and extract fit fractions
@@ -120,10 +135,39 @@ if __name__ == "__main__":
 
     n_processes = min(len(cfgfiles), yaml_file["processing"]["n_processes"])
 
-    if n_processes < 1:
-        raise Exception("run_mle| No processes requested! Exiting...")
+    # Get number of gpu devices amptools sees
+    USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals())
 
-    with multiprocessing.Pool(n_processes) as pool:
-        pool.map(mle, cfgfiles)
+    devs = -1
+    if "GPUManager" in globals():
+        devs = GPUManager.getNumDevices()
+    mle.set_devs(devs)
+
+    if n_processes < 1:
+        if len(cfgfiles) > 0:
+            print("mle| all cfg files are complete, skipping MLE fits")
+        else:
+            print("mle| no cfg files to process")
+    else:
+        with multiprocessing.Pool(n_processes) as pool:
+            pool.map(mle, cfgfiles)
+
+    if bins_per_group > 1:
+        print("mle| collecting seed files into group subfolders")
+        groups = glob.glob(f"{output_directory}/group_*")
+        if len(groups) != nGroups:
+            raise Exception("run_mle| Expected number of groups did not match actual groupings")
+        for ig, group in enumerate(groups):
+            group_name = group.split("/")[-1]
+            for relBin, absBin in enumerate(range(ig * bins_per_group, (ig + 1) * bins_per_group)):
+                # os.system(f"cat {output_directory}/bin_{ibin}/{seed_file} >> {group}/{seed_file}")
+                src_seed = f"{output_directory}/bin_{absBin}/{seed_file}"
+                dst_seed = f"{output_directory}/{group_name}/{seed_file}"
+                with open(src_seed) as f:
+                    lines = f.readlines()
+                    paras = [line.split(" ")[1] for line in lines if line.startswith("parameter")]
+                    for para in paras:
+                        cmd = f"sed -n 's|{para}|G{relBin}_{para}|p' {src_seed} >> {dst_seed}"
+                        os.system(cmd)
 
     print(f"mle| Elapsed time {timer.read()[2]}\n\n")
