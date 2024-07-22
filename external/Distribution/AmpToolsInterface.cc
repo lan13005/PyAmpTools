@@ -197,24 +197,62 @@ AmpToolsInterface::resetConfigurationInfo(ConfigurationInfo* configurationInfo){
       // ************************
 
       for (unsigned int i = 0; i < m_userDataReaders.size(); i++){
-        if (reaction->data().first == m_userDataReaders[i]->name())
+        if (reaction->data().first == m_userDataReaders[i]->name()){
+          report( DEBUG, kModule ) << "creating DataReaders for reaction " << reactionName << " with args: ";
+          for (unsigned int j = 0; j < reaction->data().second.size(); j++){
+            report( DEBUG, kModule ) << reaction->data().second[j] << " ";
+          }
+          report( DEBUG, kModule ) << endl;
           m_dataReaderMap[reactionName] = m_userDataReaders[i]->newDataReader(reaction->data().second);
-        if (reaction->bkgnd().first == m_userDataReaders[i]->name())
+        }
+        if (reaction->bkgnd().first == m_userDataReaders[i]->name()){
+          report( DEBUG, kModule ) << "creating DataReaders for reaction " << reactionName << " with args: ";
+          for (unsigned int j = 0; j < reaction->bkgnd().second.size(); j++){
+            report( DEBUG, kModule ) << reaction->bkgnd().second[j] << " ";
+          }
+          report( DEBUG, kModule ) << endl;
           m_bkgndReaderMap[reactionName] = m_userDataReaders[i]->newDataReader(reaction->bkgnd().second);
-        if (reaction->genMC().first == m_userDataReaders[i]->name())
+        }
+        if (reaction->genMC().first == m_userDataReaders[i]->name()){
+          report( DEBUG, kModule ) << "creating DataReaders for reaction " << reactionName << " with args: ";
+          for (unsigned int j = 0; j < reaction->genMC().second.size(); j++){
+            report( DEBUG, kModule ) << reaction->genMC().second[j] << " ";
+          }
+          report( DEBUG, kModule ) << endl;
           m_genMCReaderMap[reactionName] = m_userDataReaders[i]->newDataReader(reaction->genMC().second);
-        if (reaction->accMC().first == m_userDataReaders[i]->name())
+        }
+        if (reaction->accMC().first == m_userDataReaders[i]->name()){
+          report( DEBUG, kModule ) << "creating DataReaders for reaction " << reactionName << " with args: ";
+          for (unsigned int j = 0; j < reaction->accMC().second.size(); j++){
+            report( DEBUG, kModule ) << reaction->accMC().second[j] << " ";
+          }
+          report( DEBUG, kModule ) << endl;
           m_accMCReaderMap[reactionName] = m_userDataReaders[i]->newDataReader(reaction->accMC().second);
+        }
       }
+
+      report( DEBUG, kModule ) << "current size of m_dataReaderMap: " << m_dataReaderMap.size() << endl;
+      report( DEBUG, kModule ) << "current size of m_bkgndReaderMap: " << m_bkgndReaderMap.size() << endl;
+      report( DEBUG, kModule ) << "current size of m_genMCReaderMap: " << m_genMCReaderMap.size() << endl;
+      report( DEBUG, kModule ) << "current size of m_accMCReaderMap: " << m_accMCReaderMap.size() << endl;
+
       DataReader* dataRdr  =  dataReader(reactionName);
       DataReader* bkgndRdr = bkgndReader(reactionName);
       DataReader* genMCRdr = genMCReader(reactionName);
       DataReader* accMCRdr = accMCReader(reactionName);
 
+      report( DEBUG, kModule ) << "creating DataReaders for reaction " << reactionName << endl;
+      report( DEBUG, kModule ) << "  + dataRdr:  " << (dataRdr ? dataRdr->identifier()  : "NULL") << endl;
+      report( DEBUG, kModule ) << "  + bkgndRdr: " << (bkgndRdr ? bkgndRdr->identifier() : "NULL") << endl;
+      report( DEBUG, kModule ) << "  + genMCRdr: " << (genMCRdr ? genMCRdr->identifier() : "NULL") << endl;
+      report( DEBUG, kModule ) << "  + accMCRdr: " << (accMCRdr ? accMCRdr->identifier() : "NULL") << endl;
+
       m_uniqueDataSets.insert( dataRdr );
       m_uniqueDataSets.insert( bkgndRdr );
       m_uniqueDataSets.insert( genMCRdr );
       m_uniqueDataSets.insert( accMCRdr );
+
+      report( DEBUG, kModule ) << "  + current size of m_uniqueDataSets: " << m_uniqueDataSets.size() << endl;
 
       if (!dataRdr)
         report( WARNING, kModule ) << "not creating a DataReader for data associated with reaction " << reactionName << endl;
@@ -235,7 +273,9 @@ AmpToolsInterface::resetConfigurationInfo(ConfigurationInfo* configurationInfo){
 
         NormIntInterface* normInt = NULL;
         if (genMCRdr && accMCRdr && intenMan && !(reaction->normIntFileInput())){
-
+          report( DEBUG, kModule ) << "creating new NormIntInterface:" << endl;
+          report( DEBUG, kModule ) << "  + genMCRdr: " << genMCRdr->identifier() << endl;
+          report( DEBUG, kModule ) << "  + accMCRdr: " << accMCRdr->identifier() << endl;
           normInt = new NormIntInterface(genMCRdr, accMCRdr, *intenMan);
           m_normIntMap[reactionName] = normInt;
           if (reaction->normIntFile() == "")
@@ -628,6 +668,12 @@ AmpToolsInterface::clear(){
   if (minuitMinimizationManager()){
     delete minuitMinimizationManager();
     m_minuitMinimizationManager = nullptr;
+  }
+
+  // loop over m_userDataReaders and clear tracked instances
+  for (unsigned int i = 0; i < m_userDataReaders.size(); i++){
+    report (DEBUG, kModule ) << "Clearing userDataReader" << endl;
+    m_userDataReaders[i]->clearDataReaderInstances();
   }
 }
 

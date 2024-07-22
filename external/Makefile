@@ -11,7 +11,7 @@ endif
 # SUPPORTED AMPTOOLS / FSROOT VERSIONS
 # Features introduced beyond these commits might get overwritten
 # by the distribution process and can crash the build
-AMPTOOLS_COMMIT := 4c36f0b
+AMPTOOLS_COMMIT := 0753e28 # master as of 07/20/2024
 FSROOT_COMMIT := d4d7e73
 
 SRC_DIRS := Distribution
@@ -96,6 +96,11 @@ distribute_makefiles:
 	cp $(SRC_DIRS)/MISubject.* AmpTools/AmpTools/MinuitInterface
 	cp $(SRC_DIRS)/URMinuit.* AmpTools/AmpTools/UpRootMinuit
 	cp $(SRC_DIRS)/AmpVecs.* AmpTools/AmpTools/IUAmpTools
+### UserDataReader needs a method to clear m_dataReaderInstances
+	cp $(SRC_DIRS)/UserDataReader.h AmpTools/AmpTools/IUAmpTools
+	cp $(SRC_DIRS)/DataReader.h AmpTools/AmpTools/IUAmpTools
+### Allow report to dump to a log file if AMPTOOLS_LOG_FILE env variable is set. i.e. AMPTOOLS_LOG_FILE="log.txt"
+	cp $(SRC_DIRS)/report.cc AmpTools/AmpTools/IUAmpTools
 ### Introduce GradientCalculator
 	cp $(SRC_DIRS)/GradientCalculator.* AmpTools/AmpTools/IUAmpTools
 ### Allow getting of m_termNames

@@ -109,7 +109,7 @@ AmpVecs::AmpVecs(){
 //   report( DEBUG, kModule ) << "Address of m_hasMixedSignWeights: " << &m_hasMixedSignWeights << endl;
 //   report( DEBUG, kModule ) << "Address of m_lastWeightSign: " << &m_lastWeightSign << endl;
 
-  report( DEBUG, kModule ) << "AmpVecs::AmpVecs() completed" << endl;
+  report( DEBUG, kModule ) << "AmpVecs::AmpVecs() initialization completed" << endl;
 }
 
 void
@@ -259,7 +259,7 @@ AmpVecs::loadEvent( const Kinematics* pKinematics, unsigned long long iEvent,
   if (m_pdData == NULL){
     // if every other 2000 events, print a message
     if( iEvent % 2500 == 0 )
-      report( DEBUG, kModule ) << "AmpVecs::loadEvent() loading event " << iEvent << endl;
+      report( DEBUG, kModule ) << "AmpVecs::loadEvent() allocating memory for data" << endl;
 
     m_iNTrueEvents = iNTrueEvents;
     m_iNEvents = iNTrueEvents;
@@ -273,11 +273,14 @@ AmpVecs::loadEvent( const Kinematics* pKinematics, unsigned long long iEvent,
 
     m_pdData = new GDouble[4*m_iNParticles*m_iNEvents];
     m_pdWeights = new GDouble[m_iNEvents];
+    // report( DEBUG, kModule ) << "AmpVecs::loadEvent() allocated memory for data" << endl;
   }
 
   // check to be sure we won't exceed the bounds of the array
+  // report( DEBUG, kModule ) << "AmpVecs::loadEvent() loading event " << iEvent << endl;
   assert( iEvent < m_iNEvents );
 
+  // report( DEBUG, kModule ) << "AmpVecs::loadEvent() loading event " << iEvent << endl;
   for (int iParticle = 0; iParticle < m_iNParticles; iParticle++){
     m_pdData[4*iEvent*m_iNParticles+4*iParticle+0]=pKinematics->particle(iParticle).E();
     m_pdData[4*iEvent*m_iNParticles+4*iParticle+1]=pKinematics->particle(iParticle).Px();
@@ -291,6 +294,7 @@ AmpVecs::loadEvent( const Kinematics* pKinematics, unsigned long long iEvent,
   m_integralValid = false;
   m_dataLoaded = true;
   m_userVarsOffset.clear();
+  // report( DEBUG, kModule ) << "AmpVecs::loadEvent() completed" << endl;
 }
 
 
@@ -306,13 +310,15 @@ AmpVecs::loadData( DataReader* pDataReader ){
 
   // Get the number of events and reset the data reader
 
+  report( DEBUG, kModule ) << "AmpVecs::loadData() resetting: " << pDataReader->identifier() << endl;
   pDataReader->resetSource();
   m_iNTrueEvents = pDataReader->numEvents();
+  report( DEBUG, kModule ) << "AmpVecs::loadData() numEvents: " << m_iNTrueEvents << endl;
 
   // try to print an informative message -- this can be normal behavior in
   // an MPI job with a sparse background source and many concurrent processess
   if( m_iNTrueEvents < 1 ){
-
+    report( NOTICE, kModule ) << "DataReader " << pDataReader->identifier() << " does not contain any events." << endl;
     string readerName = pDataReader->name();
     vector< string > readerArgs = pDataReader->arguments();
 
@@ -328,8 +334,11 @@ AmpVecs::loadData( DataReader* pDataReader ){
 
   Kinematics* pKinematics;
   for(unsigned long long iEvent = 0; iEvent < m_iNTrueEvents; iEvent++){
+    // report( DEBUG, kModule ) << "AmpVecs::loadData() loading event " << iEvent << endl;
     pKinematics = pDataReader->getEvent();
+    // report( DEBUG, kModule ) << "AmpVecs::loadData() got event " << iEvent << endl;
     loadEvent(pKinematics, iEvent, m_iNTrueEvents );
+    // report( DEBUG, kModule ) << "AmpVecs::loadData() loaded event " << iEvent << endl;
 
     float weight = pKinematics->weight();
 
