@@ -37,7 +37,7 @@ if __name__ == "__main__":
     n_t_bins = yaml_file["n_t_bins"]
     base_directory = yaml_file["base_directory"]
     output_directory = yaml_file["amptools"]["output_directory"]
-    bins_per_group = yaml_file["amptools"]["bins_per_group"] if "bins_per_group" in yaml_file["amptools"] else 1
+    bins_per_group = yaml_file["bins_per_group"] if "bins_per_group" in yaml_file else 1
     data_folder = yaml_file["data_folder"]
     pols = yaml_file["polarizations"]
     prepare_for_nifty = bool(yaml_file["amptools"]["prepare_for_nifty"])
@@ -66,6 +66,8 @@ if __name__ == "__main__":
     else:
         mass_edges = None  # Determine mass bin edges based on the first ftype source
         t_edges = None
+        nBars = {}
+        nBar_errs = {}
         
         for ftype in ["data", "accmc", "genmc"]:
             for pol in pols:
@@ -94,20 +96,25 @@ if __name__ == "__main__":
 
                 # Perform split_mass
                 if is_data or not sharemc or (sharemc and not mc_already_shared[ftype]):
-                    mass_edges, t_edges = split_mass_t(fname, oname, 
+                    mass_edges, t_edges, nBar, nBar_err = split_mass_t(fname, oname, 
                                                 min_mass, max_mass, n_mass_bins, 
                                                 min_t, max_t, n_t_bins,
                                                 treeName="kin", mass_edges=mass_edges, t_edges=t_edges)
+                    _pol = "shared" if sharemc else pol
+                    nBars[(ftype, _pol)] = nBar
+                    nBar_errs[(ftype, _pol)] = nBar_err
                     if sharemc:
                         mc_already_shared[ftype] = True
 
         # background file is optional, would assume data is pure weighted signal
         for pol in pols:
             if os.path.exists(f"{data_folder}/bkgnd{pol}.root"):
-                mass_edges, t_edges = split_mass_t(f"{data_folder}/bkgnd{pol}.root", f"bkgnd{pol}", 
+                mass_edges, t_edges, nBar, nBar_err = split_mass_t(f"{data_folder}/bkgnd{pol}.root", f"bkgnd{pol}", 
                                                     min_mass, max_mass, n_mass_bins, 
                                                     min_t, max_t, n_t_bins,
                                                     treeName="kin", mass_edges=mass_edges, t_edges=t_edges)
+                nBars[("bkgnd", pol)] = nBar
+                nBar_errs[("bkgnd", pol)] = nBar_err
             else:
                 print(f"No bkgnd{pol}.root found (not required), skipping")
 
@@ -126,6 +133,31 @@ if __name__ == "__main__":
                     f.write(f"bin number: {k}\n")
                     f.write(f"mass range: {mass_edges[i]:.2f} - {mass_edges[i + 1]:.2f} GeV\n")
                     f.write(f"t range: {t_edges[j]:.2f} - {t_edges[j + 1]:.2f} GeV^2\n")
+                    nBar_ftype = {pair[0]: 0 for pair in nBars.keys()} # keys ~ (ftype, pol)
+                    nBar_err_ftype = {pair[0]: 0 for pair in nBars.keys()}
+                    f.write("---------------------\n")
+                    for (ftype, pol) in nBars:
+                        f.write(f"nBar {ftype} {pol}: {nBars[(ftype, pol)][i][j]} +/- {nBar_errs[(ftype, pol)][i][j]}\n")
+                        if ftype in ["data", "bkgnd"]:
+                            nBar_ftype[ftype] += nBars[(ftype, pol)][i][j]
+                            nBar_err_ftype[ftype] += nBar_errs[(ftype, pol)][i][j]**2
+                        if ftype in ["accmc", "genmc"]:
+                            share_factor = (len(pols) if pol == "shared" else 1)
+                            nBar_ftype[ftype] += nBars[(ftype, pol)][i][j] * share_factor
+                            nBar_err_ftype[ftype] += (nBar_errs[(ftype, pol)][i][j] * share_factor)**2
+                    f.write("---------------------\n")
+                    for ftype in nBar_ftype:
+                        f.write(f"nBar {ftype}: {nBar_ftype[ftype]} +/- {nBar_err_ftype[ftype]**0.5}\n")
+                    f.write("---------------------\n")
+                    signal = nBar_ftype['data'] - nBar_ftype['bkgnd']
+                    signal_err = (nBar_err_ftype['data'] + nBar_err_ftype['bkgnd'])**0.5
+                    f.write(f"nBar signal: {signal} +/- {signal_err}\n")
+                    eff = nBar_ftype['accmc'] / nBar_ftype['genmc']
+                    eff_err = eff * ((nBar_err_ftype['accmc']**0.5 / nBar_ftype['accmc'])**2 + (nBar_err_ftype['genmc']**0.5 / nBar_ftype['genmc'])**2)**0.5
+                    corr_signal = signal / eff
+                    corr_signal_err = corr_signal * ((signal_err / signal)**2 + (eff_err / eff)**2)**0.5
+                    f.write(f"efficiency (%): {eff*100:.3f} +/- {eff_err*100:.3f}\n")
+                    f.write(f"nBar corrected signal: {corr_signal} +/- {corr_signal_err}\n")
                 replace_fitname = f"sed -i 's|PLACEHOLDER_FITNAME|bin_{k}|g' bin_{k}/bin_{k}.cfg"
                 os.system(replace_fitname)
                 for pol in pols:
@@ -175,7 +207,7 @@ if __name__ == "__main__":
                 if line.startswith("parameter") and "parScale" in line:
                     parameters.append(line.split(" ")[1].strip())
                 if any([line.startswith(source) for source in ["data", "accmc", "genmc", "bkgnd"]]):
-                    source = line.split(" ")[-1].strip().split("/")[-1]
+                    source = line.split(" ")[3].strip().split("/")[-1]
                     if source not in sources: # Take care of duplicates in case we share MC datasets
                         sources.append(source) 
                 if line.startswith("include"):
