@@ -17,7 +17,7 @@ pyamptools_ff_cmd = "pa fitfrac"
 seed_file = "seed_nifty.txt"
 
 class MLE:
-    def __init__(self, yaml_file):
+    def __init__(self, yaml_file, dump=''):
         """
         Args:
             yaml_file (dict): Configuration file
@@ -29,6 +29,7 @@ class MLE:
         self.ff_args = yaml_file["amptools"]["regex_merge"]
         self.prepare_for_nifty = bool(yaml_file["amptools"]["prepare_for_nifty"])
         self.devs = None
+        self.dump = dump
         print("<<<<<<<<<<<<<< ConfigLoader <<<<<<<<<<<<<<\n\n")
 
     def set_devs(self, devs):
@@ -49,7 +50,10 @@ class MLE:
         cmd = f"{pyamptools_fit_cmd} {cfgfile} --numRnd {self.n_randomizations} --seedfile seed_bin{binNum}"
         if self.devs is not None and self.devs >= 0:
             cmd += f" --device {device}"
-        cmd += f" >> slurm/log_{binNum}.txt"
+        if self.dump != '':
+            if not os.path.exists(f"{self.dump}"):
+                os.makedirs(f"{self.dump}")
+            cmd += f" >> {self.dump}/log_{binNum}.txt"
         os.system(cmd)
 
         if not os.path.exists(f"{base_fname}.fit"):
@@ -89,8 +93,10 @@ class MLE:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Perform maximum likelihood fits (using AmpTools) on all cfg files")
     parser.add_argument("yaml_name", type=str, default="conf/configuration.yaml", help="Path a configuration yaml file")
+    parser.add_argument("-d", type=str, default='', help="Dump log files for each bin to this relative path")
     args = parser.parse_args()
     yaml_name = args.yaml_name
+    dump = args.d
 
     print("\n---------------------")
     print(f"Running {__file__}")
@@ -102,11 +108,11 @@ if __name__ == "__main__":
 
     yaml_file = load_yaml(yaml_name)
 
-    mle = MLE(yaml_file)
+    mle = MLE(yaml_file, dump=dump)
 
     output_directory = mle.output_directory
     n_randomizations = mle.n_randomizations
-    bins_per_group = yaml_file["amptools"]["bins_per_group"]
+    bins_per_group = yaml_file["bins_per_group"]
     bins_per_group = 1 if bins_per_group < 1 or bins_per_group is None else bins_per_group
     nBins = yaml_file["n_mass_bins"] * yaml_file["n_t_bins"]
     if nBins % bins_per_group != 0:
