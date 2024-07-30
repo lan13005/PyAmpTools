@@ -20,7 +20,7 @@ from pyamptools.utility.general import Timer, dump_yaml, load_yaml
 mappings = {
     "GENERAL.outputFolder": "SRC.nifty.output_directory",
     "PWA_MANAGER.cfgfiles": "SRC.amptools.output_directory/bin_*/bin_[].cfg",
-    "PWA_MANAGER.bins_per_group": "SRC.amptools.bins_per_group",
+    "PWA_MANAGER.bins_per_group": "SRC.bins_per_group",
     "PWA_MANAGER.accelerator": "SRC.processing.accelerator",
     "PWA_MANAGER.min_mass": "SRC.min_mass",
     "PWA_MANAGER.max_mass": "SRC.max_mass",
@@ -102,6 +102,7 @@ if __name__ == "__main__":
         
     dest_name = src_yaml['nifty']['yaml']
     synchronize = src_yaml['nifty']['synchronize']
+    output_directory = src_yaml['nifty']['output_directory']
     dest_yaml = load_yaml(dest_name, resolve=False)
 
     if synchronize:
@@ -122,6 +123,9 @@ if __name__ == "__main__":
         print(f"Base YAML file used for IFTPWA: {dest_name}")
 
     dump_yaml(dest_yaml, ".nifty.yaml") # Create "synchronized" yaml file
+    if output_directory is not None and not os.path.exists(output_directory):
+        os.makedirs(output_directory)
+    os.system(f"cp {yaml_name} {output_directory}/.{yaml_name}") # Copy the source yaml file to the output directory
     os.system(f"iftPwaFit --iftpwa_config .nifty.yaml {' '.join(additional_args)}") # Run IFT pwa fit
 
     # TODO: Need to support prior simulation
