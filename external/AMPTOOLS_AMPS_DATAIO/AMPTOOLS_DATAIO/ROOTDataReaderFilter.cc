@@ -6,6 +6,7 @@
 #include "TLorentzVector.h"
 
 #include "AMPTOOLS_DATAIO/ROOTDataReaderFilter.h"
+#include "IUAmpTools/report.h"
 #include "IUAmpTools/Kinematics.h"
 
 #include "TH1.h"
@@ -14,11 +15,15 @@
 
 using namespace std;
 
+
+const char* ROOTDataReaderFilter::kModule = "ROOTDataReaderFilter";
+
 ROOTDataReaderFilter::ROOTDataReaderFilter( const vector< string >& args ):
    UserDataReader< ROOTDataReaderFilter >( args ),
    m_eventCounter( 0 ),
    m_useWeight( false )
 {
+   
    // arguments must come in triplets (variable, min, max) with a maximum number designated by maxselects
    //    any additional multiple of 3 is possible, i.e. 1,4,7,10..., maxvar where there is an additional +1 is needed to shift to the first actual argument
    //    This will work even if you wish to select on the same variable multiple times
@@ -86,21 +91,21 @@ ROOTDataReaderFilter::ROOTDataReaderFilter( const vector< string >& args ):
       m_RangeSpecified=true;
 
       for (auto &p: mapVars){
-         //cout << p.first << ' ' << p.second << endl;
+         //report( INFO, kModule ) << p.first << ' ' << p.second << endl;
          m_inTree->SetBranchAddress( p.first.c_str(), &p.second );
       }
 
       // Print out the selection/cut criteria
-      cout << "*********************************************" << endl;
-      cout << "NVARS: " << nselects << endl;
-      cout << "Total events: " <<  m_inTree->GetEntries() << endl;
+      report( INFO, kModule ) << "*********************************************" << endl;
+      report( INFO, kModule ) << "NVARS: " << nselects << endl;
+      report( INFO, kModule ) << "Total events: " <<  m_inTree->GetEntries() << endl;
       m_numEvents = 0;
       m_weightIntegral = 0;
       for (int i=0; i<nselects; ++i){
          if (b_isSelection[i])
-            cout << "Selecting " << s_min[i] << " < " << s_var[i] << " < " << s_max[i] << endl;
+            report( INFO, kModule ) << "Selecting " << s_min[i] << " < " << s_var[i] << " < " << s_max[i] << endl;
          else
-            cout << "Cutting " << s_min[i] << " < " << s_var[i] << " < " << s_max[i] << endl;
+            report( INFO, kModule ) << "Cutting " << s_min[i] << " < " << s_var[i] << " < " << s_max[i] << endl;
       }
 
       while( m_eventCounter < static_cast< unsigned int >( m_inTree->GetEntries() ) ){
@@ -131,9 +136,9 @@ ROOTDataReaderFilter::ROOTDataReaderFilter( const vector< string >& args ):
             m_weightIntegral+=m_weight;
          }
       }
-      cout << "[" << args[0] << "] Number of events kept    = " << m_numEvents << endl;
-      cout << "[" << args[0] << "] Weight Integral    = " << m_weightIntegral << endl;
-      cout << "*********************************************" << endl;
+      report( INFO, kModule ) << "[" << args[0] << "] Number of events kept    = " << m_numEvents << endl;
+      report( INFO, kModule ) << "[" << args[0] << "] Weight Integral    = " << m_weightIntegral << endl;
+      report( INFO, kModule ) << "*********************************************" << endl;
    }
 
    resetSource();
@@ -156,7 +161,7 @@ ROOTDataReaderFilter::~ROOTDataReaderFilter()
 void ROOTDataReaderFilter::resetSource()
 {
 
-   // cout << "Resetting source " << m_inTree->GetName()
+   // report( INFO, kModule ) << "Resetting source " << m_inTree->GetName()
    //    << " in " << m_inFile->GetName() << endl;
 
    // this will cause the read to start back at event 0

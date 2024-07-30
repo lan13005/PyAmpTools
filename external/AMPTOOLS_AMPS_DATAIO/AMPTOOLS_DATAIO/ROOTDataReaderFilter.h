@@ -73,6 +73,8 @@ private:
   float m_pyBeam;
   float m_pzBeam;
   float m_weight=1;
+
+  static const char* kModule;
 };
 
 #endif
