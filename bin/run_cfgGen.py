@@ -134,23 +134,41 @@ def generate_amptools_cfg(
         #### SET DATA, GEN, ACC, BKGND ####
         ###################################
 
-        reader_parts = datareader.split(" ")
-        reader_name = reader_parts[0]
+        required_srcs = set(["data", "genmc", "accmc"])
+        if len(bkgnds) > 0: 
+            required_srcs.add("bkgnd")
+        reader_names = {}
+        reader_argss = {}
+        if isinstance(datareader, str):
+            reader_parts = datareader.split(" ")
+            reader_name = reader_parts[0]
+            reader_args = reader_parts[1:] if len(reader_parts) > 1 else []
+            for required_src in required_srcs:
+                reader_names[required_src] = reader_name
+                reader_argss[required_src] = reader_args
+        if isinstance(datareader, dict):
+            assert set(datareader.keys()) == required_srcs, f"Datareader keys must be {required_srcs} instead of {set(datareader.keys())}"
+            for required_src, reader_parts in datareader.items():
+                reader_parts = reader_parts.split(" ")
+                reader_name = reader_parts[0]
+                reader_args = reader_parts[1:] if len(reader_parts) > 1 else []
+                reader_names[required_src] = reader_name
+                reader_argss[required_src] = reader_args
 
         data = datas[i]
-        data_args = [data] + (reader_parts[1:] if len(reader_parts) > 1 else [])  # append args
-        reactionInfo.setData(reader_name, data_args)
+        data_args = [data] + reader_argss["data"]  # append args
+        reactionInfo.setData(reader_names["data"], data_args.copy())
         gen = gens[i]
-        gen_args = [gen] + (reader_parts[1:] if len(reader_parts) > 1 else [])
-        reactionInfo.setGenMC(reader_name, gen_args)
+        gen_args = [gen] + reader_argss["genmc"]
+        reactionInfo.setGenMC(reader_names["genmc"], gen_args.copy())
         acc = accs[i]
-        acc_args = [acc] + (reader_parts[1:] if len(reader_parts) > 1 else [])
-        reactionInfo.setAccMC(reader_name, acc_args)
+        acc_args = [acc] + reader_argss["accmc"]
+        reactionInfo.setAccMC(reader_names["accmc"], acc_args.copy())
 
         if len(bkgnds) > 0:
             bkgnd = bkgnds[i]
-            bkgnd_args = [bkgnd] + (reader_parts[1:] if len(reader_parts) > 1 else [])
-            reactionInfo.setBkgnd(reader_name, bkgnd_args)
+            bkgnd_args = [bkgnd] + reader_argss["bkgnd"]
+            reactionInfo.setBkgnd(reader_names["bkgnd"], bkgnd_args.copy())
 
         #############################################
         #### DEFINE COHERENT SUMS AND AMPLITUDES ####
