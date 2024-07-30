@@ -1,12 +1,12 @@
-import sys
-import os
-from os.path import expandvars
 import glob
+import os
 import subprocess
+import sys
+from os.path import expandvars
 from shutil import which
 
 
-def recursive_link_if_not_exist(source_folders, destination_folder, ftype, verbose=False):
+def recursive_link_if_not_exist(source_folders, destination_folder, ftype, verbose=True):
     if verbose:
         print(f"\n\nDestination Folder: {destination_folder}")
     for source_folder in source_folders:

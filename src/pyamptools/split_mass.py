@@ -9,7 +9,9 @@ import uproot
 def split_mass_t(infile, outputBase, 
                 lowMass, highMass, nBins, 
                 lowT, highT, nTBins,
-                treeName="kin", maxEvents=4294967000, mass_edges=None, t_edges=None):
+                treeName="kin", 
+                keep_all_columns=True,
+                maxEvents=4294967000, mass_edges=None, t_edges=None):
     """
     Split events into bins based on (invariant mass, t) and save to separate ROOT files.
 
@@ -26,6 +28,7 @@ def split_mass_t(infile, outputBase,
         mass_edges (List[float]): Bin the data with these bin edges (nBins + 1 elements), default None
         t_edges (List[float]): Bin the data with these bin edges (nTBins + 1 elements), default None
         maxEvents (int): Maximum number of events to process
+        keep_all_columns (bool): Keep all columns in the output ROOT files, default False
 
     Returns:
         mass_edges (List[float]): Bin edges (nBins + 1 elements)
@@ -73,7 +76,10 @@ def split_mass_t(infile, outputBase,
 
         # Read the relevant branches as arrays (modify this according to your data structure)
         # Assuming the branches are named px, py, pz, e for particles
-        branches = tree.arrays(filter_name=RELEVANT_COLS, entry_stop=maxEvents)
+        if keep_all_columns:
+            branches = tree.arrays(entry_stop=maxEvents)
+        else:
+            branches = tree.arrays(filter_name=RELEVANT_COLS, entry_stop=maxEvents)
 
         # Convert branches to TLorentzVector (use the appropriate branches from your data)
         particles = ak.zip({"Px": branches["Px_FinalState"], "Py": branches["Py_FinalState"], "Pz": branches["Pz_FinalState"], "E": branches["E_FinalState"]}, with_name="LorentzVector")
@@ -101,6 +107,8 @@ def split_mass_t(infile, outputBase,
         digitized_bins = np.digitize(invariant_mass, mass_edges) - 1  # -1 to convert bin numbers to 0-indexed
         digitized_t_bins = np.digitize(mandelstam_t, t_edges) - 1  # -1 to convert bin numbers to 0-indexed
 
+        nBar = np.empty((nBins, nTBins), dtype=float)
+        nBar_err = np.empty((nBins, nTBins), dtype=float)
         for j in range(nTBins):
             for i in range(nBins):
                 # Filter events for each bin
@@ -116,15 +124,19 @@ def split_mass_t(infile, outputBase,
                 #   keys of output_data either. Unsure how to remove them
                 output_data = {name: events_in_bin[name] for name in branches.fields}
 
+                # Weighted integral
+                nBar[i, j] = ak.sum(output_data["Weight"])
+                nBar_err[i, j] = np.sqrt(ak.sum(output_data["Weight"] ** 2)) # SumW2
+
                 k = j * nBins + i # cycle through mass bins first
                 with uproot.recreate(f"{outputBase}_{k}.root") as outfile:
-                    print(f"Writing to {nevents} events to {outputBase}_{k}.root ~> (massBin={i}, tBin={j})...")
+                    print(f"Writing to {nevents} events ({nBar[i, j]:0.2f} weighted events) to {outputBase}_{k}.root ~> (massBin={i}, tBin={j})...")
                     outfile[treeName] = output_data
 
     mass_edges = [float(np.round(edge, 5)) for edge in mass_edges]
     t_edges = [float(np.round(edge, 5)) for edge in t_edges]
 
-    return mass_edges, t_edges
+    return mass_edges, t_edges, nBar, nBar_err
 
 
 if __name__ == "__main__":
