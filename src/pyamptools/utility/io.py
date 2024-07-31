@@ -8,7 +8,7 @@ import pandas as pd
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
-def get_nBar(base, acceptance_correct=True):
+def get_nEventsInBin(base, acceptance_correct=True):
     """
     Load the expected number of events across all bins in a given directory. Searches metadata.txt files
     for the number of signal events (data-bkgnd). These values are calculated when the data divided using
@@ -42,7 +42,7 @@ def get_nBar(base, acceptance_correct=True):
     return np.array(values), np.array(errors)
 
 
-def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_query_2):
+def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_query_2, accCorrect):
     """
     Load results from AmpTools
 
@@ -53,10 +53,13 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
         niters (int): number of iterations used in the fit
         mle_query_1 (str): query to apply to the DataFrame BEFORE calculating delta_nll
         mle_query_2 (str): query to apply to the DataFrame AFTER  calculating delta_nll
+        accCorrect (bool): whether to use acceptance corrected signal values
 
     Returns:
         DataFrame: DataFrame of results
     """
+
+    lor = 0 if accCorrect else 1 # Left or right of | symbol in the output of extract_ff. Gets corrected values or not
 
     df = {}
 
@@ -99,7 +102,7 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
             totalYield = 0
             for line in f.readlines():
                 if line.startswith("TOTAL EVENTS"):
-                    totalYield = float(line.split()[3])
+                    totalYield = float(line.split()[3].split("|")[lor])
                     if "total" in df:
                         df["total"].append(totalYield)
                     else:
@@ -110,11 +113,11 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
 
                     # FILL VALUES
                     if amp in df:
-                        df[amp].append(float(line.split()[4]) * totalYield)
-                        df[f"{amp} err"].append(float(line.split()[6]) * totalYield)
+                        df[amp].append(float(line.split()[4].split("|")[lor]) * totalYield)
+                        df[f"{amp} err"].append(float(line.split()[6].split("|")[lor]) * totalYield)
                     else:
-                        df[amp] = [float(line.split()[4]) * totalYield]
-                        df[f"{amp} err"] = [float(line.split()[6]) * totalYield]
+                        df[amp] = [float(line.split()[4].split("|")[lor]) * totalYield]
+                        df[f"{amp} err"] = [float(line.split()[6].split("|")[lor]) * totalYield]
 
                 if line.startswith("PHASE DIFFERENCE"):
                     amp1 = line.split()[2].split("::")[-1]
