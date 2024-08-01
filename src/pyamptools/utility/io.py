@@ -79,11 +79,13 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
         return None
 
     for cfgfile, i in itertools.product(cfgfiles, range(niters)):
+
         basedir = os.path.dirname(cfgfile)
         binTag = basedir.split("/")[-1]
         fit_file = f"{basedir}/{binTag}_{i}.fit"
+
         if not os.path.exists(fit_file):
-            continue
+            raise FileNotFoundError(f"{fit_file} expected, but not found!")
     
         value = loadParValueFromFit(fit_file, "bestMinimum")
         _nlls.append(value)
@@ -154,11 +156,6 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
 
     df = pd.DataFrame(df)
 
-    # This is the case if there are 0 fit result files loaded
-    if len(df) == 0:
-        print("No amptools MLE fit results loaded! Returning empty DataFrame...")
-        return df
-
     # Apply Query 1
     if mle_query_1 != "":
         df = df.query(mle_query_1)
@@ -173,15 +170,10 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
 
     df = pd.DataFrame(df)
 
-    # Check that all masses and tPrimes are present
-    # if len(df["mass"].unique()) != len(masses):
-    #     missing_bins = set(masses) - set(df["mass"].unique())
-    #     missing_bins = [round(b, 5) for b in missing_bins]
-    #     missing_idxs = [np.where(np.abs(masses - b) < 1e-5)[0][0] for b in missing_bins]
-    #     print("\nloadAmpToolsResults did not collect the correct number of masses, perhaps mle_queries are too strict?")
-    #     print(f"  --> Missing bins: {missing_idxs}")
-    #     print(f"  --> Missing masses: {missing_bins}")
-    #     raise ValueError("Some kinematic bins had no converged MLE fits. See logs. Exiting...")
+    # This is the case if there are 0 fit result files loaded
+    if len(df) == 0:
+        print("No amptools MLE fit results loaded! Returning empty DataFrame...")
+        return df
 
     avail_t = list(df["tprime"].unique())
     avail_m = list(df["mass"].unique())
