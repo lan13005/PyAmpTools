@@ -6,7 +6,7 @@ import re
 import sys
 
 
-def extract_ff(results, outfileName="", fmt=".5f", regex_merge=None, no_phases=False):
+def extract_ff(results, outfileName="", fmt=".5f", regex_merge=None, no_phases=False, only=None):
     """
     Extract Fit Fractions and phase differences between pairs of waves from a FitResults object
 
@@ -22,13 +22,20 @@ def extract_ff(results, outfileName="", fmt=".5f", regex_merge=None, no_phases=F
         acceptanceCorrect (bool): Acceptance correct the values
         fmt (str): string format for printing
         regex_merge (List[str]): Merge amplitudes: List of Regex pairs (pattern, replace) separated by ~>
+        only (str): Only dump fit fractions for ["acc", "noacc"]. Default dumps FF concatenated by "|"
 
     Returns:
         None, dumps a file to outfileName or stdout
     """
 
-    def write_ff(amp, intensity, error, intensity_corr, error_corr):
-        outfile.write(f"FIT FRACTION {amp} = {intensity_corr/total_intensity_corr:{fmt}}|{intensity/total_intensity:{fmt}} +- {error_corr/total_intensity_corr:{fmt}}|{error/total_intensity:{fmt}}\n")
+    def write_ff(amp, intensity, error, intensity_corr, error_corr, only=None):
+        if only is None:
+            outfile.write(f"FIT FRACTION {amp} = {intensity_corr/total_intensity_corr:{fmt}}|{intensity/total_intensity:{fmt}} +- {error_corr/total_intensity_corr:{fmt}}|{error/total_intensity:{fmt}}\n")
+        elif only == "acc":
+            outfile.write(f"FIT FRACTION {amp} = {intensity/total_intensity:{fmt}} +- {error/total_intensity:{fmt}}\n")
+        elif only == "noacc": # no accepatance = correct for acceptance
+            outfile.write(f"FIT FRACTION {amp} = {intensity_corr/total_intensity_corr:{fmt}} +- {error_corr/total_intensity_corr:{fmt}}\n")
+        
 
     ############### LOAD RESULTS TIME! ################
     outfile = open(outfileName, "w") if outfileName != "" else sys.stdout
@@ -37,7 +44,14 @@ def extract_ff(results, outfileName="", fmt=".5f", regex_merge=None, no_phases=F
     outfile.write("########################################################################\n")
     outfile.write("# Values on the left of | are acceptance corrected, on the right are not\n")
     outfile.write("########################################################################\n\n")
-    outfile.write(f"TOTAL EVENTS = {total_intensity_corr:0.2f}|{total_intensity:0.2f} +- {total_error_corr:0.2f}|{total_error:0.2f}\n")
+    if only is None:
+        outfile.write(f"TOTAL EVENTS = {total_intensity_corr:0.2f}|{total_intensity:0.2f} +- {total_error_corr:0.2f}|{total_error:0.2f}\n")
+    elif only == "acc":
+        outfile.write(f"TOTAL EVENTS = {total_intensity:0.2f} +- {total_error:0.2f}\n")
+    elif only == "noacc":
+        outfile.write(f"TOTAL EVENTS = {total_intensity_corr:0.2f} +- {total_error_corr:0.2f}\n")
+    else:
+        raise ValueError(f"Invalid 'only' argument: {only}. Expected either ['acc', 'noacc']")
 
     uniqueAmps = results.ampList()  # vector<string>
     uniqueAmps = [str(amp) for amp in uniqueAmps]
@@ -51,7 +65,7 @@ def extract_ff(results, outfileName="", fmt=".5f", regex_merge=None, no_phases=F
         print(f" -> {amp}")
         intensity, error = results.intensity(useamp, False)
         intensity_corr, error_corr = results.intensity(useamp, True)
-        write_ff(amp, intensity, error, intensity_corr, error_corr)
+        write_ff(amp, intensity, error, intensity_corr, error_corr, only)
 
     ######## MERGE AMPLITUDES STRIPPING REGEX MATCHED STRING #########
     if regex_merge is not None:
@@ -78,7 +92,7 @@ def extract_ff(results, outfileName="", fmt=".5f", regex_merge=None, no_phases=F
 
                 intensity, error = results.intensity(amps, False)
                 intensity_corr, error_corr = results.intensity(amps, True)
-                write_ff(merged_amp, intensity, error, intensity_corr, error_corr)
+                write_ff(merged_amp, intensity, error, intensity_corr, error_corr, only)
             merged.clear()
 
     ######### WRITE ALL POSSIBLE PHASE DIFFERENCES ##########
@@ -114,6 +128,7 @@ def _cli_extract_ff():
     parser.add_argument("--fmt", type=str, default=".5f", help="Format string for printing")
     parser.add_argument("--regex_merge", type=str, nargs="+", help="Merge amplitudes: Regex pair (pattern, replace) separated by ~>")
     parser.add_argument("--no_phases", action="store_true", help="Do not dump phase differences")
+    parser.add_argument("--only", type=str, default=None, help="Only dump fit fractions for ['acc', 'noacc']")
     args = parser.parse_args(sys.argv[1:])
 
     ################### LOAD LIBRARIES ##################
@@ -127,6 +142,7 @@ def _cli_extract_ff():
     fmt = args.fmt
     regex_merge = args.regex_merge
     no_phases = args.no_phases
+    only = args.only
     assert os.path.isfile(fitFile), "Fit Results file does not exist at specified path"
 
     ############## LOAD FIT RESULTS OBJECT ##############
@@ -140,7 +156,7 @@ def _cli_extract_ff():
     AmpToolsInterface.registerDataReader(DataReader())
 
     ############## EXTRACT FIT FRACTIONS ##############
-    extract_ff(results, outfileName, fmt, regex_merge, no_phases)
+    extract_ff(results, outfileName, fmt, regex_merge, no_phases, only)
 
 
 if __name__ == "__main__":
