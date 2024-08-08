@@ -2,6 +2,7 @@ import argparse
 import glob
 import os
 
+import numpy as np
 from omegaconf import OmegaConf
 from pyamptools.split_mass import split_mass_t
 from pyamptools.utility.general import Timer, dump_yaml, load_yaml
@@ -65,24 +66,40 @@ if __name__ == "__main__":
         print("User requested data to be split into (mass, t) bins. Checking for pre-existing bins...")
 
         check_for_preexisting = all([os.path.exists(f"bin_{i}") for i in range(n_mass_bins * n_t_bins)])
-
-        sharemc = False
-        mc_already_shared = {"data": False, "bkgnd": False, "accmc": False, "genmc": False}
         
+        run_split_and_cfg_ceate = True
+        create_cfg = False
         if check_for_preexisting:
             delete_or_skip = input("Pre-existing bins found. Delete them? (y/n): ")
             if delete_or_skip.lower() == "y":
                 os.system("rm -rf bin_*")
                 print("  Deleted pre-existing bins")
             else:
-                print("  Skipping split_mass")
+                run_split_and_cfg_ceate = False
+                ans_create_cfg = input("Create new cfg files? (y/n): ")
+                if ans_create_cfg.lower() == "y":
+                    print("  Will create new cfg files")
+                    create_cfg = True
+                else:
+                    print("  Skipping split_mass")
 
-        else:
+        # Determine mass bin edges based on the first ftype source
+        mass_edges = yaml_file["mass_edges"] if "mass_edges" in yaml_file else None 
+        t_edges = yaml_file["t_edges"] if "t_edges" in yaml_file else None
+        nBars = {}
+        nBar_errs = {}
+        if "nBars" in yaml_file:
+            nBars = yaml_file["nBars"]
+            nBars = {key: np.array(nBars[key]) for key in nBars}
+        if "nBar_errs" in yaml_file:
+            nBar_errs = yaml_file["nBar_errs"]
+            nBar_errs = {key: np.array(nBar_errs[key]) for key in nBar_errs}
+        mc_already_shared = {"data": False, "bkgnd": False, "accmc": False, "genmc": False} if "mc_already_shared" not in yaml_file else yaml_file["mc_already_shared"]
+
+        if run_split_and_cfg_ceate:
+            
+            sharemc = False
             print("No pre-existing bins found, running split_mass")
-            mass_edges = None  # Determine mass bin edges based on the first ftype source
-            t_edges = None
-            nBars = {}
-            nBar_errs = {}
             
             for ftype in ["data", "accmc", "genmc"]:
                 for pol in pols:
@@ -116,8 +133,8 @@ if __name__ == "__main__":
                                                     min_t, max_t, n_t_bins,
                                                     treeName="kin", mass_edges=mass_edges, t_edges=t_edges)
                         _pol = "shared" if sharemc else pol
-                        nBars[(ftype, _pol)] = nBar
-                        nBar_errs[(ftype, _pol)] = nBar_err
+                        nBars[f"{ftype}_{_pol}"] = nBar
+                        nBar_errs[f"{ftype}_{_pol}"] = nBar_err
                         if sharemc:
                             mc_already_shared[ftype] = True
 
@@ -128,8 +145,8 @@ if __name__ == "__main__":
                                                         min_mass, max_mass, n_mass_bins, 
                                                         min_t, max_t, n_t_bins,
                                                         treeName="kin", mass_edges=mass_edges, t_edges=t_edges)
-                    nBars[("bkgnd", pol)] = nBar
-                    nBar_errs[("bkgnd", pol)] = nBar_err
+                    nBars[f"bkgnd_{pol}"] = nBar
+                    nBar_errs[f"bkgnd_{pol}"] = nBar_err
                 else:
                     print(f"No bkgnd{pol}.root found (not required), skipping")
 
@@ -137,6 +154,7 @@ if __name__ == "__main__":
             # # RENAME AND COPY+MODIFY AMPTOOLS CFG FILES
             # ###########################################
 
+        if run_split_and_cfg_ceate or create_cfg:
             for j in range(n_t_bins):
                 for i in range(n_mass_bins):
                     k = j * n_mass_bins + i
@@ -146,33 +164,43 @@ if __name__ == "__main__":
                     with open(f"bin_{k}/metadata.txt", "w") as f:
                         f.write("---------------------\n")
                         f.write(f"bin number: {k}\n")
-                        f.write(f"mass range: {mass_edges[i]:.2f} - {mass_edges[i + 1]:.2f} GeV\n")
-                        f.write(f"t range: {t_edges[j]:.2f} - {t_edges[j + 1]:.2f} GeV^2\n")
-                        nBar_ftype = {pair[0]: 0 for pair in nBars.keys()} # keys ~ (ftype, pol)
-                        nBar_err_ftype = {pair[0]: 0 for pair in nBars.keys()}
+                        if mass_edges is not None:
+                            f.write(f"mass range: {mass_edges[i]:.2f} - {mass_edges[i + 1]:.2f} GeV\n")
+                        if t_edges is not None:
+                            f.write(f"t range: {t_edges[j]:.2f} - {t_edges[j + 1]:.2f} GeV^2\n")
+                        nBar_ftype = {pair.split("_")[0]: 0 for pair in nBars.keys()} # keys ~ ftype_pol
+                        nBar_err_ftype = {pair.split("_")[0]: 0 for pair in nBars.keys()}
                         f.write("---------------------\n")
-                        for (ftype, pol) in nBars:
-                            f.write(f"nBar {ftype} {pol}: {nBars[(ftype, pol)][i][j]} +/- {nBar_errs[(ftype, pol)][i][j]}\n")
+                        for ftype_pol in nBars:
+                            ftype, pol = ftype_pol.split("_")
+                            _nBars = nBars[f"{ftype}_{pol}"]
+                            _nBar_errs = nBar_errs[f"{ftype}_{pol}"]
+                            f.write(f"nBar {ftype} {pol}: {_nBars[i][j]} +/- {_nBar_errs[i][j]}\n")
                             if ftype in ["data", "bkgnd"]:
-                                nBar_ftype[ftype] += nBars[(ftype, pol)][i][j]
-                                nBar_err_ftype[ftype] += nBar_errs[(ftype, pol)][i][j]**2
+                                nBar_ftype[ftype] += _nBars[i][j]
+                                nBar_err_ftype[ftype] += _nBar_errs[i][j]**2
                             if ftype in ["accmc", "genmc"]:
                                 share_factor = (len(pols) if pol == "shared" else 1)
-                                nBar_ftype[ftype] += nBars[(ftype, pol)][i][j] * share_factor
-                                nBar_err_ftype[ftype] += (nBar_errs[(ftype, pol)][i][j] * share_factor)**2
+                                nBar_ftype[ftype] += _nBars[i][j] * share_factor
+                                nBar_err_ftype[ftype] += (_nBar_errs[i][j] * share_factor)**2
                         f.write("---------------------\n")
                         for ftype in nBar_ftype:
                             f.write(f"nBar {ftype}: {nBar_ftype[ftype]} +/- {nBar_err_ftype[ftype]**0.5}\n")
                         f.write("---------------------\n")
-                        signal = nBar_ftype['data'] - nBar_ftype['bkgnd']
-                        signal_err = (nBar_err_ftype['data'] + nBar_err_ftype['bkgnd'])**0.5
-                        f.write(f"nBar signal: {signal} +/- {signal_err}\n")
-                        eff = nBar_ftype['accmc'] / nBar_ftype['genmc']
-                        eff_err = eff * ((nBar_err_ftype['accmc']**0.5 / nBar_ftype['accmc'])**2 + (nBar_err_ftype['genmc']**0.5 / nBar_ftype['genmc'])**2)**0.5
-                        corr_signal = signal / eff
-                        corr_signal_err = corr_signal * ((signal_err / signal)**2 + (eff_err / eff)**2)**0.5
-                        f.write(f"efficiency (%): {eff*100:.3f} +/- {eff_err*100:.3f}\n")
-                        f.write(f"nBar corrected signal: {corr_signal} +/- {corr_signal_err}\n")
+                        if len(nBars) != 0:
+                            if "bkgnd" in nBar_ftype: # if there is bkgnd we subtract it to get the signal
+                                signal = nBar_ftype['data'] - nBar_ftype['bkgnd']
+                                signal_err = (nBar_err_ftype['data'] + nBar_err_ftype['bkgnd'])**0.5
+                            else:
+                                signal = nBar_ftype['data']
+                                signal_err = nBar_err_ftype['data']
+                            f.write(f"nBar signal: {signal} +/- {signal_err}\n")
+                            eff = nBar_ftype['accmc'] / nBar_ftype['genmc']
+                            eff_err = eff * ((nBar_err_ftype['accmc']**0.5 / nBar_ftype['accmc'])**2 + (nBar_err_ftype['genmc']**0.5 / nBar_ftype['genmc'])**2)**0.5
+                            corr_signal = signal / eff
+                            corr_signal_err = corr_signal * ((signal_err / signal)**2 + (eff_err / eff)**2)**0.5
+                            f.write(f"efficiency (%): {eff*100:.3f} +/- {eff_err*100:.3f}\n")
+                            f.write(f"nBar corrected signal: {corr_signal} +/- {corr_signal_err}\n")
                     replace_fitname = f"sed -i 's|PLACEHOLDER_FITNAME|bin_{k}|g' bin_{k}/bin_{k}.cfg"
                     os.system(replace_fitname)
                     for pol in pols:
@@ -191,7 +219,9 @@ if __name__ == "__main__":
             # Read amptools.cfg and append the t-range and mass-range to a metadata section using omegaconf
             os.chdir(cwd)
             output_yaml = OmegaConf.load(yaml_name)
-            output_yaml.update({"mass_edges": mass_edges, "t_edges": t_edges})
+            nBars = {key: nBars[key].tolist() for key in nBars}
+            nBar_errs = {key: nBar_errs[key].tolist() for key in nBar_errs}
+            output_yaml.update({"mass_edges": mass_edges, "t_edges": t_edges, "nBars": nBars, "nBar_errs": nBar_errs, "mc_already_shared": mc_already_shared})
             dump_yaml(output_yaml, yaml_name)
 
 
@@ -203,11 +233,14 @@ if __name__ == "__main__":
 
         prexist_groups = glob.glob(f"{output_directory}/group_*")
         n_prexist = len(prexist_groups)
+        ans = "y"
         if n_prexist > 0:
-            input(f"\n{n_prexist} group folders already exist. Press enter to overwrite them or Ctrl+C to exit")
-            os.system(f"rm -rf {output_directory}/group_*")
+            ans = input(f"\n{n_prexist} group folders already exist. Ovewrite? (y/n): ")
+            if ans.lower() == "y":
+                os.system(f"rm -rf {output_directory}/group_*")
+                print("  Deleted pre-existing groups")
 
-        if bins_per_group > 1:
+        if bins_per_group > 1 and ans == "y":
             bins = glob.glob(f"{output_directory}/bin_*")
             bins = sorted(bins, key=lambda x: int(x.split("_")[-1]))
             nBins = len(bins)

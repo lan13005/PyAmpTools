@@ -344,7 +344,7 @@ def generate_amptools_cfg_from_dict(yaml_file):
                         _accs = [f"{data_folder}/{ftype}.root" for pol in used_pols]
                 else:
                     raise FileNotFoundError(f"File {source} does not exist.")
-            if not os.path.isfile(source) and ftype in ["data", "bkgnd"]:
+            if not os.path.isfile(source) and ftype in ["data"]:
                 raise FileNotFoundError(f"File {source} does not exist.")
 
     # These are placeholder locations for us to split_mass with
