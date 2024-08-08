@@ -41,6 +41,7 @@ All major dependencies (ROOT, AmpTools, FSRoot) are built from source.
 ```shell
 conda env create  # Creates environment specified by environment.yml and pyproject.toml
 conda activate pyamptools # activate the environment
+# pip install mpi4py if you wish to use MPI (see Potential Build Errors if failing)
 pre-commit install --install-hooks # (Optional) commit hooks to perform loose formatting
 ```
 

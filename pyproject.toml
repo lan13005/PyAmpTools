@@ -20,14 +20,14 @@ dependencies = [
     "IPython",
     "ipykernel",
     "jupyter",
-    "mpi4py",     # (mpi has not been well tested, but it has worked before. There was also a linking error if not manually installing it after conda env created)
+    # "mpi4py",     # (mpi has not been well tested, but it has worked before. There was also a linking error if not manually installing it after conda env created)
     "pyarrow",    # storage format
     "tbb",        # for FSROOT, multiprocessing/threading
     "psutil",     # check process information
     "pdf2image",  # convert pdf to image for plotGen tutorial documentation
     "scons",      # needed to 'make' AMPTOOLS_GENERATORS
 ]
-name = "pyamptools9"
+name = "pyamptools"
 requires-python = ">=3.9"
 version = "0.1.0"
 
@@ -37,8 +37,8 @@ profile = "black"
 
 [project.optional-dependencies]
 dev = [
-  "pyamptools9[doc]",
-  "pyamptools9[ift]",
+  "pyamptools[doc]",
+  "pyamptools[ift]",
   "pytest",
   "pre-commit",
   "ruff",

@@ -1,4 +1,4 @@
-name: pyamptools9
+name: pyamptools
 channels:
   - anaconda
   - defaults
