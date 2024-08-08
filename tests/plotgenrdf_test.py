@@ -8,5 +8,5 @@ def test_plotrdf():
     cmd = f"python {PYAMPTOOLS_HOME}/scripts/plotgenrdf.py {fit_results} -o {output_file}"
     print(cmd)
     os.system(cmd)
-    assert os.path.exists(f"{output_file}_all.png"), f"scripts/plotgenrdf.py failed to generate {output_file}_all.png"
-    os.system(f"rm {output_file}_all.png")
+    assert os.path.exists(f"{output_file}_all.pdf"), f"scripts/plotgenrdf.py failed to generate {output_file}_all.pdf"
+    os.system(f"rm {output_file}_all.pdf")

@@ -61,6 +61,9 @@ def exec_mcmc():
 
 
 def test_mle_mcmc_chain():
+    if not os.path.exists("tests/samples/SDME_EXAMPLE"):
+        print("Skipping MLE-MCMC chain test. SDME_EXAMPLE directory not found.")
+        return
     os.chdir("tests/samples/SDME_EXAMPLE")
 
     ## Perform MLE fit
