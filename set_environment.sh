@@ -4,8 +4,12 @@ echo "Loading environment"
 echo "*******************"
 echo ""
 
-env_name="pyamptools9"
-default_env="/w/halld-scshelf2101/lng/WORK/PyAmpTools9" # Default env location on Jlab farm. Will be compared to PWD so no trailing slash!
+env_name="pyamptools" # current conda environment name
+
+# Default env location on Jlab farm. Will be compared to PWD so no trailing slash!
+#  This should point to a another location where external pyamptools and amptools libraries
+#  are already built so we can reuse them
+default_env="/w/halld-scshelf2101/lng/WORK/PyAmpTools9"
 
 
 # VSCode could create additional environment variables...
@@ -21,6 +25,26 @@ fi
 # Check if the hostname contains "jlab.org" if so we perform default setup
 #    and link external libraries against a central repo (its actually my
 #    personal working directory but it isn't modified much anymore)
+
+# Function to mark removed files as assumed-unchanged
+mark_removed_files_assume_unchanged() {
+    # Get the list of removed files
+    local removed_files
+    removed_files=$(git status --porcelain | grep '^ D' | awk '{print $2}')
+
+    # Check if any removed files are found
+    if [ -z "$removed_files" ]; then
+    echo "No removed files to process."
+    return 0
+    fi
+
+    # Mark the removed files as assumed-unchanged
+    for file in $removed_files; do
+        git update-index --assume-unchanged "$file"
+    done
+
+    echo "Updated git index to assume symlinked external files are unchanged."
+}
 
 hostname=$(hostname)
 if [[ "$hostname" == *"jlab.org"* ]]; then
@@ -43,6 +67,7 @@ if [[ "$hostname" == *"jlab.org"* ]]; then
     if [[ ! "$PYAMPTOOLS_HOME" == "$default_env" ]]; then
         mv $PYAMPTOOLS_HOME/external $PYAMPTOOLS_HOME/.external # hide current external directory
         ln -s "$default_env/external" $PYAMPTOOLS_HOME # link over the pre-built libraries
+        mark_removed_files_assume_unchanged
     fi
 fi
 ####################
