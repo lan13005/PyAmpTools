@@ -125,8 +125,12 @@ def split_mass_t(infile, outputBase,
                 output_data = {name: events_in_bin[name] for name in branches.fields}
 
                 # Weighted integral
-                nBar[i, j] = ak.sum(output_data["Weight"])
-                nBar_err[i, j] = np.sqrt(ak.sum(output_data["Weight"] ** 2)) # SumW2
+                if "Weight" in output_data:
+                    nBar[i, j] = ak.sum(output_data["Weight"])
+                    nBar_err[i, j] = np.sqrt(ak.sum(output_data["Weight"] ** 2)) # SumW2
+                else:
+                    nBar[i, j] = nevents
+                    nBar_err[i, j] = np.sqrt(nevents)
 
                 k = j * nBins + i # cycle through mass bins first
                 with uproot.recreate(f"{outputBase}_{k}.root") as outfile:
