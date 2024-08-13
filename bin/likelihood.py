@@ -1,5 +1,5 @@
 
-import logging as log
+import logging
 import os
 import pickle as pkl
 from functools import partial
@@ -14,25 +14,19 @@ import numpy as np
 from omegaconf import OmegaConf
 
 # ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-log.basicConfig(level=log.WARNING, format='%(asctime)s| %(message)s', datefmt='%H:%M:%S')
+level = logging.INFO
+logger = logging.getLogger('pwa_manager')
+logger.setLevel(level)
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter('%(asctime)s| %(message)s', datefmt='%H:%M:%S'))
+logger.addHandler(handler)
+
 jax.config.update("jax_enable_x64", True)
 
 # Mark wi, numTerms as static so jax does not trace them
 # @partial(jax.pmap) # , static_broadcasted_argnums=(1, 2, 3))
 # @partial(jax.jit) # , static_argnums=(0, 1, 2))
 
-############# THINGS TO DO #############
-# Code to always over reaction so likelihood(mass,t,cV)
-# (mass, t, reaction, terms, events) ampvecs
-
-#### normint.pkl ~ (reaction * nmbMasses * nmbTprimes, terms, terms)
-# have to rerun to cluster reactions together so we can accept the same cV for all reactions in kinematic bin
-
-#### amps.pkl   ~ (reaction * nmbMasses * nmbTprimes, terms, events)
-# We have the same number of reactions and terms per kinematic bin
-# number of events can differ but they are all concatenated together
-# have to ensure number of len(starts) == reaction * nmbMasses * nmbTprimes. Perhaps off by 1 since we prepend 0
-# nreactions
 
 def intensity_calc(array, wi, nTerms, m_sumCoherently):
 
@@ -47,7 +41,7 @@ def intensity_calc(array, wi, nTerms, m_sumCoherently):
         This will not allow us to output intensities per event since the output shape will be different
     """
     
-    # @jax.jit
+    @jax.jit
     def _intensity_calc(cTmp):
 
         m_iNTrueEvents = array.shape[-1]
@@ -104,7 +98,7 @@ def normint_calc(nTerms, m_sumCoherently):
     Jax will not need to retrace the function i think. Only one jit compiled function will be needed
     """
 
-    # @jax.jit
+    @jax.jit
     def _normInt_calc(cTmp, ampInts, normInts):
 
         normInt = 0
@@ -184,6 +178,9 @@ class Likelihood:
         self.normIntss = normint_src["normIntss"] # ~ (nmbReactions, nmbMasses, nmbTprimes, nmbAmps, nmbAmps) Normalized integrals
         self.normint_files = normint_src["normint_files"] # ~ (nmbMasses, nmbTprimes). List of strings containing normint file names
 
+        print(self.m_sumCoherently)
+        exit()
+
         # Ensure the ording of the terms are the same
         self.ampvec_terms = [v[:-3] for v in self.keys if v[-3:] in ["_re", "_im"]]
         self.ampvec_terms = list(dict.fromkeys(self.ampvec_terms)) # remove duplicates
@@ -246,7 +243,7 @@ class Likelihood:
             intens = fIntens(cV)
             thisTerm = jnp.sum ( self.data[self.wi, start:stop] * jnp.log(intens / self.data[self.wi, start:stop]) )
             sumLnI_data += thisTerm
-            log.info(f"sumLnI_data += {thisTerm}")
+            logger.debug(f"sumLnI_data += {thisTerm} at {start}:{stop}")
         
         if self.bkgndexist:
             fBIntens = self.fBIntens[k*self.nmbReactions:(k+1)*self.nmbReactions]
@@ -255,10 +252,10 @@ class Likelihood:
             for start, stop, fIntens in zip(fBStarts, fBStops, fBIntens):
                 thisTerm = jnp.sum ( self.bkgnd[self.wi, start:stop] * jnp.log(fIntens(cV) / self.bkgnd[self.wi, start:stop]) )
                 sumLnI_bkgnd += thisTerm
-                log.info(f"sumLnI_bkgnd += {thisTerm}")
+                logger.debug(f"sumLnI_bkgnd += {thisTerm} at {start}:{stop}")
 
         dataTerm = sumLnI_data - sumLnI_bkgnd
-        log.info(f"dataTerm: {dataTerm}")
+        logger.debug(f"dataTerm: {dataTerm}")
         ########################## END DATA TERM ###########################
 
         ########################## NORM INT TERM ###########################
@@ -276,8 +273,8 @@ class Likelihood:
                 thisTerm = (m_sumDataWeights - m_sumBkgWeights) * jnp.log(thisTerm)
                 thisTerm += nPred - (m_sumDataWeights * jnp.log(nPred))
             normTerm += thisTerm
-            log.info(f"normTerm += {thisTerm}")
-        log.info(f"normTerm: {normTerm}")
+            logger.debug(f"normTerm += {thisTerm} at bkgnd[{bStart}:{bStop}] and data[{dStart}:{dStop}]")
+        logger.debug(f"normTerm: {normTerm}")
         ######################## END NORM INT TERM #########################
 
         nll = -2 * (dataTerm - normTerm)
@@ -288,25 +285,24 @@ class Likelihood:
         pass
 
     def _check_data_shape(self):
-        log.info("------ Checking data shapes ------")
-        log.info(f"nTerms: {self.nTerms}")
-        log.info(f"nmbReactions: {len(self.reactions)}")
-        log.info(f"nmbMasses: {self.nmbMasses}")
-        log.info(f"nmbTprimes: {self.nmbTprimes}")
-        log.info('- - - - - - - - - - - - - - - - - - ')
+        logger.info("------ Checking data shapes ------")
+        logger.info(f"nTerms: {self.nTerms}")
+        logger.info(f"nmbReactions: {len(self.reactions)}")
+        logger.info(f"nmbMasses: {self.nmbMasses}")
+        logger.info(f"nmbTprimes: {self.nmbTprimes}")
+        logger.info('- - - - - - - - - - - - - - - - - - ')
         for k, v in self.amp_src.items():
             if isinstance(v, np.ndarray):
-                log.info(f"Shape of {k}: {v.shape} ~ (2nTerms+[weight, bin], nEvents)")
+                logger.info(f"Shape of {k}: {v.shape} ~ (2nTerms+[weight, bin], nEvents)")
         for k, v in self.normint_src.items():
             if isinstance(v, np.ndarray):
                 if len(v.shape) == 3:
-                    log.info(f"Shape of {k}: {v.shape} ~ (nmbReactions, nmbMasses, nmbTprimes)")
+                    logger.info(f"Shape of {k}: {v.shape} ~ (nmbReactions, nmbMasses, nmbTprimes)")
                 elif len(v.shape) == 5:
-                    log.info(f"Shape of {k}: {v.shape} ~ (nmbReactions, nmbMasses, nmbTprimes, nTerms, nTerms)")
-        log.info("---- Done checking data shapes ----\n")
+                    logger.info(f"Shape of {k}: {v.shape} ~ (nmbReactions, nmbMasses, nmbTprimes, nTerms, nTerms)")
+        logger.info("---- Done checking data shapes ----\n")
         
 
-# yaml_file = "/w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests_ift/pa.yaml"
 yaml_file = "/w/halld-scshelf2101/lng/WORK/PyAmpTools9/OTHER_CHANNELS/ETAPI0/minor_changes_primary.yaml"
 
 likMan = Likelihood(yaml_file)
@@ -316,30 +312,21 @@ for tbin in range(likMan.nmbTprimes):
     for mbin in range(likMan.nmbMasses):
         params.append( ((mbin, tbin), jnp.full(2*likMan.nTerms, 1)) )
 
-print(f"params: {params}")
+start_time = time.time()
+for i in range(6):
+    nll = likMan.likelihood(params[i])
+    # print(nll)
+logger.info(f"Time taken: {time.time() - start_time}")
 
 start_time = time.time()
 for i in range(6):
     nll = likMan.likelihood(params[i])
-    print(nll)
-log.info(f"Time taken: {time.time() - start_time}")
+    # print(nll)
+logger.info(f"Time taken: {time.time() - start_time}")
+
+start_time = time.time()
+for i in range(6):
+    nll = likMan.likelihood(params[i])
+    # print(nll)
+logger.info(f"Time taken: {time.time() - start_time}")
 # log.info(nll)
-
-# 
-# log.info(likelihood.data[-1])
-
-# sumLnI data = -6449.16
-# sumLnI bkgnd = -3007.53
-# a_dataTerm = -3441.63
-# a_normIntTerm = -5961.97
-# sumLnI data = -6449.16
-# sumLnI bkgnd = -3007.53
-# -5040.668310474681
-
-# 09:33:10| sumLnI_data += -5311.015038663371
-# 09:33:10| sumLnI_bkgnd += -2526.3281891523775
-# 09:33:10| dataTerm: -2784.686849510994
-# 09:33:10| normTerm += -5305.191417700269
-# 09:33:10| normTerm: -5305.191417700269
-# 09:33:10| Time taken: 0.31047487258911133
-# 09:33:10| -5041.009136378550
