@@ -1,7 +1,5 @@
 # Introduction
 
-## NOTE: Temporarily shifting environment name to pyamptools9 (as we upgrade to Alma 9)
-
 This repository contains Python bindings for [AmpTools](https://github.com/mashephe/AmpTools). Under the hood, it uses [PyROOT](https://root.cern/manual/python/) which uses cppyy. These bindings will hopefully simplify the interaction with the AmpTools library while also providing access to the python ecosystem. There are no known features of AmpTools that is not currently supported and both GPU and MPI is working. [FSRoot](https://github.com/remitche66/FSRoot) is also included as a submodule and can be integrated into analysis workflows.
 
 Features:
