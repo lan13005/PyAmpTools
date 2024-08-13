@@ -2,16 +2,14 @@
 import logging
 import os
 import pickle as pkl
-from functools import partial
+import time
 
 import jax
 import jax.numpy as jnp
-
-os.environ["XLA_FLAGS"] = '--xla_force_host_platform_device_count=2'
-import time
-
 import numpy as np
 from omegaconf import OmegaConf
+
+os.environ["XLA_FLAGS"] = '--xla_force_host_platform_device_count=2'
 
 # ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 level = logging.INFO
@@ -27,8 +25,22 @@ jax.config.update("jax_enable_x64", True)
 # @partial(jax.pmap) # , static_broadcasted_argnums=(1, 2, 3))
 # @partial(jax.jit) # , static_argnums=(0, 1, 2))
 
+def generate_pairs(m_sumCoherently):
+    """ coherence matrix is symmetric """
+    if len(m_sumCoherently.shape) != 2:
+        raise ValueError("Coherence matrix is not 2D")
+    if m_sumCoherently.shape[0] != m_sumCoherently.shape[1]:
+        raise ValueError("Coherence matrix is not square")
+    nTerms = m_sumCoherently.shape[0]
+    triplet = []
+    for i in range(nTerms):
+        for j in range(i + 1):
+            if m_sumCoherently[i][j] == 1:
+                sym_factor = 2 if i != j else 1
+                triplet.append((i, j, sym_factor))
+    return jnp.array(triplet)
 
-def intensity_calc(array, wi, nTerms, m_sumCoherently):
+def intensity_calc(array, wi, nTerms, coh_pairs):
 
     """
     Design:
@@ -40,57 +52,47 @@ def intensity_calc(array, wi, nTerms, m_sumCoherently):
         will take start and stop indicies. This is fine if we return a single value like the 2LnLik.
         This will not allow us to output intensities per event since the output shape will be different
     """
+
+    array = jnp.array(array) # For some reason converting it here is faster?
+    m_iNTrueEvents = array.shape[-1]
     
+    # NOTE: jax.lax.scan makes looping better. Can parallelize better and stores intermediate values
+    # Jax unrolls loops adding them to the computational graph. Inherently sequential
+    # For small number of loopings, scanning can have more overhead
+    @jax.jit
+    def __intensity_calc(args, triple):
+
+        i, j, sym_factor = triple
+        cVRe, cVIm = args
+
+        # V * conj(V) = (a + ib) * (c - id) = ac + bd + i(bc - ad)
+        cViVjRe = cVRe[i] * cVRe[j] + cVIm[i] * cVIm[j]
+        cViVjIm = cVIm[i] * cVRe[j] - cVRe[i] * cVIm[j]
+
+        cAiAjRe =  array[2*i] * array[2*j]   + array[2*i+1] * array[2*j+1]
+        cAiAjIm = -array[2*i] * array[2*j+1] + array[2*i+1] * array[2*j]
+
+        # Dividing by m_iNTrueEvents
+        # See AmpTools source code for more details. Not necessary but shifts minimum
+        intensity = (cViVjRe * cAiAjRe - cViVjIm * cAiAjIm) * sym_factor / m_iNTrueEvents
+
+        return args, intensity
+
     @jax.jit
     def _intensity_calc(cTmp):
 
-        m_iNTrueEvents = array.shape[-1]
-        intensities = jnp.zeros(m_iNTrueEvents)
-
         cVRe = cTmp[0::2]
         cVIm = cTmp[1::2]
+        args = (cVRe, cVIm)
+        _, intensities = jax.lax.scan(__intensity_calc, args, coh_pairs)
 
-        # NOTE: consider using jax.lax.scan to make looping better. Can parallelize better and stores intermediate values
-        # Jax unrolls loops adding them to the computational graph. Inherently sequential
-        for i in range(nTerms):
-            for j in range(i + 1):
-
-                # Sum over coherent sectors only
-                if m_sumCoherently[i][j] != 1:
-                    continue
-
-                # V * conj(V) = (a + ib) * (c - id) = ac + bd + i(bc - ad)
-                cViVjRe = cVRe[i] * cVRe[j] + cVIm[i] * cVIm[j]
-                cViVjIm = cVIm[i] * cVRe[j] - cVRe[i] * cVIm[j]
-
-                if i != j:
-                    _cViVjRe = 2 * cViVjRe
-                    _cViVjIm = 2 * cViVjIm
-                else:
-                    _cViVjRe = cViVjRe
-                    _cViVjIm = cViVjIm
-
-                # This is a scaling of the intensity so that the "data term"
-                # in the ln likelihood grows like N instead of N*ln(N) -- this
-                # makes the scaling consistent with the norm int term, but
-                # shifts the likelihood at minimum.  This may be bothersome
-                # to users comparing across versions so leave an option for
-                # turning it off at compile time.
-                _cViVjRe /= m_iNTrueEvents
-                _cViVjIm /= m_iNTrueEvents
-
-                cAiAjRe =  array[2*i] * array[2*j] + array[2*i+1] * array[2*j+1]
-                cAiAjIm = -array[2*i] * array[2*j+1] + array[2*i+1] * array[2*j]
-
-                intensities += (_cViVjRe * cAiAjRe - _cViVjIm * cAiAjIm)
-
-        intensities *= array[wi]
+        intensities = jnp.sum(intensities, axis=0) * array[wi]
 
         return intensities
 
     return _intensity_calc
 
-def normint_calc(nTerms, m_sumCoherently):
+def normint_calc(nTerms, coh_pairs):
 
     """
     Similar pattern to intensity_calc but since our static arrays (normalization integrals)
@@ -99,40 +101,39 @@ def normint_calc(nTerms, m_sumCoherently):
     """
 
     @jax.jit
-    def _normInt_calc(cTmp, ampInts, normInts):
+    def __normInt_calc(carry, triple):
 
-        normInt = 0
+        i, j, sym_factor = triple
+        cVRe, cVIm, ampInts, normInts = carry
+
+        # V * conj(V) = (a + ib) * (c - id) = ac + bd + i(bc - ad)
+        cViVjRe = cVRe[i] * cVRe[j] + cVIm[i] * cVIm[j]
+        cViVjIm = cVIm[i] * cVRe[j] - cVRe[i] * cVIm[j]
+
+        cViVjRe = sym_factor * cViVjRe
+        cViVjIm = sym_factor * cViVjIm
+
+        reNI = normInts[i, j].real
+        imNI = normInts[i, j].imag
+
+        thisTerm = sym_factor * (cViVjRe * reNI - cViVjIm * imNI) 
+        
+        return carry, thisTerm
+
+    @jax.jit
+    def _normInt_calc(cTmp, ampInts, normInts):
 
         cVRe = cTmp[0::2]
         cVIm = cTmp[1::2]
 
-        for i in range(nTerms):
-            for j in range(i + 1):
+        carry = (cVRe, cVIm, ampInts, normInts)
 
-                thisTerm = 0
+        _, terms = jax.lax.scan(__normInt_calc, carry, coh_pairs)
 
-                # Sum over coherent sectors only
-                if m_sumCoherently[i][j] != 1:
-                    continue
-
-                # V * conj(V) = (a + ib) * (c - id) = ac + bd + i(bc - ad)
-                cViVjRe = cVRe[i] * cVRe[j] + cVIm[i] * cVIm[j]
-                cViVjIm = cVIm[i] * cVRe[j] - cVRe[i] * cVIm[j]
-
-                reNI = normInts[i, j].real
-                imNI = normInts[i, j].imag
-
-                thisTerm += (cViVjRe * reNI - cViVjIm * imNI) 
-
-                if i != j: thisTerm *= 2
-
-                normInt += thisTerm
-
-        return normInt
+        return jnp.sum(terms)
 
     return _normInt_calc
 
-# Should already be binned
 class Likelihood:
 
     def __init__(self, yaml_file):
@@ -173,13 +174,11 @@ class Likelihood:
         self.nAccs = normint_src["nAccs"] # ~ (nmbMasses, nmbTprimes) Number of accmc weighted events
         self.nTerms = normint_src["nTerms"] # ~ (nmbReactions) length of termss
         self.normint_terms = normint_src["terms"] # ~ (nmbAmps) List of strings containing term names (i.e. the Zlm partial waves amplitudes)
-        self.m_sumCoherently = normint_src["m_sumCoherently"] # ~ (nmbMasses, nmbTprimes, nTerms, nTerms) Coherent sum of terms
+        self.m_sumCoherently = jnp.array(normint_src["m_sumCoherently"]) # ~ (nmbMasses, nmbTprimes, nTerms, nTerms) Coherent sum of terms
+        self.coh_pairs = generate_pairs(self.m_sumCoherently) # ~ (nmbPairs, 2) Pairs of coherent terms
         self.ampIntss = normint_src["ampIntss"] # ~ (nmbReactions, nmbMasses, nmbTprimes, nmbAmps, nmbAmps) Amplitude integrals
         self.normIntss = normint_src["normIntss"] # ~ (nmbReactions, nmbMasses, nmbTprimes, nmbAmps, nmbAmps) Normalized integrals
         self.normint_files = normint_src["normint_files"] # ~ (nmbMasses, nmbTprimes). List of strings containing normint file names
-
-        print(self.m_sumCoherently)
-        exit()
 
         # Ensure the ording of the terms are the same
         self.ampvec_terms = [v[:-3] for v in self.keys if v[-3:] in ["_re", "_im"]]
@@ -208,15 +207,15 @@ class Likelihood:
                     subArray = self.data[:, start:stop]
                     self.fDStarts.append(start)
                     self.fDStops.append(stop)
-                    self.fDIntens.append(intensity_calc(subArray, self.wi, self.nTerms, self.m_sumCoherently))
+                    self.fDIntens.append(intensity_calc(subArray, self.wi, self.nTerms, self.coh_pairs))
                     if self.bkgndexist:
                         start = self.starts["bkgnd"][rbin][mbin][tbin]
                         stop = self.stops["bkgnd"][rbin][mbin][tbin]
                         subArray = self.bkgnd[:, start:stop]
                         self.fBStarts.append(start)
                         self.fBStops.append(stop)
-                        self.fBIntens.append(intensity_calc(subArray, self.wi, self.nTerms, self.m_sumCoherently))
-        self.fNormInt = normint_calc(self.nTerms, self.m_sumCoherently)
+                        self.fBIntens.append(intensity_calc(subArray, self.wi, self.nTerms, self.coh_pairs))
+        self.fNormInt = normint_calc(self.nTerms, self.coh_pairs)
 
         self.fDStarts = jnp.array(self.fDStarts)
         self.fDStops = jnp.array(self.fDStops)
@@ -323,10 +322,9 @@ for i in range(6):
     nll = likMan.likelihood(params[i])
     # print(nll)
 logger.info(f"Time taken: {time.time() - start_time}")
-
 start_time = time.time()
 for i in range(6):
     nll = likMan.likelihood(params[i])
-    # print(nll)
+    print(nll)
 logger.info(f"Time taken: {time.time() - start_time}")
 # log.info(nll)
