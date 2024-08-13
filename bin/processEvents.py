@@ -81,17 +81,17 @@ if __name__ == "__main__":
     start_time = time()
 
     # ############################################################################
-    # # STEP 1) Ask AmpTools to dump ampvecs and normint to a ROOT file and a text file respectively
-    # if args.ncores > 1:
-    #     print(f"\nProcessing {len(cfgfiles)} config files using {args.ncores} processes...\n")
-    #     pool_args = [(cfgfile, verbose) for cfgfile in cfgfiles]
-    #     with Pool(args.ncores) as p:
-    #         p.map(extract_normint_ampvecs, pool_args)
-    # else:
-    #     print(f"\nProcessing {len(cfgfiles)} config files...\n")
-    #     for cfgfile in cfgfiles:
-    #         extract_normint_ampvecs( (cfgfile, verbose) )
-    # print("\nAll config files have been processed!")
+    # STEP 1) Ask AmpTools to dump ampvecs and normint to a ROOT file and a text file respectively
+    if args.ncores > 1:
+        print(f"\nProcessing {len(cfgfiles)} config files using {args.ncores} processes...\n")
+        pool_args = [(cfgfile, verbose) for cfgfile in cfgfiles]
+        with Pool(args.ncores) as p:
+            p.map(extract_normint_ampvecs, pool_args)
+    else:
+        print(f"\nProcessing {len(cfgfiles)} config files...\n")
+        for cfgfile in cfgfiles:
+            extract_normint_ampvecs( (cfgfile, verbose) )
+    print("\nAll config files have been processed!")
 
     ############################################################################
     # STEP 2) Restructure ampvecs and normints into arrays and save to pkl files
