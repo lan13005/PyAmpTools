@@ -8,8 +8,8 @@ import numpy as np
 import uproot as up
 from omegaconf import OmegaConf
 
-pat_dropReac = re.compile(r"(?<=reaction_\d{3}_).*")
-fullname = "{r}_{t}" # (r)eactionName and (t)ermName
+pat_dropreac = re.compile(r'[^.]*\.(.*)')
+fullname = "{r}.{t}" # (r)eactionName and (t)ermName
 
 def load_root(fname, treename):
     with up.open(fname) as f:
@@ -58,7 +58,7 @@ def restructure_amps(yaml_file, treename="kin"):
         ######################################################
 
         starts[ftype] = [0]
-        terms = None
+        parts = None
 
         skip_cols = ["weight", "bin"]
 
@@ -73,19 +73,19 @@ def restructure_amps(yaml_file, treename="kin"):
                     nentries = len(data[list(data.keys())[0]])
                     data['bin'] = np.ones(nentries, dtype=int) * k
 
-                    if terms is None:
-                        terms = []
+                    if parts is None:
+                        parts = []
                         for key in data.keys():
-                            match = re.search(pat_dropReac, key)
-                            if match: terms.append(match.group())
-                            else: terms.append(key) # i.e. weight branch
+                            match = pat_dropreac.search(key)
+                            if match: parts.append(match.group(1))
+                            else: parts.append(key) # i.e. weight branch
 
                     starts[ftype].append(starts[ftype][-1] + nentries)
                     if ftype not in values:
                         values[ftype] = {}
-                        for key in terms:
+                        for key in parts:
                             values[ftype][key] = []
-                    for key in terms:
+                    for key in parts:
                         if key in skip_cols:
                             data_key = key
                         else:
@@ -101,28 +101,28 @@ def restructure_amps(yaml_file, treename="kin"):
 
     print()
 
-    # Check order of terms are exactly the same
+    # Check order of parts are exactly the same
     # this ensures the arrays are in the same order
-    termNames = list(values[ftypes[0]].keys())
+    partNames = list(values[ftypes[0]].keys())
     for ftype in ftypes[1:]:
-        if list(values[ftype].keys()) != termNames:
-            raise ValueError(f"Terms do not match: {list(values[ftype].keys())} != {termNames}")
+        if list(values[ftype].keys()) != partNames:
+            raise ValueError(f"parts do not match: {list(values[ftype].keys())} != {partNames}")
 
-    # NOTE: Check if any terms are all zeros. If so, drop them.
+    # NOTE: Check if any parts are all zeros. If so, drop them.
     # We can do this if we start running into IO problems
-    drop_terms = []
+    drop_parts = []
     for ftype in ftypes:
         for key in values[ftype].keys():
             allzeros = np.allclose(values[ftype][key], 0)
             if allzeros:
-                drop_terms.append((ftype, key))
-    if len(drop_terms) > 0:
+                drop_parts.append((ftype, key))
+    if len(drop_parts) > 0:
         print("**********************************************************************************")
         print("The following arrays are all zeros. Consider dropping them to save space.")
-        print("  Note: This is expected for some amplitudes used by AmpTools, i.e.e Zlm amplitude")
-        print("  since these are the associated terms that enter in the 4 different sum")
+        print("  Note: This is expected for some amplitudes used by AmpTools, i.e. Zlm amplitude")
+        print("  since these are the associated parts that enter in the 4 different sum")
         print("**********************************************************************************")
-        for ftype, key in drop_terms:
+        for ftype, key in drop_parts:
             print(f"({ftype}, {key})")
 
 
@@ -140,9 +140,9 @@ def restructure_amps(yaml_file, treename="kin"):
     starts = {k: np.array(v).reshape(nmbReactions, nmbMasses, nmbTprimes, order="F") for k, v in starts.items()}
     stops = {k: np.array(v).reshape(nmbReactions, nmbMasses, nmbTprimes, order="F") for k, v in stops.items()}
 
-    # order of termNames is the index order of the values
+    # order of partNames is the index order of the values
     data = {
-        "termNames": termNames,
+        "partNames": partNames,
         "starts": starts,
         "stops": stops,
     }
