@@ -13,7 +13,9 @@ import time
 import numpy as np
 from omegaconf import OmegaConf
 
-log.basicConfig(level=log.INFO, format='%(asctime)s| %(message)s', datefmt='%H:%M:%S')
+# ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+log.basicConfig(level=log.WARNING, format='%(asctime)s| %(message)s', datefmt='%H:%M:%S')
+jax.config.update("jax_enable_x64", True)
 
 # Mark wi, numTerms as static so jax does not trace them
 # @partial(jax.pmap) # , static_broadcasted_argnums=(1, 2, 3))
@@ -32,7 +34,7 @@ log.basicConfig(level=log.INFO, format='%(asctime)s| %(message)s', datefmt='%H:%
 # have to ensure number of len(starts) == reaction * nmbMasses * nmbTprimes. Perhaps off by 1 since we prepend 0
 # nreactions
 
-def intensity_calc(array, wi, nTerms):
+def intensity_calc(array, wi, nTerms, m_sumCoherently):
 
     """
     Design:
@@ -45,18 +47,25 @@ def intensity_calc(array, wi, nTerms):
         This will not allow us to output intensities per event since the output shape will be different
     """
     
-    @jax.jit
+    # @jax.jit
     def _intensity_calc(cTmp):
 
-        intensities = jnp.zeros(array.shape[-1])
+        m_iNTrueEvents = array.shape[-1]
+        intensities = jnp.zeros(m_iNTrueEvents)
 
         cVRe = cTmp[0::2]
         cVIm = cTmp[1::2]
 
+        # NOTE: consider using jax.lax.scan to make looping better. Can parallelize better and stores intermediate values
+        # Jax unrolls loops adding them to the computational graph. Inherently sequential
         for i in range(nTerms):
             for j in range(i + 1):
 
-                # (a + ib) * (c - id) = ac + bd + i(bc - ad)
+                # Sum over coherent sectors only
+                if m_sumCoherently[i][j] != 1:
+                    continue
+
+                # V * conj(V) = (a + ib) * (c - id) = ac + bd + i(bc - ad)
                 cViVjRe = cVRe[i] * cVRe[j] + cVIm[i] * cVIm[j]
                 cViVjIm = cVIm[i] * cVRe[j] - cVRe[i] * cVIm[j]
 
@@ -67,18 +76,27 @@ def intensity_calc(array, wi, nTerms):
                     _cViVjRe = cViVjRe
                     _cViVjIm = cViVjIm
 
+                # This is a scaling of the intensity so that the "data term"
+                # in the ln likelihood grows like N instead of N*ln(N) -- this
+                # makes the scaling consistent with the norm int term, but
+                # shifts the likelihood at minimum.  This may be bothersome
+                # to users comparing across versions so leave an option for
+                # turning it off at compile time.
+                _cViVjRe /= m_iNTrueEvents
+                _cViVjIm /= m_iNTrueEvents
+
                 cAiAjRe =  array[2*i] * array[2*j] + array[2*i+1] * array[2*j+1]
                 cAiAjIm = -array[2*i] * array[2*j+1] + array[2*i+1] * array[2*j]
 
                 intensities += (_cViVjRe * cAiAjRe - _cViVjIm * cAiAjIm)
 
-        intensities = intensities * array[wi] / jnp.sum(array[wi], axis=-1)
+        intensities *= array[wi]
 
         return intensities
 
     return _intensity_calc
 
-def normint_calc(nTerms):
+def normint_calc(nTerms, m_sumCoherently):
 
     """
     Similar pattern to intensity_calc but since our static arrays (normalization integrals)
@@ -86,7 +104,7 @@ def normint_calc(nTerms):
     Jax will not need to retrace the function i think. Only one jit compiled function will be needed
     """
 
-    @jax.jit
+    # @jax.jit
     def _normInt_calc(cTmp, ampInts, normInts):
 
         normInt = 0
@@ -97,21 +115,24 @@ def normint_calc(nTerms):
         for i in range(nTerms):
             for j in range(i + 1):
 
-                # (a + ib) * (c - id) = ac + bd + i(bc - ad)
+                thisTerm = 0
+
+                # Sum over coherent sectors only
+                if m_sumCoherently[i][j] != 1:
+                    continue
+
+                # V * conj(V) = (a + ib) * (c - id) = ac + bd + i(bc - ad)
                 cViVjRe = cVRe[i] * cVRe[j] + cVIm[i] * cVIm[j]
                 cViVjIm = cVIm[i] * cVRe[j] - cVRe[i] * cVIm[j]
-
-                if i != j:
-                    _cViVjRe = 2 * cViVjRe
-                    _cViVjIm = 2 * cViVjIm
-                else:
-                    _cViVjRe = cViVjRe
-                    _cViVjIm = cViVjIm
 
                 reNI = normInts[i, j].real
                 imNI = normInts[i, j].imag
 
-                normInt += (_cViVjRe * reNI - _cViVjIm * imNI) 
+                thisTerm += (cViVjRe * reNI - cViVjIm * imNI) 
+
+                if i != j: thisTerm *= 2
+
+                normInt += thisTerm
 
         return normInt
 
@@ -140,7 +161,7 @@ class Likelihood:
 
         self.starts = amp_src["starts"]
         self.stops = amp_src["stops"]
-        self.keys = amp_src["termNames"] # ~ (2*nmbAmps + 2) real and imaginary parts of complex terms + weight + bin
+        self.keys = amp_src["partNames"] # ~ (2*nmbAmps + 2) real and imaginary parts of complex terms + weight + bin
         self.wi = self.keys.index("weight") # wi, bi, nTerms should never change. if using in jax, no need to re-jit
         self.bi = self.keys.index("bin")
         self.nTerms = len(self.keys) // 2 - 1 
@@ -148,23 +169,29 @@ class Likelihood:
         self.data = amp_src["data"]
         self.accmc = amp_src["accmc"]
         self.genmc = amp_src["genmc"]
-        self.m_sumDataWeights = jnp.sum(self.data[self.wi])
-        self.m_sumAccWeights = jnp.sum(self.accmc[self.wi])
-        self.m_sumGenWeights = jnp.sum(self.genmc[self.wi])
         self._check_data_shape()
 
         self.bkgnd = amp_src.get("bkgnd") # get is load key safe
         self.bkgndexist = self.bkgnd is not None
-        self.m_sumBkgWeights = jnp.sum(self.bkgnd[self.wi]) if self.bkgndexist else 0
 
         self.reactions = normint_src["reactions"] # ~ (nmbMasses, nmbTprimes) List of strings containing reaction names
         self.nGens = normint_src["nGens"] # ~ (nmbMasses, nmbTprimes) # Number of genmc events
         self.nAccs = normint_src["nAccs"] # ~ (nmbMasses, nmbTprimes) Number of accmc weighted events
         self.nTerms = normint_src["nTerms"] # ~ (nmbReactions) length of termss
-        self.terms = normint_src["terms"] # ~ (nmbAmps) List of strings containing term names (i.e. the Zlm partial waves amplitudes)
-        self.ampIntss = normint_src["ampIntss"] # ~ (nmbMasses, nmbTprimes, nmbAmps, nmbAmps) Amplitude integrals
-        self.normIntss = normint_src["normIntss"] # ~ (nmbMasses, nmbTprimes, nmbAmps, nmbAmps) Normalized integrals
+        self.normint_terms = normint_src["terms"] # ~ (nmbAmps) List of strings containing term names (i.e. the Zlm partial waves amplitudes)
+        self.m_sumCoherently = normint_src["m_sumCoherently"] # ~ (nmbMasses, nmbTprimes, nTerms, nTerms) Coherent sum of terms
+        self.ampIntss = normint_src["ampIntss"] # ~ (nmbReactions, nmbMasses, nmbTprimes, nmbAmps, nmbAmps) Amplitude integrals
+        self.normIntss = normint_src["normIntss"] # ~ (nmbReactions, nmbMasses, nmbTprimes, nmbAmps, nmbAmps) Normalized integrals
         self.normint_files = normint_src["normint_files"] # ~ (nmbMasses, nmbTprimes). List of strings containing normint file names
+
+        # Ensure the ording of the terms are the same
+        self.ampvec_terms = [v[:-3] for v in self.keys if v[-3:] in ["_re", "_im"]]
+        self.ampvec_terms = list(dict.fromkeys(self.ampvec_terms)) # remove duplicates
+        self.normint_terms = [".".join(v.split(".")[1:]) for v in self.normint_terms]
+        if self.ampvec_terms != self.normint_terms:
+            log.error("Ampvec terms and normint terms do not match!")
+            exit(1)
+        self.terms = self.normint_terms
 
         # nifty production coefficient
         self.cV = jnp.full( (self.nmbMasses, self.nmbTprimes, self.nTerms*2), 1 ) # real/imag parts interleaved as all 1s
@@ -184,20 +211,20 @@ class Likelihood:
                     subArray = self.data[:, start:stop]
                     self.fDStarts.append(start)
                     self.fDStops.append(stop)
-                    self.fDIntens.append(intensity_calc(subArray, self.wi, self.nTerms)) 
-                    start = self.starts["bkgnd"][rbin][mbin][tbin]
-                    stop = self.stops["bkgnd"][rbin][mbin][tbin]
-                    subArray = self.bkgnd[:, start:stop]
-                    self.fBStarts.append(start)
-                    self.fBStops.append(stop)
-                    self.fBIntens.append(intensity_calc(subArray, self.wi, self.nTerms))
-        self.fNormInt = normint_calc(self.nTerms)
+                    self.fDIntens.append(intensity_calc(subArray, self.wi, self.nTerms, self.m_sumCoherently))
+                    if self.bkgndexist:
+                        start = self.starts["bkgnd"][rbin][mbin][tbin]
+                        stop = self.stops["bkgnd"][rbin][mbin][tbin]
+                        subArray = self.bkgnd[:, start:stop]
+                        self.fBStarts.append(start)
+                        self.fBStops.append(stop)
+                        self.fBIntens.append(intensity_calc(subArray, self.wi, self.nTerms, self.m_sumCoherently))
+        self.fNormInt = normint_calc(self.nTerms, self.m_sumCoherently)
 
-        # print(self.fDStarts)
-        # print(self.fDStops)
-        # print(self.data.shape)
-        # print(Dbins)
-        # exit()
+        self.fDStarts = jnp.array(self.fDStarts)
+        self.fDStops = jnp.array(self.fDStops)
+        self.fBStarts = jnp.array(self.fBStarts)
+        self.fBStops = jnp.array(self.fBStops)
     
     def likelihood(self, params):
 
@@ -216,7 +243,8 @@ class Likelihood:
         fDStops = self.fDStops[k*self.nmbReactions:(k+1)*self.nmbReactions]
 
         for start, stop, fIntens in zip(fDStarts, fDStops, fDIntens):
-            thisTerm = jnp.sum ( self.data[self.wi, start:stop] * jnp.log(fIntens(cV) / self.data[self.wi, start:stop]) )
+            intens = fIntens(cV)
+            thisTerm = jnp.sum ( self.data[self.wi, start:stop] * jnp.log(intens / self.data[self.wi, start:stop]) )
             sumLnI_data += thisTerm
             log.info(f"sumLnI_data += {thisTerm}")
         
@@ -235,12 +263,18 @@ class Likelihood:
 
         ########################## NORM INT TERM ###########################
         normTerm = 0
-        for rbin in range(self.nmbReactions):
+        bStarts = self.fBStarts[k*self.nmbReactions:(k+1)*self.nmbReactions]
+        bStops = self.fBStops[k*self.nmbReactions:(k+1)*self.nmbReactions]
+        dStarts = self.fDStarts[k*self.nmbReactions:(k+1)*self.nmbReactions]
+        dStops = self.fDStops[k*self.nmbReactions:(k+1)*self.nmbReactions]
+        for rbin, bStart, bStop, dStart, dStop in zip(range(self.nmbReactions), bStarts, bStops, dStarts, dStops):
             thisTerm = self.fNormInt(cV, self.ampIntss[rbin, mbin, tbin], self.normIntss[rbin, mbin, tbin])
             if self.bkgndexist:
-                nPred = thisTerm
-                thisTerm = (self.m_sumDataWeights - self.m_sumBkgWeights) * jnp.log(thisTerm)
-                thisTerm += nPred - (self.m_sumDataWeights * jnp.log(nPred))
+                m_sumBkgWeights = jnp.sum(self.bkgnd[self.wi, bStart:bStop])
+                m_sumDataWeights = jnp.sum(self.data[self.wi, dStart:dStop])
+                nPred = thisTerm + m_sumBkgWeights
+                thisTerm = (m_sumDataWeights - m_sumBkgWeights) * jnp.log(thisTerm)
+                thisTerm += nPred - (m_sumDataWeights * jnp.log(nPred))
             normTerm += thisTerm
             log.info(f"normTerm += {thisTerm}")
         log.info(f"normTerm: {normTerm}")
@@ -282,8 +316,30 @@ for tbin in range(likMan.nmbTprimes):
     for mbin in range(likMan.nmbMasses):
         params.append( ((mbin, tbin), jnp.full(2*likMan.nTerms, 1)) )
 
-intensity = likMan.likelihood(params[0])
-log.info(intensity)
+print(f"params: {params}")
+
+start_time = time.time()
+for i in range(6):
+    nll = likMan.likelihood(params[i])
+    print(nll)
+log.info(f"Time taken: {time.time() - start_time}")
+# log.info(nll)
+
 # 
 # log.info(likelihood.data[-1])
 
+# sumLnI data = -6449.16
+# sumLnI bkgnd = -3007.53
+# a_dataTerm = -3441.63
+# a_normIntTerm = -5961.97
+# sumLnI data = -6449.16
+# sumLnI bkgnd = -3007.53
+# -5040.668310474681
+
+# 09:33:10| sumLnI_data += -5311.015038663371
+# 09:33:10| sumLnI_bkgnd += -2526.3281891523775
+# 09:33:10| dataTerm: -2784.686849510994
+# 09:33:10| normTerm += -5305.191417700269
+# 09:33:10| normTerm: -5305.191417700269
+# 09:33:10| Time taken: 0.31047487258911133
+# 09:33:10| -5041.009136378550
