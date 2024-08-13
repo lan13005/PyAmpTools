@@ -437,3 +437,36 @@ def setPlotStyle(
     plt.rc("ytick", labelsize=small_size)  # fontsize of the tick labels
     plt.rc("legend", fontsize=small_size)  # legend fontsize
     plt.rc("figure", titlesize=big_size)  # fontsize of the figure title
+
+
+class Silencer:
+
+    def __init__(self, show_stdout=False, show_stderr=False):
+        self.show_stdout = show_stdout
+        self.show_stderr = show_stderr
+
+    def __enter__(self):
+        if not self.show_stdout:
+            # Save the original stdout file descriptor
+            self._original_stdout_fd = os.dup(1)
+            # Replace stdout with a file descriptor to /dev/null
+            self._devnull_fd = os.open(os.devnull, os.O_WRONLY)
+            os.dup2(self._devnull_fd, 1)
+        if not self.show_stderr:
+            # Save the original stderr file descriptor
+            self._original_stderr_fd = os.dup(2)
+            # Replace stderr with a file descriptor to /dev/null
+            self._devnull_fd = os.open(os.devnull, os.O_WRONLY)
+            os.dup2(self._devnull_fd, 2)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if not self.show_stdout:
+            # Restore the original stdout file descriptor
+            os.dup2(self._original_stdout_fd, 1)
+            os.close(self._devnull_fd)
+            os.close(self._original_stdout_fd)
+        if not self.show_stderr:
+            # Restore the original stderr file descriptor
+            os.dup2(self._original_stderr_fd, 2)
+            os.close(self._devnull_fd)
+            os.close(self._original_stderr_fd)
