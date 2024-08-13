@@ -1,4 +1,4 @@
-external/Distribution/DataReader.h #if !(defined DATAREADER)
+#if !(defined DATAREADER)
 #define DATAREADER
 
 //******************************************************************************

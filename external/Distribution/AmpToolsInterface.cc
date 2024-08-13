@@ -49,6 +49,9 @@
 #include "IUAmpTools/AmpToolsInterface.h"
 #include "IUAmpTools/FitResults.h"
 
+#include "TFile.h"
+#include "TTree.h"
+
 #include "IUAmpTools/report.h"
 
 const char* AmpToolsInterface::kModule = "AmpToolsInterface";
@@ -471,6 +474,110 @@ AmpToolsInterface::randomizeParameter( const string& parName, float min, float m
   invalidateAmps();
 }
 
+// Save the complex numbers of the decay amplitudes
+void 
+AmpToolsInterface::saveAmps(
+  ReactionInfo* reaction,
+  std::vector<string>& saved_files,
+  string suffix=""){
+
+    string reactionName(reaction->reactionName());
+    // AmpVecs store complex decay amplitudes. LikelihoodCalculator owns the signal and background
+    // NormIntInterface owns the generated and accepted MC
+    LikelihoodCalculator* likCalc = likelihoodCalculator(reactionName);
+    NormIntInterface* normInt = normIntInterface(reactionName);
+    AmpVecs& ampVecsSignal = likCalc->ampVecsSignal();
+    AmpVecs& ampVecsGenMC  = normInt->ampVecsGenMC();
+    AmpVecs& ampVecsAccMC  = normInt->ampVecsAccMC();
+    AmpVecs& ampVecsBkgnd  = likCalc->ampVecsBkgnd();
+    std::vector<AmpVecs*> ampVecs = {&ampVecsSignal, &ampVecsGenMC, &ampVecsAccMC, &ampVecsBkgnd};
+
+    // Note. Order must be the same as above
+    vector<string> fnames = {};
+    fnames.push_back(reaction->data().second[0]);
+    fnames.push_back(reaction->genMC().second[0]);
+    fnames.push_back(reaction->accMC().second[0]);
+    bool bkgndFileExists = reaction->bkgnd().first.empty() == false;
+    if (bkgndFileExists) // Only bkgnd file is optional
+      fnames.push_back(reaction->bkgnd().second[0]);
+
+    // DUMP ALL COMPLEX AMPLITUDES TO A ROOT FILE
+    // NOTE: for the Zlm amplitudes, I think the terms are purely real since we do this 
+    //       separation in 4 different coherent sums
+    //       Assume it should be complex and reduce the file later in post
+    for (int i=0; i<fnames.size(); i++){
+      AmpVecs* ampVec = ampVecs[i];
+      string fname = fnames[i];
+      bool alreadySaved = std::find(saved_files.begin(), saved_files.end(), fname) != saved_files.end();
+      if (i==3 && !bkgndFileExists || alreadySaved)
+        continue;
+      saved_files.push_back(fname);
+      if ( fname.substr(fname.size()-5, fname.size()) != ".root" )
+        assert( fname.substr(fname.size()-5, fname.size()) == ".root" );
+      fname = fname.substr(0, fname.size()-5);
+      saveAmpVecsToTree(*ampVec, fname, suffix);
+    }
+}
+
+// Write the ampvecs object to a root file
+void 
+AmpToolsInterface::saveAmpVecsToTree(
+  AmpVecs& m_ampvec, 
+  string fname, 
+  string suffix){
+
+    report( DEBUG, kModule ) << "Saving copy of " << fname << " to " << fname+suffix+".root" << endl;
+
+    // TFile *inputFile = new TFile((fname+".root").c_str(), "READ");
+    // if (!inputFile || inputFile->IsZombie()) {
+    //     std::cerr << "Error opening input file\n";
+    //     return;
+    // }
+    // TTree *inputTree = (TTree*)inputFile->Get("kin");
+
+    // Save as a hidden file. IDK if this is a good idea.
+    //   We would very like to post-process the root files and store them in a better
+    //   data structure that has better read speed
+    TFile *outputFile = new TFile((fname+suffix+".root").c_str(), "RECREATE");
+    TTree *outputTree = new TTree("kin", "kin");
+
+    int iNTerms = m_ampvec.m_iNTerms;
+    vector<string>& ampNames = m_ampvec.m_termNames;
+
+    // Replace all occurrences of "::" with "_"
+    for (auto& ampName : ampNames) {
+        size_t pos;
+        while ((pos = ampName.find("::")) != std::string::npos) {
+            ampName.replace(pos, 2, ".");
+        }
+    }
+
+    double weight;
+    std::vector<double> ta_re(iNTerms);
+    std::vector<double> ta_im(iNTerms);
+    for (int iAmp=0; iAmp<iNTerms; iAmp++){
+      string ampName = ampNames[iAmp];
+      outputTree->Branch((ampName+"_re").c_str(), &ta_re[iAmp], (ampName+"_re/D").c_str());
+      outputTree->Branch((ampName+"_im").c_str(), &ta_im[iAmp], (ampName+"_im/D").c_str());
+    }
+    outputTree->Branch("weight", &weight, "weight/D");
+
+    int m_iNEvents = m_ampvec.m_iNEvents;
+    for (int iEvent=0; iEvent<m_iNEvents; iEvent++){
+
+      weight = m_ampvec.m_pdWeights[iEvent];
+      for (int iAmp=0; iAmp<iNTerms; iAmp++){
+        ta_re[iAmp] = m_ampvec.m_pdAmps[2*m_iNEvents*iAmp+2*iEvent];
+        ta_im[iAmp] = m_ampvec.m_pdAmps[2*m_iNEvents*iAmp+2*iEvent+1];
+      }
+      outputTree->Fill();
+    }
+
+    outputFile->Write();
+    outputFile->Close();
+}
+
+
 void
 AmpToolsInterface::finalizeFit( const string& tag ){
 
@@ -478,8 +585,10 @@ AmpToolsInterface::finalizeFit( const string& tag ){
   // save fit parameters
   // ************************
 
-  m_fitResults->saveResults();
-  m_fitResults->writeResults( m_configurationInfo->fitOutputFileName( tag ) );
+  if (tag != ""){
+    m_fitResults->saveResults();
+    m_fitResults->writeResults( m_configurationInfo->fitOutputFileName( tag ) );
+  }
 
   // ************************
   // save normalization integrals
@@ -490,13 +599,26 @@ AmpToolsInterface::finalizeFit( const string& tag ){
     ReactionInfo* reaction = m_configurationInfo->reactionList()[irct];
 
     if( !reaction->normIntFileInput() ){
+      // cout << "Exporting normInt cache for reaction " << reaction->reactionName() << endl;
       string reactionName(reaction->reactionName());
       NormIntInterface* normInt = normIntInterface(reactionName);
-      // the call to FitResults::writeResults will force a cache update
-      // there is no need to do it twice
-      //      if (normInt->hasAccessToMC()) normInt->forceCacheUpdate();
+
+      if (tag == ""){
+        // the call to FitResults::writeResults will force a cache update
+        // there is no need to do it twice
+        if (normInt->hasAccessToMC())
+          normInt->forceCacheUpdate();
+      }
       normInt->exportNormIntCache( reaction->normIntFile() );
     }
+  }
+
+  // Do this after dumping normalization integrals since we need to force cache update first
+  string suffix("_amps");
+  std::vector<string> saved_files = {};
+  for (unsigned int irct = 0; irct < m_configurationInfo->reactionList().size(); irct++){
+    ReactionInfo* reaction = m_configurationInfo->reactionList()[irct];
+    saveAmps( reaction, saved_files, suffix );
   }
 }
 
@@ -915,7 +1037,7 @@ AmpToolsInterface::decayAmplitude (int iEvent, string ampName,
   }
 
   if (iEvent >= m_ampVecs[iDataSet].m_iNTrueEvents || iEvent < 0){
-    report( ERROR, kModule ) << "out of bounds in decayAmplitude call" << endl;
+    report( ERROR, kModule ) << "out of bounds in decafinyAmplitude call" << endl;
     assert(false);
   }
 
@@ -928,9 +1050,31 @@ AmpToolsInterface::decayAmplitude (int iEvent, string ampName,
 
   return complex<double>
   (m_ampVecs[iDataSet].m_pdAmps[2*m_ampVecs[iDataSet].m_iNEvents*iAmp+2*iEvent],
-   m_ampVecs[iDataSet].m_pdAmps[2*m_ampVecs[iDataSet].m_iNEvents*iAmp+2*iEvent+1]);
+    m_ampVecs[iDataSet].m_pdAmps[2*m_ampVecs[iDataSet].m_iNEvents*iAmp+2*iEvent+1]);
 
 }
+
+// pair< double, complex<double> >
+// AmpToolsInterface::decayAmplitudeAndWeight const(
+//   int iEvent, string ampName,
+//   unsigned int iDataSet) const {
+
+//   if (iDataSet >= MAXAMPVECS){
+//     report( ERROR, kModule ) << "data set index out of range" << endl;
+//     assert(false);
+//   }
+
+//   if (iEvent >= m_ampVecs.m_iNTrueEvents || iEvent < 0){
+//     report( ERROR, kModule ) << "out of bounds in decayAmplitude call" << endl;
+//     assert(false);
+//   }
+
+//   complex<double> amp = decayAmplitude(iEvent, ampName, iDataSet);
+//   double weight = m_ampVecs.m_pdWeights[iEvent];
+
+//   return pair< double, complex<double> >( weight, amp );
+// }
+
 
 complex<double>
 AmpToolsInterface::scaledProductionAmplitude (string ampName, unsigned int iDataSet) const {

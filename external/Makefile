@@ -105,6 +105,8 @@ distribute_makefiles:
 	cp $(SRC_DIRS)/GradientCalculator.* AmpTools/AmpTools/IUAmpTools
 ### Allow getting of m_termNames
 	cp $(SRC_DIRS)/NormIntInterface.h AmpTools/AmpTools/IUAmpTools
+### Allow getting of signal / bkgnd ampvecs
+	cp $(SRC_DIRS)/LikelihoodCalculator.h AmpTools/AmpTools/IUAmpTools
 ### Distribute FSRoot makefiles and src files
 	cp $(SRC_DIRS)/FSROOT_Makefile FSRoot/Makefile
 	cp $(SRC_DIRS)/initialize_fsroot.* FSRoot

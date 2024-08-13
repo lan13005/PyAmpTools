@@ -397,6 +397,12 @@ public:
   complex<double> decayAmplitude (int iEvent, string ampName,
                                   unsigned int iDataSet = 0) const;
 
+  // complex<double> decayAmplitudeAndWeight (int iEvent, string ampName,
+  //                                         unsigned int iDataSet = 0) const;
+
+  void saveAmps( ReactionInfo* reaction, std::vector<string>& saved_files, string suffix );
+  void saveAmpVecsToTree( AmpVecs& m_ampvec, string fname, string suffix );
+
 
   /** Retrieve the production amplitude associated with a given amplitude.
    *  Recall that all amplitudes are defined as

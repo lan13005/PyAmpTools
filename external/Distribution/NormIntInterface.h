@@ -105,6 +105,8 @@ public:
   void setAccEvents( double sumWeights ) { m_sumAccWeights = sumWeights; }
 
   vector< string > getTermNames() const { return m_termNames; }
+  AmpVecs& ampVecsGenMC() { return m_genMCVecs; }
+  AmpVecs& ampVecsAccMC() { return m_accMCVecs; }
 
 protected:
 

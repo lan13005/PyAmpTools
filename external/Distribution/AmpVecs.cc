@@ -374,6 +374,7 @@ void
 AmpVecs::allocateTerms( const IntensityManager& intenMan, bool bAllocIntensity ){
   report( DEBUG, kModule ) << "AmpVecs::allocateTerms() allocating terms" << endl;
   m_iNTerms           = intenMan.getTermNames().size();
+  m_termNames         = intenMan.getTermNames();
   m_maxFactPerEvent   = intenMan.maxFactorStoragePerEvent();
   m_userVarsPerEvent  = intenMan.userVarsPerEvent();
 
