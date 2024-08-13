@@ -72,6 +72,7 @@ def generate_amptools_cfg(
     basereactName,
     particles,
     header=help_header,
+    init_one_val=None,
     datareader="ROOTDataReader",
     add_amp_factor=None,
     append_to_cfg=None,
@@ -99,6 +100,7 @@ def generate_amptools_cfg(
         add_amp_factor (str): Additional factor to add to the amplitude
         append_to_cfg (str): Additional string args to append to the end of the cfg file
         append_to_decay (str): Additional string args to append to the decay factor
+        init_one_val (float, None): If not None, all amplitudes will be set to this value
 
     Returns:
         None, writes a file to cfgFileOutputName
@@ -129,6 +131,7 @@ def generate_amptools_cfg(
             parScale.setFixed(True)
 
         reactionInfo = cfgInfo.createReaction(reactName, particles)  # ReactionInfo*
+        # reactionInfo.setNormIntFile(f"{reactName}.ni", False)
 
         ###################################
         #### SET DATA, GEN, ACC, BKGND ####
@@ -216,12 +219,17 @@ def generate_amptools_cfg(
     ### RANDOMLY INITALIZE AMPLITUDES ###
     #####################################
 
+    bAoV = False
+    if init_one_val is not None:
+        init_one_val = float(init_one_val)
+        bAoV = True
+
     for amp, lines in constraintMap.items():
-        value = random.uniform(0.0, 1.0)
+        value = init_one_val if bAoV else random.uniform(0.0, 1.0)
         if amp in realAmps:
             lines[0].setReal(True)
         else:
-            value += random.uniform(0.0, 1.0) * 1j
+            value += 1j * (init_one_val if bAoV else random.uniform(0.0, 1.0))
         if amp in fixedAmps:
             lines[0].setFixed(True)
         for line in lines[1:]:
@@ -411,6 +419,7 @@ def generate_amptools_cfg_from_dict(yaml_file):
             add_amp_factor=yaml_file["add_amp_factor"].strip(),
             append_to_cfg=yaml_file["append_to_cfg"].strip(),
             append_to_decay=yaml_file["append_to_decay"].strip(),
+            init_one_val=yaml_file["init_one_val"],
         )
 
         generate_success = True
