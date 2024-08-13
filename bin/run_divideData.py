@@ -16,10 +16,12 @@ from pyamptools.utility.general import Timer, dump_yaml, load_yaml
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Divide data into mass bins")
     parser.add_argument("yaml_name", type=str, default="conf/configuration.yaml", help="Path a configuration yaml file")
+    parser.add_argument("-e", "--use_edges", action="store_true", help="Use mass_edges and t_edges from the yaml file. Else recompute")
     parser.add_argument("--nosplit", action="store_true", help="Skip the split_mass step")
     parser.add_argument("--nomerge", action="store_true", help="Skip the merge_bins step")
     args = parser.parse_args()
     yaml_name = args.yaml_name
+    use_edges = args.use_edges
 
     cwd = os.getcwd()
     timer = Timer()
@@ -84,8 +86,8 @@ if __name__ == "__main__":
                     print("  Skipping split_mass")
 
         # Determine mass bin edges based on the first ftype source
-        mass_edges = yaml_file["mass_edges"] if "mass_edges" in yaml_file else None 
-        t_edges = yaml_file["t_edges"] if "t_edges" in yaml_file else None
+        mass_edges = yaml_file["mass_edges"] if "mass_edges" in yaml_file and use_edges else None 
+        t_edges = yaml_file["t_edges"] if "t_edges" in yaml_file and use_edges else None
         nBars = {}
         nBar_errs = {}
         if "nBars" in yaml_file:
@@ -211,6 +213,18 @@ if __name__ == "__main__":
                             search = f"PLACEHOLDER_{ftype.upper()}_{pol}"
                             replace = f"{output_directory}/bin_{k}/{fname}.root"
                             os.system(replace_cmd.format(search, replace, k, k))
+
+
+                    cfg_path = "bin_{0}/bin_{0}.cfg"
+                    reactions = []
+                    with open(cfg_path.format(k), "r") as f:
+                        lines = f.readlines()
+                        for line in lines:
+                            if line.startswith("reaction"):
+                                reactions.append(line.split(" ")[1].strip())
+                    with open(cfg_path.format(k), "a") as f:
+                        for reaction in reactions:
+                            f.write(f"normintfile {reaction} {output_directory}/bin_{k}/{reaction}.ni\n")
 
                     if prepare_for_nifty:
                         os.system(f"touch bin_{k}/seed_nifty.txt")
