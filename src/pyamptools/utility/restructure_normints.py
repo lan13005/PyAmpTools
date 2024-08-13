@@ -16,7 +16,7 @@ from omegaconf import OmegaConf
 # non-zero elements.
 #######################################################################
 
-pat_captureParts = re.compile(r'-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?')
+pat_captureParts = re.compile(r'-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?') # captures (real, imag) parts, apparently
 pat_dropReac = re.compile(r'.*::(.*)') 
 pat_bin = re.compile(r'.*bin_(\d+).*')
 pat_reaction = re.compile(r'.*reaction_(\d+).ni')
@@ -30,6 +30,11 @@ def extract_numbers(filepath):
 
 def complexls(list_of_two_strings):
     return complex(float(list_of_two_strings[0]), float(list_of_two_strings[1]))
+
+def coherenceMatrix(strings):
+    size = len(strings)
+    matrix = [[1 if strings[i] == strings[j] else 0 for j in range(size)] for i in range(size)]
+    return matrix
 
 def restructure_file(fname, verbose=False):
 
@@ -57,7 +62,7 @@ def restructure_file(fname, verbose=False):
 
         normInts = []
         for i in range(nTerms):
-            values = lines[2 + nTerms + i].strip().split('\t')
+            values = lines[2 + 2*nTerms + i].strip().split('\t')
             values = [complexls(re.findall(pat_captureParts, v)) for v in values]
             normInts.append(values)
         normInts = np.array(normInts)
@@ -118,7 +123,7 @@ def restructure_files(
     nterms = nterms[0]
     terms = list(terms)
 
-    terms = [term.replace("::","_") for term in terms]
+    terms = [term.replace("::",".") for term in terms]
 
     reactions = np.array(reactions).reshape(*oshape, order='F')
     nGens = np.array(nGens).reshape(*oshape, order='F')
@@ -164,6 +169,9 @@ def restructure_normints(yaml_file):
 
     polScales = np.full(oshape, 1.0)
 
+    unique_sums = [tuple(x.split(".")[:2]) for x in terms]
+    m_sumCoherently = coherenceMatrix(unique_sums)
+
     with open(f"{base_directory}/normint.pkl", "wb") as f:
         data = {
             "reactions": reactions,
@@ -171,6 +179,7 @@ def restructure_normints(yaml_file):
             "nAccs": nAccs,
             "nTerms": nterms,
             "terms": terms,
+            "m_sumCoherently": m_sumCoherently,
             "ampIntss": ampIntss,
             "normIntss": normIntss,
             "normint_files": normint_files,
