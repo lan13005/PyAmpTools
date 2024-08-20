@@ -26,7 +26,7 @@ def extract_numbers(filepath):
     reaction_match = pat_reaction.search(filepath)
     bin_num = int(bin_match.group(1)) if bin_match else None
     reaction_num = int(reaction_match.group(1)) if reaction_match else None
-    return (reaction_num, bin_num)
+    return (bin_num, reaction_num)
 
 def complexls(list_of_two_strings):
     return complex(float(list_of_two_strings[0]), float(list_of_two_strings[1]))
@@ -72,14 +72,14 @@ def restructure_file(fname, verbose=False):
         if np.allclose(normInts.imag, 0):
             normInts = normInts.real
 
-        percent_zero = np.sum(ampInts==0) / ampInts.size * 100
-        percent_zero = np.sum(normInts==0) / normInts.size * 100
+        percent_zero_ai = np.sum(ampInts==0 ) / ampInts.size * 100
+        percent_zero_ni = np.sum(normInts==0) / normInts.size * 100
 
         if verbose:
             print("----------------------------------------")
             print(f"nGen: {nGen}, nAcc: {nAcc}, nTerms: {nTerms}")
-            print(f"Percentage of zeros in ampInts: {percent_zero}")
-            print(f"Percentage of zeros in normInts: {percent_zero}")
+            print(f"Percentage of zeros in ampInts: {percent_zero_ai}")
+            print(f"Percentage of zeros in normInts: {percent_zero_ni}")
             print("----------------------------------------")
 
     return reaction, nGen, nAcc, nTerms, terms, ampInts, normInts
@@ -187,7 +187,7 @@ def restructure_normints(yaml_file):
         }
         pickle.dump(data, f)
 
-    print(f"Saved normint.pkl to {base_directory}")
+    print(f"\nSaved normint.pkl to {base_directory}")
 
 if __name__ == "__main__":
 
