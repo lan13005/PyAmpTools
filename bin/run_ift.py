@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 
 from pyamptools.utility.general import Timer, dump_yaml, load_yaml
@@ -18,19 +19,19 @@ from pyamptools.utility.general import Timer, dump_yaml, load_yaml
 #       that uses {} to denote variable search paths. ATM we variable interpolate
 #       each part separated by /
 mappings = {
-    "GENERAL.outputFolder": "SRC.nifty.output_directory",
-    "PWA_MANAGER.cfgfiles": "SRC.amptools.output_directory/bin_*/bin_[].cfg",
-    "PWA_MANAGER.bins_per_group": "SRC.bins_per_group",
-    "PWA_MANAGER.accelerator": "SRC.processing.accelerator",
-    "PWA_MANAGER.min_mass": "SRC.min_mass",
-    "PWA_MANAGER.max_mass": "SRC.max_mass",
-    "PWA_MANAGER.nmbMasses": "SRC.n_mass_bins",
-    "PWA_MANAGER.min_tPrime": "SRC.min_t",
-    "PWA_MANAGER.max_tPrime": "SRC.max_t",
-    "PWA_MANAGER.nmbTprimes": "SRC.n_t_bins",
-    "PWA_MANAGER.waveNames": "SRC.waveset",
-    "PWA_MANAGER.n_randomizations": "SRC.amptools.n_randomizations",
-    "PWA_MANAGER.phase_reference": "SRC.phase_reference",
+    # "GENERAL.outputFolder": "SRC.nifty.output_directory",
+    # "PWA_MANAGER.cfgfiles": "SRC.amptools.output_directory/bin_*/bin_[].cfg",
+    # "PWA_MANAGER.bins_per_group": "SRC.bins_per_group",
+    # "PWA_MANAGER.accelerator": "SRC.processing.accelerator",
+    # "PWA_MANAGER.min_mass": "SRC.min_mass",
+    # "PWA_MANAGER.max_mass": "SRC.max_mass",
+    # "PWA_MANAGER.nmbMasses": "SRC.n_mass_bins",
+    # "PWA_MANAGER.min_tPrime": "SRC.min_t",
+    # "PWA_MANAGER.max_tPrime": "SRC.max_t",
+    # "PWA_MANAGER.nmbTprimes": "SRC.n_t_bins",
+    # "PWA_MANAGER.waveNames": "SRC.waveset",
+    # "PWA_MANAGER.n_randomizations": "SRC.amptools.n_randomizations",
+    # "PWA_MANAGER.phase_reference": "SRC.phase_reference",
 }
 
 def get_value_from_src(src_yaml, key_path):
@@ -76,21 +77,26 @@ def set_nested_value_inplace(nested_dict, keys, value, verbose=True):
             current_level[key] = {}
         current_level = current_level[key]
     if verbose:
-        print(f"* Setting {keys[-1]} to {value}")
+        logger.info(f"* Setting {keys[-1]} to {value}")
     current_level[keys[-1]] = value
 
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser(description="Perform IFT fit over all cfg files")
     parser.add_argument("yaml_name", type=str, default="conf/configuration.yaml", help="Path a configuration yaml file")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     parser.add_argument("additional_args", nargs=argparse.REMAINDER, help=argparse.SUPPRESS)
     args = parser.parse_args()
     yaml_name = args.yaml_name
     additional_args = args.additional_args
 
-    print("\n---------------------")
-    print(f"Running {__file__}")
-    print(f"  yaml location: {yaml_name}")
-    print("---------------------\n")
+    logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING, format='%(asctime)s| %(message)s', datefmt='%H:%M:%S')
+    logger = logging.getLogger(__name__)
+
+    logger.info("\n---------------------")
+    logger.info(f"Running {__file__}")
+    logger.info(f"  yaml location: {yaml_name}")
+    logger.info("---------------------\n")
 
     timer = Timer()
     cwd = os.getcwd()
@@ -98,7 +104,7 @@ if __name__ == "__main__":
     src_yaml = load_yaml(yaml_name)
     
     if src_yaml['nifty']['yaml'] is None:
-        print("No NIFTy yaml file specified. Exiting...")
+        logger.info("No NIFTy yaml file specified. Exiting...")
         
     dest_name = src_yaml['nifty']['yaml']
     synchronize = src_yaml['nifty']['synchronize']
@@ -106,9 +112,9 @@ if __name__ == "__main__":
     dest_yaml = load_yaml(dest_name, resolve=False)
 
     if synchronize:
-        print("\n------------------ SYNCHRONIZING YAML FILES ------------------")
-        print(f"Base YAML file used for IFTPWA: {dest_name}")
-        print(f"    will be synchronized with values found in your provided yaml file: {yaml_name}")
+        logger.info("\n------------------ SYNCHRONIZING YAML FILES ------------------")
+        logger.info(f"Base YAML file used for IFTPWA: {dest_name}")
+        logger.info(f"    will be synchronized with values found in your provided yaml file: {yaml_name}")
         for dest_keys, src_keys in mappings.items():
             dest_keys = dest_keys.split(".")
             src_keys = src_keys.split("/")
@@ -118,15 +124,21 @@ if __name__ == "__main__":
             else:
                 src_keys = "/".join(src_keys)
             set_nested_value_inplace(dest_yaml, dest_keys, src_keys, verbose=True)
-        print("--------------------------------------------------------------\n")
+        logger.info("--------------------------------------------------------------\n")
     else:
-        print(f"Base YAML file used for IFTPWA: {dest_name}")
+        logger.info(f"Base YAML file used for IFTPWA: {dest_name}")
 
     dump_yaml(dest_yaml, ".nifty.yaml") # Create "synchronized" yaml file
     if output_directory is not None and not os.path.exists(output_directory):
         os.makedirs(output_directory)
     os.system(f"cp {yaml_name} {output_directory}/.{yaml_name}") # Copy the source yaml file to the output directory
-    os.system(f"iftPwaFit --iftpwa_config .nifty.yaml {' '.join(additional_args)}") # Run IFT pwa fit
+
+    mpi_processes = src_yaml['nifty']['mpi_processes'] if 'mpi_processes' in src_yaml['nifty'] else None
+    if mpi_processes is not None:
+        cmd  = f"mpirun -n {mpi_processes} "
+        cmd += "--mca btl ^openib " # Disable openib
+        cmd += f"iftPwaFit --iftpwa_config .nifty.yaml {' '.join(additional_args)}"
+    os.system(cmd) # Run IFT pwa fit
 
     # TODO: Need to support prior simulation
     # Plotting should also be done
@@ -134,4 +146,4 @@ if __name__ == "__main__":
     
     os.system("rm -f .nifty.yaml") # Cleanup
 
-    print(f"ift| Elapsed time {timer.read()[2]}\n\n")
+    logger.info(f"ift| Elapsed time {timer.read()[2]}\n\n")
