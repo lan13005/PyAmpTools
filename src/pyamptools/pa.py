@@ -32,7 +32,7 @@ def main():
 
     PYAMPTOOLS_HOME = os.environ["PYAMPTOOLS_HOME"]
 
-    print(f"PYAMPTOOLS_HOME: {PYAMPTOOLS_HOME}")
+    # print(f"PYAMPTOOLS_HOME: {PYAMPTOOLS_HOME}")
 
     func_map = {
         # 'command' : (path, description)
@@ -95,9 +95,9 @@ def main():
 
     # Call the script with additional arguments
     command = ["python"] + [cmd_path] + cmd_args
-    print("\n======================================================================================================")
-    print(f'Running command: {" ".join(command)}')
-    print("======================================================================================================\n")
+    # print("\n======================================================================================================")
+    # print(f'Running command: {" ".join(command)}')
+    # print("======================================================================================================\n")
     subprocess.run(command)
 
 

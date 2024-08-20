@@ -18,3 +18,5 @@ benchmark
 tests/samples
 external/AMPTOOLS_AMPS_DATAIO/IN_PROGRESS/
 external/AMPTOOLS_GENERATORS/ccdb
+external/AmpTools
+external/FSRoot

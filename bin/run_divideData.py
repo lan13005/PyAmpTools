@@ -96,7 +96,7 @@ if __name__ == "__main__":
         if "nBar_errs" in yaml_file:
             nBar_errs = yaml_file["nBar_errs"]
             nBar_errs = {key: np.array(nBar_errs[key]) for key in nBar_errs}
-        mc_already_shared = {"data": False, "bkgnd": False, "accmc": False, "genmc": False} if "mc_already_shared" not in yaml_file else yaml_file["mc_already_shared"]
+        mc_already_shared = {"data": False, "bkgnd": False, "accmc": False, "genmc": False} # if "mc_already_shared" not in yaml_file else yaml_file["mc_already_shared"]
 
         if run_split_and_cfg_ceate:
             
@@ -235,7 +235,7 @@ if __name__ == "__main__":
             output_yaml = OmegaConf.load(yaml_name)
             nBars = {key: nBars[key].tolist() for key in nBars}
             nBar_errs = {key: nBar_errs[key].tolist() for key in nBar_errs}
-            output_yaml.update({"mass_edges": mass_edges, "t_edges": t_edges, "nBars": nBars, "nBar_errs": nBar_errs, "mc_already_shared": mc_already_shared})
+            output_yaml.update({"mass_edges": mass_edges, "t_edges": t_edges, "nBars": nBars, "nBar_errs": nBar_errs, "share_mc": mc_already_shared})
             dump_yaml(output_yaml, yaml_name)
 
 

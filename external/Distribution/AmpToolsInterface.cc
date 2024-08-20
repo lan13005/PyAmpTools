@@ -528,13 +528,6 @@ AmpToolsInterface::saveAmpVecsToTree(
 
     report( DEBUG, kModule ) << "Saving copy of " << fname << " to " << fname+suffix+".root" << endl;
 
-    // TFile *inputFile = new TFile((fname+".root").c_str(), "READ");
-    // if (!inputFile || inputFile->IsZombie()) {
-    //     std::cerr << "Error opening input file\n";
-    //     return;
-    // }
-    // TTree *inputTree = (TTree*)inputFile->Get("kin");
-
     // Save as a hidden file. IDK if this is a good idea.
     //   We would very like to post-process the root files and store them in a better
     //   data structure that has better read speed
@@ -544,7 +537,7 @@ AmpToolsInterface::saveAmpVecsToTree(
     int iNTerms = m_ampvec.m_iNTerms;
     vector<string>& ampNames = m_ampvec.m_termNames;
 
-    // Replace all occurrences of "::" with "_"
+    // inplace replace all occurrences of "::" with "."
     for (auto& ampName : ampNames) {
         size_t pos;
         while ((pos = ampName.find("::")) != std::string::npos) {
@@ -563,10 +556,10 @@ AmpToolsInterface::saveAmpVecsToTree(
     outputTree->Branch("weight", &weight, "weight/D");
 
     int m_iNEvents = m_ampvec.m_iNEvents;
-    for (int iEvent=0; iEvent<m_iNEvents; iEvent++){
+    for (int iEvent=0; iEvent<m_iNEvents; ++iEvent){
 
       weight = m_ampvec.m_pdWeights[iEvent];
-      for (int iAmp=0; iAmp<iNTerms; iAmp++){
+      for (int iAmp=0; iAmp<iNTerms; ++iAmp){
         ta_re[iAmp] = m_ampvec.m_pdAmps[2*m_iNEvents*iAmp+2*iEvent];
         ta_im[iAmp] = m_ampvec.m_pdAmps[2*m_iNEvents*iAmp+2*iEvent+1];
       }

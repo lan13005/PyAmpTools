@@ -139,7 +139,7 @@ if __name__ == "__main__":
             cfgfiles.append(cfgfile)
             print(f"  {cfgfile}")
 
-    n_processes = min(len(cfgfiles), yaml_file["processing"]["n_processes"])
+    n_processes = min(len(cfgfiles), yaml_file["amptools"]["n_processes"])
 
     # Get number of gpu devices amptools sees
     USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals())
