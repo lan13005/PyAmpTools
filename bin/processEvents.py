@@ -47,6 +47,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Restructure normalization integrals')
     parser.add_argument('yaml', type=str, help='yaml file with paths')
     parser.add_argument('-n', '--ncores', type=int, default=1, help='number of cores to use')
+    parser.add_argument('-ia', '--include_accmc', action='store_true', help='include accmc in ampvec root file')
+    parser.add_argument('-ig', '--include_genmc', action='store_true', help='include genmc in ampvec root file')
     parser.add_argument('-v', '--verbose', action='store_true', help='verbose output')
 
     args = parser.parse_args()
@@ -97,9 +99,9 @@ if __name__ == "__main__":
     # STEP 2) Restructure ampvecs and normints into arrays and save to pkl files
     print("\nRestructuring processed files into arrays and saving to pkl files")
     print("  This step cannot use multiple processes...")
-    restructured_amps = restructure_amps(yaml_file, treename="kin")
+    restructured_amps = restructure_amps(yaml_file, treename="kin", include_accmc=args.include_accmc, include_genmc=args.include_genmc)
     restructued_normints = restructure_normints(yaml_file)
-    print(f"\nrElapsed time: {time() - start_time:.2f} seconds\n")
+    print(f"\nElapsed time: {time() - start_time:.2f} seconds\n")
 
 # intensityManager = ati.intensityManager(reactions[0].reactionName())
 
