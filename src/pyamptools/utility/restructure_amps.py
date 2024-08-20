@@ -16,7 +16,7 @@ def load_root(fname, treename):
         data = f[treename].arrays(library="np")
         return data
 
-def restructure_amps(yaml_file, treename="kin"):
+def restructure_amps(yaml_file, treename="kin", include_accmc=True, include_genmc=True):
     
     ####################################################################
     # After finalizeFit from an amptoolsinterface call a set of root
@@ -34,11 +34,15 @@ def restructure_amps(yaml_file, treename="kin"):
     nmbMasses = yaml_file["n_mass_bins"]
     nmbTprimes = yaml_file["n_t_bins"]
     reactions = yaml_file["polarizations"] # i.e. "000", "045", "090", "135"
+    share_mc = yaml_file["share_mc"]
     reactionNames = [f"reaction_{reaction}" for reaction in reactions] # i.e. "reaction_000", "reaction_045", "reaction_090", "reaction_135"
     nmbReactions = len(reactions)
 
-    ftypes = ["data", "accmc", "genmc"] # bkgnd is optional
-    # ftypes = ["accmc"] # bkgnd is optional
+    ftypes = ["data"] # bkgnd is optional
+    if include_accmc:
+        ftypes.append("accmc")
+    if include_genmc:
+        ftypes.append("genmc")
     if len(glob.glob(f"{output_directory}/bin_*/bkgnd*_amps.root")) > 0:
         ftypes.append("bkgnd")
 
@@ -66,7 +70,15 @@ def restructure_amps(yaml_file, treename="kin"):
             for im in range(nmbMasses):
                 for reactionName, reaction in zip(reactionNames, reactions):
                     k = it * nmbMasses + im
-                    file = f"{output_directory}/bin_{k}/{ftype}{reaction}_amps.root"
+
+                    file = None
+                    if share_mc[ftype]:
+                        if reaction == "000":
+                            file = f"{output_directory}/bin_{k}/{ftype}_amps.root"
+                        else:
+                            continue
+                    else:
+                        file = f"{output_directory}/bin_{k}/{ftype}{reaction}_amps.root"
 
                     data = load_root(file, treename)
 
@@ -137,8 +149,8 @@ def restructure_amps(yaml_file, treename="kin"):
     # It becomes harder to track when starts are reshaped
     stops = {k: v[1:] for k, v in starts.items()}
     starts = {k: v[:-1] for k, v in starts.items()}
-    starts = {k: np.array(v).reshape(nmbReactions, nmbMasses, nmbTprimes, order="F") for k, v in starts.items()}
-    stops = {k: np.array(v).reshape(nmbReactions, nmbMasses, nmbTprimes, order="F") for k, v in stops.items()}
+    starts = {k: np.array(v).reshape( (nmbReactions if not share_mc[k] else 1), nmbMasses, nmbTprimes, order="F") for k, v in starts.items()}
+    stops = {k: np.array(v).reshape(  (nmbReactions if not share_mc[k] else 1), nmbMasses, nmbTprimes, order="F") for k, v in stops.items()}
 
     # order of partNames is the index order of the values
     data = {
@@ -152,17 +164,22 @@ def restructure_amps(yaml_file, treename="kin"):
     with open(f"{base_directory}/amps.pkl", "wb") as f:
         pickle.dump(data, f)
     
-    print(f"Saved amps.pkl to {base_directory}")
+    print(f"\nSaved amps.pkl to {base_directory}")
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Restructure normalization integrals')
     parser.add_argument('yaml', type=str, help='yaml file with paths')
+    parser.add_argument('-ia', '--include_accmc', action='store_true', help='include accmc')
+    parser.add_argument('-ig', '--include_genmc', action='store_true', help='include genmc')
     parser.add_argument('-t', '--treename', type=str, default='kin', help='name of the tree in the root file')
 
     args = parser.parse_args()
     yaml = args.yaml
     yaml_file = OmegaConf.load(yaml)
 
-    restructure_amps(yaml_file, args.treename)
+    include_accmc = args.include_accmc
+    include_genmc = args.include_genmc
+
+    restructure_amps(yaml_file, args.treename, include_accmc, include_genmc)
