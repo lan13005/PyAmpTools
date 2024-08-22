@@ -4,7 +4,7 @@ import multiprocessing
 import os
 
 from pyamptools import atiSetup
-from pyamptools.utility.general import Timer, load_yaml
+from pyamptools.utility.general import Silencer, Timer, load_yaml
 
 pyamptools_fit_cmd = "pa fit"
 pyamptools_ff_cmd = "pa fitfrac"
@@ -50,7 +50,9 @@ class MLE:
         cmd = f"{pyamptools_fit_cmd} {cfgfile} --numRnd {self.n_randomizations} --seedfile seed_bin{binNum}"
         if self.devs is not None and self.devs >= 0:
             cmd += f" --device {device}"
-        if self.dump != '':
+        if self.dump == 'null':
+            cmd += " > /dev/null"
+        elif self.dump != '':
             if not os.path.exists(f"{self.dump}"):
                 os.makedirs(f"{self.dump}")
             cmd += f" >> {self.dump}/log_{binNum}.txt"
@@ -66,6 +68,8 @@ class MLE:
         ###############################
 
         cmd = f"{pyamptools_ff_cmd} {base_fname}.fit --outputfileName intensities_bin{binNum}.txt {self.ff_args}"
+        if self.dump == 'null':
+            cmd += " > /dev/null"
         print(cmd)
         os.system(cmd)
         os.system(f"mv intensities_bin{binNum}.txt {folder}/intensities.txt")
@@ -74,6 +78,8 @@ class MLE:
         # Extract ff for all iterations
         for i in range(self.n_randomizations):
             cmd = f"{pyamptools_ff_cmd} {base_fname}_{i}.fit --outputfileName intensities_bin{binNum}_{i}.txt {self.ff_args}"
+            if self.dump == 'null':
+                cmd += " > /dev/null"
             print(cmd)
             os.system(cmd)
             os.system(f"mv intensities_bin{binNum}_{i}.txt {folder}/intensities_{i}.txt")
@@ -93,7 +99,7 @@ class MLE:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Perform maximum likelihood fits (using AmpTools) on all cfg files")
     parser.add_argument("yaml_name", type=str, default="conf/configuration.yaml", help="Path a configuration yaml file")
-    parser.add_argument("-d", type=str, default='', help="Dump log files for each bin to this relative path")
+    parser.add_argument("-d", type=str, default='null', help="Dump log files for each bin to this relative path. If empty str will dump to stdout")
     args = parser.parse_args()
     yaml_name = args.yaml_name
     dump = args.d
@@ -112,19 +118,23 @@ if __name__ == "__main__":
 
     output_directory = mle.output_directory
     n_randomizations = mle.n_randomizations
-    bins_per_group = yaml_file["bins_per_group"]
+    bins_per_group = yaml_file['amptools']["bins_per_group"]
     bins_per_group = 1 if bins_per_group < 1 or bins_per_group is None else bins_per_group
     nBins = yaml_file["n_mass_bins"] * yaml_file["n_t_bins"]
     if nBins % bins_per_group != 0:
         raise Exception("run_mle| Number of bins is not divisible by bins_per_group!")
     nGroups = nBins // bins_per_group
 
+    search_format = yaml_file["amptools"]["search_format"]
+    if search_format not in ["bin", "group"]:
+        raise Exception("run_mle| search_format must be either 'bin' or 'group'")
+
     ###########################################
     # Perform MLE fit and extract fit fractions
     # for all cfg files if incomplete
     ###########################################
 
-    _cfgfiles = glob.glob(f"{output_directory}/bin_*/*.cfg")  # all cfg files
+    _cfgfiles = glob.glob(f"{output_directory}/{search_format}_*/*.cfg")  # all cfg files
     cfgfiles = []  # cfg files that need to be processed
     print("mle| Will process following cfg files:")
     for cfgfile in _cfgfiles:
@@ -158,7 +168,7 @@ if __name__ == "__main__":
         with multiprocessing.Pool(n_processes) as pool:
             pool.map(mle, cfgfiles)
 
-    if bins_per_group > 1:
+    if bins_per_group > 1 and search_format == "bin":
         print("mle| collecting seed files into group subfolders")
         groups = glob.glob(f"{output_directory}/group_*")
         if len(groups) != nGroups:
