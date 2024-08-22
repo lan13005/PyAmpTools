@@ -19,19 +19,7 @@ from pyamptools.utility.general import Timer, dump_yaml, load_yaml
 #       that uses {} to denote variable search paths. ATM we variable interpolate
 #       each part separated by /
 mappings = {
-    # "GENERAL.outputFolder": "SRC.nifty.output_directory",
-    # "PWA_MANAGER.cfgfiles": "SRC.amptools.output_directory/bin_*/bin_[].cfg",
-    # "PWA_MANAGER.bins_per_group": "SRC.bins_per_group",
-    # "PWA_MANAGER.accelerator": "SRC.processing.accelerator",
-    # "PWA_MANAGER.min_mass": "SRC.min_mass",
-    # "PWA_MANAGER.max_mass": "SRC.max_mass",
-    # "PWA_MANAGER.nmbMasses": "SRC.n_mass_bins",
-    # "PWA_MANAGER.min_tPrime": "SRC.min_t",
-    # "PWA_MANAGER.max_tPrime": "SRC.max_t",
-    # "PWA_MANAGER.nmbTprimes": "SRC.n_t_bins",
-    # "PWA_MANAGER.waveNames": "SRC.waveset",
-    # "PWA_MANAGER.n_randomizations": "SRC.amptools.n_randomizations",
-    # "PWA_MANAGER.phase_reference": "SRC.phase_reference",
+    "GENERAL.outputFolder": "SRC.nifty.output_directory",
 }
 
 def get_value_from_src(src_yaml, key_path):
