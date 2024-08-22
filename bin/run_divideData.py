@@ -1,6 +1,7 @@
 import argparse
 import glob
 import os
+from multiprocessing import Pool
 
 import numpy as np
 from omegaconf import OmegaConf
@@ -23,6 +24,8 @@ if __name__ == "__main__":
     yaml_name = args.yaml_name
     use_edges = args.use_edges
 
+    hadd_pool_size = 5 
+
     cwd = os.getcwd()
     timer = Timer()
 
@@ -41,7 +44,9 @@ if __name__ == "__main__":
     n_t_bins = yaml_file["n_t_bins"]
     base_directory = yaml_file["base_directory"]
     output_directory = yaml_file["amptools"]["output_directory"]
-    bins_per_group = yaml_file["bins_per_group"] if "bins_per_group" in yaml_file else 1
+    bins_per_group = yaml_file["amptools"]["bins_per_group"] if "bins_per_group" in yaml_file["amptools"] else 1
+    constrain_grouped_production = yaml_file["amptools"]["constrain_grouped_production"] if "constrain_grouped_production" in yaml_file["amptools"] else False
+    merge_grouped_trees = yaml_file["amptools"]["merge_grouped_trees"] if "merge_grouped_trees" in yaml_file["amptools"] else True
     data_folder = yaml_file["data_folder"]
     pols = yaml_file["polarizations"]
     prepare_for_nifty = bool(yaml_file["amptools"]["prepare_for_nifty"])
@@ -270,6 +275,7 @@ if __name__ == "__main__":
             parameters = []
             sources = []
             includes = []
+            initialized_waves = [] # amplitude names that have initialized keyword in cfg file
             with open(cfg_path, "r") as f:
                 lines = f.readlines()
                 for line in lines:
@@ -283,67 +289,115 @@ if __name__ == "__main__":
                             sources.append(source) 
                     if line.startswith("include"):
                         includes.append(line.split(" ")[1].strip().split("/")[-1])
+                    if line.startswith("initialize"):
+                        initialized_waves.append(line.split(" ")[1].strip())
 
-            # Merge some bins into groups on user request
-            # NOTE: For t and mass binning, the mass index cycles faster: i.e. [(m1,t1), (m2,t1), ...]
-
-            for i in range(nGroups):
-                bin_group = bins[i * bins_per_group : (i + 1) * bins_per_group]
-                group_name = f"group_{i}"
-                os.makedirs(f"{output_directory}/{group_name}", exist_ok=True)
-
-                metadata = open(f"{output_directory}/{group_name}/metadata.txt", "w")
+            if merge_grouped_trees:
                 
-                first_pass = True
-                for j, bin in enumerate(bin_group):
+                def merge_trees(i):
+
+                    bin_group = bins[i * bins_per_group : (i + 1) * bins_per_group]
+                    group_name = f"group_{i}"
+                    os.makedirs(f"{output_directory}/{group_name}", exist_ok=True)
+
+                    bin = bin_group[0]
                     bin_name = bin.split("/")[-1]
-                    cfg_name = f"G{j}_{bin_name}.cfg"
+                    cfg_name = f"bin_{i}.cfg"
                     os.system(f"cp -r {bin}/{bin_name}.cfg {output_directory}/{group_name}/{cfg_name}")
-                    os.system(f"cat {bin}/metadata.txt >> {output_directory}/{group_name}/metadata.txt")
-                    os.system(f"echo '' >> {output_directory}/{group_name}/metadata.txt")
-                    os.system(f"echo '' >> {output_directory}/{group_name}/metadata.txt")
 
-                    # Replace all bin names with group names
-                    sed_repl = f"sed -i 's|{bin_name}|group_{i}|g' {output_directory}/{group_name}/{cfg_name}"
+                    # Replace all bin names with group names if line does not start with fit
+                    sed_repl = f"sed -i '/^fit/! s|{bin_name}|group_{i}|g' {output_directory}/{group_name}/{cfg_name}"
                     os.system(sed_repl)
-
-                    # Remove fit keyword lines or commented for additional files in the group as we will merge along a group
-                    if j != 0:
-                        os.system(f"sed -i '/^fit/d' {output_directory}/{group_name}/{cfg_name}")
-                        os.system(f"sed -i '/^#/d' {output_directory}/{group_name}/{cfg_name}")
-                    os.system(f"sed -i '/^include/d' {output_directory}/{group_name}/{cfg_name}") # remove all include seed files
-
-                    # update naming for reactions
-                    for reaction in reactions:
-                        reaction_repl = reaction.replace("reaction", f"G{j}_reaction")
-                        sed_repl = f"sed -i 's|{reaction}|{reaction_repl}|g' {output_directory}/{group_name}/{cfg_name}"
-                        os.system(sed_repl)
-
-                    # update naming for parameters
-                    for parameter in parameters:
-                        parameter_repl = parameter.replace("parScale", f"G{j}_parScale")
-                        sed_repl = f"sed -i 's|{parameter}|{parameter_repl}|g' {output_directory}/{group_name}/{cfg_name}"
-                        os.system(sed_repl)
+                    # Search for line that starts wtih fit and replace bin id with group id
+                    sed_repl = f"sed -i '/^fit/ s|{bin_name}|bin_{i}|g' {output_directory}/{group_name}/{cfg_name}"
+                    os.system(sed_repl)
 
                     # update naming for sources
                     for source in sources:
-                        source_repl = source.replace("data", f"G{j}_data").replace("accmc", f"G{j}_accmc").replace("genmc", f"G{j}_genmc").replace("bkgnd", f"G{j}_bkgnd")
-                        sed_repl = f"sed -i 's|{source}|{source_repl}|g' {output_directory}/{group_name}/{cfg_name}"
+                        print()
+                        bin_sources = [f"{bin}/{source}" for bin in bin_group]
+                        hadd_cmd = f"hadd {output_directory}/{group_name}/{source} {' '.join(bin_sources)}"
+                        print(hadd_cmd)
+                        os.system(hadd_cmd+" > /dev/null")
+                    
+                    os.system(f"touch {output_directory}/{group_name}/seed_nifty.txt")
+
+                with Pool(hadd_pool_size) as p:
+                    p.map(merge_trees, range(nGroups))
+
+            # Merge some bins into groups on user request keeping bins distinct
+            #   All bins in a group will have a different reaction identifier so that if you merged 2 bins there will be 2x more reactions
+            #   This might not be what you want. If you merged bin_i and bin_j into one group the amplitudes will not be able to talk across
+            #   bins. This should in principle result in different results when compared to dividing the data directly into the groups
+            # NOTE: For t and mass binning, the mass index cycles faster: i.e. [(m1,t1), (m2,t1), ...]
+            else:
+                for i in range(nGroups):
+                    bin_group = bins[i * bins_per_group : (i + 1) * bins_per_group]
+                    group_name = f"group_{i}"
+                    os.makedirs(f"{output_directory}/{group_name}", exist_ok=True)
+
+                    metadata = open(f"{output_directory}/{group_name}/metadata.txt", "w")
+                    
+                    first_pass = True
+                    for j, bin in enumerate(bin_group):
+                        bin_name = bin.split("/")[-1]
+                        cfg_name = f"G{j}_{bin_name}.cfg"
+                        os.system(f"cp -r {bin}/{bin_name}.cfg {output_directory}/{group_name}/{cfg_name}")
+                        os.system(f"cat {bin}/metadata.txt >> {output_directory}/{group_name}/metadata.txt")
+                        os.system(f"echo '' >> {output_directory}/{group_name}/metadata.txt")
+                        os.system(f"echo '' >> {output_directory}/{group_name}/metadata.txt")
+
+                        # Replace all bin names with group names if line does not start with fit
+                        sed_repl = f"sed -i '/^fit/! s|{bin_name}|group_{i}|g' {output_directory}/{group_name}/{cfg_name}"
                         os.system(sed_repl)
-                        os.system(f"cp -r {bin}/{source} {output_directory}/{group_name}/G{j}_{source}")
+                        # Search for line that starts wtih fit and replace bin id with group id
+                        sed_repl = f"sed -i '/^fit/ s|{bin_name}|bin_{i}|g' {output_directory}/{group_name}/{cfg_name}"
+                        os.system(sed_repl)
 
-                    # append seed file parameters into group seed files
-                    for include in includes:
-                        cmd = f"sed 's/parScale/G{j}_parScale/g' {bin}/{include} >> {output_directory}/{group_name}/{include}"
-                        os.system(cmd)
+                        # Remove fit keyword lines or commented for additional files in the group as we will merge along a group
+                        if j != 0:
+                            os.system(f"sed -i '/^fit/d' {output_directory}/{group_name}/{cfg_name}")
+                            os.system(f"sed -i '/^#/d' {output_directory}/{group_name}/{cfg_name}")
+                            os.system(f"sed -i '/^initialize/d' {output_directory}/{group_name}/{cfg_name}")
+                        os.system(f"sed -i '/^include/d' {output_directory}/{group_name}/{cfg_name}") # remove all include seed files
 
-                # merge config files using cat
-                cat_cmd = f"cat {output_directory}/{group_name}/G*bin*.cfg > {output_directory}/{group_name}/bin_{i}.cfg"
-                os.system(cat_cmd)
+                        # update naming for reactions
+                        for reaction in reactions:
+                            reaction_repl = reaction.replace("reaction", f"G{j}_reaction")
+                            sed_repl = f"sed -i 's|{reaction}|{reaction_repl}|g' {output_directory}/{group_name}/{cfg_name}"
+                            os.system(sed_repl)
 
-                # append include seed file
-                os.system(f"echo '\ninclude {output_directory}/{group_name}/seed_nifty.txt' >> {output_directory}/{group_name}/bin_{i}.cfg")
+                        # update naming for parameters
+                        for parameter in parameters:
+                            parameter_repl = parameter.replace("parScale", f"G{j}_parScale")
+                            sed_repl = f"sed -i 's|{parameter}|{parameter_repl}|g' {output_directory}/{group_name}/{cfg_name}"
+                            os.system(sed_repl)
 
-                # clean up cfg files
-                os.system(f"rm -f {output_directory}/{group_name}/G*bin*.cfg")
+                        # update naming for sources
+                        for source in sources:
+                            source_repl = source.replace("data", f"G{j}_data").replace("accmc", f"G{j}_accmc").replace("genmc", f"G{j}_genmc").replace("bkgnd", f"G{j}_bkgnd")
+                            sed_repl = f"sed -i 's|{source}|{source_repl}|g' {output_directory}/{group_name}/{cfg_name}"
+                            os.system(sed_repl)
+                            os.system(f"cp -r {bin}/{source} {output_directory}/{group_name}/G{j}_{source}")
+
+                        # append seed file parameters into group seed files
+                        for include in includes:
+                            cmd = f"sed 's/parScale/G{j}_parScale/g' {bin}/{include} >> {output_directory}/{group_name}/{include}"
+                            os.system(cmd)
+
+                        # constrain the production coefficients to be shared for all bins in the group
+                        if constrain_grouped_production and j != 0:
+                            for wave in initialized_waves:
+                                cmd = f"echo 'constrain G0_{wave} G{j}_{wave}' >> {output_directory}/{group_name}/{cfg_name}"
+                                os.system(cmd)
+
+                    # merge config files using cat
+                    cat_cmd = f"cat {output_directory}/{group_name}/G*bin*.cfg > {output_directory}/{group_name}/bin_{i}.cfg"
+                    os.system(cat_cmd)
+
+                    # append include seed file
+                    os.system(f"echo '\ninclude {output_directory}/{group_name}/seed_nifty.txt' >> {output_directory}/{group_name}/bin_{i}.cfg")
+
+                    # clean up cfg files
+                    os.system(f"rm -f {output_directory}/{group_name}/G*bin*.cfg")
 
