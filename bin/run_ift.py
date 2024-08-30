@@ -89,6 +89,9 @@ if __name__ == "__main__":
     timer = Timer()
     cwd = os.getcwd()
 
+    if not os.path.exists(yaml_name):
+        raise FileNotFoundError(f"YAML file {yaml_name} not found")
+
     src_yaml = load_yaml(yaml_name)
     
     if src_yaml['nifty']['yaml'] is None:
@@ -122,10 +125,13 @@ if __name__ == "__main__":
     os.system(f"cp {yaml_name} {output_directory}/.{yaml_name}") # Copy the source yaml file to the output directory
 
     mpi_processes = src_yaml['nifty']['mpi_processes'] if 'mpi_processes' in src_yaml['nifty'] else None
-    if mpi_processes is not None:
-        cmd  = f"mpirun -n {mpi_processes} "
-        cmd += "--mca btl ^openib " # Disable openib
-        cmd += f"iftPwaFit --iftpwa_config .nifty.yaml {' '.join(additional_args)}"
+
+    prefix = ""
+    if mpi_processes is not None and mpi_processes > 1:
+        prefix  = f"mpirun -n {mpi_processes} "
+        prefix += "--mca btl ^openib " # Disable openib
+    cmd = f"{prefix}iftPwaFit --iftpwa_config .nifty.yaml {' '.join(additional_args)}"
+    
     os.system(cmd) # Run IFT pwa fit
 
     # TODO: Need to support prior simulation
