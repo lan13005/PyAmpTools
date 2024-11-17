@@ -228,10 +228,10 @@ def draw_histograms(
 		### NOW CONFIGURE HOW YOU WANT TO DRAW THE HISTOGRAMS ####
 		### HERE IS AN EXAMPLE... BUT IMPOSSIBLE TO MAKE GENERIC #
 
-		# ncols = int(np.floor(np.sqrt(len(HISTS_TO_BOOK))))
-		# nrows = int(np.ceil(len(HISTS_TO_BOOK) / ncols))
-		ncols = int(np.ceil(np.sqrt(len(HISTS_TO_BOOK))))
-		nrows = ncols
+		nrows = int(np.floor(np.sqrt(len(HISTS_TO_BOOK))))
+		ncols = int(np.ceil(len(HISTS_TO_BOOK) / nrows))
+		# ncols = int(np.ceil(np.sqrt(len(HISTS_TO_BOOK))))
+		# nrows = ncols
 
 		canvas = TCanvas("canvas", "canvas", ncols*400, nrows*400)
 		canvas.Clear()
@@ -268,12 +268,15 @@ def draw_histograms(
 			data_hist = HISTOGRAM_STORAGE[kData][ihist]
 			data_hist.SetMarkerStyle(ROOT.kFullCircle)
 			data_hist.SetMarkerSize(1.0)
-			data_hist.GetXaxis().SetNdivisions(5)
+			data_hist.GetXaxis().SetNdivisions(5,5,0)
+			data_hist.GetYaxis().SetNdivisions(5,5,0)
 
 			bkgnd_hist = HISTOGRAM_STORAGE[kBkgnd][ihist]
 			accmc_hist = HISTOGRAM_STORAGE[kAccMC][ihist]
-			accmc_hist.SetFillColorAlpha(kColors[kAccMC], 1.0)
-			accmc_hist.SetLineColor(0)
+			accmc_hist.SetFillColorAlpha(kColors[kAccMC], 0.9)
+			accmc_hist.SetLineWidth(0)
+			accmc_hist.GetXaxis().SetNdivisions(5,5,0)
+			accmc_hist.GetYaxis().SetNdivisions(5,5,0)
 
 			data_hist.Sumw2()
 			bkgnd_hist.Sumw2()
@@ -282,12 +285,15 @@ def draw_histograms(
 			if plot_acc_corrected:
 				genmc_hist = HISTOGRAM_STORAGE[kGenMC][ihist]
 				genmc_hist.Sumw2()
-				genmc_hist.SetFillColorAlpha(kColors[kGenMC], 1.0)
-				genmc_hist.SetLineColor(0)
+				genmc_hist.SetFillColorAlpha(kColors[kGenMC], 0.9)
+				genmc_hist.SetLineWidth(0)
+				genmc_hist.GetXaxis().SetNdivisions(5,5,0)
+				genmc_hist.GetYaxis().SetNdivisions(5,5,0)
 				corrected_data_hists.append(data_hist.Clone())
 				corrected_data_hists[-1].SetMarkerStyle(ROOT.kFullCircle)
 				corrected_data_hists[-1].SetMarkerSize(1.0)
-				corrected_data_hists[-1].GetXaxis().SetNdivisions(5)
+				corrected_data_hists[-1].GetXaxis().SetNdivisions(5,5,0)
+				corrected_data_hists[-1].GetYaxis().SetNdivisions(5,5,0)
 				corrected_data_hists[-1].Sumw2()
 
 			canvas.cd(ihist + 1)
@@ -297,16 +303,23 @@ def draw_histograms(
 				data_hist.Add(bkgnd_hist.GetPtr(), -1)
 				if plot_acc_corrected:
 					corrected_data_hists[-1].Add(bkgnd_hist.GetPtr(), -1)
-				data_hist.Draw("E") # Draw first to set labels and y-limits
-				data_hist.GetYaxis().SetLabelOffset(0.01)
-				data_hist.GetYaxis().SetTitleOffset(1.70)
-				accmc_hist.Draw("HIST SAME")
+     
+				# data_hist.Draw("E") # Draw first to set labels and y-limits
+				# data_hist.GetYaxis().SetLabelOffset(0.01)
+				# data_hist.GetYaxis().SetTitleOffset(1.70)
+				# accmc_hist.Draw("HIST SAME")
+        
+				accmc_hist.Draw("HIST")
 				data_hist.Draw("E SAME")
-				data_hist.SetMinimum(0)
+				accmc_hist.GetYaxis().SetLabelOffset(0.01)
+				accmc_hist.GetYaxis().SetTitleOffset(1.70)
+				accmc_hist.SetMinimum(0)
+				max_y = 1.2 * max(data_hist.GetMaximum(), accmc_hist.GetMaximum())
+				accmc_hist.SetMaximum(max_y)
 
 				# chi2 = data_hist.Chi2Test(accmc_hist.GetPtr(), "CHI2/NDF")
 				chi2 = calculate_chi_squared(data_hist, accmc_hist)
-				latex.DrawLatex(0.22, 0.9, f"#chi^{{2}}/ndf = {chi2:.2f}")
+				latex.DrawLatex(0.25, 0.87, f"#chi^{{2}}/bin = {chi2:.1f}")
 
 				if plot_acc_corrected: # Overlay acceptance corrected data only if bkgnd subtracted
 					canvas_gen.cd(ihist + 1)
@@ -319,34 +332,36 @@ def draw_histograms(
 							efficiency_hists[-1].SetBinContent(bin, 0)
 
 					corrected_data_hists[-1].Divide(efficiency_hists[-1])
-					corrected_data_hists[-1].Draw("E")
-					corrected_data_hists[-1].GetYaxis().SetLabelOffset(0.01)
-					corrected_data_hists[-1].GetYaxis().SetTitleOffset(1.70)
-					genmc_hist.Draw("HIST SAME")
+     
+					genmc_hist.Draw("HIST")
+					genmc_hist.GetYaxis().SetLabelOffset(0.01)
+					genmc_hist.GetYaxis().SetTitleOffset(1.70)
 					corrected_data_hists[-1].Draw("E SAME")
-					corrected_data_hists[-1].SetMinimum(0)
+					genmc_hist.SetMinimum(0)
+					max_y = 1.2 * max(corrected_data_hists[-1].GetMaximum(), genmc_hist.GetMaximum())
+					genmc_hist.SetMaximum(max_y)
 
 					chi2_gen = calculate_chi_squared(corrected_data_hists[-1], genmc_hist)
-					latex.DrawLatex(0.22, 0.9, f"#chi^{{2}}/ndf = {chi2_gen:.2f}")
-
+					latex.DrawLatex(0.25, 0.87, f"#chi^{{2}}/bin = {chi2_gen:.1f}")
 
 			else: # STACK BACKGROUND
 				stacks.append(THStack("stack", ""))
 				for booked_hist, srctype in zip([bkgnd_hist, accmc_hist], [kBkgnd, kAccMC]):
-					booked_hist.SetFillColorAlpha(kColors[srctype], 1.0)
-					booked_hist.SetLineColor(0)
+					booked_hist.SetFillColorAlpha(kColors[srctype], 0.9)
+					booked_hist.SetLineWidth(0)
 					hist_ptr = booked_hist.GetPtr()
 					stacks[-1].Add(hist_ptr)
-				data_hist.Draw("E")
-				data_hist.GetYaxis().SetLabelOffset(0.01)
-				data_hist.GetYaxis().SetTitleOffset(1.70)
-				stacks[-1].Draw("HIST SAME")
+				stacks[-1].Draw("HIST")
 				data_hist.Draw("E SAME")
-				data_hist.SetMinimum(0)
+				stacks[-1].SetMinimum(0)
+				stacks[-1].GetYaxis().SetLabelOffset(0.01)
+				stacks[-1].GetYaxis().SetTitleOffset(1.70)
+				max_y = 1.2 * max(data_hist.GetMaximum(), stacks[-1].GetStack().Last().GetMaximum())
+				stacks[-1].SetMaximum(max_y)
 
 				chi2_stack = calculate_chi_squared(data_hist, stacks[-1].GetStack().Last())
-				latex.DrawLatex(0.22, 0.9, f"#chi^{{2}}/ndf = {chi2_stack:.2f}")
-
+				latex.DrawLatex(0.25, 0.87, f"#chi^{{2}}/bin = {chi2_stack:.1f}")
+  
 		canvas.Print(f"{output_name}.pdf")
 		if plot_acc_corrected:
 			canvas_gen.Print(f"{output_name}_acc_corrected.pdf")
