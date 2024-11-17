@@ -86,7 +86,8 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
         fit_file = f"{basedir}/{binTag}_{i}.fit"
 
         if not os.path.exists(fit_file):
-            raise FileNotFoundError(f"{fit_file} expected, but not found!")
+            # print(f"{fit_file} expected, but not found!")
+            continue
     
         value = loadParValueFromFit(fit_file, "bestMinimum")
         _nlls.append(value)
@@ -160,6 +161,7 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
     # Apply Query 1
     if mle_query_1 != "":
         df = df.query(mle_query_1)
+        # print(f"Remaining number of rows after query 1 ({mle_query_1}): {len(df)}")
 
     # groupby mass and subtract the min nll in each kinematic bin
     # create a new column called delta_nll and subtract the min nll in each kinematic bin
@@ -168,12 +170,13 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
     # Apply Query 2
     if mle_query_2 != "":
         df = df.query(mle_query_2)
+        # print(f"Remaining number of rows after query 2 ({mle_query_2}): {len(df)}")
 
     df = pd.DataFrame(df)
 
     # This is the case if there are 0 fit result files loaded
     if len(df) == 0:
-        print("No amptools MLE fit results loaded! Returning empty DataFrame...")
+        # print("No amptools MLE fit results loaded! Returning empty DataFrame...")
         return df
 
     avail_t = list(df["tprime"].unique())

@@ -406,4 +406,4 @@ if __name__ == "__main__":
                     # clean up cfg files
                     os.system(f"rm -f {output_directory}/{group_name}/G*bin*.cfg")
 
-    print(f"\n{timer.elapsed_time()} elapsed\n")
+    print(f"\n{timer.read()[2]} elapsed\n")
