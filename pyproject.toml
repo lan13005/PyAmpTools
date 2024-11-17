@@ -5,27 +5,28 @@ requires = ["setuptools"]
 
 [project]
 dependencies = [
-    "argcomplete",
-    "matplotlib",
-    "pandas",
-    "numpy",
-    "mplhep",
-    "uproot",
-    "black",
-    "isort",
-    "corner",
-    "h5py",
-    "emcee",
-    "tqdm",
-    "IPython",
-    "ipykernel",
-    "jupyter",
-    # "mpi4py",     # (mpi has not been well tested, but it has worked before. There was also a linking error if not manually installing it after conda env created)
-    "pyarrow",    # storage format
-    "tbb",        # for FSROOT, multiprocessing/threading
-    "psutil",     # check process information
-    "pdf2image",  # convert pdf to image for plotGen tutorial documentation
-    "scons",      # needed to 'make' AMPTOOLS_GENERATORS
+  "argcomplete",
+  "matplotlib",
+  "pandas",
+  "numpy",
+  "mplhep",
+  "particle",
+  "uproot",
+  "black",
+  "isort",
+  "corner",
+  "h5py",
+  "emcee",
+  "tqdm",
+  "IPython",
+  "ipykernel",
+  "jupyter",
+  # "mpi4py",     # (mpi has not been well tested, but it has worked before. There was also a linking error if not manually installing it after conda env created)
+  "pyarrow",   # storage format
+  "tbb",       # for FSROOT, multiprocessing/threading
+  "psutil",    # check process information
+  "pdf2image", # convert pdf to image for plotGen tutorial documentation
+  "scons",     # needed to 'make' AMPTOOLS_GENERATORS
 ]
 name = "pyamptools"
 requires-python = ">=3.9"
@@ -44,18 +45,19 @@ dev = [
   "ruff",
   "pretty_errors",
 ]
-doc = [
-  "jupyter-book",
-  "ghp-import",
-]
+doc = ["jupyter-book", "ghp-import"]
 ift = [
-  "hydra-core", # remove later?
-  "omegaconf", # remove later?
+  "hydra-core",                # remove later?
+  "omegaconf",                 # remove later?
+  "optuna",
   "scikit-learn",
   "scipy",
-  "numdifftools",
   "jax",
   "jaxlib",
+  "plotext",
+  "dash",
+  "dash_bootstrap_components",
+  "plotly",
 ]
 
 [project.scripts]
