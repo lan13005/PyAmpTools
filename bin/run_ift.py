@@ -1,6 +1,9 @@
 import argparse
 import logging
 import os
+import subprocess
+
+from omegaconf import OmegaConf
 
 from pyamptools.utility.general import Timer, dump_yaml, load_yaml
 
@@ -126,12 +129,28 @@ if __name__ == "__main__":
 
     mpi_processes = src_yaml['nifty']['mpi_processes'] if 'mpi_processes' in src_yaml['nifty'] else None
 
+    ## NOTE: GPU is not working. Distribution across mpi processes uses too much memory still. 
+    ##       Unsure how to better balance. Uncomment the following to try to load GPUs again
+    num_gpus = 0
+    # if subprocess.call("command -v nvidia-smi", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0:
+    #     get_cmd = "nvidia-smi --query-gpu=name --format=csv,noheader | wc -l"
+    #     num_gpus = int(os.popen(get_cmd).read())
+    #     print(f"Number of GPUs found (will attempt to distribute mpi work across all): {num_gpus}")
     prefix = ""
     if mpi_processes is not None and mpi_processes > 1:
-        prefix  = f"mpirun -n {mpi_processes} "
+        prefix  = f"mpiexec -v -n {mpi_processes} "
         prefix += "--mca btl ^openib " # Disable openib
-    cmd = f"{prefix}iftPwaFit --iftpwa_config .nifty.yaml {' '.join(additional_args)}"
+    if num_gpus > 0:
+        # Distribute mpi work across all GPUs
+        cmd = (f"{prefix}bash -c 'export CUDA_VISIBLE_DEVICES=$(($OMPI_COMM_WORLD_RANK % {num_gpus})); "
+            f'export XLA_PYTHON_CLIENT_MEM_FRACTION=1; '
+            f'export TF_FORCE_GPU_ALLOW_GROWTH=true; '
+            f"iftPwaFit --iftpwa_config .nifty.yaml {' '.join(additional_args)}'")
+    else:
+        cmd = (f"{prefix}bash -c 'export JAX_PLATFORMS=cpu; "
+                f"iftPwaFit --iftpwa_config .nifty.yaml {' '.join(additional_args)}'")
     
+    print(f"\nmpiexec command:\n {cmd}\n")
     os.system(cmd) # Run IFT pwa fit
 
     # TODO: Need to support prior simulation
