@@ -109,6 +109,7 @@ distribute_makefiles:
 	cp $(SRC_DIRS)/LikelihoodCalculator.h AmpTools/AmpTools/IUAmpTools
 ### Distribute FSRoot makefiles and src files
 	cp $(SRC_DIRS)/FSROOT_Makefile FSRoot/Makefile
+	cp $(SRC_DIRS)/FSROOT_EXECUTABLES_Makefile FSRoot/Executables/Makefile
 	cp $(SRC_DIRS)/initialize_fsroot.* FSRoot
 
 .PHONY: distribute_makefiles default mpi gpu mpigpu gpumpi clean
