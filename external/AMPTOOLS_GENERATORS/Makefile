@@ -24,7 +24,7 @@ AMPTOOLS := $(AMPTOOLS_HOME)/AmpTools
 AMPGEN := $(PYAMPTOOLS_HOME)/external/AMPTOOLS_GENERATORS
 CCDB_HOME := $(PYAMPTOOLS_HOME)/external/AMPTOOLS_GENERATORS/ccdb
 CCDB := $(CCDB_HOME)/include
-MYSQL := /usr/include/mysql/
+MYSQL := $(shell find /usr/include -type f -name "mysql.h" | sed 's|/mysql.h||' | head -n 1)
 PYTHON := $(CONDA_PREFIX)/include/python3.9/
 
 # Consider all subdirectories when searching for source files
