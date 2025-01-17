@@ -48,6 +48,7 @@ def loadLibraries(accelerator, use_fsroot=False, use_genamp=False, verbose=True)
         print("------------------------------------------------\n\n")
     #################### LOAD LIBRARIES (ORDER MATTERS!) ###################
 
+    loadLibrary(f"libIUAmpTools{SUFFIX}.so", RANK_MPI, verbose=verbose)
     loadLibrary(f"libAmpTools{SUFFIX}.so", RANK_MPI, verbose=verbose)
     loadLibrary("libAmpPlotter.so", RANK_MPI, verbose=verbose)
     loadLibrary(f"libAmpsDataIO{SUFFIX}.so", RANK_MPI, verbose=verbose)  # Depends on AmpPlotter!
