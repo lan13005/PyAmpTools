@@ -73,7 +73,8 @@ export PYTHON3_EXECUTABLE=$(readlink -f $(which python3))
 export CMAKE_VERS=3.20.2
 export protbuf_VERSION=21.12
 export CXX_STANDARD=17
-eval `/usr/bin/modulecmd bash load gcc/${GCC_VERS}` # load gcc if on JLab ifarm
+export NTHREADS=8
+# eval `/usr/bin/modulecmd bash load gcc/${GCC_VERS}` # load gcc if on JLab ifarm
 
 # Extra flags for building ROOT from source
 export EXTRA_CMAKE_FLAGS="-Droofit=Off \
@@ -172,7 +173,7 @@ fi
 
 # Build if needed
 if [ ! -d root-${ROOT_VERS}-gcc${GCC_VERS} ]; then
-    nice ${CMAKE} --build root-${ROOT_VERS}-gcc${GCC_VERS}.build --target install -- -j24 |& tee -a ${LOG}
+    nice ${CMAKE} --build root-${ROOT_VERS}-gcc${GCC_VERS}.build --target install -- -j${NTHREADS} |& tee -a ${LOG}
 else
     echo "Skipping build and using existing root-${ROOT_VERS}-gcc${GCC_VERS}"
     echo "(Remove directory root-${ROOT_VERS}-gcc${GCC_VERS} and rerun if rebuild needed)"
