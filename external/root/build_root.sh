@@ -73,7 +73,7 @@ export PYTHON3_EXECUTABLE=$(readlink -f $(which python3))
 export CMAKE_VERS=3.20.2
 export protbuf_VERSION=21.12
 export CXX_STANDARD=17
-export NTHREADS=8
+export NTHREADS=6
 # eval `/usr/bin/modulecmd bash load gcc/${GCC_VERS}` # load gcc if on JLab ifarm
 
 # Extra flags for building ROOT from source

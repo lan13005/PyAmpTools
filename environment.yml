@@ -7,5 +7,6 @@ dependencies:
   - pip
   - pip:
       - -e .[dev]
+  - tbb
 variables:
   PYTHONHASHSEED: 0
