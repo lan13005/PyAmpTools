@@ -70,7 +70,8 @@ for e, refl in zip([-1, 1], refls):
                 converter[amp] = [e, l, M, J]
                 P = "+" if (-1) ** l == +1 else "-"
                 C = "-"  # vector-pseudoscalar is always -1
-                prettyLabels[amp] = rf"${J}^{{{P}{C}}}[{spectroscopic_map[l]}_{{{M}}}^{{{refl}}}]$"
+                sM = f"+{M}" if M > 0 else f"{M}" # include + in front
+                prettyLabels[amp] = rf"${J}^{{{P}{C}}}[{spectroscopic_map[l]}_{{{sM}}}^{{{refl}}}]$"
 
 # If there is no prettyLabel version, just pass back the key
 class KeyReturningDict(dict):

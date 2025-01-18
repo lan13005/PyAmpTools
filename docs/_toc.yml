@@ -6,7 +6,7 @@ root: intro
 parts:
   - chapters:
     - file: additional_info
-  - caption: Tutorials
+  - caption: AmpTools Related Tutorials
     chapters:
       - file: demos/libraryLoading
       - file: demos/generation
@@ -15,14 +15,16 @@ parts:
           - file: demos/mle
           - file: demos/mcmc
       - file: demos/plotgen
-  - caption: Development
+  - caption: Information Field Theory
     chapters:
-      - file: demos/pyroot
-  - caption: API
-    chapters:
-      - file: api/atiSetup
-      - file: api/mle
-      - file: api/mcmc
-      - file: api/loadParameters
-      - file: api/plotgen
-      - file: api/extract_ff
+      - file: ift/iftpwa_intro
+      - file: ift/iftpwa_config
+      - file: ift/iftpwa_tips
+  # - caption: API
+  #   chapters:
+  #     - file: api/atiSetup
+  #     - file: api/mle
+  #     - file: api/mcmc
+  #     - file: api/loadParameters
+  #     - file: api/plotgen
+  #     - file: api/extract_ff

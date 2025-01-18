@@ -150,6 +150,7 @@ def draw_histograms(
 	wavesets="all",
 	stack_background=False,
 	plot_acc_corrected=False,
+	output_format="pdf"
 ):
 	"""
 	Draw histograms from a FitResults object. Histograms are booked using the book_histogram() function that uses macros to compute
@@ -163,11 +164,15 @@ def draw_histograms(
 		wavesets (str): Space separated list of wavesets to turn on. Wavesets are semi-colon ; separated list of amplitudes. "all" turns on all waves.
 		stack_background (bool): Stack backgrounds instead of subtracting them
 		plot_acc_corrected (bool): Plot acceptance corrected data, compare to weighted genmc
+		output_format (str): Output file format, "pdf" or "png"
 
 	Returns:
 		None, dumps a pdf file based on hist_output_name
 	"""
-
+ 
+	output_format = output_format.lower()
+	assert output_format in ["pdf", "png"], "Output format must be 'pdf' or 'png'"
+ 
 	THStack = ROOT.THStack
 	TCanvas = ROOT.TCanvas
 	plotGen = ROOT.PlotGenerator(results)
@@ -362,9 +367,9 @@ def draw_histograms(
 				chi2_stack = calculate_chi_squared(data_hist, stacks[-1].GetStack().Last())
 				latex.DrawLatex(0.25, 0.87, f"#chi^{{2}}/bin = {chi2_stack:.1f}")
   
-		canvas.Print(f"{output_name}.pdf")
+		canvas.Print(f"{output_name}.{output_format}")
 		if plot_acc_corrected:
-			canvas_gen.Print(f"{output_name}_acc_corrected.pdf")
+			canvas_gen.Print(f"{output_name}_acc_corrected.{output_format}")
 		# canvas.Print(f"{output_name}.pdf")
 		# canvas.Print(f"{output_name}.pdf]")
 
