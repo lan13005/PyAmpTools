@@ -4,11 +4,10 @@ set -e  # Exit on error
 set -o pipefail  # Fail on first error in pipelines
 
 # GitHub credentials (passed from Docker BuildKit secrets)
-H_USERNAME=$1
-H_PAT=$2
+GH_USERNAME=$1
+GH_PAT=$2
 
 echo "Using GitHub credentials for cloning private repositories..."
-echo "GitHub Username: $GH_USERNAME"
 
 # Overwrite /bin/sh with bash (some Debian images use dash by default)
 ln -sf /bin/bash /bin/sh
@@ -36,7 +35,7 @@ update-ca-trust extract && update-ca-trust && dnf clean all && dnf makecache # f
 dnf install -y epel-release # for installing xrootd
 dnf config-manager --set-enabled crb # for installing xrootd
 dnf install -y --allowerasing \
-    git curl unzip vim make automake gcc gcc-c++ kernel-devel patch \
+    git curl unzip vim make automake gcc gcc-c++ kernel-devel patch environment-modules \
     python3-devel python3-pip cmake wget \
     openmpi openmpi-devel boost-devel sqlite-devel \
     binutils libX11-devel libXpm-devel libXft-devel libXext-devel python openssl-devel \
@@ -53,13 +52,11 @@ dnf install -y --allowerasing \
 # Install Conda (Mamba) from Miniforge
 wget -O Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
 bash Miniforge3.sh -b -p "${HOME}/conda"
-yes | rm Miniforge3.sh
+rm Miniforge3.sh
 source "${HOME}/conda/etc/profile.d/conda.sh"
 conda activate
 
 # Clone PyAmpTools using BuildKit Secrets
-echo $GH_USERNAME
-echo $GH_PAT
 git clone https://${GH_USERNAME}:${GH_PAT}@github.com/lan13005/PyAmpTools.git --recurse-submodules
 cd PyAmpTools
 conda env create
@@ -69,15 +66,13 @@ mkdir -p $CONDA_PREFIX/etc/conda/activate.d/
 ln -snfr set_environment.sh $CONDA_PREFIX/etc/conda/activate.d
 source set_environment.sh
 # update linker for mpi4py
-yes | rm $CONDA_PREFIX/compiler_compat/ld
-ln -s /usr/bin/ld $CONDA_PREFIX/compiler_compat/con
+rm $CONDA_PREFIX/compiler_compat/ld
+ln -s /usr/bin/ld $CONDA_PREFIX/compiler_compat/ld
 module load mpi
 pip install mpi4py
 cd ..
 
 # Clone IFTPWA using BuildKit Secrets
-echo $GH_USERNAME
-echo $GH_PAT
 git clone https://${GH_USERNAME}:${GH_PAT}@github.com/fmkroci/iftpwa.git
 cd iftpwa
 git checkout hyperopt
@@ -85,8 +80,6 @@ pip install -e .
 cd ..
 
 # Install and setup fzf using BuildKit Secrets
-echo $GH_USERNAME
-echo $GH_PAT
 git clone --depth 1 https://${GH_USERNAME}:${GH_PAT}@github.com/junegunn/fzf.git /app/fzf
 /app/fzf/install --all
 
