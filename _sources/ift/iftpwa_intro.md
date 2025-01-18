@@ -4,6 +4,10 @@
 
 When multiple resonances overlap in phase space, partial wave analysis is needed to disentangle the individual contributions. One can think of it as a generalized Fourier analysis where each basis component can represent a physically interpretable process (caveats!). 
 
+```{seealso}
+Want to learn more about Information Field Theory? Checkout these [Notes](https://lan13005.github.io/Information-Theory/)
+```
+
 ## Design Requirements
 - complex valued
 - large datasets
