@@ -191,19 +191,6 @@
 
 
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="pyroot.html">PyROOT - Lessons Learned</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../api/atiSetup.html">atiSetup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/mle.html">mle</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/mcmc.html">MCMC</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/loadParameters.html">LoadParameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/plotgen.html">PlotGen</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/extract_ff.html">extract_ff</a></li>
-</ul>
 
     </div>
 </nav></div>
@@ -438,7 +425,9 @@ atiSetup| Loading library libIUAmpTools.so ............  ON
 atiSetup| Loading library libAmpTools.so ..............  ON
 atiSetup| Loading library libAmpPlotter.so ............  ON
 atiSetup| Loading library libAmpsDataIO.so ............  ON
-atiSetup| Loading library libFSRoot.so ................  OFF
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>atiSetup| Loading library libFSRoot.so ................  OFF
 atiSetup| Loading library libAmpsGen.so ...............  ON
 
 
@@ -710,7 +699,7 @@ nwalkers: 32
 burnIn: 0
 nsamples: 200
 params_dict: {}
-moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7f59ecb685b0&gt;]
+moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7fb7c1a535b0&gt;]
 sampler_kwargs: {&#39;progress&#39;: False}
  ========================================================================= 
 
@@ -719,10 +708,10 @@ Initializing walkers in an N-ball around the initial estimate
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Calculating intensity with amplitudes dictionary:
-  resAmp3 -&gt; [&#39;etapi::imZ::resAmp3&#39;, &#39;etapi::reZ::resAmp3&#39;]
-  resAmp1 -&gt; [&#39;etapi::reZ::resAmp1&#39;, &#39;etapi::imZ::resAmp1&#39;]
-  resAmp2 -&gt; [&#39;etapi::reZ::resAmp2&#39;, &#39;etapi::imZ::resAmp2&#39;]
-  total -&gt; [&#39;etapi::imZ::resAmp3&#39;, &#39;etapi::reZ::resAmp1&#39;, &#39;etapi::reZ::resAmp3&#39;, &#39;etapi::imZ::resAmp1&#39;, &#39;etapi::reZ::resAmp2&#39;, &#39;etapi::imZ::resAmp2&#39;]
+  resAmp2 -&gt; [&#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp2&#39;]
+  resAmp3 -&gt; [&#39;etapi::reZ::resAmp3&#39;, &#39;etapi::imZ::resAmp3&#39;]
+  resAmp1 -&gt; [&#39;etapi::imZ::resAmp1&#39;, &#39;etapi::reZ::resAmp1&#39;]
+  total -&gt; [&#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp2&#39;, &#39;etapi::reZ::resAmp3&#39;, &#39;etapi::imZ::resAmp1&#39;, &#39;etapi::reZ::resAmp1&#39;, &#39;etapi::imZ::resAmp3&#39;]
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The chain is shorter than 50 times the integrated autocorrelation time for 5 parameter(s). Use this estimate with caution and run a longer chain!
@@ -750,7 +739,7 @@ Autocorrelation time: 16.447 steps
 MCMC intensity samples saved to mcmc/samples_intensity.feather
   shape: (6400, 4)
 
-Fit time: 4.130315065383911 seconds
+Fit time: 4.1476171016693115 seconds
 </pre></div>
 </div>
 </div>
