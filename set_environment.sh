@@ -11,14 +11,23 @@ env_name="pyamptools" # current conda environment name
 #  are already built so we can reuse them
 default_env="/w/halld-scshelf2101/lng/WORK/PyAmpTools9"
 
+# Get name of this script for either bash or zsh
+if [ -n "$BASH_SOURCE" ]; then
+    SRC_PATH=${BASH_SOURCE}
+elif [ -n "$ZSH_VERSION" ]; then
+    SRC_PATH=${(%):-%x}
+else
+    echo "Unknown shell"
+    exit 1
+fi
 
 # VSCode could create additional environment variables...
 #   Checking to see if PYAMPTOOLS_HOME is a full path to see if it's been set by the user
 if [[ ! $PYAMPTOOLS_HOME == /* ]] || [ -z "$PYAMPTOOLS_HOME" ]; then
-    export PYAMPTOOLS_HOME=$( dirname "$( readlink -f "${BASH_SOURCE[0]}" )" ) # absolute location of this script
+    export PYAMPTOOLS_HOME=$(dirname "$(realpath "${SRC_PATH}")") # absolute location of this script
     echo "PYAMPTOOLS_HOME was set to $PYAMPTOOLS_HOME"
-# else
-#     echo "PYAMPTOOLS_HOME is already set. Will not attempt override. PYAMPTOOLS_HOME=$PYAMPTOOLS_HOME"
+else
+    echo "PYAMPTOOLS_HOME is already set. Will not attempt override. PYAMPTOOLS_HOME=$PYAMPTOOLS_HOME"
 fi
 
 ####################
