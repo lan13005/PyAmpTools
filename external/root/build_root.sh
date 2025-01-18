@@ -67,7 +67,7 @@
 # Specify ROOT, compiler, python, and cmake versions
 conda activate pyamptools # activate the conda environment
 export ROOT_VERS=6.28.06
-export GCC_VERS=11.4.0
+export GCC_VERS=$(gcc --version | head -n1 | awk '{print $3}')
 export PYTHON_VERS=$(python3 -V 2>&1 | grep -Po '(?<=Python )(.+)')
 export PYTHON3_EXECUTABLE=$(readlink -f $(which python3))
 export CMAKE_VERS=3.20.2
@@ -191,7 +191,7 @@ echo "" >> $SETENV
 echo "echo \"\"" >> $SETENV
 echo "echo \"[LOADED ROOT] ROOT ${ROOT_VERS} was compiled with gcc ${GCC_VERS} and python ${PYTHON_VERS}\"" >> $SETENV
 echo "" >> $SETENV
-echo "module load gcc/${GCC_VERS}" >> $SETENV
+#echo "module load gcc/${GCC_VERS}" >> $SETENV
 echo "source \$1/root-${ROOT_VERS}-gcc${GCC_VERS}/bin/thisroot.sh" >> $SETENV
 echo "" >> $SETENV
 
@@ -205,6 +205,6 @@ echo "" >> $SETENV
 echo "echo \"\"" >> $SETENV
 echo "echo \"[LOADED ROOT] ROOT ${ROOT_VERS} was compiled with gcc ${GCC_VERS} and python ${PYTHON_VERS}\"" >> $SETENV
 echo "" >> $SETENV
-echo "module load gcc/${GCC_VERS}" >> $SETENV
+#echo "module load gcc/${GCC_VERS}" >> $SETENV
 echo "source \$1/root-${ROOT_VERS}-gcc${GCC_VERS}/bin/thisroot.csh" >> $SETENV
 echo "" >> $SETENV
