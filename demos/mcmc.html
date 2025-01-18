@@ -14,45 +14,48 @@
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!-- 
+    this give us a css class that will be invisible only if js is disabled 
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-
-  
-  <link href="../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
-  <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
     <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>let toggleHintShow = 'Click to show';</script>
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
     <script async="async" src="../_static/sphinx-thebe.js?v=c100c467"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
@@ -66,6 +69,7 @@
     <link rel="prev" title="Maximum Likelihood Estimation" href="mle.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -73,31 +77,16 @@
 
   
   
-  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
   
   <div id="pst-scroll-pixel-helper"></div>
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>
-    Back to top
-  </button>
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
-  
-  <input type="checkbox"
-          class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
-  
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="../search.html"
       method="get">
@@ -105,7 +94,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search this book..."
          aria-label="Search this book..."
          autocomplete="off"
@@ -113,10 +101,15 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
     </header>
   
 
@@ -125,7 +118,8 @@
       
       
       
-      <div class="bd-sidebar-primary bd-sidebar">
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -140,6 +134,8 @@
         <div class="sidebar-primary-item">
 
   
+    
+  
 
 <a class="navbar-brand logo" href="../intro.html">
   
@@ -153,15 +149,11 @@
 </a></div>
         <div class="sidebar-primary-item">
 
- <script>
- document.write(`
-   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script></div>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         
@@ -175,17 +167,29 @@
         <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../additional_info.html">Potential Build Errors</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="libraryLoading.html">Loading Libraries</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generation.html">Generating Data</a></li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="fitting.html">Fitting</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="fitting.html">Fitting</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="mle.html">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Markov Chain Monte Carlo</a></li>
 
 </ul>
-</li>
+</details></li>
 <li class="toctree-l1"><a class="reference internal" href="plotgen.html">Plotting Fit Results</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_intro.html">iftpwa - Introduction</a></li>
+
+<li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_config.html">iftpwa - Default Configuration</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_tips.html">iftpwa - Tips</a></li>
+
+
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul class="nav bd-sidenav">
@@ -214,7 +218,7 @@
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
 
@@ -223,14 +227,14 @@
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -353,27 +357,19 @@
 
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
-  </button>
-`);
-</script>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-  </button>
-`);
-</script>
-<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
-</label>
+</button>
 </div></div>
       
     </div>
@@ -410,6 +406,7 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="markov-chain-monte-carlo">
 <h1>Markov Chain Monte Carlo<a class="headerlink" href="#markov-chain-monte-carlo" title="Link to this heading">#</a></h1>
+<p><span style="color:red; font-weight:bold;">Restricting amptools to limit output: AMPTOOLS_DEBUG_LEVEL=”ERROR”</span></p>
 <p>Markov Chain Monte Carlo (MCMC) is another class of techniques to perform interence by sampling directly from the posterior distribution. In this tutorial we will showcase how to use <a class="reference external" href="https://emcee.readthedocs.io/en/stable/">emcee</a>, an <em>ensemble sampler</em>. Ensemble samplers uses a set of walkers that move around the parameter space generally spending more time in high probablity regions. Several types of moves are implemented in <code class="docutils literal notranslate"><span class="pre">emcee</span></code> and can be mixed together to form a probabilistic mixture, see <a class="reference external" href="https://emcee.readthedocs.io/en/stable/user/moves/">emcee moves documentation</a>. Accepting or rejecting the move is based on the <a class="reference external" href="https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm">Metropolis algorithm</a>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -437,11 +434,9 @@ atiSetup| GPU is disabled
 ------------------------------------------------
 
 
+atiSetup| Loading library libIUAmpTools.so ............  ON
 atiSetup| Loading library libAmpTools.so ..............  ON
-atiSetup| Loading library libAmpPlotter.so ............
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  ON
+atiSetup| Loading library libAmpPlotter.so ............  ON
 atiSetup| Loading library libAmpsDataIO.so ............  ON
 atiSetup| Loading library libFSRoot.so ................  OFF
 atiSetup| Loading library libAmpsGen.so ...............  ON
@@ -451,7 +446,6 @@ atiSetup| Loading library libAmpsGen.so ...............  ON
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
-Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 </pre></div>
 </div>
 </div>
@@ -501,7 +495,7 @@ Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> ====================================================================================
- cfgfile: /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/fit.cfg
+ cfgfile: /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/fit.cfg
  ofile: mcmc/emcee_state.h5
  intensity_dump: mcmc/samples_intensity.feather
  corner_ofile: corner.png
@@ -664,7 +658,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   =================================================================
    |        ^                                                      |
-   |       / \             Version:  v0.15.1-5-g4c36-dirty         |
+   |       / \             Version:  v0.15.3-2-g0753-dirty         |
    |      /---\                                                    |
    |     /     \           GDouble:  8 bytes                       |
    |    /       \ MP           MPI:  NO                            |
@@ -673,171 +667,6 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
    |        |              doi.org/10.5281/zenodo.5039377          |
    |        | OOLS                                                 |
    =================================================================
-
-[ ConfigurationInfo ]:
-
-	## CONFIGURATION INFO DISPLAY ##
-	
-
-[ ReactionInfo ]:
-
-	############################################
-	#############   REACTION INFO  #############
-	############################################
-	      REACTION NAME:  etapi
-	      PARTICLE LIST:  4
-			1.  Beam
-			2.  Proton
-			3.  Eta
-			4.  Pi0
-	        DATA READER:  ROOTDataReader
-					/w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
-	      ACC MC READER:  ROOTDataReader
-					/w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-	      GEN MC READER:  ROOTDataReader
-					/w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-	  NORMALIZATION INTEGRAL FILE: 
-			    normint
-	      GPU DEVICE NUMBER:  -1
-
-[ CoherentSumInfo ]:
-
-	********************************************
-	***********  COHERENT SUM INFO  ************
-	********************************************
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  reZ
-
-[ AmplitudeInfo ]:
-
-	++++++++++++++++++++++++++++++++++++++++++++
-	+++++++++++++  AMPLITUDE INFO  +++++++++++++
-	++++++++++++++++++++++++++++++++++++++++++++
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  reZ
-	     AMPLITUDE NAME:  resAmp1
-	            FACTORS:  1
-			1.  	 Zlm	 2	 0	 +1	 +1	 0.0	 1.0	
-	 EXTRA PERMUTATIONS:  0
-	        CONSTRAINTS:  1
-			1.  etapi::imZ::resAmp1
-	         PARAMETERS:  0
-	      INITIAL VALUE:  (-139.917,0)
-	               REAL?  1
-	              FIXED?  0
-	              SCALE:  1.0
-	++++++++++++++++++++++++++++++++++++++++++++
-	+++++++++++++  AMPLITUDE INFO  +++++++++++++
-	++++++++++++++++++++++++++++++++++++++++++++
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  reZ
-	     AMPLITUDE NAME:  resAmp2
-	            FACTORS:  1
-			1.  	 Zlm	 2	 2	 +1	 +1	 0.0	 1.0	
-	 EXTRA PERMUTATIONS:  0
-	        CONSTRAINTS:  1
-			1.  etapi::imZ::resAmp2
-	         PARAMETERS:  0
-	      INITIAL VALUE:  (-80.7646,134.783)
-	               REAL?  0
-	              FIXED?  0
-	              SCALE:  1.0
-	++++++++++++++++++++++++++++++++++++++++++++
-	+++++++++++++  AMPLITUDE INFO  +++++++++++++
-	++++++++++++++++++++++++++++++++++++++++++++
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  reZ
-	     AMPLITUDE NAME:  resAmp3
-	            FACTORS:  1
-			1.  	 Zlm	 0	 0	 +1	 +1	 0.0	 1.0	
-	 EXTRA PERMUTATIONS:  0
-	        CONSTRAINTS:  1
-			1.  etapi::imZ::resAmp3
-	         PARAMETERS:  0
-	      INITIAL VALUE:  (-193.378,106.653)
-	               REAL?  0
-	              FIXED?  0
-	              SCALE:  1.0
-
-[ CoherentSumInfo ]:
-
-	********************************************
-	***********  COHERENT SUM INFO  ************
-	********************************************
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  imZ
-
-[ AmplitudeInfo ]:
-
-	++++++++++++++++++++++++++++++++++++++++++++
-	+++++++++++++  AMPLITUDE INFO  +++++++++++++
-	++++++++++++++++++++++++++++++++++++++++++++
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  imZ
-	     AMPLITUDE NAME:  resAmp1
-	            FACTORS:  1
-			1.  	 Zlm	 2	 0	 -1	 -1	 0.0	 1.0	
-	 EXTRA PERMUTATIONS:  0
-	        CONSTRAINTS:  1
-			1.  etapi::reZ::resAmp1
-	         PARAMETERS:  0
-	      INITIAL VALUE:  (-139.917,0)
-	               REAL?  1
-	              FIXED?  0
-	              SCALE:  1.0
-	++++++++++++++++++++++++++++++++++++++++++++
-	+++++++++++++  AMPLITUDE INFO  +++++++++++++
-	++++++++++++++++++++++++++++++++++++++++++++
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  imZ
-	     AMPLITUDE NAME:  resAmp2
-	            FACTORS:  1
-			1.  	 Zlm	 2	 2	 -1	 -1	 0.0	 1.0	
-	 EXTRA PERMUTATIONS:  0
-	        CONSTRAINTS:  1
-			1.  etapi::reZ::resAmp2
-	         PARAMETERS:  0
-	      INITIAL VALUE:  (-80.7646,134.783)
-	               REAL?  0
-	              FIXED?  0
-	              SCALE:  1.0
-	++++++++++++++++++++++++++++++++++++++++++++
-	+++++++++++++  AMPLITUDE INFO  +++++++++++++
-	++++++++++++++++++++++++++++++++++++++++++++
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  imZ
-	     AMPLITUDE NAME:  resAmp3
-	            FACTORS:  1
-			1.  	 Zlm	 0	 0	 -1	 -1	 0.0	 1.0	
-	 EXTRA PERMUTATIONS:  0
-	        CONSTRAINTS:  1
-			1.  etapi::reZ::resAmp3
-	         PARAMETERS:  0
-	      INITIAL VALUE:  (-193.378,106.653)
-	               REAL?  0
-	              FIXED?  0
-	              SCALE:  1.0
-
-[ Minuit ]:
-
-	**********
-	 **    1 **SET STRATEGY  1
-	**********
-	 NOW USING STRATEGY  1: TRY TO BALANCE SPEED AGAINST RELIABILITY
-
-[ AmplitudeManager ]:
-
-	Creating AmplitudeManager for the reaction:  etapi
-		 particle index assignment:  Beam -&gt; 0
-		 particle index assignment:  Proton -&gt; 1
-		 particle index assignment:  Eta -&gt; 2
-		 particle index assignment:  Pi0 -&gt; 3
-
-[ NormIntInterface ]:
-
-	Loading generated Monte Carlo from file...
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-	Duplicated Monte Carlo set detected, using previously loaded version
 </pre></div>
 </div>
 </div>
@@ -846,11 +675,6 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">LoadParametersSampler</span> <span class="o">=</span> <span class="n">LoadParameters</span><span class="p">(</span><span class="n">cfgInfo</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Input was a ConfigurationInfo object. Take actions accordingly...
 </pre></div>
 </div>
 </div>
@@ -886,7 +710,7 @@ nwalkers: 32
 burnIn: 0
 nsamples: 200
 params_dict: {}
-moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7fe21b02a970&gt;]
+moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7f59ecb685b0&gt;]
 sampler_kwargs: {&#39;progress&#39;: False}
  ========================================================================= 
 
@@ -895,10 +719,10 @@ Initializing walkers in an N-ball around the initial estimate
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Calculating intensity with amplitudes dictionary:
-  resAmp1 -&gt; [&#39;etapi::imZ::resAmp1&#39;, &#39;etapi::reZ::resAmp1&#39;]
-  resAmp2 -&gt; [&#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp2&#39;]
-  resAmp3 -&gt; [&#39;etapi::reZ::resAmp3&#39;, &#39;etapi::imZ::resAmp3&#39;]
-  total -&gt; [&#39;etapi::imZ::resAmp1&#39;, &#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp3&#39;, &#39;etapi::reZ::resAmp2&#39;, &#39;etapi::reZ::resAmp1&#39;, &#39;etapi::imZ::resAmp3&#39;]
+  resAmp3 -&gt; [&#39;etapi::imZ::resAmp3&#39;, &#39;etapi::reZ::resAmp3&#39;]
+  resAmp1 -&gt; [&#39;etapi::reZ::resAmp1&#39;, &#39;etapi::imZ::resAmp1&#39;]
+  resAmp2 -&gt; [&#39;etapi::reZ::resAmp2&#39;, &#39;etapi::imZ::resAmp2&#39;]
+  total -&gt; [&#39;etapi::imZ::resAmp3&#39;, &#39;etapi::reZ::resAmp1&#39;, &#39;etapi::reZ::resAmp3&#39;, &#39;etapi::imZ::resAmp1&#39;, &#39;etapi::reZ::resAmp2&#39;, &#39;etapi::imZ::resAmp2&#39;]
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The chain is shorter than 50 times the integrated autocorrelation time for 5 parameter(s). Use this estimate with caution and run a longer chain!
@@ -926,9 +750,7 @@ Autocorrelation time: 16.447 steps
 MCMC intensity samples saved to mcmc/samples_intensity.feather
   shape: (6400, 4)
 
-Fit time: 11.953816175460815 seconds
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
-	Perfect acceptance -- generated and accepted MC are the same
+Fit time: 4.130315065383911 seconds
 </pre></div>
 </div>
 </div>
@@ -942,7 +764,7 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/51f1f9e94de720150fa5046fccb2bff3548f4815a8dcac8c636de35ab74f4f80.png" src="../_images/51f1f9e94de720150fa5046fccb2bff3548f4815a8dcac8c636de35ab74f4f80.png" />
+<img alt="../_images/32206aad5f8bb085dae5fd2174530ceb04455806fc5b58bf6de4fec58f1a0e73.png" src="../_images/32206aad5f8bb085dae5fd2174530ceb04455806fc5b58bf6de4fec58f1a0e73.png" />
 </div>
 </div>
 <p>We can see that the parameters are correlated. In this cfg file <code class="docutils literal notranslate"><span class="pre">resAmp1</span></code> is set to be real while <code class="docutils literal notranslate"><span class="pre">resAmp2</span></code> and <code class="docutils literal notranslate"><span class="pre">resAmp3</span></code> are freely floating complex numbers. It can be seen that resAmp1 is negatively correlated with the other parameters. The other parameters are uniformly positively correlated with each other.</p>
@@ -990,7 +812,7 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
               
               
               
-                <footer class="prev-next-footer">
+                <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
     <a class="left-prev"
@@ -1018,7 +840,8 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
             
             
               
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
   <div class="sidebar-secondary-item">
@@ -1078,8 +901,8 @@ By Lawrence Ng
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
 
   <footer class="bd-footer">
   </footer>

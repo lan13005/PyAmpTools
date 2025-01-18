@@ -14,45 +14,48 @@
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!-- 
+    this give us a css class that will be invisible only if js is disabled 
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-
-  
-  <link href="../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
-  <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
     <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>let toggleHintShow = 'Click to show';</script>
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
     <script async="async" src="../_static/sphinx-thebe.js?v=c100c467"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
@@ -64,6 +67,7 @@
     <link rel="prev" title="Fitting" href="fitting.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -71,31 +75,16 @@
 
   
   
-  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
   
   <div id="pst-scroll-pixel-helper"></div>
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>
-    Back to top
-  </button>
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
-  
-  <input type="checkbox"
-          class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
-  
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="../search.html"
       method="get">
@@ -103,7 +92,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search this book..."
          aria-label="Search this book..."
          autocomplete="off"
@@ -111,10 +99,15 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
     </header>
   
 
@@ -123,7 +116,8 @@
       
       
       
-      <div class="bd-sidebar-primary bd-sidebar">
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -138,6 +132,8 @@
         <div class="sidebar-primary-item">
 
   
+    
+  
 
 <a class="navbar-brand logo" href="../intro.html">
   
@@ -151,15 +147,11 @@
 </a></div>
         <div class="sidebar-primary-item">
 
- <script>
- document.write(`
-   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script></div>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         
@@ -173,17 +165,29 @@
         <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../additional_info.html">Potential Build Errors</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="libraryLoading.html">Loading Libraries</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generation.html">Generating Data</a></li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="fitting.html">Fitting</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="fitting.html">Fitting</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mcmc.html">Markov Chain Monte Carlo</a></li>
 
 </ul>
-</li>
+</details></li>
 <li class="toctree-l1"><a class="reference internal" href="plotgen.html">Plotting Fit Results</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_intro.html">iftpwa - Introduction</a></li>
+
+<li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_config.html">iftpwa - Default Configuration</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_tips.html">iftpwa - Tips</a></li>
+
+
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul class="nav bd-sidenav">
@@ -212,7 +216,7 @@
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
 
@@ -221,14 +225,14 @@
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -351,24 +355,16 @@
 
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
-  </button>
-`);
-</script>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-  </button>
-`);
-</script>
+</button>
 
 </div></div>
       
@@ -396,6 +392,7 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="maximum-likelihood-estimation">
 <h1>Maximum Likelihood Estimation<a class="headerlink" href="#maximum-likelihood-estimation" title="Link to this heading">#</a></h1>
+<p><span style="color:red; font-weight:bold;">Restricting amptools to limit output: AMPTOOLS_DEBUG_LEVEL=”ERROR”</span></p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
@@ -434,6 +431,7 @@ atiSetup| GPU is disabled
 ------------------------------------------------
 
 
+atiSetup| Loading library libIUAmpTools.so ............  ON
 atiSetup| Loading library libAmpTools.so ..............  ON
 atiSetup| Loading library libAmpPlotter.so ............  ON
 atiSetup| Loading library libAmpsDataIO.so ............  ON
@@ -445,8 +443,6 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
-
-Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 </pre></div>
 </div>
 </div>
@@ -464,10 +460,10 @@ Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> === COMMANDLINE ARGUMENTS === 
-Config file: /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/fitInit.cfg
+Config file: /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/fitInit.cfg
 Seed file: seed_file
 Number of random fits: 0
-Random seed: 1714570062
+Random seed: 1737215254
  ============================= 
 </pre></div>
 </div>
@@ -485,7 +481,7 @@ Random seed: 1714570062
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   =================================================================
    |        ^                                                      |
-   |       / \             Version:  v0.15.1-5-g4c36-dirty         |
+   |       / \             Version:  v0.15.3-2-g0753-dirty         |
    |      /---\                                                    |
    |     /     \           GDouble:  8 bytes                       |
    |    /       \ MP           MPI:  NO                            |
@@ -494,150 +490,6 @@ Random seed: 1714570062
    |        |              doi.org/10.5281/zenodo.5039377          |
    |        | OOLS                                                 |
    =================================================================
-
-[ ConfigurationInfo ]:
-
-	## CONFIGURATION INFO DISPLAY ##
-	
-
-[ ReactionInfo ]:
-
-	############################################
-	#############   REACTION INFO  #############
-	############################################
-	      REACTION NAME:  etapi
-	      PARTICLE LIST:  4
-			1.  Beam
-			2.  Proton
-			3.  Eta
-			4.  Pi0
-	        DATA READER:  ROOTDataReader
-					/w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
-	      ACC MC READER:  ROOTDataReader
-					/w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-	      GEN MC READER:  ROOTDataReader
-					/w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-	  NORMALIZATION INTEGRAL FILE: 
-			    normint
-	      GPU DEVICE NUMBER:  -1
-
-[ CoherentSumInfo ]:
-
-	********************************************
-	***********  COHERENT SUM INFO  ************
-	********************************************
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  reZ
-
-[ AmplitudeInfo ]:
-
-	++++++++++++++++++++++++++++++++++++++++++++
-	+++++++++++++  AMPLITUDE INFO  +++++++++++++
-	++++++++++++++++++++++++++++++++++++++++++++
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  reZ
-	     AMPLITUDE NAME:  resAmp1
-	            FACTORS:  1
-			1.  	 Zlm	 2	 0	 +1	 +1	 0.0	 1.0	
-	 EXTRA PERMUTATIONS:  0
-	        CONSTRAINTS:  1
-			1.  etapi::imZ::resAmp1
-	         PARAMETERS:  0
-	      INITIAL VALUE:  (10,0)
-	               REAL?  1
-	              FIXED?  0
-	              SCALE:  1.0
-	++++++++++++++++++++++++++++++++++++++++++++
-	+++++++++++++  AMPLITUDE INFO  +++++++++++++
-	++++++++++++++++++++++++++++++++++++++++++++
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  reZ
-	     AMPLITUDE NAME:  resAmp2
-	            FACTORS:  1
-			1.  	 Zlm	 2	 2	 +1	 +1	 0.0	 1.0	
-	 EXTRA PERMUTATIONS:  0
-	        CONSTRAINTS:  1
-			1.  etapi::imZ::resAmp2
-	         PARAMETERS:  0
-	      INITIAL VALUE:  (10,0)
-	               REAL?  0
-	              FIXED?  0
-	              SCALE:  1.0
-	++++++++++++++++++++++++++++++++++++++++++++
-	+++++++++++++  AMPLITUDE INFO  +++++++++++++
-	++++++++++++++++++++++++++++++++++++++++++++
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  reZ
-	     AMPLITUDE NAME:  resAmp3
-	            FACTORS:  1
-			1.  	 Zlm	 0	 0	 +1	 +1	 0.0	 1.0	
-	 EXTRA PERMUTATIONS:  0
-	        CONSTRAINTS:  1
-			1.  etapi::imZ::resAmp3
-	         PARAMETERS:  0
-	      INITIAL VALUE:  (10,0)
-	               REAL?  0
-	              FIXED?  0
-	              SCALE:  1.0
-
-[ CoherentSumInfo ]:
-
-	********************************************
-	***********  COHERENT SUM INFO  ************
-	********************************************
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  imZ
-
-[ AmplitudeInfo ]:
-
-	++++++++++++++++++++++++++++++++++++++++++++
-	+++++++++++++  AMPLITUDE INFO  +++++++++++++
-	++++++++++++++++++++++++++++++++++++++++++++
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  imZ
-	     AMPLITUDE NAME:  resAmp1
-	            FACTORS:  1
-			1.  	 Zlm	 2	 0	 -1	 -1	 0.0	 1.0	
-	 EXTRA PERMUTATIONS:  0
-	        CONSTRAINTS:  1
-			1.  etapi::reZ::resAmp1
-	         PARAMETERS:  0
-	      INITIAL VALUE:  (10,0)
-	               REAL?  1
-	              FIXED?  0
-	              SCALE:  1.0
-	++++++++++++++++++++++++++++++++++++++++++++
-	+++++++++++++  AMPLITUDE INFO  +++++++++++++
-	++++++++++++++++++++++++++++++++++++++++++++
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  imZ
-	     AMPLITUDE NAME:  resAmp2
-	            FACTORS:  1
-			1.  	 Zlm	 2	 2	 -1	 -1	 0.0	 1.0	
-	 EXTRA PERMUTATIONS:  0
-	        CONSTRAINTS:  1
-			1.  etapi::reZ::resAmp2
-	         PARAMETERS:  0
-	      INITIAL VALUE:  (10,0)
-	               REAL?  0
-	              FIXED?  0
-	              SCALE:  1.0
-	++++++++++++++++++++++++++++++++++++++++++++
-	+++++++++++++  AMPLITUDE INFO  +++++++++++++
-	++++++++++++++++++++++++++++++++++++++++++++
-	      REACTION NAME:  etapi
-	  COHERENT SUM NAME:  imZ
-	     AMPLITUDE NAME:  resAmp3
-	            FACTORS:  1
-			1.  	 Zlm	 0	 0	 -1	 -1	 0.0	 1.0	
-	 EXTRA PERMUTATIONS:  0
-	        CONSTRAINTS:  1
-			1.  etapi::reZ::resAmp3
-	         PARAMETERS:  0
-	      INITIAL VALUE:  (10,0)
-	               REAL?  0
-	              FIXED?  0
-	              SCALE:  1.0
 </pre></div>
 </div>
 </div>
@@ -662,30 +514,6 @@ Random seed: 1714570062
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[ Minuit ]:
-
-	**********
-	 **    1 **SET STRATEGY  1
-	**********
-	 NOW USING STRATEGY  1: TRY TO BALANCE SPEED AGAINST RELIABILITY
-
-[ AmplitudeManager ]:
-
-	Creating AmplitudeManager for the reaction:  etapi
-		 particle index assignment:  Beam -&gt; 0
-		 particle index assignment:  Proton -&gt; 1
-		 particle index assignment:  Eta -&gt; 2
-		 particle index assignment:  Pi0 -&gt; 3
-
-[ NormIntInterface ]:
-
-	Loading generated Monte Carlo from file...
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-	Duplicated Monte Carlo set detected, using previously loaded version
-</pre></div>
-</div>
-</div>
 </div>
 <p>A <code class="docutils literal notranslate"><span class="pre">fit</span></code> module is defined in PyAmpTools to run the standard MLE fit. We simply pass the recently created <code class="docutils literal notranslate"><span class="pre">ati</span></code> instance and the number of fits with random initializations to perform. Randomization is beneficial as the optimizer could get stuck in unwanted local minima.</p>
 <p>A single fit is performed without randomization is performed if <code class="docutils literal notranslate"><span class="pre">numRnd=0</span></code></p>
@@ -698,61 +526,7 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LIKELIHOOD BEFORE MINIMIZATION: 112356.11732090596
-LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): 14346.408126566832
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
-
-[ Minuit ]:
-
-	**********
-	 **    2 **MIGRAD 100000 0.1
-	**********
-	 FIRST CALL TO USER FUNCTION AT NEW START POINT, WITH IFLAG=4.
-	 START MIGRAD MINIMIZATION.  STRATEGY  1  CONVERGENCE WHEN EDM .LT. 1.00e-04
-	 FCN=26585.6 FROM MIGRAD     STATUS=INITIATE      162         163 TOTAL
-	                     EDM= unknown      STRATEGY= 1      NO ERROR MATRIX       
-	  EXT PARAMETER                         CURRENT GUESS       STEP         FIRST   
-	  NO.   NAME                  VALUE          ERROR          SIZE      DERIVATIVE 
-	    1 etapi::reZ::resAmp1_re  -8.24991e+01   1.00000e-01       -92.499        75.351
-	    2 etapi::reZ::resAmp2_re   9.26049e+01   1.00000e-01             0        2.0926
-	    3 etapi::reZ::resAmp2_im   2.78287e+02   1.00000e-02             0        44.689
-	    4 etapi::reZ::resAmp3_re   1.00000e+01   1.00000e-01             0        75.356
-	    5 etapi::reZ::resAmp3_im   1.50706e+02   1.00000e-02             0       -41.017
-	
-	 MIGRAD MINIMIZATION HAS CONVERGED.
-	 FCN=14346.4 FROM MIGRAD     STATUS=CONVERGED     300         301 TOTAL
-	                     EDM=2.08018e-06    STRATEGY= 1  ERROR MATRIX UNCERTAINTY 4.7e+00 per cent
-	  EXT PARAMETER                                             STEP         FIRST   
-	  NO.   NAME                  VALUE          ERROR          SIZE      DERIVATIVE 
-	    1 etapi::reZ::resAmp1_re  -1.39917e+02   2.44224e+00     -0.012835   -0.00050537
-	    2 etapi::reZ::resAmp2_re  -8.07646e+01   6.24080e+00      0.037625   -0.00063901
-	    3 etapi::reZ::resAmp2_im   1.34783e+02   4.87638e+00      0.050544   -0.00017916
-	    4 etapi::reZ::resAmp3_re  -1.93378e+02   4.03569e+00      0.042951    0.00066661
-	    5 etapi::reZ::resAmp3_im   1.06653e+02   4.59293e+00      0.021035   -0.00011554
-	
-	 EXTERNAL ERROR MATRIX.    NDIM= 500    NPAR=  5    ERR DEF=1.00000e+00
-	        5.96      -9.78      -7.67      -6.73      -5.68
-	       -9.78       38.9       25.2       21.3       22.5
-	       -7.67       25.2       23.8       15.5       13.4
-	       -6.73       21.3       15.5       16.3       14.6
-	       -5.68       22.5       13.4       14.6       21.1
-	 PARAMETER CORRELATION COEFFICIENTS
-	       NO.  GLOBAL      1      2      3      4      5
-	      1:     0.708  1.000 -0.641 -0.644 -0.683 -0.506
-	      2:     0.911 -0.641  1.000  0.828  0.847  0.786
-	      3:     0.862 -0.644  0.828  1.000  0.789  0.600
-	      4:     0.900 -0.683  0.847  0.789  1.000  0.787
-	      5:     0.837 -0.506  0.786  0.600  0.787  1.000
-
-[ MinuitMinimizationManager ]:
-
-	MIGRAD evaluation total wall time:  3.04522e-01 s.
-	   average time per function call:  1.00835e+00 ms.
-
-[ NormIntInterface ]:
-
-	Perfect acceptance -- generated and accepted MC are the same
+LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): 14346.408126566821
 </pre></div>
 </div>
 </div>
@@ -796,7 +570,7 @@ LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): 14346.408126566832
               
               
               
-                <footer class="prev-next-footer">
+                <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
     <a class="left-prev"
@@ -823,8 +597,6 @@ LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): 14346.408126566832
             </div>
             
             
-              
-                <div class="bd-sidebar-secondary bd-toc"></div>
               
             
           </div>
@@ -869,8 +641,8 @@ By Lawrence Ng
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
 
   <footer class="bd-footer">
   </footer>

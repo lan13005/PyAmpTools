@@ -1,0 +1,738 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>iftpwa - Default Configuration &#8212; PyAmpTools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!-- 
+    this give us a css class that will be invisible only if js is disabled 
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'ift/iftpwa_config';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="iftpwa - Tips" href="iftpwa_tips.html" />
+    <link rel="prev" title="iftpwa - Introduction" href="iftpwa_intro.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../intro.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">PyAmpTools</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../intro.html">
+                    PyAmpTools
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../additional_info.html">Potential Build Errors</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../demos/libraryLoading.html">Loading Libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos/generation.html">Generating Data</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../demos/fitting.html">Fitting</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../demos/mle.html">Maximum Likelihood Estimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../demos/mcmc.html">Markov Chain Monte Carlo</a></li>
+
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos/plotgen.html">Plotting Fit Results</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="iftpwa_intro.html">iftpwa - Introduction</a></li>
+
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">iftpwa - Default Configuration</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="iftpwa_tips.html">iftpwa - Tips</a></li>
+
+
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../demos/pyroot.html">PyROOT - Lessons Learned</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../api/atiSetup.html">atiSetup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/mle.html">mle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/mcmc.html">MCMC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/loadParameters.html">LoadParameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/plotgen.html">PlotGen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/extract_ff.html">extract_ff</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/lan13005/PyAmpTools" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2Fift/iftpwa_config.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/ift/iftpwa_config.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>iftpwa - Default Configuration</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">iftpwa - Default Configuration</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#correlated-field-model-in-nifty">Correlated Field Model in NIFTy</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#simplified-model">Simplified Model</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#default-configuration-for-gluex-pwa">Default Configuration for GlueX PWA</a></li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="iftpwa-default-configuration">
+<h1>iftpwa - Default Configuration<a class="headerlink" href="#iftpwa-default-configuration" title="Link to this heading">#</a></h1>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="correlated-field-model-in-nifty">
+<h1>Correlated Field Model in NIFTy<a class="headerlink" href="#correlated-field-model-in-nifty" title="Link to this heading">#</a></h1>
+<p>Please read the following first, perhaps run the code yourself to see how the correlated field model works in NIFTy. This model forms the basis of the iftpwa package.
+<a class="reference external" href="https://ift.pages.mpcdf.de/nifty/user/old_nifty_getting_started_4_CorrelatedFields.html">Showcasingthe Correlated Field Model (NIFTy)</a></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The correlated field model is no longer a Gaussian process but it does make understanding and explaining the IFT approach easier</p>
+</div>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="simplified-model">
+<h1>Simplified Model<a class="headerlink" href="#simplified-model" title="Link to this heading">#</a></h1>
+<p>The following simplified model is used to depict how the configuration file key-value fields affect the physics model:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}
+A_i &amp; = \kappa \cdot \rho_i \cdot C_i \cdot \left[ G(w_i, s_i, f_i, a_i) \times I(w_i) + a_i P_i(w_i, \vec{x}) \right] \\
+\end{split}\]</div>
+<div class="math notranslate nohighlight">
+\[\begin{split}
+\begin{split}
+i &amp; = \text{wave index} \\ 
+\kappa &amp; = \text{kinematic factor} \\ 
+\rho_i &amp; = \text{phase space factor as a pkl file} \\
+C_i &amp; = \text{scale factor -&gt; half-normal / laplace priors} \\
+G(s_i, f_i, a_i) &amp; = \text{Gaussian process with scale, flexibility, asperity} \\ 
+I &amp; = \text{indicator function to zero Gaussian process component} \\
+a &amp; = \text{prescale factor for Parametric component} \\
+P(\vec{x}) &amp; = \text{Parametric component with parameters } \vec{x} \\ 
+\end{split}
+\end{split}\]</div>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="default-configuration-for-gluex-pwa">
+<h1>Default Configuration for GlueX PWA<a class="headerlink" href="#default-configuration-for-gluex-pwa" title="Link to this heading">#</a></h1>
+<p>Below is the default YAML configuration for GlueX analyses of <span class="math notranslate nohighlight">\(\gamma p \rightarrow \eta\pi^0 p\)</span></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">GENERAL</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">pwa_manager</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">GLUEX</span>
+<span class="w">    </span><span class="nt">seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span><span class="w"> </span><span class="c1"># (int) RNG seed for reproducible results. Optimizer can get stuck in local minima so freely change this or try multiple values</span>
+<span class="w">    </span><span class="nt">verbosityLevel</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"> </span><span class="c1"># (int) Greater than 0 will print a bit (slightly) more information to screen</span>
+<span class="w">    </span><span class="nt">outputFolder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">???</span><span class="w"> </span><span class="c1"># (path) Base folder to dump all results into</span>
+<span class="w">    </span><span class="nt">fitResultPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${GENERAL.outputFolder}/niftypwa_fit.pkl</span><span class="w"> </span><span class="c1"># (path) Python pickle file dump location, pkl file stores all the information about {input, model, result}</span>
+<span class="w">    </span><span class="nt">maxNIFTyJobs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"> </span><span class="c1"># (int) Number of NIFTy jobs (not to be confused with MPI processes that the PWA_MANAGER can spawn). For example, if one would like to use multiple NIFTy processes for sampling. Untested.</span>
+<span class="w">    </span><span class="nt">initial_position_std</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span><span class="w"> </span><span class="c1"># (float) Random initial position is drawn from your prior model, Gaussian distributed with this standard deviation. See NIFTy/src/minimization/optimize_kl.py for more information</span>
+<span class="w">    </span><span class="c1"># initial_position_template: /w/halld-scshelf2101/lng/WORK/PyAmpTools9/OTHER_CHANNELS/ETAPI0/RESULTS_JAX_P/NiftyFits_a2B_a2pB_a0F/niftypwa_fit.pkl</span>
+<span class="w">    </span><span class="nt">default_yaml</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># (path) values in this file can be used to update a yaml file found at the path specified with this key. Allows reusage.</span>
+
+<span class="c1"># pwa_manager for GlueX takes in another configuration file that defines the partial waves used and the kinematic binning: (mass, t)</span>
+<span class="c1">#   This maintains consistency between iftpwa results and results from a set of maximum likelihood fits obtained using AmpTools</span>
+<span class="nt">PWA_MANAGER</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">yaml_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/w/halld-scshelf2101/lng/WORK/PyAmpTools9/OTHER_CHANNELS/ETAPI0/jax_primary_P.yaml</span>
+
+<span class="c1"># Define our forward model containing correlated fields and parametric models</span>
+<span class="nt">IFT_MODEL</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span><span class="w"> </span><span class="c1"># (float, &quot;auto&quot;) overal scale factor for amplitude</span>
+<span class="w">    </span><span class="nt">nCalcScale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">500</span><span class="w"> </span><span class="c1"># (float) number of samples used to estimate IFT_MODEL.scale</span>
+<span class="w">    </span><span class="nt">positiveScale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">half_normal</span><span class="w"> </span><span class="c1"># (half_normal, sqrt_exp) or (bool) choice of distribution using IFT_MODEL.scale. half_normal is a half normal, sqrt_exp is laplace (sqrt since we are on amplitude level not intensity). Bool is legacy to take absolute value of scale</span>
+<span class="w">    </span><span class="nt">useLogNormalPriorSlope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) use log normal prior for the slope of the power spectra instead of normal</span>
+<span class="w">    </span><span class="nt">useGammaFlex</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) use Gamma distribution for the flexibility of the power spectra. Typically lighter tails than log-normal</span>
+<span class="w">    </span><span class="nt">useLaplaceScale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) should be same as setting positiveScale = sqrt_exp. We generally only consider positive scales so this is technically exponentially distributed</span>
+<span class="w">    </span><span class="nt">useGammaAsp</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (booL) use Gamma distribution for the asperity of the power spectra. Typically lighter tails than log-normal</span>
+<span class="w">    </span><span class="nt">loglogavgslope</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">-4.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.1</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># (float, float) for (mean, std) of the power spectrum slope (log-log scale). More negative slopes will limit high frequency components. Must be provided.</span>
+<span class="w">    </span><span class="nt">flexibility</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.5</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.5</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># (float, float) for (mean, std) or null. (0.5, 0.5) is special case resulting in Laplace distribution. Determines the amplitude of the integrated Wiener process component of the power spectrum.</span>
+<span class="w">    </span><span class="nt">asperity</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.5</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.5</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># (float, float) for (mean, std) or null. (0.5, 0.5) is special case resulting in Laplace distribution. Determines the roughness of the integrated Wiener process component of the power spectrum.</span>
+<span class="w">    </span><span class="nt">stdOffset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.001</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># Amplitude offfset is normally distributed around 0 with this (float, float) for (mean, std). </span>
+<span class="w">    </span><span class="nt">loglogavgslopeTprime</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">-4.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.1</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># (float, float). Cannot be null if you have multiple t-bins. </span>
+<span class="w">    </span><span class="nt">flexibilityTprime</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.5</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.5</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># (float, float) or null. Read above</span>
+<span class="w">    </span><span class="nt">asperityTprime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># # (float, float) or null. Read above</span>
+<span class="w">    </span><span class="nt">dofdexStye</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">real_imag</span><span class="w"> </span><span class="c1"># (real_imag, single_dofdex) allows fields to share the same power spectrum model. Useful for coupling real and imaginary parts of the same complex amplitude</span>
+<span class="w">    </span><span class="nt">custom_model_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${PARAMETRIC_MODEL}</span><span class="w"> </span><span class="c1"># (path) or (YAML reference). Path must point to a file (see iftpwa/assets/parametric_model.py). (YAML reference) defined below</span>
+<span class="w">    </span><span class="nt">modelName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># (string) if custom_model_path is provided referencing a key in the model dictionary. null if custom_model_path is defined in this YAML file</span>
+<span class="w">    </span><span class="nt">res2bkg</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w"> </span><span class="c1"># (float) scale parametric/resonance contributions before adding to bkgnd to form the signal</span>
+<span class="w">    </span><span class="nt">bkg2res</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w"> </span><span class="c1"># (float) scale bkgnd contributions before adding to parametric/resonance to form the signal</span>
+<span class="w">    </span><span class="nt">tPrimeFalloff</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"> </span><span class="c1"># (float) preweight t distribution. Legacy</span>
+<span class="w">    </span><span class="nt">estimateRatios</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) use the user-provided dataset ratios. Unused by GlueX</span>
+<span class="w">    </span><span class="nt">perTprimeScaling</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"> </span><span class="c1"># (bool) scale each t bin separately</span>
+<span class="w">    </span><span class="nt">altTprimeNorm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">no_norm</span><span class="w"> </span><span class="c1"># (peak_norm, no_norm, kin_norm) dictates how to normalize the phase space multiplier for each t-bin. no_norm keeps the normalization the supplied phase space pkl file</span>
+<span class="w">    </span><span class="nt">noInterpScipy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) use scipy.interpolate.interp1d cubic interpolation instead of nifty.interp linear interpolation to ensure values align in the phase space multiplier</span>
+<span class="w">    </span><span class="nt">phaseSpaceMultiplier</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># (path) or null. Path to a pickled file containing a tuple of (masses, dict[amp: float]) where each float will scale the corresponding amp field</span>
+<span class="w">    </span><span class="nt">s0</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># (float) or null. Energy scale factor. </span>
+<span class="w">    </span><span class="nt">productionFactor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">GLUEX</span><span class="w"> </span><span class="c1"># (string) or null. Production factor scheme (see iftpwa/src/mode/model_builder.py). Depends on beam energy and target mass. </span>
+<span class="w">    </span><span class="nt">ratio_fluct</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># can use if using multiple datasets</span>
+<span class="w">    </span><span class="nt">ratio_fluc_std</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># can use if using multiple datasets</span>
+<span class="w">    </span><span class="nt">ratio_slope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># can use if using multiple datasets</span>
+<span class="w">    </span><span class="nt">ratio_stdSlope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># can use if using multiple datasets</span>
+<span class="w">    </span><span class="nt">ratio_slopeTprime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># can use if using multiple datasets</span>
+<span class="w">    </span><span class="nt">ratio_stdSlopeTprime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># can use if using multiple datasets</span>
+<span class="w">    </span><span class="nt">ratio_std_offset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># can use if using multiple datasets </span>
+<span class="w">    </span><span class="nt">ratio_std_std_offset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># can use if using multiple datasets</span>
+
+<span class="c1"># Used in IFT_MODEL.custom_model_path</span>
+<span class="nt">PARAMETRIC_MODEL</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">smoothScales</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span><span class="w"> </span><span class="c1"># (bool) uses a correlated field to smooth the t-dependence of the parameteric models</span>
+<span class="w">    </span><span class="nt">parameter_priors</span><span class="p">:</span><span class="w"> </span><span class="c1"># Define prior distributions for the free parameters </span>
+<span class="w">        </span><span class="c1"># see iftpwa/src/utilities/nifty.py for available priors but most parameters should be positive so log-normal is typical</span>
+<span class="w">        </span><span class="nt">m_a0_980</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">UnnamedLogNormalOperator(sigma=0.05, mean=0.98)</span><span class="w"> </span><span class="c1"># Flatte peak mass for a0(980)</span>
+<span class="w">        </span><span class="nt">g1_a0_980</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">UnnamedLogNormalOperator(sigma=0.1, mean=0.35)</span><span class="w"> </span><span class="c1"># Flatte coupling_1 for a0(980)</span>
+<span class="w">        </span><span class="nt">g2_a0_980</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">UnnamedLogNormalOperator(sigma=0.1, mean=0.35)</span><span class="w"> </span><span class="c1"># Flatte coupling_2 for a0(980)</span>
+<span class="w">        </span><span class="nt">m_a2_1320</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">UnnamedLogNormalOperator(sigma=0.0013 * 30, mean=1.3186)</span><span class="w"> </span><span class="c1"># Breit-Wigner peak mass for a2(1320)</span>
+<span class="w">        </span><span class="nt">w_a2_1320</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">UnnamedLogNormalOperator(sigma=0.002 * 30, mean=0.105)</span><span class="w"> </span><span class="c1"># Breit-Wigner width for a2(1320)</span>
+<span class="w">        </span><span class="nt">m_a2_1700</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">UnnamedLogNormalOperator(sigma=0.02, mean=1.706)</span><span class="w"> </span><span class="c1"># Breit-Wigner peak mass for a2(1700)</span>
+<span class="w">        </span><span class="nt">w_a2_1700</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">UnnamedLogNormalOperator(sigma=0.05, mean=0.380)</span><span class="w"> </span><span class="c1"># Breit-Wigner width for a2(1700)</span>
+<span class="w">    </span><span class="nt">resonances</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">a0_980</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;$a_0(980)$&quot;</span><span class="w"> </span><span class="c1"># (string) name of the resonance in LaTeX format</span>
+<span class="w">        </span><span class="nt">fun</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;flatte&quot;</span><span class="w"> </span><span class="c1"># (string) name of the function to use for the resonance. Available functions found at iftpwa/src/model/physics_functions.py</span>
+<span class="w">        </span><span class="nt">preScale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3.5</span><span class="w"> </span><span class="c1"># preScale this component by this factor to bias towards total values. Can be 0</span>
+<span class="w">        </span><span class="nt">no_bkg</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) if true, this component will not have a correlated field background component</span>
+<span class="w">        </span><span class="nt">paras</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="s">&quot;mass&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="nv">m_a0_980</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;g1&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="nv">g1_a0_980</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;g2&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="nv">g2_a0_980</span><span class="p p-Indicator">}</span><span class="w"> </span><span class="c1"># (dict) free parameters for the physics function</span>
+<span class="w">        </span><span class="nt">static_paras</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="s">&quot;mass11&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="nv">0.548</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;mass12&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="nv">0.135</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;mass21&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="nv">0.495</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;mass22&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="nv">0.495</span><span class="p p-Indicator">,</span><span class="nt"> channel</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">}</span><span class="w"> </span><span class="c1"># (dict) fixed parameters for the physics function</span>
+<span class="w">        </span><span class="nt">waves</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;Sp0-&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Sp0+&#39;</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># (List[string]) list of waves containing this parameteric component</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">a2_1320</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;$a_2(1320)$&quot;</span>
+<span class="w">        </span><span class="nt">fun</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;breitwigner_dyn&quot;</span>
+<span class="w">        </span><span class="nt">preScale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.5</span>
+<span class="w">        </span><span class="nt">no_bkg</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
+<span class="w">        </span><span class="nt">paras</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="s">&quot;mass&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="nv">m_a2_1320</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;width&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="nv">w_a2_1320</span><span class="p p-Indicator">}</span>
+<span class="w">        </span><span class="nt">static_paras</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="s">&quot;spin&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;mass1&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="nv">0.548</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;mass2&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="nv">0.135</span><span class="p p-Indicator">}</span>
+<span class="w">        </span><span class="nt">waves</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;Dm2-&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Dm1-&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Dp0-&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Dp1-&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Dp2-&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Dm2+&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Dm1+&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Dp0+&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Dp1+&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Dp2+&#39;</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">a2_1700</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;$a_2(1700)$&quot;</span>
+<span class="w">        </span><span class="nt">fun</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;breitwigner_dyn&quot;</span>
+<span class="w">        </span><span class="nt">preScale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span><span class="w"> </span><span class="c1"># 0.25</span>
+<span class="w">        </span><span class="nt">no_bkg</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># true</span>
+<span class="w">        </span><span class="nt">paras</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="s">&quot;mass&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="nv">m_a2_1700</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;width&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="nv">w_a2_1700</span><span class="p p-Indicator">}</span>
+<span class="w">        </span><span class="nt">static_paras</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="s">&quot;spin&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;mass1&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="nv">0.548</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;mass2&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="nv">0.135</span><span class="p p-Indicator">}</span>
+<span class="w">        </span><span class="nt">waves</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;Dm2-&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Dm1-&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Dp0-&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Dp1-&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Dp2-&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Dm2+&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Dm1+&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Dp0+&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Dp1+&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;Dp2+&#39;</span><span class="p p-Indicator">]</span>
+
+<span class="c1"># Some parameters takes a list of lists which dictate the number of global iterations in a given setting</span>
+<span class="c1">#   See iftpwa/src/scripts/iftpwa_fit.py for calls to `makeCallableSimple` for parameters with this style</span>
+<span class="nt">LIKELIHOOD</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">approximation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) approximate the likelihood (with Gaussian, I believe)</span>
+<span class="w">    </span><span class="nt">metric_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">normal</span><span class="w"> </span><span class="c1"># (normal, studentt) type of metric to use for the likelihood</span>
+<span class="w">    </span><span class="nt">theta_studentt</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># (float) theta paraemeter for student-t distribution, this has to be set if metric_type is studentt</span>
+<span class="w">    </span><span class="nt">learn_metric</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) can learn the metric but not recommended</span>
+<span class="w">    </span><span class="nt">learn_metric_sigma</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w"> </span><span class="c1"># (float)</span>
+<span class="w">    </span><span class="nt">nKeepMetric</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"> </span><span class="c1"># (int) global iterations at nKeepMetric intervals will not approximate the likelihood. 1 means we never approximate the likelihood I guess</span>
+<span class="w">    </span><span class="c1"># </span>
+<span class="w">    </span><span class="nt">subSampleProb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w"> </span><span class="c1"># (float) subsample the data to speed up likelihood calculation</span>
+<span class="w">    </span><span class="nt">initialSubSampleProb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w"> </span><span class="c1"># (float) scales the initial signal field by this factor, in principle should match the initial subSampleProb</span>
+<span class="w">    </span><span class="nt">subSampleApproxIndep</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) Legacy, unused</span>
+<span class="w">    </span><span class="nt">bootstrap</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) bootstrap the data to introduce more stochasticity</span>
+<span class="w">    </span><span class="nt">external_approximation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># (path) pointing to an external pickle file, null if not used</span>
+<span class="w">    </span><span class="nt">dropout_prob</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span><span class="w"> </span><span class="c1"># (float) dropout probability for each kinematic bin. Introduces more stochasticity and can help with overfitting</span>
+<span class="w">    </span><span class="nt">rotate_phase</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># (bool) or null. Unused</span>
+<span class="w">    </span><span class="nt">clip_latent</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"> </span><span class="c1"># (float) if between [0, 1] then this is a fractional scaling of the latent space between (-clip_latent, clip_latent) to prevent large updates. </span>
+
+<span class="c1"># Some parameters takes a list of lists which dictate the number of global iterations in a given setting</span>
+<span class="c1">#   See iftpwa/src/scripts/iftpwa_fit.py for calls to `makeCallableSimple` for parameters with this style</span>
+<span class="nt">OPTIMIZATION</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">nSamples</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">],</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">4</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">5</span><span class="p p-Indicator">],</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">10</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">10</span><span class="p p-Indicator">],</span><span class="w"> </span><span class="nv">25</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># (int) Runs 0 sampling (point estimate) for 1 global iteration, 5 samples for next 4 global iterations, ...</span>
+<span class="w">    </span><span class="nt">nIterGlobal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"> </span><span class="c1"># (int) number of global iterations to run NIFTy optimize_kl for</span>
+<span class="w">    </span><span class="nt">nMultiStart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"> </span><span class="c1"># (int) number of multiple restarts to perform (each only a fixed single global iteration) that optimizes multiStartObjective</span>
+<span class="w">    </span><span class="nt">multiStartObjective</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;maximize|Dp2+_fit_intens&quot;</span><span class="w"> </span><span class="c1"># (str) pipe separated direction|quantity to select best starting condition. i.e. &quot;minimize|energy&quot; will choose the minimum energy (KL divergence/ELBO/Loss/Cost)</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="c1"># KL Minimizer</span>
+<span class="w">    </span><span class="nt">algoOptKL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LBFGS</span><span class="w"> </span><span class="c1"># (string) algorithm</span>
+<span class="w">    </span><span class="nt">nIterMaxOptKL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span><span class="w"> </span><span class="c1"># (int) number of iterations to perform algoOptKL to optimize the KL divergence</span>
+<span class="w">    </span><span class="nt">deltaEKL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.001</span><span class="w"> </span><span class="c1"># (float) if the difference between the last and current energies is below this value, the convergence counter will be increased in this iteration.</span>
+<span class="w">    </span><span class="nt">convergenceLvlKL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w"> </span><span class="c1"># (int) the number which the convergence counter must reach before the iteration is considered to be converged</span>
+
+<span class="w">    </span><span class="c1"># Sampling</span>
+<span class="w">    </span><span class="c1"># The accuracy of the samples specify the point at which they become dominated by noise. As to not constrain the KL minimization</span>
+<span class="w">    </span><span class="c1">#    samples should be sampled more accurately than our KL optimization objective, hence, the more stringent minimization criterion for the sampling in the demonstration script</span>
+<span class="w">    </span><span class="c1">#    See https://gitlab.mpcdf.mpg.de/ift/nifty/-/blob/NIFTy_8/demos/0_intro.py and https://github.com/NIFTy-PPL/NIFTy/issues/35</span>
+<span class="w">    </span><span class="nt">nIterMaxSamples</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span><span class="w"> </span><span class="c1"># (int) iteration limit for sampling</span>
+<span class="w">    </span><span class="nt">deltaESampling</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.001</span><span class="w"> </span><span class="c1"># (float) see above</span>
+<span class="w">    </span><span class="nt">convergenceLvlSampling</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w"> </span><span class="c1"># (int) see above</span>
+
+<span class="w">    </span><span class="c1"># GeoVI</span>
+<span class="w">    </span><span class="nt">algoOptGeoVI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Newton</span><span class="w"> </span><span class="c1"># (string) algorithm</span>
+<span class="w">    </span><span class="nt">nIterMaxGeoVI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w"> </span><span class="c1"># (int) number of iterations to perform algoOptGeoVI</span>
+<span class="w">    </span><span class="nt">deltaEGeoVI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.001</span><span class="w"> </span><span class="c1"># (float) see above</span>
+<span class="w">    </span><span class="nt">convergenceLvlGeoVI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w"> </span><span class="c1"># (int) see above</span>
+
+<span class="w">    </span><span class="c1">#############</span>
+<span class="w">    </span><span class="nt">resume</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"> </span><span class="c1"># (bool) resume previous fit or overwrite</span>
+<span class="w">    </span><span class="c1">#############</span>
+
+<span class="w">    </span><span class="nt">niftyCache</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${GENERAL.outputFolder}/</span><span class="w"> </span><span class="c1"># (path) path to dump NIFTy results</span>
+<span class="w">    </span><span class="nt">overwriteCache</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"> </span><span class="c1"># (bool) overwrite the cache</span>
+<span class="w">    </span><span class="nt">sanityChecks</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) NIFTy - some sanity checks that are evaluated at the beginning. They are potentially expensive because all likelihoods have to be instantiated multiple times</span>
+<span class="w">    </span><span class="nt">constants</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">tamps_mass_dir_loglogavgslope</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># provide the names of the latent space variables that should be fixed [&#39;tamps_mass_dir_loglogavgslope&#39;] # examples: [&#39;tamps_mass_dir_loglogavgslope&#39;, &#39;tamps_mass_dir_flexibility&#39;, &#39;tamps_tprime_dir_loglogavgslope&#39;, &#39;tamps_tprime_dir_flexibility&#39;, &#39;tamps_zeromode&#39;]</span>
+
+<span class="c1"># Scans are performed by [Optuna](https://github.com/optuna/optuna). `iftpwa` naturally tracks the likelihood energy and the intensity of all individual amplitude components. </span>
+<span class="c1">#   If a ground truth is provided, the mean squared error or chi-squared (if number of samples &gt; 1) are also calculated. </span>
+<span class="c1">#   These metrics are all available to be optimized against. These metrics take the form `{amplitude_field_name}_{&quot;fit&quot;, resonance_name, &quot;bkg&quot;}_{&quot;intens&quot;, &quot;chi2&quot;}`. </span>
+<span class="c1">#   A list of tracked metrics can be dumped at the end of a iftpwa fit if `verbosityLevel` &gt; 0. </span>
+<span class="c1">#   Aggregated stats for `chi2` metric is also calculated: `{min, -2sigma, -1sigma, median, 1sigma, 2sigma, max}`. </span>
+<span class="c1"># Fields within this yaml can be referenced following a field path that is period delimited. </span>
+<span class="c1">#   An Optuna `suggest` command and associated args must also be passed. Field values must be a string that is then `eval`&#39;d by `python` to construct `args` and `kwargs`. </span>
+<span class="c1">#   For example, `OPTIMIZATION.nSamples.1|suggest_int: &quot;2, 10, step=2&quot;` would modify the `nSamples` sub-field within the `OPTIMIZATION` field so that Optuna makes integer suggestions on list index element 1. The suggestions are integers between 2 and 10 in steps of 2. </span>
+<span class="c1">#   See Optuna docs for available `suggest` commands.</span>
+<span class="nt">HYPERPARAMETER_SCANS</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">n_trials</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<span class="w">    </span><span class="nt">objective</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;minimize|energy&quot;</span><span class="w"> </span><span class="c1"># (str) direction|objective where direction is either {&#39;minimize&#39;, &#39;maximize&#39;}</span>
+<span class="w">    </span><span class="nt">sampler</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RandomSampler</span><span class="w"> </span><span class="c1"># (str) see https://optuna.readthedocs.io/en/stable/reference/samplers/index.html. BruteForceSampler can be used to exhaust all combinations</span>
+<span class="w">    </span><span class="nt">GENERAL.seed|suggest_int</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0,</span><span class="nv"> </span><span class="s">10000,</span><span class="nv"> </span><span class="s">step=1&quot;</span><span class="w"> </span><span class="c1"># (str) randomizing the seed can be a proxy for running randomly initialized fits</span>
+<span class="w">    </span><span class="nt">IFT_MODEL.loglogavgslope.1|suggest_float</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0.01,</span><span class="nv"> </span><span class="s">0.51,</span><span class="nv"> </span><span class="s">step=0.25&quot;</span>
+<span class="w">    </span><span class="nt">IFT_MODEL.res2bkg|suggest_float</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0.01,</span><span class="nv"> </span><span class="s">1.01,</span><span class="nv"> </span><span class="s">step=0.25&quot;</span>
+<span class="w">    </span><span class="nt">IFT_MODEL.scale|suggest_int</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1000,</span><span class="nv"> </span><span class="s">21000,</span><span class="nv"> </span><span class="s">step=4000&quot;</span>
+</pre></div>
+</div>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./ift"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="iftpwa_intro.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">iftpwa - Introduction</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="iftpwa_tips.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">iftpwa - Tips</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">iftpwa - Default Configuration</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#correlated-field-model-in-nifty">Correlated Field Model in NIFTy</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#simplified-model">Simplified Model</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#default-configuration-for-gluex-pwa">Default Configuration for GlueX PWA</a></li>
+</ul>
+
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Lawrence Ng
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

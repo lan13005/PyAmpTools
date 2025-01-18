@@ -14,45 +14,48 @@
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!-- 
+    this give us a css class that will be invisible only if js is disabled 
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-
-  
-  <link href="../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
-  <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
     <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>let toggleHintShow = 'Click to show';</script>
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
     <script async="async" src="../_static/sphinx-thebe.js?v=c100c467"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
@@ -60,10 +63,11 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'demos/plotgen';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="PyROOT - Lessons Learned" href="pyroot.html" />
+    <link rel="next" title="iftpwa - Introduction" href="../ift/iftpwa_intro.html" />
     <link rel="prev" title="Markov Chain Monte Carlo" href="mcmc.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -71,31 +75,16 @@
 
   
   
-  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
   
   <div id="pst-scroll-pixel-helper"></div>
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>
-    Back to top
-  </button>
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
-  
-  <input type="checkbox"
-          class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
-  
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="../search.html"
       method="get">
@@ -103,7 +92,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search this book..."
          aria-label="Search this book..."
          autocomplete="off"
@@ -111,10 +99,15 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
     </header>
   
 
@@ -123,7 +116,8 @@
       
       
       
-      <div class="bd-sidebar-primary bd-sidebar">
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -138,6 +132,8 @@
         <div class="sidebar-primary-item">
 
   
+    
+  
 
 <a class="navbar-brand logo" href="../intro.html">
   
@@ -151,15 +147,11 @@
 </a></div>
         <div class="sidebar-primary-item">
 
- <script>
- document.write(`
-   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script></div>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         
@@ -173,17 +165,29 @@
         <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../additional_info.html">Potential Build Errors</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="libraryLoading.html">Loading Libraries</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generation.html">Generating Data</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="fitting.html">Fitting</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="fitting.html">Fitting</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="mle.html">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mcmc.html">Markov Chain Monte Carlo</a></li>
 
 </ul>
-</li>
+</details></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Plotting Fit Results</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_intro.html">iftpwa - Introduction</a></li>
+
+<li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_config.html">iftpwa - Default Configuration</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_tips.html">iftpwa - Tips</a></li>
+
+
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul class="nav bd-sidenav">
@@ -212,7 +216,7 @@
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
 
@@ -221,14 +225,14 @@
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -351,24 +355,16 @@
 
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
-  </button>
-`);
-</script>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-  </button>
-`);
-</script>
+</button>
 
 </div></div>
       
@@ -412,9 +408,7 @@ document.write(`
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Welcome to JupyROOT 6.28/06
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>atiSetup| jupyter-book called python
+atiSetup| jupyter-book called python
 
 ------------------------------------------------
 atiSetup| MPI is disabled
@@ -422,12 +416,13 @@ atiSetup| GPU is disabled
 ------------------------------------------------
 
 
+atiSetup| Loading library libIUAmpTools.so ............  ON
 atiSetup| Loading library libAmpTools.so ..............  ON
-atiSetup| Loading library libAmpPlotter.so ............  ON
-atiSetup| Loading library libAmpsDataIO.so ............
+atiSetup| Loading library libAmpPlotter.so ............
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  ON
+atiSetup| Loading library libAmpsDataIO.so ............  ON
 atiSetup| Loading library libFSRoot.so ................  ON
 atiSetup| Loading library libAmpsGen.so ...............  OFF
 
@@ -435,10 +430,7 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 ------------------------------------------------
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Initializing AMPTOOLS_AMPS_DATAIO for PyROOT...
-------------------------------------------------
-
-Initializing FSRoot for PyROOT...
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
 </pre></div>
 </div>
 </div>
@@ -452,6 +444,11 @@ Initializing FSRoot for PyROOT...
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyamptools.utility.rdf_macros</span> <span class="kn">import</span> <span class="n">loadMacros</span>
 
 <span class="n">loadMacros</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Loading FSMath macros from /w/halld-scshelf2101/lng/WORK/PyAmpTools9/utility/RDF_userDefFuncs.cc
 </pre></div>
 </div>
 </div>
@@ -491,7 +488,7 @@ Initializing FSRoot for PyROOT...
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   =================================================================
    |        ^                                                      |
-   |       / \             Version:  v0.15.1-5-g4c36-dirty         |
+   |       / \             Version:  v0.15.3-2-g0753-dirty         |
    |      /---\                                                    |
    |     /     \           GDouble:  8 bytes                       |
    |    /       \ MP           MPI:  NO                            |
@@ -511,20 +508,6 @@ Initializing FSRoot for PyROOT...
 <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span><span class="n">DataReader</span><span class="p">())</span>
 
 <span class="n">plotGen</span> <span class="o">=</span> <span class="n">PlotGenerator</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[ AmplitudeManager ]:
-
-	Creating AmplitudeManager for the reaction:  etapi
-		 particle index assignment:  Beam -&gt; 0
-		 particle index assignment:  Proton -&gt; 1
-		 particle index assignment:  Eta -&gt; 2
-		 particle index assignment:  Pi0 -&gt; 3
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
 </pre></div>
 </div>
 </div>
@@ -561,11 +544,17 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">amplitudes</span> <span class="o">=</span> <span class="s2">&quot;all resAmp1 resAmp2 resAmp3 resAmp1;resAmp2&quot;</span>
-<span class="n">draw_histograms</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">hist_output_name</span><span class="p">,</span> <span class="n">particles</span><span class="p">,</span> <span class="n">HISTS_TO_BOOK</span><span class="p">,</span> <span class="n">amplitudes</span><span class="p">)</span>
+<span class="n">draw_histograms</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">hist_output_name</span><span class="p">,</span> <span class="n">particles</span><span class="p">,</span> <span class="n">HISTS_TO_BOOK</span><span class="p">,</span> <span class="n">amplitudes</span><span class="p">,</span> <span class="n">output_format</span><span class="o">=</span><span class="s2">&quot;png&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Loaded data into PlotGenerator...
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: all
  &gt;&gt;   Keeping all amplitudes: { &quot;resAmp1&quot;, &quot;resAmp2&quot;, &quot;resAmp3&quot; }
 </pre></div>
@@ -582,21 +571,65 @@ Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/S
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: resAmp1;resAmp2
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>	Creating AmplitudeManager for the reaction:  etapi
-		 particle index assignment:  Beam -&gt; 0
-		 particle index assignment:  Proton -&gt; 1
-		 particle index assignment:  Eta -&gt; 2
-		 particle index assignment:  Pi0 -&gt; 3
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-Resetting source kin in /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Info in &lt;TCanvas::Print&gt;: png file result_all.png has been created
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Info in &lt;TCanvas::Print&gt;: png file result_all.png has been created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
 Info in &lt;TCanvas::Print&gt;: png file result_resAmp1.png has been created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
 Info in &lt;TCanvas::Print&gt;: png file result_resAmp2.png has been created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
 Info in &lt;TCanvas::Print&gt;: png file result_resAmp3.png has been created
-Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
+Info in &lt;TCanvas::Print&gt;: png file result_resAmp1_resAmp2.png has been created
 </pre></div>
 </div>
 </div>
@@ -609,7 +642,7 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/cbfa858b77e5b87949685099783f8f4bfbd974c4618314d72fd7f66fa99a356d.png" src="../_images/cbfa858b77e5b87949685099783f8f4bfbd974c4618314d72fd7f66fa99a356d.png" />
+<img alt="../_images/32fafe08e3943c9ad190cf00a025c13ab75e21a0290a5e4b1587652313207bab.png" src="../_images/32fafe08e3943c9ad190cf00a025c13ab75e21a0290a5e4b1587652313207bab.png" />
 </div>
 </div>
 <p>Only the L=2 M=0 wave</p>
@@ -620,7 +653,7 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/b4642417141c841c7367a4e58919327761b4941b134fbb9fd9c40ccc26c19d0e.png" src="../_images/b4642417141c841c7367a4e58919327761b4941b134fbb9fd9c40ccc26c19d0e.png" />
+<img alt="../_images/f65c246d3e3212c935053712e49890abfbc6e88d0a2b918bdda1c63d8b685f7f.png" src="../_images/f65c246d3e3212c935053712e49890abfbc6e88d0a2b918bdda1c63d8b685f7f.png" />
 </div>
 </div>
 <p>Only the L=2 M=2 wave</p>
@@ -631,7 +664,7 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/330d852199a9c2ae206d532219dea6235797b52b929ebc8622ea189f906105c4.png" src="../_images/330d852199a9c2ae206d532219dea6235797b52b929ebc8622ea189f906105c4.png" />
+<img alt="../_images/a5d656ad675ed456e4db406536f278cbf709442b1645b7df76dc1facb80e5e57.png" src="../_images/a5d656ad675ed456e4db406536f278cbf709442b1645b7df76dc1facb80e5e57.png" />
 </div>
 </div>
 <p>Only the L=0 M=0 wave</p>
@@ -642,18 +675,18 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/367fd349ff85093a42dc229be15a3bd8e576c9ee35566b755bbef3046b8bc225.png" src="../_images/367fd349ff85093a42dc229be15a3bd8e576c9ee35566b755bbef3046b8bc225.png" />
+<img alt="../_images/b375d36b367f3322f02a34812fe9d7813b2f49028ae1f1ae0d7fac2bb35cb1ae.png" src="../_images/b375d36b367f3322f02a34812fe9d7813b2f49028ae1f1ae0d7fac2bb35cb1ae.png" />
 </div>
 </div>
 <p>Coherent sum of (L=2, M=0) (L=2, M=0) waves</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;result_resAmp1;resAmp2.png&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;result_resAmp1_resAmp2.png&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/9e1fbd1b13a01b32329887088fb377bb13feb40c94372d0d5277003d06f3a128.png" src="../_images/9e1fbd1b13a01b32329887088fb377bb13feb40c94372d0d5277003d06f3a128.png" />
+<img alt="../_images/6f9bfe16680d10d98e277f0b02d12e136a52d19961973c0fadc02474796378e2.png" src="../_images/6f9bfe16680d10d98e277f0b02d12e136a52d19961973c0fadc02474796378e2.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -693,7 +726,7 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
               
               
               
-                <footer class="prev-next-footer">
+                <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
     <a class="left-prev"
@@ -706,11 +739,11 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
       </div>
     </a>
     <a class="right-next"
-       href="pyroot.html"
+       href="../ift/iftpwa_intro.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">PyROOT - Lessons Learned</p>
+        <p class="prev-next-title">iftpwa - Introduction</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -720,8 +753,6 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1;resAmp2.png has been cre
             </div>
             
             
-              
-                <div class="bd-sidebar-secondary bd-toc"></div>
               
             
           </div>
@@ -766,8 +797,8 @@ By Lawrence Ng
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
 
   <footer class="bd-footer">
   </footer>

@@ -8,7 +8,7 @@ This repository contains Python bindings for AmpTools. Under the hood, it uses [
 
 # Usage / Design
 
-AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in `external` directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in `external/AMPTOOLS_AMPS_DATAIO`. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of `gen_amp`, a program to produce simulations with AmpTools, is provided in `external/AMPTOOLS_GENERATORS`. This distribution system will unfortunately lag behind the sources from `halld_sim` and `AmpTools` repos. 
+AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in `external` directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in `external/AMPTOOLS_AMPS_DATAIO`. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of `gen_amp`, a program to produce simulations with AmpTools, is provided in `external/AMPTOOLS_GENERATORS`. This distribution system will unfortunately lag behind the sources from `halld_sim` and `AmpTools` repos.
 
 `pa` is an **executable** that dispatches various functions for: maximimum likelihood fitting (`fit`), extracting fit fractions from MLE fit results (`fitfrac`), and Markov chain Monte Carlo (`mcmc`), and simulation generation (`gen_amp`, `gen_vec_ps`). Example usage:
 
@@ -41,6 +41,7 @@ All major dependencies (ROOT, AmpTools, FSRoot) are built from source.
 ```shell
 conda env create  # Creates environment specified by environment.yml and pyproject.toml
 conda activate pyamptools # activate the environment
+# pip install mpi4py if you wish to use MPI (see Potential Build Errors if failing)
 pre-commit install --install-hooks # (Optional) commit hooks to perform loose formatting
 ```
 
@@ -65,6 +66,7 @@ cd external/root
 # if you modify the root version and use VSCode please update .vscode/settings.json file's extraPaths variable accordingly
 source build_root.sh
 cd ../.. # move back to main directory
+source set_environment.sh # to load the new ROOT environment before downloading amptools/fsroot
 ```
 
 Build required libraries
