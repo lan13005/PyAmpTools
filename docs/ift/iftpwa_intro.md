@@ -26,5 +26,3 @@ NIFTy provides [Metric Gaussian Variational Inference](https://arxiv.org/abs/190
 ### References
 - [Progress in the partial-wave analysis methods at COMPASS](https://arxiv.org/abs/2311.00449)
 - [NIFTy gitlab](https://gitlab.mpcdf.mpg.de/ift/nifty/-/tree/NIFTy_8/src?ref_type=heads)
-
-## Usage with Docker for GlueX Physics Analysis
