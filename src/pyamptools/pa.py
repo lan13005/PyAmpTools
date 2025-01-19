@@ -79,8 +79,18 @@ def main():
                 command_help += f"  * {command:15} {description}\n"
             return help_message + "\n" + command_help
 
+        def format_files(self):
+            file_help = "Command file locations:\n"
+            for command, (path, description) in func_map.items():
+                file_help += f"  * {command:15} {path}\n"
+            file_help += "\n  ==== YAML based command files ====\n"
+            for command, (path, description) in analysis_map.items():
+                file_help += f"  * {command:15} {path}\n"
+            return file_help
+
     parser = HelpOnErrorParser(description="Dispatch pyamptools commands. Select a command from the Commands section below. Remaning arguments will be passed to the selected command.")
-    parser.add_argument("command", choices=choices, help=argparse.SUPPRESS)
+    parser.add_argument("-f", "--files", action="store_true", help="show command file locations and exit ")
+    parser.add_argument("command", nargs="?", choices=choices, help=argparse.SUPPRESS)
     parser.add_argument("command_args", nargs=argparse.REMAINDER, help=argparse.SUPPRESS)
 
     # tab-autocomplete so you can type 'pa ' into terminal and tab for available functions
@@ -88,6 +98,14 @@ def main():
     argcomplete.autocomplete(parser, exclude=["-h", "--help"])
 
     _args = parser.parse_args()
+
+    if _args.files:
+        print(parser.format_files())
+        sys.exit(0)
+
+    if _args.command is None:
+        parser.print_help()
+        sys.exit(0)
 
     cmd = _args.command
     cmd_args = _args.command_args
