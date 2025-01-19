@@ -64,7 +64,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="iftpwa - Introduction" href="../ift/iftpwa_intro.html" />
-    <link rel="prev" title="Markov Chain Monte Carlo" href="mcmc.html" />
+    <link rel="prev" title="Extracting Fit Fractions" href="extract_ff.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -175,19 +175,14 @@
 
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="extract_ff.html">Extracting Fit Fractions</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Plotting Fit Results</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_intro.html">iftpwa - Introduction</a></li>
-
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_config.html">iftpwa - Default Configuration</a></li>
-
-
-
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_tips.html">iftpwa - Tips</a></li>
-
-
 </ul>
 
     </div>
@@ -498,6 +493,17 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[ AmplitudeManager ]:
+
+	Creating AmplitudeManager for the reaction:  etapi
+		 particle index assignment:  Beam -&gt; 0
+		 particle index assignment:  Proton -&gt; 1
+		 particle index assignment:  Eta -&gt; 2
+		 particle index assignment:  Pi0 -&gt; 3
+</pre></div>
+</div>
+</div>
 </div>
 <p>We can book histograms in the dictionary format shown below. For now, we will just make 1D histograms of several kinematic quantities. We use macros inspired and using <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> format to compute quantities. The macros are defined in <code class="docutils literal notranslate"><span class="pre">utils/RDFmacros.py</span></code>, see <a class="reference external" href="https://github.com/lan13005/PyAmpTools/blob/main/utils/RDFmacros.py">here for source code</a>.</p>
 <p>For example, <code class="docutils literal notranslate"><span class="pre">MASS(ETA,PI0)</span></code> would compute the invariant mass of the <code class="docutils literal notranslate"><span class="pre">ETA,</span> <span class="pre">PI0</span></code> system where <code class="docutils literal notranslate"><span class="pre">ETA</span></code> and <code class="docutils literal notranslate"><span class="pre">PI0</span></code> are defined <code class="docutils literal notranslate"><span class="pre">particles</span></code>. The order of the <code class="docutils literal notranslate"><span class="pre">particles</span></code> matters and should match what is seen in the configuration file.</p>
@@ -537,12 +543,7 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Loaded data into PlotGenerator...
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: all
+ &gt;&gt; Plotting waveset: all
  &gt;&gt;   Keeping all amplitudes: { &quot;resAmp1&quot;, &quot;resAmp2&quot;, &quot;resAmp3&quot; }
 </pre></div>
 </div>
@@ -556,6 +557,13 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: resAmp1;resAmp2
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>	Creating AmplitudeManager for the reaction:  etapi
+		 particle index assignment:  Beam -&gt; 0
+		 particle index assignment:  Proton -&gt; 1
+		 particle index assignment:  Eta -&gt; 2
+		 particle index assignment:  Pi0 -&gt; 3
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Warning in &lt;TH1D::Sumw2&gt;: Sum of squares of weights structure already created
@@ -717,12 +725,12 @@ Info in &lt;TCanvas::Print&gt;: png file result_resAmp1_resAmp2.png has been cre
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="mcmc.html"
+       href="extract_ff.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Markov Chain Monte Carlo</p>
+        <p class="prev-next-title">Extracting Fit Fractions</p>
       </div>
     </a>
     <a class="right-next"

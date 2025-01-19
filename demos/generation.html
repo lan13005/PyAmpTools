@@ -175,19 +175,14 @@
 
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="extract_ff.html">Extracting Fit Fractions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plotgen.html">Plotting Fit Results</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_intro.html">iftpwa - Introduction</a></li>
-
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_config.html">iftpwa - Default Configuration</a></li>
-
-
-
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_tips.html">iftpwa - Tips</a></li>
-
-
 </ul>
 
     </div>
@@ -418,18 +413,16 @@ atiSetup| GPU is disabled
 atiSetup| Loading library libIUAmpTools.so ............  ON
 atiSetup| Loading library libAmpTools.so ..............  ON
 atiSetup| Loading library libAmpPlotter.so ............  ON
-atiSetup| Loading library libAmpsDataIO.so ............
+atiSetup| Loading library libAmpsDataIO.so ............  ON
+atiSetup| Loading library libFSRoot.so ................  OFF
+atiSetup| Loading library libAmpsGen.so ...............
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  ON
-atiSetup| Loading library libFSRoot.so ................  OFF
-atiSetup| Loading library libAmpsGen.so ...............  ON
 
 
 ------------------------------------------------
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
+------------------------------------------------
 </pre></div>
 </div>
 </div>
@@ -499,9 +492,9 @@ reaction etapi  Beam Proton Eta Pi0
 ############# FOR FITTING #############
 fit result
 normintfile etapi normint
-genmc etapi ROOTDataReader /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-accmc etapi ROOTDataReader /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-data  etapi ROOTDataReader /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
+genmc etapi ROOTDataReader /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
+accmc etapi ROOTDataReader /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
+data  etapi ROOTDataReader /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
 #######################################
 
 # polarization information -- use 100% polarization to enhance visual effect
@@ -538,7 +531,7 @@ constrain etapi::reZ::resAmp2 etapi::imZ::resAmp2
 initialize etapi::reZ::resAmp3 cartesian 10 0
 constrain etapi::reZ::resAmp3 etapi::imZ::resAmp3
 
-include /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/mle.txt
+include /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/mle.txt
 </pre></div>
 </div>
 </div>
@@ -666,7 +659,15 @@ hddmname
    |        | OOLS                                                 |
    =================================================================
 ConfigFileParser WARNING:  no known resonance found, seed with mass = width = 1GeV
-TRandom3 Seed : 3207706312
+TRandom3 Seed : 4106047166
+
+[ AmplitudeManager ]:
+
+	Creating AmplitudeManager for the reaction:  etapi
+		 particle index assignment:  Beam -&gt; 0
+		 particle index assignment:  Proton -&gt; 1
+		 particle index assignment:  Eta -&gt; 2
+		 particle index assignment:  Pi0 -&gt; 3
 WARNING: Couldn&#39;t find beam configuration file -- write local version
 
 BeamProperties: Parsing config file local_beam.conf
@@ -681,10 +682,10 @@ Initialization for coherent bremsstralung calculation
 ConfigFileParser WARNING:  Minimum photon energy not high enough to guarantee flat mass distribution!
 Generating four-vectors...
 Processing events...
-414 events were processed.
+423 events were processed.
 Generating four-vectors...
 Processing events...
-802 events were processed.
+900 events were processed.
 Generating four-vectors...
 Processing events...
 1000 events were processed.
@@ -710,7 +711,7 @@ Processing events...
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>******************************************************************************
 *Tree    :kin       : Kinematics                                             *
-*Entries :     1000 : Total =           89780 bytes  File  Size =      60574 *
+*Entries :     1000 : Total =           89780 bytes  File  Size =      60554 *
 *        :          : Tree compression factor =   1.42                       *
 ******************************************************************************
 *Br    0 :NumFinalState : NumFinalState/I                                    *
@@ -718,7 +719,7 @@ Processing events...
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=  30.21     *
 *............................................................................*
 *Br    1 :E_FinalState : E_FinalState[NumFinalState]/F                       *
-*Entries :     1000 : Total  Size=      16722 bytes  File Size  =      12710 *
+*Entries :     1000 : Total  Size=      16722 bytes  File Size  =      12708 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.27     *
 *............................................................................*
 *Br    2 :Px_FinalState : Px_FinalState[NumFinalState]/F                     *
@@ -726,16 +727,16 @@ Processing events...
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.23     *
 *............................................................................*
 *Br    3 :Py_FinalState : Py_FinalState[NumFinalState]/F                     *
-*Entries :     1000 : Total  Size=      16727 bytes  File Size  =      13165 *
+*Entries :     1000 : Total  Size=      16727 bytes  File Size  =      13164 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.22     *
 *............................................................................*
 *Br    4 :Pz_FinalState : Pz_FinalState[NumFinalState]/F                     *
-*Entries :     1000 : Total  Size=      16727 bytes  File Size  =      12937 *
+*Entries :     1000 : Total  Size=      16727 bytes  File Size  =      12950 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.24     *
 *............................................................................*
 *Br    5 :E_Beam    : E_Beam/F                                               *
-*Entries :     1000 : Total  Size=       4561 bytes  File Size  =       3656 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.11     *
+*Entries :     1000 : Total  Size=       4561 bytes  File Size  =       3641 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.12     *
 *............................................................................*
 *Br    6 :Px_Beam   : Px_Beam/F                                              *
 *Entries :     1000 : Total  Size=       4566 bytes  File Size  =        123 *
@@ -746,8 +747,8 @@ Processing events...
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=  33.11     *
 *............................................................................*
 *Br    8 :Pz_Beam   : Pz_Beam/F                                              *
-*Entries :     1000 : Total  Size=       4566 bytes  File Size  =       3657 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.11     *
+*Entries :     1000 : Total  Size=       4566 bytes  File Size  =       3642 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.12     *
 *............................................................................*
 </pre></div>
 </div>
