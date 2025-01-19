@@ -1,8 +1,8 @@
 # iftpwa - Tips
 
-# Analysis Tips
+## Analysis Tips
 
-# Developing Tips
+## Developing Tips
 - All random variables start normally distributed, when constructing terms/factors in the model it is often needed to transform to other distributions which can be done through using the cumulative distribution functions and quantile functions
 - `ift.from_random` is often used to probe what the forward model is doing
 - **Example:** code for drawing from a half-normal distribution

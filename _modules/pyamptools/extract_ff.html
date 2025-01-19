@@ -33,7 +33,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css?v=be8a1c11" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -179,14 +179,8 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../ift/iftpwa_intro.html">iftpwa - Introduction</a></li>
-
 <li class="toctree-l1"><a class="reference internal" href="../../ift/iftpwa_config.html">iftpwa - Default Configuration</a></li>
-
-
-
 <li class="toctree-l1"><a class="reference internal" href="../../ift/iftpwa_tips.html">iftpwa - Tips</a></li>
-
-
 </ul>
 
     </div>
@@ -341,34 +335,32 @@
 <a class="viewcode-back" href="../../api/extract_ff.html#pyamptools.extract_ff.extract_ff">[docs]</a>
 <span class="k">def</span> <span class="nf">extract_ff</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">outfileName</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;.5f&quot;</span><span class="p">,</span> <span class="n">regex_merge</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_phases</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Extract Fit Fractions and phase differences between pairs of waves from a FitResults object</span>
-
-<span class="sd">    Regex merge can be a useful tool to merge amplitudes that are related to each other (user-specified)</span>
-<span class="sd">        For example waveset: D-2- D-1- D0- D1- D2- D-2+ D-1+ D0+ D1+ D2+</span>
-<span class="sd">        To remove the sign at the end (merge reflectivites)     use = r&#39;[-+]$&#39;</span>
-<span class="sd">        To remove first sign and number (merge M-projections)   use = r&#39;[-+]?(\d+)&#39;</span>
-<span class="sd">        To remove numbers and signs to merge all D:             use = r&#39;[-+]?(\d+)[-+]&#39;</span>
+<span class="sd">    Extract fit fractions and phase differences between pairs of waves from a FitResults object.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        results (FitResults): FitResults object</span>
-<span class="sd">        outfileName (str): Output root file name or dump to stdout if &#39;&#39;</span>
-<span class="sd">        acceptanceCorrect (bool): Acceptance correct the values</span>
-<span class="sd">        fmt (str): string format for printing</span>
-<span class="sd">        regex_merge (List[str]): Merge amplitudes: List of Regex pairs (pattern, replace) separated by ~&gt;</span>
-<span class="sd">        only (str): Only dump fit fractions for [&quot;acc&quot;, &quot;noacc&quot;]. Default dumps FF concatenated by &quot;|&quot;</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        None, dumps a file to outfileName or stdout</span>
+<span class="sd">        results (FitResults): FitResults object containing fit results</span>
+<span class="sd">        outfileName (str): Output root file name or dump to stdout if empty string</span>
+<span class="sd">        fmt (str): String format for printing numbers</span>
+<span class="sd">        regex_merge (List[str], optional): List of regex pattern/replace pairs for merging amplitudes.</span>
+<span class="sd">            Pairs are separated by ~&gt;. The substitution happens for all amplitude names.</span>
+<span class="sd">            All amplitudes with same reduced name will be grouped into a list and a combined fit fraction</span>
+<span class="sd">            calculated. See AmpTools&#39; FitResults.intensity method.</span>
+<span class="sd">            Examples:</span>
+<span class="sd">                - &#39;.*::(.*)::.*~&gt;\\1&#39;: Captures text between :: and replaces full match</span>
+<span class="sd">                - &#39;.*(.)$~&gt;\\1&#39;: Captures last character and replaces full match</span>
+<span class="sd">                - &#39;.*reaction_(000|045|090|135)::(Pos|Neg)(?:Im|Re)::&#39;: Removes matched pattern,</span>
+<span class="sd">                  allowing grouping over polarizations and mirrored sums</span>
+<span class="sd">        no_phases (bool, optional): If True, skip calculating phase differences</span>
+<span class="sd">        only (str, optional): Only dump fit fractions for &quot;acc&quot; or &quot;noacc&quot;. Default dumps both.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">write_ff</span><span class="p">(</span><span class="n">amp</span><span class="p">,</span> <span class="n">intensity</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">intensity_corr</span><span class="p">,</span> <span class="n">error_corr</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">only</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FIT FRACTION </span><span class="si">{</span><span class="n">amp</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">intensity_corr</span><span class="o">/</span><span class="n">total_intensity_corr</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="s2">|</span><span class="si">{</span><span class="n">intensity</span><span class="o">/</span><span class="n">total_intensity</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="s2"> +- </span><span class="si">{</span><span class="n">error_corr</span><span class="o">/</span><span class="n">total_intensity_corr</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="s2">|</span><span class="si">{</span><span class="n">error</span><span class="o">/</span><span class="n">total_intensity</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FIT FRACTION </span><span class="si">{</span><span class="n">amp</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">intensity_corr</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">total_intensity_corr</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="s2">|</span><span class="si">{</span><span class="n">intensity</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">total_intensity</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="s2"> +- </span><span class="si">{</span><span class="n">error_corr</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">total_intensity_corr</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="s2">|</span><span class="si">{</span><span class="n">error</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">total_intensity</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">only</span> <span class="o">==</span> <span class="s2">&quot;acc&quot;</span><span class="p">:</span>
-            <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FIT FRACTION </span><span class="si">{</span><span class="n">amp</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">intensity</span><span class="o">/</span><span class="n">total_intensity</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="s2"> +- </span><span class="si">{</span><span class="n">error</span><span class="o">/</span><span class="n">total_intensity</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">only</span> <span class="o">==</span> <span class="s2">&quot;noacc&quot;</span><span class="p">:</span> <span class="c1"># no accepatance = correct for acceptance</span>
-            <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FIT FRACTION </span><span class="si">{</span><span class="n">amp</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">intensity_corr</span><span class="o">/</span><span class="n">total_intensity_corr</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="s2"> +- </span><span class="si">{</span><span class="n">error_corr</span><span class="o">/</span><span class="n">total_intensity_corr</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-        
+            <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FIT FRACTION </span><span class="si">{</span><span class="n">amp</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">intensity</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">total_intensity</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="s2"> +- </span><span class="si">{</span><span class="n">error</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">total_intensity</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">only</span> <span class="o">==</span> <span class="s2">&quot;noacc&quot;</span><span class="p">:</span>  <span class="c1"># no accepatance = correct for acceptance</span>
+            <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FIT FRACTION </span><span class="si">{</span><span class="n">amp</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">intensity_corr</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">total_intensity_corr</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="s2"> +- </span><span class="si">{</span><span class="n">error_corr</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">total_intensity_corr</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="c1">############### LOAD RESULTS TIME! ################</span>
     <span class="n">outfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfileName</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">outfileName</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span> <span class="k">else</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>

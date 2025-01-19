@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css?v=be8a1c11" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -182,14 +182,8 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="iftpwa_intro.html">iftpwa - Introduction</a></li>
-
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">iftpwa - Default Configuration</a></li>
-
-
-
 <li class="toctree-l1"><a class="reference internal" href="iftpwa_tips.html">iftpwa - Tips</a></li>
-
-
 </ul>
 
     </div>
@@ -377,12 +371,10 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">iftpwa - Default Configuration</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#correlated-field-model-in-nifty">Correlated Field Model in NIFTy</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#simplified-model">Simplified Model</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#default-configuration-for-gluex-pwa">Default Configuration for GlueX PWA</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#correlated-field-model-in-nifty">Correlated Field Model in NIFTy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simplified-model">Simplified Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#default-configuration-for-gluex-pwa">Default Configuration for GlueX PWA</a></li>
 </ul>
-
             </nav>
         </div>
     </div>
@@ -395,9 +387,8 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="iftpwa-default-configuration">
 <h1>iftpwa - Default Configuration<a class="headerlink" href="#iftpwa-default-configuration" title="Link to this heading">#</a></h1>
-</section>
-<section class="tex2jax_ignore mathjax_ignore" id="correlated-field-model-in-nifty">
-<h1>Correlated Field Model in NIFTy<a class="headerlink" href="#correlated-field-model-in-nifty" title="Link to this heading">#</a></h1>
+<section id="correlated-field-model-in-nifty">
+<h2>Correlated Field Model in NIFTy<a class="headerlink" href="#correlated-field-model-in-nifty" title="Link to this heading">#</a></h2>
 <p>Please read the following first, perhaps run the code yourself to see how the correlated field model works in NIFTy. This model forms the basis of the iftpwa package.
 <a class="reference external" href="https://ift.pages.mpcdf.de/nifty/user/old_nifty_getting_started_4_CorrelatedFields.html">Showcasingthe Correlated Field Model (NIFTy)</a></p>
 <div class="admonition note">
@@ -405,8 +396,8 @@
 <p>The correlated field model is no longer a Gaussian process but it does make understanding and explaining the IFT approach easier</p>
 </div>
 </section>
-<section class="tex2jax_ignore mathjax_ignore" id="simplified-model">
-<h1>Simplified Model<a class="headerlink" href="#simplified-model" title="Link to this heading">#</a></h1>
+<section id="simplified-model">
+<h2>Simplified Model<a class="headerlink" href="#simplified-model" title="Link to this heading">#</a></h2>
 <p>The following simplified model is used to depict how the configuration file key-value fields affect the physics model:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}
@@ -426,8 +417,8 @@ P(\vec{x}) &amp; = \text{Parametric component with parameters } \vec{x} \\
 \end{split}
 \end{split}\]</div>
 </section>
-<section class="tex2jax_ignore mathjax_ignore" id="default-configuration-for-gluex-pwa">
-<h1>Default Configuration for GlueX PWA<a class="headerlink" href="#default-configuration-for-gluex-pwa" title="Link to this heading">#</a></h1>
+<section id="default-configuration-for-gluex-pwa">
+<h2>Default Configuration for GlueX PWA<a class="headerlink" href="#default-configuration-for-gluex-pwa" title="Link to this heading">#</a></h2>
 <p>Below is the default YAML configuration for GlueX analyses of <span class="math notranslate nohighlight">\(\gamma p \rightarrow \eta\pi^0 p\)</span></p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">GENERAL</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">pwa_manager</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">GLUEX</span>
@@ -597,6 +588,7 @@ P(\vec{x}) &amp; = \text{Parametric component with parameters } \vec{x} \\
 </pre></div>
 </div>
 </section>
+</section>
 
     <script type="text/x-thebe-config">
     {
@@ -663,12 +655,10 @@ P(\vec{x}) &amp; = \text{Parametric component with parameters } \vec{x} \\
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">iftpwa - Default Configuration</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#correlated-field-model-in-nifty">Correlated Field Model in NIFTy</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#simplified-model">Simplified Model</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#default-configuration-for-gluex-pwa">Default Configuration for GlueX PWA</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#correlated-field-model-in-nifty">Correlated Field Model in NIFTy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simplified-model">Simplified Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#default-configuration-for-gluex-pwa">Default Configuration for GlueX PWA</a></li>
 </ul>
-
   </nav></div>
 
 </div></div>

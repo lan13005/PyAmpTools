@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css?v=be8a1c11" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -180,14 +180,8 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_intro.html">iftpwa - Introduction</a></li>
-
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_config.html">iftpwa - Default Configuration</a></li>
-
-
-
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_tips.html">iftpwa - Tips</a></li>
-
-
 </ul>
 
     </div>
@@ -392,27 +386,28 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="pyamptools.extract_ff.extract_ff">
 <span class="sig-name descname"><span class="pre">extract_ff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfileName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.5f'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regex_merge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_phases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyamptools/extract_ff.html#extract_ff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyamptools.extract_ff.extract_ff" title="Link to this definition">#</a></dt>
-<dd><p>Extract Fit Fractions and phase differences between pairs of waves from a FitResults object</p>
-<dl class="simple">
-<dt>Regex merge can be a useful tool to merge amplitudes that are related to each other (user-specified)</dt><dd><p>For example waveset: D-2- D-1- D0- D1- D2- D-2+ D-1+ D0+ D1+ D2+
-To remove the sign at the end (merge reflectivites)     use = r’[-+]$’
-To remove first sign and number (merge M-projections)   use = r’[-+]?(d+)’
-To remove numbers and signs to merge all D:             use = r’[-+]?(d+)[-+]’</p>
-</dd>
-</dl>
+<dd><p>Extract fit fractions and phase differences between pairs of waves from a FitResults object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>results</strong> (<em>FitResults</em>) – FitResults object</p></li>
-<li><p><strong>outfileName</strong> (<em>str</em>) – Output root file name or dump to stdout if ‘’</p></li>
-<li><p><strong>acceptanceCorrect</strong> (<em>bool</em>) – Acceptance correct the values</p></li>
-<li><p><strong>fmt</strong> (<em>str</em>) – string format for printing</p></li>
-<li><p><strong>regex_merge</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Merge amplitudes: List of Regex pairs (pattern, replace) separated by ~&gt;</p></li>
-<li><p><strong>only</strong> (<em>str</em>) – Only dump fit fractions for [“acc”, “noacc”]. Default dumps FF concatenated by “|”</p></li>
+<li><p><strong>results</strong> (<em>FitResults</em>) – FitResults object containing fit results</p></li>
+<li><p><strong>outfileName</strong> (<em>str</em>) – Output root file name or dump to stdout if empty string</p></li>
+<li><p><strong>fmt</strong> (<em>str</em>) – String format for printing numbers</p></li>
+<li><p><strong>regex_merge</strong> (<em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – <p>List of regex pattern/replace pairs for merging amplitudes.
+Pairs are separated by ~&gt;. The substitution happens for all amplitude names.
+All amplitudes with same reduced name will be grouped into a list and a combined fit fraction
+calculated. See AmpTools’ FitResults.intensity method.
+.. rubric:: Examples</p>
+<ul>
+<li><p>’.*::(.*)::.*~&gt;1’: Captures text between :: and replaces full match</p></li>
+<li><p>’.*(.)$~&gt;1’: Captures last character and replaces full match</p></li>
+<li><p>’.*reaction_(000|045|090|135)::(Pos|Neg)(?:Im|Re)::’: Removes matched pattern,
+allowing grouping over polarizations and mirrored sums</p></li>
 </ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None, dumps a file to outfileName or stdout</p>
+</p></li>
+<li><p><strong>no_phases</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, skip calculating phase differences</p></li>
+<li><p><strong>only</strong> (<em>str</em><em>, </em><em>optional</em>) – Only dump fit fractions for “acc” or “noacc”. Default dumps both.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

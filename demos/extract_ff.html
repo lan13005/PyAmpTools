@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>iftpwa - Tips &#8212; PyAmpTools</title>
+    <title>Extracting Fit Fractions &#8212; PyAmpTools</title>
   
   
   
@@ -60,10 +60,9 @@
     <script async="async" src="../_static/sphinx-thebe.js?v=c100c467"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'ift/iftpwa_tips';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'demos/extract_ff';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="iftpwa - Default Configuration" href="iftpwa_config.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -114,6 +113,8 @@
     <div class="bd-container__inner bd-page-width">
       
       
+      
+        
       
       <dialog id="pst-primary-sidebar-modal"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
@@ -166,21 +167,21 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../demos/libraryLoading.html">Loading Libraries</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../demos/generation.html">Generating Data</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../demos/fitting.html">Fitting</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../demos/mle.html">Maximum Likelihood Estimation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../demos/mcmc.html">Markov Chain Monte Carlo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="libraryLoading.html">Loading Libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generation.html">Generating Data</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="fitting.html">Fitting</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="mle.html">Maximum Likelihood Estimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mcmc.html">Markov Chain Monte Carlo</a></li>
 
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="../demos/plotgen.html">Plotting Fit Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plotgen.html">Plotting Fit Results</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="iftpwa_intro.html">iftpwa - Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="iftpwa_config.html">iftpwa - Default Configuration</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">iftpwa - Tips</a></li>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_intro.html">iftpwa - Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_config.html">iftpwa - Default Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_tips.html">iftpwa - Tips</a></li>
 </ul>
 
     </div>
@@ -252,7 +253,7 @@
       
       
       
-      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2Fift/iftpwa_tips.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2Fdemos/extract_ff.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -282,7 +283,7 @@
       
       
       
-      <li><a href="../_sources/ift/iftpwa_tips.md" target="_blank"
+      <li><a href="../_sources/demos/extract_ff.ipynb" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -292,7 +293,7 @@
 <span class="btn__icon-container">
   <i class="fas fa-file"></i>
   </span>
-<span class="btn__text-container">.md</span>
+<span class="btn__text-container">.ipynb</span>
 </a>
 </li>
       
@@ -345,9 +346,7 @@
 <button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
 </button>
-<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="fa-solid fa-list"></span>
-</button>
+
 </div></div>
       
     </div>
@@ -358,20 +357,11 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>iftpwa - Tips</h1>
+    <h1>Extracting Fit Fractions</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
             
-            <div>
-                <h2> Contents </h2>
-            </div>
-            <nav aria-label="Page">
-                <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#analysis-tips">Analysis Tips</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#developing-tips">Developing Tips</a></li>
-</ul>
-            </nav>
         </div>
     </div>
 </div>
@@ -381,41 +371,38 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="iftpwa-tips">
-<h1>iftpwa - Tips<a class="headerlink" href="#iftpwa-tips" title="Link to this heading">#</a></h1>
-<section id="analysis-tips">
-<h2>Analysis Tips<a class="headerlink" href="#analysis-tips" title="Link to this heading">#</a></h2>
-</section>
-<section id="developing-tips">
-<h2>Developing Tips<a class="headerlink" href="#developing-tips" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>All random variables start normally distributed, when constructing terms/factors in the model it is often needed to transform to other distributions which can be done through using the cumulative distribution functions and quantile functions</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ift.from_random</span></code> is often used to probe what the forward model is doing</p></li>
-<li><p><strong>Example:</strong> code for drawing from a half-normal distribution</p></li>
-</ul>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">jax.scipy.special</span> <span class="kn">import</span> <span class="n">erfinv</span>
-<span class="kn">from</span> <span class="nn">jax.scipy.stats.norm</span> <span class="kn">import</span> <span class="n">cdf</span> <span class="k">as</span> <span class="n">normal_cdf</span>
-<span class="kn">import</span> <span class="nn">nifty8</span> <span class="k">as</span> <span class="nn">ift</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
+  <section class="tex2jax_ignore mathjax_ignore" id="extracting-fit-fractions">
+<h1>Extracting Fit Fractions<a class="headerlink" href="#extracting-fit-fractions" title="Link to this heading">#</a></h1>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 
-<span class="n">scale</span> <span class="o">=</span> <span class="mi">10</span> <span class="c1"># arbitary standard deviation</span>
+<span class="n">PYAMPTOOLS_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYAMPTOOLS_HOME&quot;</span><span class="p">]</span>
+<span class="n">SRC</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PYAMPTOOLS_HOME</span><span class="si">}</span><span class="s2">/src/pyamptools&quot;</span>
+<span class="n">fit_results</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PYAMPTOOLS_HOME</span><span class="si">}</span><span class="s2">/tests/samples/SIMPLE_EXAMPLE/result.fit&quot;</span>
+<span class="n">output_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PYAMPTOOLS_HOME</span><span class="si">}</span><span class="s2">/tests/ff.txt&quot;</span>
 
-<span class="n">domain</span> <span class="o">=</span> <span class="n">ift</span><span class="o">.</span><span class="n">RGSpace</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span> <span class="p">,),</span> <span class="n">distances</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,),</span> <span class="n">harmonic</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-<span class="k">def</span> <span class="nf">fun</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="n">uniform_rv</span> <span class="o">=</span> <span class="n">normal_cdf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-    <span class="c1"># see https://en.wikipedia.org/wiki/Normal_distribution for Quantile function</span>
-    <span class="c1">#   which uses erfinv(2p-1) where p is uniform. Makes result half-normal instead of normal</span>
-    <span class="k">return</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">erfinv</span><span class="p">(</span><span class="n">uniform_rv</span><span class="p">)</span>
-
-<span class="n">fun</span> <span class="o">=</span> <span class="n">ift</span><span class="o">.</span><span class="n">JaxOperator</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="n">fun</span><span class="p">)</span>
-<span class="n">draws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">fun</span><span class="p">(</span><span class="n">ift</span><span class="o">.</span><span class="n">from_random</span><span class="p">(</span><span class="n">domain</span><span class="p">))</span><span class="o">.</span><span class="n">val</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10000</span><span class="p">)])</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">draws</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">test_extract_ff</span><span class="p">():</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;pa fitfrac&quot;</span><span class="p">,</span>
+        <span class="n">fit_results</span><span class="p">,</span>
+        <span class="s2">&quot;--outputfileName&quot;</span><span class="p">,</span>
+        <span class="n">output_file</span><span class="p">,</span>
+        <span class="s2">&quot;--regex_merge&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;&#39;.*::(.*)::.*~&gt;</span><span class="se">\\</span><span class="s2">1&#39;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;&#39;.*(.)$~&gt;</span><span class="se">\\</span><span class="s2">1&#39;&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">())</span>
+    <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;rm </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</section>
+</div>
+</div>
 </section>
 
     <script type="text/x-thebe-config">
@@ -431,7 +418,7 @@
         },
         kernelOptions: {
             name: "python3",
-            path: "./ift"
+            path: "./demos"
         },
         predefinedOutput: true
     }
@@ -448,38 +435,12 @@
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
-    <a class="left-prev"
-       href="iftpwa_config.html"
-       title="previous page">
-      <i class="fa-solid fa-angle-left"></i>
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">iftpwa - Default Configuration</p>
-      </div>
-    </a>
 </div>
                 </footer>
               
             </div>
             
             
-              
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
-                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
-
-
-  <div class="sidebar-secondary-item">
-  <div class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> Contents
-  </div>
-  <nav class="bd-toc-nav page-toc">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#analysis-tips">Analysis Tips</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#developing-tips">Developing Tips</a></li>
-</ul>
-  </nav></div>
-
-</div></div>
               
             
           </div>
