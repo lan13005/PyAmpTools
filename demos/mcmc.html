@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css?v=be8a1c11" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -65,7 +65,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'demos/mcmc';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Plotting Fit Results" href="plotgen.html" />
+    <link rel="next" title="Extracting Fit Fractions" href="extract_ff.html" />
     <link rel="prev" title="Maximum Likelihood Estimation" href="mle.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -177,19 +177,14 @@
 
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="extract_ff.html">Extracting Fit Fractions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plotgen.html">Plotting Fit Results</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_intro.html">iftpwa - Introduction</a></li>
-
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_config.html">iftpwa - Default Configuration</a></li>
-
-
-
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_tips.html">iftpwa - Tips</a></li>
-
-
 </ul>
 
     </div>
@@ -398,14 +393,17 @@
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">pyamptools</span> <span class="kn">import</span> <span class="n">atiSetup</span>
 <span class="kn">from</span> <span class="nn">pyamptools.utility.load_parameters</span> <span class="kn">import</span> <span class="n">LoadParameters</span>
 <span class="kn">from</span> <span class="nn">pyamptools.mcmc</span> <span class="kn">import</span> <span class="n">mcmcManager</span>
 <span class="kn">from</span> <span class="nn">pyamptools.utility.general</span> <span class="kn">import</span> <span class="n">PrintSourceCode</span>
 
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;AMPTOOLS_REPORT_LEVEL&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ERROR&quot;</span>
+
 <span class="n">PYAMPTOOLS_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYAMPTOOLS_HOME&quot;</span><span class="p">]</span>
-<span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># RANK_MPI defaults to 0 even if not using MPI</span>
+<span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span>  <span class="c1"># RANK_MPI defaults to 0 even if not using MPI</span>
 </pre></div>
 </div>
 </div>
@@ -426,7 +424,7 @@ atiSetup| Loading library libAmpTools.so ..............  ON
 atiSetup| Loading library libAmpPlotter.so ............  ON
 atiSetup| Loading library libAmpsDataIO.so ............  ON
 atiSetup| Loading library libFSRoot.so ................  OFF
-atiSetup| Loading library libAmpsGen.so ...............  ON
+atiSetup| Loading library libAmpsGen.so ...............  OFF
 
 
 ------------------------------------------------
@@ -697,7 +695,7 @@ nwalkers: 32
 burnIn: 0
 nsamples: 200
 params_dict: {}
-moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7f18d5be54f0&gt;]
+moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7fab15541e20&gt;]
 sampler_kwargs: {&#39;progress&#39;: False}
  ========================================================================= 
 
@@ -706,10 +704,10 @@ Initializing walkers in an N-ball around the initial estimate
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Calculating intensity with amplitudes dictionary:
-  resAmp3 -&gt; [&#39;etapi::imZ::resAmp3&#39;, &#39;etapi::reZ::resAmp3&#39;]
   resAmp2 -&gt; [&#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp2&#39;]
   resAmp1 -&gt; [&#39;etapi::imZ::resAmp1&#39;, &#39;etapi::reZ::resAmp1&#39;]
-  total -&gt; [&#39;etapi::imZ::resAmp3&#39;, &#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp2&#39;, &#39;etapi::reZ::resAmp3&#39;, &#39;etapi::imZ::resAmp1&#39;, &#39;etapi::reZ::resAmp1&#39;]
+  resAmp3 -&gt; [&#39;etapi::reZ::resAmp3&#39;, &#39;etapi::imZ::resAmp3&#39;]
+  total -&gt; [&#39;etapi::imZ::resAmp2&#39;, &#39;etapi::imZ::resAmp1&#39;, &#39;etapi::reZ::resAmp3&#39;, &#39;etapi::reZ::resAmp1&#39;, &#39;etapi::reZ::resAmp2&#39;, &#39;etapi::imZ::resAmp3&#39;]
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The chain is shorter than 50 times the integrated autocorrelation time for 5 parameter(s). Use this estimate with caution and run a longer chain!
@@ -732,12 +730,12 @@ Autocorrelation time: 16.447 steps
 #   Re[resAmp3]          = -193.365   -195.907   -193.304   -190.706   -193.379   2.845     
 #   Im[resAmp3]          = 106.786    103.457    106.491    109.742    106.480    3.366     
 # ======================================================================================
-
-
-MCMC intensity samples saved to mcmc/samples_intensity.feather
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MCMC intensity samples saved to mcmc/samples_intensity.feather
   shape: (6400, 4)
 
-Fit time: 4.282480239868164 seconds
+Fit time: 4.381178140640259 seconds
 </pre></div>
 </div>
 </div>
@@ -812,11 +810,11 @@ Fit time: 4.282480239868164 seconds
       </div>
     </a>
     <a class="right-next"
-       href="plotgen.html"
+       href="extract_ff.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Plotting Fit Results</p>
+        <p class="prev-next-title">Extracting Fit Fractions</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

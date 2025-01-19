@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css?v=be8a1c11" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -175,19 +175,14 @@
 
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="extract_ff.html">Extracting Fit Fractions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plotgen.html">Plotting Fit Results</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_intro.html">iftpwa - Introduction</a></li>
-
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_config.html">iftpwa - Default Configuration</a></li>
-
-
-
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_tips.html">iftpwa - Tips</a></li>
-
-
 </ul>
 
     </div>
@@ -387,6 +382,8 @@
 <span class="kn">from</span> <span class="nn">pyamptools</span> <span class="kn">import</span> <span class="n">atiSetup</span>
 
 <span class="kn">from</span> <span class="nn">pyamptools.mle</span> <span class="kn">import</span> <span class="n">runFits</span>
+
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;AMPTOOLS_REPORT_LEVEL&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ERROR&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -450,7 +447,7 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 Config file: /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/fitInit.cfg
 Seed file: seed_file
 Number of random fits: 0
-Random seed: 1737217079
+Random seed: 1737323364
  ============================= 
 </pre></div>
 </div>

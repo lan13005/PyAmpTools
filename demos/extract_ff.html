@@ -63,6 +63,8 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'demos/extract_ff';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Plotting Fit Results" href="plotgen.html" />
+    <link rel="prev" title="Markov Chain Monte Carlo" href="mcmc.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -114,8 +116,6 @@
       
       
       
-        
-      
       <dialog id="pst-primary-sidebar-modal"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
@@ -166,7 +166,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../additional_info.html">Potential Build Errors</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
-<ul class="nav bd-sidenav">
+<ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="libraryLoading.html">Loading Libraries</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generation.html">Generating Data</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="fitting.html">Fitting</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -175,6 +175,7 @@
 
 </ul>
 </details></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Extracting Fit Fractions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plotgen.html">Plotting Fit Results</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
@@ -346,7 +347,9 @@
 <button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
 </button>
-
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
 </div></div>
       
     </div>
@@ -362,6 +365,16 @@
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#docstring-pa-fitfrac">Docstring: <code class="docutils literal notranslate"><span class="pre">pa</span> <span class="pre">fitfrac</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-1">Example 1</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-2">Example 2</a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -373,36 +386,225 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="extracting-fit-fractions">
 <h1>Extracting Fit Fractions<a class="headerlink" href="#extracting-fit-fractions" title="Link to this heading">#</a></h1>
+<p>A fit results file (read in using AmpTools.FitResults) is dumped after an AmpTools fit is completed. These fit results can be parsed to extract the intensity (or fit fraction) of each amplitude. A typical procedure is to parse the fit results and dump the fit fractions for each unique amplitude and for <strong>user specified coherent sums</strong>.</p>
+<p>Each <strong>AmpTools</strong> amplitude name takes the form <code class="docutils literal notranslate"><span class="pre">REACTION::SUM::AMPLITUDE</span></code>. Everyone has their own naming schemes so a flexible way to form coherent sums is needed.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pa</span> <span class="pre">fitfrac</span></code> takes a flag <code class="docutils literal notranslate"><span class="pre">--regex_merge</span></code> which allows a user to specify a substitution pattern to merge amplitudes</p>
+<p>An additional flag <code class="docutils literal notranslate"><span class="pre">--test_regex</span></code> can be used to test the regex pattern without calling AmpTools to return the intensity as is used everywhere in this tutorial.</p>
+<section id="docstring-pa-fitfrac">
+<h2>Docstring: <code class="docutils literal notranslate"><span class="pre">pa</span> <span class="pre">fitfrac</span></code><a class="headerlink" href="#docstring-pa-fitfrac" title="Link to this heading">#</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">pyamptools.extract_ff</span> <span class="kn">import</span> <span class="n">extract_ff</span>
 
 <span class="n">PYAMPTOOLS_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYAMPTOOLS_HOME&quot;</span><span class="p">]</span>
 <span class="n">SRC</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PYAMPTOOLS_HOME</span><span class="si">}</span><span class="s2">/src/pyamptools&quot;</span>
 <span class="n">fit_results</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PYAMPTOOLS_HOME</span><span class="si">}</span><span class="s2">/tests/samples/SIMPLE_EXAMPLE/result.fit&quot;</span>
 <span class="n">output_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PYAMPTOOLS_HOME</span><span class="si">}</span><span class="s2">/tests/ff.txt&quot;</span>
 
-<span class="k">def</span> <span class="nf">test_extract_ff</span><span class="p">():</span>
-    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="s2">&quot;pa fitfrac&quot;</span><span class="p">,</span>
-        <span class="n">fit_results</span><span class="p">,</span>
-        <span class="s2">&quot;--outputfileName&quot;</span><span class="p">,</span>
-        <span class="n">output_file</span><span class="p">,</span>
-        <span class="s2">&quot;--regex_merge&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;&#39;.*::(.*)::.*~&gt;</span><span class="se">\\</span><span class="s2">1&#39;&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;&#39;.*(.)$~&gt;</span><span class="se">\\</span><span class="s2">1&#39;&quot;</span><span class="p">,</span>
-    <span class="p">]</span>
-    <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">())</span>
-    <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;rm </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">help</span><span class="p">(</span><span class="n">extract_ff</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Help on function extract_ff in module pyamptools.extract_ff:
+
+extract_ff(results, outfileName=&#39;&#39;, fmt=&#39;.5f&#39;, test_regex=False, no_phases=False, only=None, regex_merge=None)
+    Extract fit fractions and phase differences between pairs of waves from a FitResults object.
+    
+    Args:
+        results (FitResults): FitResults object containing fit results
+        outfileName (str): Output root file name or dump to stdout if empty string
+        fmt (str): String format for printing numbers
+        test_regex (bool, optional): If True, only test and print regex grouping without calculating intensities
+        no_phases (bool, optional): If True, skip calculating phase differences
+        only (str, optional): Only dump fit fractions for &quot;acc&quot; or &quot;noacc&quot;. Default dumps both.
+        regex_merge (List[str], optional): List of regex pattern/replace pairs for merging amplitudes.
+            Pairs are separated by ~&gt;. The substitution happens for all amplitude names.
+            All amplitudes with same reduced name will be grouped into a list and a combined fit fraction
+            calculated. See AmpTools&#39; FitResults.intensity method.
+            Examples:
+                - &#39;.*::(.*)::.*~&gt;\1&#39;: Captures text between :: and replaces full match
+                - &#39;.*(.)$~&gt;\1&#39;: Captures last character and replaces full match
+                - &#39;.*reaction_(000|045|090|135)::(Pos|Neg)(?:Im|Re)::&#39;: Removes matched pattern,
+                  allowing grouping over polarizations and mirrored sums
 </pre></div>
 </div>
 </div>
 </div>
+</section>
+<section id="example-1">
+<h2>Example 1<a class="headerlink" href="#example-1" title="Link to this heading">#</a></h2>
+<p>In this fit results file we have several amplitudes:</p>
+<ul class="simple">
+<li><p>etapi::reZ::resAmp1</p></li>
+<li><p>etapi::imZ::resAmp1</p></li>
+<li><p>etapi::reZ::resAmp2</p></li>
+<li><p>etapi::imZ::resAmp2</p></li>
+<li><p>etapi::reZ::resAmp3</p></li>
+<li><p>etapi::imZ::resAmp3</p></li>
+</ul>
+<p>What if we wanted to calculate intensity for the coherent sums across all amplitudes that share the same SUM</p>
+<p><code class="docutils literal notranslate"><span class="pre">'.*::(.*)::.*~&gt;\\1'</span></code> will match the form of our amplitude names, capture the SUM, and replace the match with the SUM. <code class="docutils literal notranslate"><span class="pre">~&gt;</span></code> is our delimiter that separates the pattern from its replacement. In this case etapi::reZ::resAmp1 and etapi::reZ::resAmp2 will both reduce to reZ. Amplitudes with same reduced name will be put into a list which will be passed to <code class="docutils literal notranslate"><span class="pre">AmpTools.FitResults.intensity()</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;pa fitfrac&quot;</span><span class="p">,</span>
+    <span class="n">fit_results</span><span class="p">,</span>
+    <span class="s2">&quot;--outputfileName&quot;</span><span class="p">,</span>
+    <span class="n">output_file</span><span class="p">,</span>
+    <span class="s2">&quot;--test_regex&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;--regex_merge&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&#39;.*::(.*)::.*~&gt;</span><span class="se">\\</span><span class="s2">1&#39;&quot;</span>
+<span class="p">]</span>
+<span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>pa fitfrac /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/result.fit --outputfileName /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/ff.txt --test_regex --regex_merge &#39;.*::(.*)::.*~&gt;\1&#39;
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   =================================================================
+   |        ^                                                      |
+   |       / \             Version:  v0.15.3-2-g0753-dirty         |
+   |      /---\                                                    |
+   |     /     \           GDouble:  8 bytes                       |
+   |    /       \ MP           MPI:  NO                            |
+   |     -------               GPU:  NO                            |
+   |        |                                                      |
+   |        |              doi.org/10.5281/zenodo.5039377          |
+   |        | OOLS                                                 |
+   =================================================================
+atiSetup| pa called python
+
+------------------------------------------------
+atiSetup| MPI is disabled
+atiSetup| GPU is disabled
+------------------------------------------------
+
+
+atiSetup| Loading library libIUAmpTools.so ............  ON
+atiSetup| Loading library libAmpTools.so ..............  ON
+atiSetup| Loading library libAmpPlotter.so ............  ON
+atiSetup| Loading library libAmpsDataIO.so ............  ON
+atiSetup| Loading library libFSRoot.so ................  OFF
+atiSetup| Loading library libAmpsGen.so ...............  OFF
+
+
+------------------------------------------------
+------------------------------------------------
+
+
+All Unique Amplitudes:
+ -&gt; etapi::reZ::resAmp1
+ -&gt; etapi::imZ::resAmp1
+ -&gt; etapi::reZ::resAmp2
+ -&gt; etapi::imZ::resAmp2
+ -&gt; etapi::reZ::resAmp3
+ -&gt; etapi::imZ::resAmp3
+
+Merged Amplitude Groups based on regex sub: r&#39;.*::(.*)::.*&#39; -&gt; r&#39;\1&#39;:
+ -&gt; reZ merged 3 amplitudes:
+     etapi::reZ::resAmp1
+     etapi::reZ::resAmp2
+     etapi::reZ::resAmp3
+ -&gt; imZ merged 3 amplitudes:
+     etapi::imZ::resAmp1
+     etapi::imZ::resAmp2
+     etapi::imZ::resAmp3
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="example-2">
+<h2>Example 2<a class="headerlink" href="#example-2" title="Link to this heading">#</a></h2>
+<p>What if we wanted to calculate intensity for the coherent sums: {resAmp1, resAmp2, resAmp3} summing over reaction and sum?</p>
+<p><code class="docutils literal notranslate"><span class="pre">'.*::.*::'</span></code> will pattern match the REACTION::SUM part of the amplitude name. Since there is no replacement (i.e. no <code class="docutils literal notranslate"><span class="pre">~&gt;</span></code>) this acts like a substitution with an empty string (or deletion…). In this case etapi::reZ::resAmp1 and etapi::imZ::resAmp1 will both reduce to resAmp1. Amplitudes with same reduced name will be put into a list which will be passed to <code class="docutils literal notranslate"><span class="pre">AmpTools.FitResults.intensity()</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;pa fitfrac&quot;</span><span class="p">,</span>
+    <span class="n">fit_results</span><span class="p">,</span>
+    <span class="s2">&quot;--outputfileName&quot;</span><span class="p">,</span>
+    <span class="n">output_file</span><span class="p">,</span>
+    <span class="s2">&quot;--test_regex&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;--regex_merge&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&#39;.*::.*::&#39;&quot;</span>
+<span class="p">]</span>
+<span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>pa fitfrac /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/result.fit --outputfileName /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/ff.txt --test_regex --regex_merge &#39;.*::.*::&#39;
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   =================================================================
+   |        ^                                                      |
+   |       / \             Version:  v0.15.3-2-g0753-dirty         |
+   |      /---\                                                    |
+   |     /     \           GDouble:  8 bytes                       |
+   |    /       \ MP           MPI:  NO                            |
+   |     -------               GPU:  NO                            |
+   |        |                                                      |
+   |        |              doi.org/10.5281/zenodo.5039377          |
+   |        | OOLS                                                 |
+   =================================================================
+atiSetup| pa called python
+
+------------------------------------------------
+atiSetup| MPI is disabled
+atiSetup| GPU is disabled
+------------------------------------------------
+
+
+atiSetup| Loading library libIUAmpTools.so ............  ON
+atiSetup| Loading library libAmpTools.so ..............  ON
+atiSetup| Loading library libAmpPlotter.so ............  ON
+atiSetup| Loading library libAmpsDataIO.so ............  ON
+atiSetup| Loading library libFSRoot.so ................  OFF
+atiSetup| Loading library libAmpsGen.so ...............  OFF
+
+
+------------------------------------------------
+------------------------------------------------
+
+
+All Unique Amplitudes:
+ -&gt; etapi::reZ::resAmp1
+ -&gt; etapi::imZ::resAmp1
+ -&gt; etapi::reZ::resAmp2
+ -&gt; etapi::imZ::resAmp2
+ -&gt; etapi::reZ::resAmp3
+ -&gt; etapi::imZ::resAmp3
+
+Merged Amplitude Groups based on regex sub: r&#39;.*::.*::&#39; -&gt; r&#39;&#39;:
+ -&gt; resAmp1 merged 2 amplitudes:
+     etapi::reZ::resAmp1
+     etapi::imZ::resAmp1
+ -&gt; resAmp2 merged 2 amplitudes:
+     etapi::reZ::resAmp2
+     etapi::imZ::resAmp2
+ -&gt; resAmp3 merged 2 amplitudes:
+     etapi::reZ::resAmp3
+     etapi::imZ::resAmp3
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0
+</pre></div>
+</div>
+</div>
+</div>
+</section>
 </section>
 
     <script type="text/x-thebe-config">
@@ -435,12 +637,48 @@
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="mcmc.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Markov Chain Monte Carlo</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="plotgen.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Plotting Fit Results</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
             </div>
             
             
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#docstring-pa-fitfrac">Docstring: <code class="docutils literal notranslate"><span class="pre">pa</span> <span class="pre">fitfrac</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-1">Example 1</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-2">Example 2</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>
