@@ -1,6 +1,6 @@
 # iftpwa - Introduction
 
-# Information Field Theory for Partial Wave Analysis (iftpwa)
+## Information Field Theory for Partial Wave Analysis (iftpwa)
 
 When multiple resonances overlap in phase space, partial wave analysis is needed to disentangle the individual contributions. One can think of it as a generalized Fourier analysis where each basis component can represent a physically interpretable process (caveats!). 
 

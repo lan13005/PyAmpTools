@@ -1,6 +1,6 @@
 # iftpwa - Default Configuration
 
-# Correlated Field Model in NIFTy
+## Correlated Field Model in NIFTy
 Please read the following first, perhaps run the code yourself to see how the correlated field model works in NIFTy. This model forms the basis of the iftpwa package.
 [Showcasingthe Correlated Field Model (NIFTy)](https://ift.pages.mpcdf.de/nifty/user/old_nifty_getting_started_4_CorrelatedFields.html)
 
@@ -8,7 +8,7 @@ Please read the following first, perhaps run the code yourself to see how the co
 The correlated field model is no longer a Gaussian process but it does make understanding and explaining the IFT approach easier
 ```
 
-# Simplified Model
+## Simplified Model
 
 The following simplified model is used to depict how the configuration file key-value fields affect the physics model:
 
@@ -29,7 +29,7 @@ P(\vec{x}) & = \text{Parametric component with parameters } \vec{x} \\
 \end{split}
 $$
 
-# Default Configuration for GlueX PWA
+## Default Configuration for GlueX PWA
 
 Below is the default YAML configuration for GlueX analyses of $\gamma p \rightarrow \eta\pi^0 p$
 

@@ -10,6 +10,13 @@ def extract_ff(results, outfileName="", fmt=".5f", regex_merge=None, no_phases=F
     """
     Extract Fit Fractions and phase differences between pairs of waves from a FitResults object
 
+    regex_merge syntax: List of Regex pairs (pattern, replace) separated by ~>
+                        This substitution happens for all amplitude names, all amplitudes with same reduced name will be put into a list and a fit fraction / intensity will be calculated for the list, see AmpTools' FitResults.intensity
+        For example:
+            '.*::(.*)::.*~>\\1' will capture characters sandwiched between two :: and replace matched pattern with the captured characters
+            '.*(.)$~>\\1' will capture the last character and replace matched pattern with this character
+            '.*reaction_(000|045|090|135)::(Pos|Neg)(?:Im|Re)::' since it has no ~> it will substitute with nothing (aka deleting) the matched pattern leaving only the amplitude name, i.e.e reaction_000::PosRe::S0+ becomes S0+ allowing grouping over polarizations and mirrored sums
+
     Regex merge can be a useful tool to merge amplitudes that are related to each other (user-specified)
         For example waveset: D-2- D-1- D0- D1- D2- D-2+ D-1+ D0+ D1+ D2+
         To remove the sign at the end (merge reflectivites)     use = r'[-+]$'
@@ -21,7 +28,7 @@ def extract_ff(results, outfileName="", fmt=".5f", regex_merge=None, no_phases=F
         outfileName (str): Output root file name or dump to stdout if ''
         acceptanceCorrect (bool): Acceptance correct the values
         fmt (str): string format for printing
-        regex_merge (List[str]): Merge amplitudes: List of Regex pairs (pattern, replace) separated by ~>
+        regex_merge (List[str]): see above
         only (str): Only dump fit fractions for ["acc", "noacc"]. Default dumps FF concatenated by "|"
 
     Returns:
@@ -30,12 +37,11 @@ def extract_ff(results, outfileName="", fmt=".5f", regex_merge=None, no_phases=F
 
     def write_ff(amp, intensity, error, intensity_corr, error_corr, only=None):
         if only is None:
-            outfile.write(f"FIT FRACTION {amp} = {intensity_corr/total_intensity_corr:{fmt}}|{intensity/total_intensity:{fmt}} +- {error_corr/total_intensity_corr:{fmt}}|{error/total_intensity:{fmt}}\n")
+            outfile.write(f"FIT FRACTION {amp} = {intensity_corr / total_intensity_corr:{fmt}}|{intensity / total_intensity:{fmt}} +- {error_corr / total_intensity_corr:{fmt}}|{error / total_intensity:{fmt}}\n")
         elif only == "acc":
-            outfile.write(f"FIT FRACTION {amp} = {intensity/total_intensity:{fmt}} +- {error/total_intensity:{fmt}}\n")
-        elif only == "noacc": # no accepatance = correct for acceptance
-            outfile.write(f"FIT FRACTION {amp} = {intensity_corr/total_intensity_corr:{fmt}} +- {error_corr/total_intensity_corr:{fmt}}\n")
-        
+            outfile.write(f"FIT FRACTION {amp} = {intensity / total_intensity:{fmt}} +- {error / total_intensity:{fmt}}\n")
+        elif only == "noacc":  # no accepatance = correct for acceptance
+            outfile.write(f"FIT FRACTION {amp} = {intensity_corr / total_intensity_corr:{fmt}} +- {error_corr / total_intensity_corr:{fmt}}\n")
 
     ############### LOAD RESULTS TIME! ################
     outfile = open(outfileName, "w") if outfileName != "" else sys.stdout
