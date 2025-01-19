@@ -115,8 +115,8 @@ export LD_LIBRARY_PATH=$PYAMPTOOLS_HOME/external/AMPTOOLS_AMPS_DATAIO:$LD_LIBRAR
 
 
 ##################### Activate ROOT #################
-if [ -f "$PYAMPTOOLS_HOME/external/root/thisroot.sh" ]; then
-    source $PYAMPTOOLS_HOME/external/root/thisroot.sh $PYAMPTOOLS_HOME/external/root # setup ROOT
+if [ -f "$PYAMPTOOLS_HOME/external/root/thisroot_proxy.sh" ]; then
+    source $PYAMPTOOLS_HOME/external/root/thisroot_proxy.sh $PYAMPTOOLS_HOME/external/root # setup ROOT
 else
     echo ""
     echo "ROOT not found. Please go into root and run build_root.sh to your specifications."
