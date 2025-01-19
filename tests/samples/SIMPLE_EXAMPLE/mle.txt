@@ -1,0 +1,6 @@
+initialize etapi::reZ::resAmp1 cartesian -139.916934472647 0 real
+initialize etapi::imZ::resAmp1 cartesian -139.916934472647 0 real
+initialize etapi::reZ::resAmp2 cartesian -80.7645558774151 134.783042536537
+initialize etapi::imZ::resAmp2 cartesian -80.7645558774151 134.783042536537
+initialize etapi::reZ::resAmp3 cartesian -193.378348147123 106.65256739115
+initialize etapi::imZ::resAmp3 cartesian -193.378348147123 106.65256739115

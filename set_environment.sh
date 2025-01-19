@@ -135,3 +135,13 @@ mkdir -p $CONDA_PREFIX/etc/conda/activate.d/
 if [ -e "$(readlink -f set_environment.sh)" ]; then
     ln -sf "$(readlink -f set_environment.sh)" $CONDA_PREFIX/etc/conda/activate.d/
 fi
+
+
+# For tests and docs to work we have to update the paths in the tests/samples/SIMPLE_EXAMPLE folder as
+#   it uses absolute paths so commands can run from anywhere
+sed -i "s~REPLACE_FOLDER_LOCATION~$PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE~" $PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE/fit.cfg 
+sed -i "s~REPLACE_FOLDER_LOCATION~$PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE~" $PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE/fit_fakeParams.cfg
+sed -i "s~REPLACE_FOLDER_LOCATION~$PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE~" $PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE/result.fit
+sed -i "s~REPLACE_FOLDER_LOCATION~$PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE~" $PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE/result_fakeParams.fit
+
+

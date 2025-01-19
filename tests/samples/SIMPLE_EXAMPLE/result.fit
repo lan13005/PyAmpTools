@@ -98,7 +98,7 @@ initialize etapi::reZ::resAmp2 cartesian 10 0
 initialize etapi::imZ::resAmp2 cartesian 10 0
 initialize etapi::reZ::resAmp3 cartesian 10 0
 initialize etapi::imZ::resAmp3 cartesian 10 0
-data etapi ROOTDataReader /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
-genmc etapi ROOTDataReader /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-accmc etapi ROOTDataReader /w/halld-scshelf2101/lng/WORK/PyAmpTools/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
+data etapi ROOTDataReader  REPLACE_FOLDER_LOCATION/samples/data_generated_samples.root
+genmc etapi ROOTDataReader REPLACE_FOLDER_LOCATION/samples/flat_generated_samples.root
+accmc etapi ROOTDataReader REPLACE_FOLDER_LOCATION/samples/flat_generated_samples.root
 normintfile etapi normint
