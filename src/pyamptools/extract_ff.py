@@ -8,31 +8,23 @@ import sys
 
 def extract_ff(results, outfileName="", fmt=".5f", regex_merge=None, no_phases=False, only=None):
     """
-    Extract Fit Fractions and phase differences between pairs of waves from a FitResults object
-
-    regex_merge syntax: List of Regex pairs (pattern, replace) separated by ~>
-                        This substitution happens for all amplitude names, all amplitudes with same reduced name will be put into a list and a fit fraction / intensity will be calculated for the list, see AmpTools' FitResults.intensity
-        For example:
-            '.*::(.*)::.*~>\\1' will capture characters sandwiched between two :: and replace matched pattern with the captured characters
-            '.*(.)$~>\\1' will capture the last character and replace matched pattern with this character
-            '.*reaction_(000|045|090|135)::(Pos|Neg)(?:Im|Re)::' since it has no ~> it will substitute with nothing (aka deleting) the matched pattern leaving only the amplitude name, i.e.e reaction_000::PosRe::S0+ becomes S0+ allowing grouping over polarizations and mirrored sums
-
-    Regex merge can be a useful tool to merge amplitudes that are related to each other (user-specified)
-        For example waveset: D-2- D-1- D0- D1- D2- D-2+ D-1+ D0+ D1+ D2+
-        To remove the sign at the end (merge reflectivites)     use = r'[-+]$'
-        To remove first sign and number (merge M-projections)   use = r'[-+]?(\d+)'
-        To remove numbers and signs to merge all D:             use = r'[-+]?(\d+)[-+]'
+    Extract fit fractions and phase differences between pairs of waves from a FitResults object.
 
     Args:
-        results (FitResults): FitResults object
-        outfileName (str): Output root file name or dump to stdout if ''
-        acceptanceCorrect (bool): Acceptance correct the values
-        fmt (str): string format for printing
-        regex_merge (List[str]): see above
-        only (str): Only dump fit fractions for ["acc", "noacc"]. Default dumps FF concatenated by "|"
-
-    Returns:
-        None, dumps a file to outfileName or stdout
+        results (FitResults): FitResults object containing fit results
+        outfileName (str): Output root file name or dump to stdout if empty string
+        fmt (str): String format for printing numbers
+        regex_merge (List[str], optional): List of regex pattern/replace pairs for merging amplitudes.
+            Pairs are separated by ~>. The substitution happens for all amplitude names.
+            All amplitudes with same reduced name will be grouped into a list and a combined fit fraction
+            calculated. See AmpTools' FitResults.intensity method.
+            Examples:
+                - '.*::(.*)::.*~>\\1': Captures text between :: and replaces full match
+                - '.*(.)$~>\\1': Captures last character and replaces full match
+                - '.*reaction_(000|045|090|135)::(Pos|Neg)(?:Im|Re)::': Removes matched pattern,
+                  allowing grouping over polarizations and mirrored sums
+        no_phases (bool, optional): If True, skip calculating phase differences
+        only (str, optional): Only dump fit fractions for "acc" or "noacc". Default dumps both.
     """
 
     def write_ff(amp, intensity, error, intensity_corr, error_corr, only=None):
