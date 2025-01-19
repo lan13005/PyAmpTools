@@ -14,6 +14,7 @@ AmpTools and FSRoot are included as git submodules. Modified source files and ma
 
 ```
 pa -h # for usage
+pa -f # pa is a simple dispatch system, this command shows the file locations of each command
 pa fit my_amptools.cfg # to run MLE fit
 pa mcmc -h # for usage of mcmc
 pa fitfrac amptools_results.fit # extract fit fractions
