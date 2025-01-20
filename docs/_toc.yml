@@ -9,7 +9,7 @@ parts:
   - caption: AmpTools Related Tutorials
     chapters:
       - file: demos/libraryLoading
-      - file: demos/generation
+#      - file: demos/generation
       - file: demos/fitting
         sections:
           - file: demos/mle

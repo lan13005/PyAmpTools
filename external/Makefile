@@ -32,7 +32,7 @@ default: distribute_makefiles
 	@cd FSRoot; make
 	@cd FSRoot/Executables; make
 	@cd AMPTOOLS_AMPS_DATAIO; make
-	@cd AMPTOOLS_GENERATORS; make
+	# @cd AMPTOOLS_GENERATORS; make
 
 mpi: | run_default
 	@echo " === Running 'make mpi' in the target directory... ==="
@@ -120,4 +120,4 @@ clean:
 	@cd AMPTOOLS_AMPS_DATAIO; make clean
 	@cd FSRoot; git reset --hard; make clean
 	@cd FSRoot/Executables; make clean
-	@cd AMPTOOLS_GENERATORS; make clean
+	# @cd AMPTOOLS_GENERATORS; make clean
