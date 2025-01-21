@@ -6,10 +6,11 @@ echo ""
 
 env_name="pyamptools" # current conda environment name
 
-# Default env location on Jlab farm. Will be compared to PWD so no trailing slash!
+# Default env location on Jlab farm. (Will be compared to PWD so no trailing slash)
 #  This should point to a another location where external pyamptools and amptools libraries
 #  are already built so we can reuse them
-default_env="/w/halld-scshelf2101/lng/WORK/PyAmpTools9"
+# default_env="/w/halld-scshelf2101/lng/WORK/PyAmpTools9"
+default_env=""
 
 # Get name of this script for either bash or zsh
 if [ -n "$BASH_SOURCE" ]; then
@@ -34,6 +35,7 @@ fi
 # Check if the hostname contains "jlab.org" if so we perform default setup
 #    and link external libraries against a central repo (its actually my
 #    personal working directory but it isn't modified much anymore)
+# NOTE: Dont do this when inside an apptainer or singularity container
 
 # Function to mark removed files as assumed-unchanged
 mark_removed_files_assume_unchanged() {
@@ -56,8 +58,8 @@ mark_removed_files_assume_unchanged() {
 }
 
 hostname=$(hostname)
-if [[ "$hostname" == *"jlab.org"* ]]; then
-
+if [[ "$hostname" == *"jlab.org"* && -n "$default_env" && -z "$APPTAINER_CONTAINER" && -z "$SINGULARITY_CONTAINER" ]]; then
+          
     echo "Hostname contains 'jlab.org'. Loading default JLab environment..."
     echo ""
 

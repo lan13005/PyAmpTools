@@ -61,9 +61,9 @@ git clone https://${GH_USERNAME}:${GH_PAT}@github.com/lan13005/PyAmpTools.git --
 cd PyAmpTools
 conda env create
 conda activate pyamptools
-# autoload set_enviornment.sh on conda activate
-mkdir -p $CONDA_PREFIX/etc/conda/activate.d/
-ln -snfr set_environment.sh $CONDA_PREFIX/etc/conda/activate.d
+## autoload set_enviornment.sh on conda activate
+# mkdir -p $CONDA_PREFIX/etc/conda/activate.d/
+# ln -snfr set_environment.sh $CONDA_PREFIX/etc/conda/activate.d
 source set_environment.sh
 # update linker for mpi4py
 rm $CONDA_PREFIX/compiler_compat/ld
@@ -99,5 +99,6 @@ echo 'alias ll="ls -l --color=auto"' >> /etc/bash.bashrc && \
 echo 'alias st="git status"' >> /etc/bash.bashrc && \
 echo 'alias log="git log --graph --abbrev-commit --decorate --format=format:'"'"'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)'"'"' --all"' >> /etc/bash.bashrc && \
 echo 'alias root="root -l"' >> /etc/bash.bashrc && \
+echo 'cd /app/PyAmpTools/ && source set_environment.sh && cd ~' >> /etc/bash.bashrc && \
 echo 'source /root/conda/bin/activate' >> /etc/bash.bashrc && \
 echo 'if [ -f /etc/bash.bashrc ]; then source /etc/bash.bashrc; fi' >> ~/.bashrc
