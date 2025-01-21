@@ -2,7 +2,7 @@
 
 Once we have a pair of configuration files we are ready to perform our two types of fits and compare the results. `pa` is a simple dispatch system that calls various python scripts which each perform a specific task in this workflow.
 
-```yaml
+```bash
 yaml=/LOCATION/TO/PYAMPTOOLS.YML
 subdir=$(grep "base_directory:" $yaml | awk '{print $2}') # grabs the base directory from the yaml file
 
