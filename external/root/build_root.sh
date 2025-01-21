@@ -209,9 +209,9 @@ echo "echo \"\"" >> $SETENV
 echo "echo \"[LOADED ROOT] ROOT ${ROOT_VERS} was compiled with gcc ${GCC_VERS} and python ${PYTHON_VERS}\"" >> $SETENV
 echo "" >> $SETENV
 #echo "module load gcc/${GCC_VERS}" >> $SETENV
-echo 'CWD=$(pwd -P)' >> $SETENV
-echo 'SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"' >> $SETENV
-echo "cd \"\$SCRIPT_DIR/root-${ROOT_VERS}-gcc${GCC_VERS}/bin\"" >> $SETENV
+echo 'set CWD = `pwd -P`' >> $SETENV
+echo 'set SCRIPT_DIR = `cd "$(dirname "${BASH_SOURCE[0]}")" && pwd`' >> $SETENV
+echo "cd \"\$SCRIPT_DIR/root-${ROOT_VERS}-gcc${GCC_VERS}/bin\" || { echo \"Failed to change directory\"; exit 1; }" >> $SETENV
 echo "source thisroot.csh" >> $SETENV
-echo 'cd $CWD' >> $SETENV
+echo "cd \"\$CWD\" || { echo \"Failed to change directory\"; exit 1; }" >> $SETENV
 echo "" >> $SETENV

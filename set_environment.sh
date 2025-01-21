@@ -59,7 +59,7 @@ mark_removed_files_assume_unchanged() {
 
 hostname=$(hostname)
 if [[ "$hostname" == *"jlab.org"* && -n "$default_env" && -z "$APPTAINER_CONTAINER" && -z "$SINGULARITY_CONTAINER" ]]; then
-          
+
     echo "Hostname contains 'jlab.org'. Loading default JLab environment..."
     echo ""
 
@@ -109,16 +109,14 @@ if [ -d "$PYAMPTOOLS_HOME/external/AMPTOOLS_GENERATORS/ccdb" ]; then
     export LD_LIBRARY_PATH=$PYAMPTOOLS_HOME/external/AMPTOOLS_GENERATORS:$LD_LIBRARY_PATH
 fi
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH  # for libhwloc.so.5 needed to locate hardware for openmpi
 export LD_LIBRARY_PATH=$AMPTOOLS/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$AMPTOOLS_HOME/AmpPlotter/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$FSROOT/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$PYAMPTOOLS_HOME/external/AMPTOOLS_AMPS_DATAIO:$LD_LIBRARY_PATH
 
-
 ##################### Activate ROOT #################
 if [ -f "$PYAMPTOOLS_HOME/external/root/thisroot_proxy.sh" ]; then
-    source $PYAMPTOOLS_HOME/external/root/thisroot_proxy.sh $PYAMPTOOLS_HOME/external/root # setup ROOT
+    source $PYAMPTOOLS_HOME/external/root/thisroot_proxy.sh # setup ROOT
 else
     echo ""
     echo "ROOT not found. Please go into root and run build_root.sh to your specifications."
@@ -128,16 +126,6 @@ python $PYAMPTOOLS_HOME/utility/link_modules.py # symlink C header files so it c
 
 # Register pa (pyamptools dispatch system) for tab auto-completion of avaiable commands
 eval "$(register-python-argcomplete pa)"
-
-# setup auto-load for next time
-mkdir -p $CONDA_PREFIX/etc/conda/activate.d/
-
-# readlink -f can still return a location even if set_environment.sh is not in the current directory
-#    lets check that it is a valid file first
-if [ -e "$(readlink -f set_environment.sh)" ]; then
-    ln -sf "$(readlink -f set_environment.sh)" $CONDA_PREFIX/etc/conda/activate.d/
-fi
-
 
 # For tests and docs to work we have to update the paths in the tests/samples/SIMPLE_EXAMPLE folder as
 #   it uses absolute paths so commands can run from anywhere
