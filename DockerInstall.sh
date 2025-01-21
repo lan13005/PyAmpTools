@@ -60,16 +60,15 @@ conda activate
 # Clone PyAmpTools using BuildKit Secrets
 git clone https://${GH_USERNAME}:${GH_PAT}@github.com/lan13005/PyAmpTools.git --recurse-submodules
 cd PyAmpTools
-conda env create
+conda create --name pyamptools python=3.9 -y
 conda activate pyamptools
-## autoload set_enviornment.sh on conda activate
-# mkdir -p $CONDA_PREFIX/etc/conda/activate.d/
-# ln -snfr set_environment.sh $CONDA_PREFIX/etc/conda/activate.d
+pip install -e .[dev]
+conda install -c conda-forge tbb -y
 source set_environment.sh
 # update linker for mpi4py
 rm -f $CONDA_PREFIX/compiler_compat/ld
 ln -s /usr/bin/ld $CONDA_PREFIX/compiler_compat/ld
-module load mpi
+module unload mpi && module load mpi
 pip install mpi4py
 cd ..
 
@@ -77,8 +76,15 @@ cd ..
 git clone https://${GH_USERNAME}:${GH_PAT}@github.com/fmkroci/iftpwa.git
 cd iftpwa
 git checkout hyperopt
-pip install -e .
+pip install -e .[dev]
 cd ..
+
+# nifty8 actually requires newer versions of python > 3.9 and therefore updated numpy and matplotlib
+#   FUTURE: update iftpwa to use newer python otherwise we wont have access to later versions of numpy and matplotlib
+NIFTY_SITE="$CONDA_PREFIX/lib/python$(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')/site-packages/nifty8/"
+sed -i 's/np.asfarray(x)/np.asarray(x, dtype=float)/g' $NIFTY_SITE/utilities.py
+sed -i '' '/^def _register_cmaps():/,/^def /s|import matplotlib\.pyplot as plt|from matplotlib import colormaps as cm|' $NIFTY_SITE/plot.py
+sed -i 's/plt.register_cmap/cm.register/g' $NIFTY_SITE/plot.py
 
 # Install and setup fzf using BuildKit Secrets
 git clone --depth 1 https://${GH_USERNAME}:${GH_PAT}@github.com/junegunn/fzf.git /app/fzf
@@ -91,11 +97,11 @@ git clone --depth 1 https://${GH_USERNAME}:${GH_PAT}@github.com/junegunn/fzf.git
 cd PyAmpTools/external/root
 source build_root.sh
 cd ../..
-source set_environment.sh  # Reload environment variables
+# source set_environment.sh  # Reload environment variables
 
-# Build external dependencies with MPI support
-cd external
-make mpi
+# # Build external dependencies with MPI support
+# cd external
+# make mpi
 
 # Add aliases to .bashrc
 echo 'alias ls="ls --color=auto"' >> /etc/bash.bashrc && \
@@ -103,8 +109,9 @@ echo 'alias ll="ls -l --color=auto"' >> /etc/bash.bashrc && \
 echo 'alias st="git status"' >> /etc/bash.bashrc && \
 echo 'alias log="git log --graph --abbrev-commit --decorate --format=format:'"'"'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)'"'"' --all"' >> /etc/bash.bashrc && \
 echo 'alias root="root -l"' >> /etc/bash.bashrc && \
-echo 'module load mpi' >> /etc/bash.bashrc && \
-echo 'cd /app/PyAmpTools/ && source set_environment.sh && cd ~' >> /etc/bash.bashrc && \
+echo 'source /etc/profile.d/modules.sh' >> /etc/bash.bashrc && \
+echo 'module unload mpi && module load mpi' >> /etc/bash.bashrc && \
 echo 'source /root/conda/bin/activate' >> /etc/bash.bashrc && \
 echo 'conda activate pyamptools' >> /etc/bash.bashrc && \
+echo 'cd /app/PyAmpTools/ && source set_environment.sh && cd /app/PyAmpTools/' >> /etc/bash.bashrc && \
 echo 'if [ -f /etc/bash.bashrc ]; then source /etc/bash.bashrc; fi' >> ~/.bashrc

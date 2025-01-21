@@ -1,7 +1,7 @@
 name: pyamptools
 channels:
-  - anaconda
   - conda-forge
+  - anaconda
 dependencies:
   - python==3.9.*
   - pip

@@ -29,9 +29,98 @@ P(\vec{x}) & = \text{Parametric component with parameters } \vec{x} \\
 \end{split}
 $$
 
-## Default Configuration for GlueX PWA
+## Default Configuration
 
-Below is the default YAML configuration for GlueX analyses of $\gamma p \rightarrow \eta\pi^0 p$
+We almost always would like to compare the IFT results to a set of maximum likelihood fits obtained using `AmpTools` so we need to perform two sets of optimizations. A set of Maximum Likelihood (MLE) fits is performed using `AmpTools` and an Information Field Theory (IFT) fit is performed using `iftpwa`. Each has its own configuration file to specify the state. `PyAmpTools` will be the main driver of both these fits and has a field that points to the `iftpwa` configuration file. 
+
+There are two configuration files that one needs to manage. 
+- `PyAmpTools` uses a configuration file to define the reaction, dataset locations, partial waves used, and kinematic binning
+- `iftpwa` uses a configuration file but in this case to declare its physics model, how to modify its likelihood, and how to perform the IFT optimization.
+
+Below are the default YAML configurations for GlueX analyses of $\gamma p \rightarrow \eta\pi^0 p$. 
+
+### PyAmpTools Configuration
+
+`PyAmpTools` enforces a specific format for how to name amplitudes given some quantum numbers. It also expects several files in the directory specfied in the `data_folder` field with specific naming conventions also. This restriction allows `PyAmpTools` to generate a configuration file that `AmpTools` can use. 
+
+```yaml
+accmc.root # shares this acceptance MC dataset for all polarizations
+bkgnd000.root # (optional) background MC datasets for each polarization
+bkgnd045.root # (optional) background MC datasets for each polarization
+bkgnd090.root # (optional) background MC datasets for each polarization
+bkgnd135.root # (optional) background MC datasets for each polarization
+data000.root # data MC datasets for each polarization
+data045.root # data MC datasets for each polarization
+data090.root # data MC datasets for each polarization
+data135.root # data MC datasets for each polarization
+genmc.root # shares this generated/thrown MC dataset for all polarizations
+```
+
+```yaml
+defaults_location: null 
+base_directory: /MY/WORKING/DIRECTORY # Dump ALL results relative to this directory
+data_folder: /MY/DATA/FOLDER # Path to the data, accmc, bkgnd, genmc datasets
+polarizations:
+    '000': 0.3519
+    '045': 0.3374
+    '090': 0.3303
+    '135': 0.3375
+waveset: Dm1-_Dm2-_Dp0-_Dp1-_Dp2-_Sp0-_Dm1+_Dm2+_Dp0+_Dp1+_Dp2+_Sp0+_Pm1+_Pp0+_Pp1+_Pm1-_Pp0-_Pp1-
+phase_reference: Dp2+_Dm1-
+reaction: Beam Proton Pi0 Eta
+daughters:
+    Pi0: 0.135
+    Eta: 0.548
+acceptance_correct: true
+min_mass: 0.9
+max_mass: 2.1
+n_mass_bins: 80
+min_t: 0.1
+max_t: 1.0
+n_t_bins: 1
+init_one_val: null
+datareader: ROOTDataReader
+coordinate_system: cartesian
+real_waves: ''
+fixed_waves: ''
+add_amp_factor: ''
+append_to_decay: ''
+append_to_cfg: ''
+amptools:
+    output_directory: ${base_directory}/AmpToolsFits
+    search_format: group
+    n_randomizations: 10
+    mle_query_1: status == 0 & ematrix == 3
+    mle_query_2: delta_nll==0
+    bins_per_group: 2
+    merge_grouped_trees: true
+    constrain_grouped_production: false
+    regex_merge: --regex_merge '.*reaction_(000|045|090|135)::(Pos|Neg)(?:Im|Re)::'
+    prepare_for_nifty: true
+    n_processes: 20
+nifty:
+    output_directory: ${base_directory}/NiftyFits
+    yaml: /w/halld-scshelf2101/lng/WORK/PyAmpTools9/OTHER_CHANNELS/ETAPI0/jax_secondary_P.yaml
+    synchronize: true
+    mpi_processes: 41
+dash:
+    t: 0.55
+    models:
+        a2B_a2pB_a0G: /w/halld-scshelf2101/lng/WORK/PyAmpTools9/OTHER_CHANNELS/ETAPI0/RESULTS_JAX_P/NiftyFits_a2B_a2pB_a0G
+        a2BG_a0G_pi1600G: /w/halld-scshelf2101/lng/WORK/PyAmpTools9/OTHER_CHANNELS/ETAPI0/RESULTS_JAX_P/NiftyFits_a2BG_a0G_pi1600G
+        a2BG_a0FG: /w/halld-scshelf2101/lng/WORK/PyAmpTools9/OTHER_CHANNELS/ETAPI0/RESULTS_JAX_P/NiftyFits_a2BG_a0FG
+        a2BG_a2FG_pi1600G: /w/halld-scshelf2101/lng/WORK/PyAmpTools9/OTHER_CHANNELS/ETAPI0/RESULTS_JAX_P/NiftyFits_a2BG_a0FG_pi1600G
+        a2BG_a2FG_pi1600B: /w/halld-scshelf2101/lng/WORK/PyAmpTools9/OTHER_CHANNELS/ETAPI0/RESULTS_JAX_P/NiftyFits_a2BG_a0FG_pi1600B
+    cache_loc: .dash_ift_cache.pkl
+    no_browser: true
+    pdf_dump: dash_iftpwa.pdf
+    html_dump: dash_iftpwa.html
+    html_dump_static: false
+    acceptance_correct: true
+    ntasks: 10
+```
+
+### IFTPWA Configuration
 
 ```yaml
 GENERAL:
@@ -128,25 +217,6 @@ PARAMETRIC_MODEL:
 
 # Some parameters takes a list of lists which dictate the number of global iterations in a given setting
 #   See iftpwa/src/scripts/iftpwa_fit.py for calls to `makeCallableSimple` for parameters with this style
-LIKELIHOOD:
-    approximation: false # (bool) approximate the likelihood (with Gaussian, I believe)
-    metric_type: normal # (normal, studentt) type of metric to use for the likelihood
-    theta_studentt: null # (float) theta paraemeter for student-t distribution, this has to be set if metric_type is studentt
-    learn_metric: false # (bool) can learn the metric but not recommended
-    learn_metric_sigma: 1.0 # (float)
-    nKeepMetric: 1 # (int) global iterations at nKeepMetric intervals will not approximate the likelihood. 1 means we never approximate the likelihood I guess
-    # 
-    subSampleProb: 1.0 # (float) subsample the data to speed up likelihood calculation
-    initialSubSampleProb: 1.0 # (float) scales the initial signal field by this factor, in principle should match the initial subSampleProb
-    subSampleApproxIndep: false # (bool) Legacy, unused
-    bootstrap: false # (bool) bootstrap the data to introduce more stochasticity
-    external_approximation: null # (path) pointing to an external pickle file, null if not used
-    dropout_prob: 0.0 # (float) dropout probability for each kinematic bin. Introduces more stochasticity and can help with overfitting
-    rotate_phase: null # (bool) or null. Unused
-    clip_latent: 0 # (float) if between [0, 1] then this is a fractional scaling of the latent space between (-clip_latent, clip_latent) to prevent large updates. 
-
-# Some parameters takes a list of lists which dictate the number of global iterations in a given setting
-#   See iftpwa/src/scripts/iftpwa_fit.py for calls to `makeCallableSimple` for parameters with this style
 OPTIMIZATION:
     nSamples: [[1, 0], [4, 5], [10, 10], 25] # (int) Runs 0 sampling (point estimate) for 1 global iteration, 5 samples for next 4 global iterations, ...
     nIterGlobal: 1 # (int) number of global iterations to run NIFTy optimize_kl for
@@ -181,6 +251,25 @@ OPTIMIZATION:
     overwriteCache: true # (bool) overwrite the cache
     sanityChecks: false # (bool) NIFTy - some sanity checks that are evaluated at the beginning. They are potentially expensive because all likelihoods have to be instantiated multiple times
     constants: [tamps_mass_dir_loglogavgslope] # provide the names of the latent space variables that should be fixed ['tamps_mass_dir_loglogavgslope'] # examples: ['tamps_mass_dir_loglogavgslope', 'tamps_mass_dir_flexibility', 'tamps_tprime_dir_loglogavgslope', 'tamps_tprime_dir_flexibility', 'tamps_zeromode']
+
+# Some parameters takes a list of lists which dictate the number of global iterations in a given setting
+#   See iftpwa/src/scripts/iftpwa_fit.py for calls to `makeCallableSimple` for parameters with this style
+LIKELIHOOD:
+    approximation: false # (bool) approximate the likelihood (with Gaussian, I believe)
+    metric_type: normal # (normal, studentt) type of metric to use for the likelihood
+    theta_studentt: null # (float) theta paraemeter for student-t distribution, this has to be set if metric_type is studentt
+    learn_metric: false # (bool) can learn the metric but not recommended
+    learn_metric_sigma: 1.0 # (float)
+    nKeepMetric: 1 # (int) global iterations at nKeepMetric intervals will not approximate the likelihood. 1 means we never approximate the likelihood I guess
+    # 
+    subSampleProb: 1.0 # (float) subsample the data to speed up likelihood calculation
+    initialSubSampleProb: 1.0 # (float) scales the initial signal field by this factor, in principle should match the initial subSampleProb
+    subSampleApproxIndep: false # (bool) Legacy, unused
+    bootstrap: false # (bool) bootstrap the data to introduce more stochasticity
+    external_approximation: null # (path) pointing to an external pickle file, null if not used
+    dropout_prob: 0.0 # (float) dropout probability for each kinematic bin. Introduces more stochasticity and can help with overfitting
+    rotate_phase: null # (bool) or null. Unused
+    clip_latent: 0 # (float) if between [0, 1] then this is a fractional scaling of the latent space between (-clip_latent, clip_latent) to prevent large updates. 
 
 # Scans are performed by [Optuna](https://github.com/optuna/optuna). `iftpwa` naturally tracks the likelihood energy and the intensity of all individual amplitude components. 
 #   If a ground truth is provided, the mean squared error or chi-squared (if number of samples > 1) are also calculated. 

@@ -24,7 +24,8 @@ docker buildx build \
     --no-cache \
     --secret id=gh_username,src=<(echo -n "$GH_USERNAME") \
     --secret id=gh_pat,src=<(echo -n "$GH_PAT") \
-    --output type=docker,dest=pyamptools.tar .
+    --output type=docker,dest=pyamptools_v2.0.tar .
 
-# Can be done on the cluster
-# apptainer build pyamptools.sif docker-archive://pyamptools.tar
+# To be done manually on the cluster
+# apptainer build pyamptools.sif docker-archive://pyamptools.tar # build singularity image file from archived tar file
+# apptainer exec --contain --bind <working_dir> --bind <data_dir> --env BASH_ENV=/dev/null pyamptools.sif bash --noprofile --norc

@@ -14,10 +14,14 @@ def recursive_link_if_not_exist(source_folders, destination_folder, ftype, verbo
             if source == sys.argv[0]:
                 continue  # do not add this linker itself...
             destination_file = destination_folder + "/" + source.split("/")[-1]
-            cmd = f"ln -snfr {source} {destination_file}"
-            if verbose:
-                print(f"Re-Linking:\n   SRC:  {source}\n   DEST: {destination_file}")
-            os.system(cmd)
+            if os.access(source, os.W_OK):  # Check if the source file is writable
+                cmd = f"ln -snfr {source} {destination_file}"
+                if verbose:
+                    print(f"Re-Linking:\n   SRC:  {source}\n   DEST: {destination_file}")
+                os.system(cmd)
+            else:
+                if verbose:
+                    print(f"Skipping (not writable location): {source}")
     if verbose:
         print("-- Added above modules to conda environment... ---")
 

@@ -75,7 +75,7 @@ if [[ "$hostname" == *"jlab.org"* && -n "$default_env" && -z "$APPTAINER_CONTAIN
 
     # You could build the external libraries from source but since you are
     # on the JLab system you can also just use the pre-built libraries
-    if [[ ! "$PYAMPTOOLS_HOME" == "$default_env" ]]; then
+    if [ "$PYAMPTOOLS_HOME" != "$default_env" ]; then
         mv $PYAMPTOOLS_HOME/external $PYAMPTOOLS_HOME/.external # hide current external directory
         ln -s "$default_env/external" $PYAMPTOOLS_HOME # link over the pre-built libraries
         mark_removed_files_assume_unchanged
@@ -84,7 +84,7 @@ fi
 ####################
 
 # Perform some checks if you are currently in the base conda environment
-if [ -z "$CONDA_DEFAULT_ENV" ] || [ "$CONDA_DEFAULT_ENV" == "base" ]; then
+if [ -z "$CONDA_DEFAULT_ENV" ] || [ "$CONDA_DEFAULT_ENV" = "base" ]; then
     echo "You are currently in the base conda environment (or conda doesn't exist at all)"
     if conda env list | grep -q "$env_name"; then
         echo "Please activate '$env_name' environment and SOURCE AGAIN"
@@ -129,10 +129,12 @@ eval "$(register-python-argcomplete pa)"
 
 # For tests and docs to work we have to update the paths in the tests/samples/SIMPLE_EXAMPLE folder as
 #   it uses absolute paths so commands can run from anywhere
-sed -i "s~REPLACE_FOLDER_LOCATION~$PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE~" $PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE/fit.cfg 
-sed -i "s~REPLACE_FOLDER_LOCATION~$PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE~" $PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE/fitInit.cfg 
-sed -i "s~REPLACE_FOLDER_LOCATION~$PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE~" $PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE/fit_fakeParams.cfg
-sed -i "s~REPLACE_FOLDER_LOCATION~$PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE~" $PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE/result.fit
-sed -i "s~REPLACE_FOLDER_LOCATION~$PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE~" $PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE/result_fakeParams.fit
+# If REPLACE_FOLDER_LOCATION is found in the file and the file is writable, update the path
+for file in fit.cfg fitInit.cfg fit_fakeParams.cfg result.fit result_fakeParams.fit; do
+    filepath="$PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE/$file"
+    if grep -q "REPLACE_FOLDER_LOCATION" "$filepath" && [ -w "$filepath" ]; then
+        sed -i "s~REPLACE_FOLDER_LOCATION~$PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE~" "$filepath"
+    fi
+done
 
 
