@@ -47,12 +47,13 @@ dnf install -y --allowerasing \
     libxml2-devel gsl-devel readline-devel qt5-qtwebengine-devel \
     R-devel R-Rcpp-devel R-RInside-devel && \
     dnf clean all  # Clean package lists to reduce image size
+source /etc/profile.d/modules.sh
 ########################################################################################################################
 
 # Install Conda (Mamba) from Miniforge
 wget -O Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
 bash Miniforge3.sh -b -p "${HOME}/conda"
-rm Miniforge3.sh
+rm -f Miniforge3.sh
 source "${HOME}/conda/etc/profile.d/conda.sh"
 conda activate
 
@@ -66,7 +67,7 @@ conda activate pyamptools
 # ln -snfr set_environment.sh $CONDA_PREFIX/etc/conda/activate.d
 source set_environment.sh
 # update linker for mpi4py
-rm $CONDA_PREFIX/compiler_compat/ld
+rm -f $CONDA_PREFIX/compiler_compat/ld
 ln -s /usr/bin/ld $CONDA_PREFIX/compiler_compat/ld
 module load mpi
 pip install mpi4py
@@ -83,7 +84,10 @@ cd ..
 git clone --depth 1 https://${GH_USERNAME}:${GH_PAT}@github.com/junegunn/fzf.git /app/fzf
 /app/fzf/install --all
 
-# Build ROOT
+# There is a known conflict between AmpTools' GPU usage and RooFit/TMVA which comes with the conda-forge binaries of ROOT. 
+# Currently, ROOT has to be built from source with roofit and tmva off. 
+# A build script is included to download ROOT from source with the appropriate cmake flags to achieve this. 
+# [ROOT](https://root.cern/install/) >v6.26 is a required dependency (build steps are shown below) requiring at least some version of `gcc` (9.3.0 works). 
 cd PyAmpTools/external/root
 source build_root.sh
 cd ../..
@@ -99,6 +103,8 @@ echo 'alias ll="ls -l --color=auto"' >> /etc/bash.bashrc && \
 echo 'alias st="git status"' >> /etc/bash.bashrc && \
 echo 'alias log="git log --graph --abbrev-commit --decorate --format=format:'"'"'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)'"'"' --all"' >> /etc/bash.bashrc && \
 echo 'alias root="root -l"' >> /etc/bash.bashrc && \
+echo 'module load mpi' >> /etc/bash.bashrc && \
 echo 'cd /app/PyAmpTools/ && source set_environment.sh && cd ~' >> /etc/bash.bashrc && \
 echo 'source /root/conda/bin/activate' >> /etc/bash.bashrc && \
+echo 'conda activate pyamptools' >> /etc/bash.bashrc && \
 echo 'if [ -f /etc/bash.bashrc ]; then source /etc/bash.bashrc; fi' >> ~/.bashrc

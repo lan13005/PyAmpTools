@@ -2,7 +2,7 @@
 
 ## Correlated Field Model in NIFTy
 Please read the following first, perhaps run the code yourself to see how the correlated field model works in NIFTy. This model forms the basis of the iftpwa package.
-[Showcasingthe Correlated Field Model (NIFTy)](https://ift.pages.mpcdf.de/nifty/user/old_nifty_getting_started_4_CorrelatedFields.html)
+[Showcasing the Correlated Field Model (NIFTy)](https://ift.pages.mpcdf.de/nifty/user/old_nifty_getting_started_4_CorrelatedFields.html)
 
 ```{note}
 The correlated field model is no longer a Gaussian process but it does make understanding and explaining the IFT approach easier
