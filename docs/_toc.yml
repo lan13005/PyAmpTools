@@ -20,6 +20,7 @@ parts:
     chapters:
       - file: ift/iftpwa_intro
       - file: ift/iftpwa_config
+      - file: ift/iftpwa_exec
       - file: ift/iftpwa_tips
   # - caption: API
   #   chapters:
