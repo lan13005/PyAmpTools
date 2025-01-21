@@ -83,7 +83,7 @@ cd ..
 #   FUTURE: update iftpwa to use newer python otherwise we wont have access to later versions of numpy and matplotlib
 NIFTY_SITE="$CONDA_PREFIX/lib/python$(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')/site-packages/nifty8/"
 sed -i 's/np.asfarray(x)/np.asarray(x, dtype=float)/g' $NIFTY_SITE/utilities.py
-sed -i '' '/^def _register_cmaps():/,/^def /s|import matplotlib\.pyplot as plt|from matplotlib import colormaps as cm|' $NIFTY_SITE/plot.py
+sed -i '/^def _register_cmaps():/,/^def /s|import matplotlib\.pyplot as plt|from matplotlib import colormaps as cm|' $NIFTY_SITE/plot.py
 sed -i 's/plt.register_cmap/cm.register/g' $NIFTY_SITE/plot.py
 
 # Install and setup fzf using BuildKit Secrets
