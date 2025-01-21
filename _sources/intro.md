@@ -27,7 +27,7 @@ Additional files in the `scripts` folder are provided that perform `amptools` co
 
 # Installation
 
-Please make modifications to `DockerInstall.sh` to match your environment. These installion steps builds on top of a minimal base image/environment. Some important considerations:
+Please make modifications to `DockerInstall.sh` to match your environment. These installation steps builds on top of a minimal base image/environment. Some important considerations:
 - if you already have conda then comment out those lines
 - default is to build with mpi support
 - if you need gpu support or gpu+mpi support then you can still go into `external` folder and run `make mpigpi` and additional shared libraries will be built
@@ -37,6 +37,8 @@ source DockerInstall.sh
 ```
 
 # Docker Usage
+
+To be added
 
 
 # Additional Information
@@ -54,7 +56,6 @@ source DockerInstall.sh
 # Unit Testing
 
 ```shell
-sed -i "s~REPLACE_FOLDER_LOCATION~$PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE~" $PYAMPTOOLS_HOME/tests/samples/SIMPLE_EXAMPLE/fit.cfg # update path
 pytest -v # -s to not hide stdout
 pytest -k [marked-test] # to run a specific marked test defined in pytest.ini
 ```

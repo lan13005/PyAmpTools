@@ -399,22 +399,16 @@
 <section id="design-requirements">
 <h2>Design Requirements<a class="headerlink" href="#design-requirements" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>complex valued</p></li>
-<li><p>large datasets</p></li>
-<li><p>model dependence and degrees of freedom</p>
-<ul>
-<li><p>high dimensionality</p></li>
-<li><p>smoothness</p></li>
-</ul>
-</li>
+<li><p>uncertainty quantification via a Bayesian framework</p></li>
+<li><p>handles high dimensionality via flexible prior models for regularization</p></li>
+<li><p>allow analysis of large datasets using MPI and variational inference</p></li>
+<li><p>complex valued parameters</p></li>
 <li><p>modular and extensible / collaboration agnostic</p></li>
-<li><p>uncertainty quantification - Bayesian analysis</p></li>
-<li><p>fast and scalable</p></li>
 </ul>
-<p>This led to the initial development of the Information Field Theory for Partial Wave Analysis (iftpwa) package by researchers at the Technical University of Munich (TUM) with support from the Max Planck Institute for Astrophysics (MPA), which develops the Numerical Information Field Theory (NIFTy) probabilistic programming framework for Bayesian inference. GlueX later joined in on the project.</p>
+<p>This led to the development of the Information Field Theory for Partial Wave Analysis (iftpwa) package by Florian Kaspar (et al.) at the Technical University of Munich (TUM) with support from the Max Planck Institute for Astrophysics (MPA), which develops the Numerical Information Field Theory (NIFTy) probabilistic programming framework for Bayesian inference. GlueX later joined in on the project.</p>
 <section id="optimization">
 <h3>Optimization<a class="headerlink" href="#optimization" title="Link to this heading">#</a></h3>
-<p>NIFTy provides <a class="reference external" href="https://arxiv.org/abs/1901.11033">Metric Gaussian Variational Inference</a> and <a class="reference external" href="https://arxiv.org/abs/2105.10470">Geometric Variational Inference</a> methods for optimization. Both of these approaches alternate between KL optimization for a specific shape of the variational posterior and updating the shape of the variational posterior. A <em>global iteration</em> is complete when both optimization steps conclude. <em>geoVI</em> reshapes the posterior to be more Gausssian-like for more effective inference.</p>
+<p>NIFTy provides <a class="reference external" href="https://arxiv.org/abs/1901.11033">Metric Gaussian Variational Inference</a> and <a class="reference external" href="https://arxiv.org/abs/2105.10470">Geometric Variational Inference</a> methods for optimization. Both of these approaches alternate between KL optimization for a specific shape of the variational posterior and updating the shape of the variational posterior. A <em>global iteration</em> is complete when both optimization steps conclude. Some reshaping of the posterior is performed to make it more Gaussian-like for more effective inference.</p>
 </section>
 <section id="references">
 <h3>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h3>
