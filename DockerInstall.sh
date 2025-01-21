@@ -97,11 +97,11 @@ git clone --depth 1 https://${GH_USERNAME}:${GH_PAT}@github.com/junegunn/fzf.git
 cd PyAmpTools/external/root
 source build_root.sh
 cd ../..
-# source set_environment.sh  # Reload environment variables
+source set_environment.sh  # Reload environment variables
 
-# # Build external dependencies with MPI support
-# cd external
-# make mpi
+# Build external dependencies with MPI support
+cd external
+make mpi
 
 # Add aliases to .bashrc
 echo 'alias ls="ls --color=auto"' >> /etc/bash.bashrc && \
