@@ -181,6 +181,7 @@
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">iftpwa - Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="iftpwa_config.html">iftpwa - Default Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="iftpwa_exec.html">iftpwa - Default Execution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="iftpwa_tips.html">iftpwa - Tips</a></li>
 </ul>
 
@@ -405,7 +406,7 @@
 <li><p>complex valued parameters</p></li>
 <li><p>modular and extensible / collaboration agnostic</p></li>
 </ul>
-<p>This led to the development of the Information Field Theory for Partial Wave Analysis (iftpwa) package by Florian Kaspar (et al.) at the Technical University of Munich (TUM) with support from the Max Planck Institute for Astrophysics (MPA), which develops the Numerical Information Field Theory (NIFTy) probabilistic programming framework for Bayesian inference. GlueX later joined in on the project.</p>
+<p>This led to the development of the Information Field Theory for Partial Wave Analysis (iftpwa) package by Florian Kaspar (et al.) at the Technical University of Munich (TUM) with support from the Max Planck Institute for Astrophysics (MPA), which develops the Numerical Information Field Theory (NIFTy) probabilistic programming framework for Bayesian inference. GlueX later joined in on the project which I am a part of as of this writing.</p>
 <section id="optimization">
 <h3>Optimization<a class="headerlink" href="#optimization" title="Link to this heading">#</a></h3>
 <p>NIFTy provides <a class="reference external" href="https://arxiv.org/abs/1901.11033">Metric Gaussian Variational Inference</a> and <a class="reference external" href="https://arxiv.org/abs/2105.10470">Geometric Variational Inference</a> methods for optimization. Both of these approaches alternate between KL optimization for a specific shape of the variational posterior and updating the shape of the variational posterior. A <em>global iteration</em> is complete when both optimization steps conclude. Some reshaping of the posterior is performed to make it more Gaussian-like for more effective inference.</p>
