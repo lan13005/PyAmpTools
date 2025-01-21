@@ -170,7 +170,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../demos/libraryLoading.html">Loading Libraries</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../demos/generation.html">Generating Data</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../demos/fitting.html">Fitting</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../demos/mle.html">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../demos/mcmc.html">Markov Chain Monte Carlo</a></li>
@@ -374,7 +373,11 @@
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#correlated-field-model-in-nifty">Correlated Field Model in NIFTy</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simplified-model">Simplified Model</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#default-configuration-for-gluex-pwa">Default Configuration for GlueX PWA</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#default-configuration">Default Configuration</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools-configuration">PyAmpTools Configuration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#iftpwa-configuration">IFTPWA Configuration</a></li>
+</ul>
+</li>
 </ul>
             </nav>
         </div>
@@ -391,7 +394,7 @@
 <section id="correlated-field-model-in-nifty">
 <h2>Correlated Field Model in NIFTy<a class="headerlink" href="#correlated-field-model-in-nifty" title="Link to this heading">#</a></h2>
 <p>Please read the following first, perhaps run the code yourself to see how the correlated field model works in NIFTy. This model forms the basis of the iftpwa package.
-<a class="reference external" href="https://ift.pages.mpcdf.de/nifty/user/old_nifty_getting_started_4_CorrelatedFields.html">Showcasingthe Correlated Field Model (NIFTy)</a></p>
+<a class="reference external" href="https://ift.pages.mpcdf.de/nifty/user/old_nifty_getting_started_4_CorrelatedFields.html">Showcasing the Correlated Field Model (NIFTy)</a></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The correlated field model is no longer a Gaussian process but it does make understanding and explaining the IFT approach easier</p>
@@ -399,29 +402,112 @@
 </section>
 <section id="simplified-model">
 <h2>Simplified Model<a class="headerlink" href="#simplified-model" title="Link to this heading">#</a></h2>
-<p>The following simplified model is used to depict how the configuration file key-value fields affect the physics model:</p>
+<p>The following simplified amplitude description is used to depict how the configuration file key-value fields affect the model for each amplitude:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}
 A_i &amp; = \kappa \cdot \rho_i \cdot C_i \cdot \left[ G(w_i, s_i, f_i, a_i) \times I(w_i) + a_i P_i(w_i, \vec{x}) \right] \\
 \end{split}\]</div>
-<div class="math notranslate nohighlight">
-\[\begin{split}
-\begin{split}
-i &amp; = \text{wave index} \\ 
-\kappa &amp; = \text{kinematic factor} \\ 
-\rho_i &amp; = \text{phase space factor as a pkl file} \\
-C_i &amp; = \text{scale factor -&gt; half-normal / laplace priors} \\
-G(s_i, f_i, a_i) &amp; = \text{Gaussian process with scale, flexibility, asperity} \\ 
-I &amp; = \text{indicator function to zero Gaussian process component} \\
-a &amp; = \text{prescale factor for Parametric component} \\
-P(\vec{x}) &amp; = \text{Parametric component with parameters } \vec{x} \\ 
-\end{split}
-\end{split}\]</div>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(i\)</span> is the wave index</p></li>
+<li><p><span class="math notranslate nohighlight">\(\kappa\)</span> is a kinematic factor. Expression hardcoded in <code class="docutils literal notranslate"><span class="pre">iftpwa/src/model/model_builder.py</span></code>, under development for GlueX</p></li>
+<li><p><span class="math notranslate nohighlight">\(\rho_i\)</span> is the dictionary of phase space factors for each wave stored in a single pkl file, <code class="docutils literal notranslate"><span class="pre">phaseSpaceMultiplier</span></code></p></li>
+<li><p><span class="math notranslate nohighlight">\(C_i\)</span> is the overall scale factor with half-normal / laplace priors. Without this, every amplitude should be O(1) scale, defined by <code class="docutils literal notranslate"><span class="pre">IFT_MODEL.scale</span></code></p></li>
+<li><p><span class="math notranslate nohighlight">\(G(s_i, f_i, a_i)\)</span> is the Correlated field model with scale, flexibility, asperity prior, defined by <code class="docutils literal notranslate"><span class="pre">IFT_MODEL</span></code></p></li>
+<li><p><span class="math notranslate nohighlight">\(I\)</span> is the indicator function to zero the Correlated field component, indicated by <code class="docutils literal notranslate"><span class="pre">no_bkg</span></code> in each resonance model. Useful if only want parameteric component in a specific wave</p></li>
+<li><p><span class="math notranslate nohighlight">\(a\)</span> is the <code class="docutils literal notranslate"><span class="pre">preScale</span></code> factor for the parametric component. Correlated field model at this point is O(1) so this allows us to bias towards larger/smaller intensity from parameteric component</p></li>
+<li><p><span class="math notranslate nohighlight">\(P(\vec{x})\)</span> is the <code class="docutils literal notranslate"><span class="pre">PARAMETRIC_MODEL</span></code> component with parameters <span class="math notranslate nohighlight">\(\vec{x}\)</span> defined by <code class="docutils literal notranslate"><span class="pre">parameter_priors</span></code> (and also <code class="docutils literal notranslate"><span class="pre">static_paras</span></code>)</p></li>
+</ul>
 </section>
-<section id="default-configuration-for-gluex-pwa">
-<h2>Default Configuration for GlueX PWA<a class="headerlink" href="#default-configuration-for-gluex-pwa" title="Link to this heading">#</a></h2>
-<p>Below is the default YAML configuration for GlueX analyses of <span class="math notranslate nohighlight">\(\gamma p \rightarrow \eta\pi^0 p\)</span></p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">GENERAL</span><span class="p">:</span>
+<section id="default-configuration">
+<h2>Default Configuration<a class="headerlink" href="#default-configuration" title="Link to this heading">#</a></h2>
+<p>We almost always would like to compare the IFT results to a set of maximum likelihood fits obtained using <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> so we need to perform two types of fits. A set of Maximum Likelihood (MLE) fits is performed using <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> and an Information Field Theory (IFT) fit is performed using <code class="docutils literal notranslate"><span class="pre">iftpwa</span></code>. Each has its own configuration file to specify the initial state. <code class="docutils literal notranslate"><span class="pre">PyAmpTools</span></code> will be the main driver of both these fits and has a YAML field that points to the <code class="docutils literal notranslate"><span class="pre">iftpwa</span></code> configuration file. Likewise, the <code class="docutils literal notranslate"><span class="pre">iftpwa</span></code> configuration file has a field that points to the <code class="docutils literal notranslate"><span class="pre">PyAmpTools</span></code> configuration file as it uses it to construct a <code class="docutils literal notranslate"><span class="pre">pwa_manager</span></code> object that calculates likelihoods.</p>
+<p>There are two configuration files that one needs to manage.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">PyAmpTools</span></code> uses a configuration file to define the reaction, dataset locations, partial waves used, and kinematic binning</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">iftpwa</span></code> uses a configuration file but in this case to declare its IFT model, how to modify its likelihood (bootstrap, resampling, …), and how to perform the IFT optimization.</p></li>
+</ul>
+<p>Below are the default YAML configurations for GlueX analyses of <span class="math notranslate nohighlight">\(\gamma p \rightarrow \eta\pi^0 p\)</span>.</p>
+<section id="pyamptools-configuration">
+<h3>PyAmpTools Configuration<a class="headerlink" href="#pyamptools-configuration" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">PyAmpTools</span></code> enforces a specific format for how to name amplitudes given some quantum numbers (stored as a dictionary in <code class="docutils literal notranslate"><span class="pre">pyamptools/src/utilities/general.py</span></code>). It also expects several files in the directory specfied in the <code class="docutils literal notranslate"><span class="pre">data_folder</span></code> YAML field with specific naming conventions also. This restriction allows <code class="docutils literal notranslate"><span class="pre">PyAmpTools</span></code> to bin the data sources and generate a configuration file for each bin that <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> can use. <code class="docutils literal notranslate"><span class="pre">iftpwa</span></code> can handle much finer kinematic bins than AmpTools due to the prior’s regularization effect. To account for this, we split the data into fine bins, usable by <code class="docutils literal notranslate"><span class="pre">iftpwa</span></code>, then regroup the data bins into coarser bins for <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code>.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example data folder structure</span>
+<span class="l l-Scalar l-Scalar-Plain">accmc.root</span><span class="w"> </span><span class="c1"># shares this acceptance MC dataset for all polarizations</span>
+<span class="l l-Scalar l-Scalar-Plain">data000.root</span><span class="w"> </span><span class="c1"># data MC datasets for each polarization</span>
+<span class="l l-Scalar l-Scalar-Plain">data045.root</span><span class="w"> </span><span class="c1"># data MC datasets for each polarization</span>
+<span class="l l-Scalar l-Scalar-Plain">data090.root</span><span class="w"> </span><span class="c1"># data MC datasets for each polarization</span>
+<span class="l l-Scalar l-Scalar-Plain">data135.root</span><span class="w"> </span><span class="c1"># data MC datasets for each polarization</span>
+<span class="l l-Scalar l-Scalar-Plain">genmc.root</span><span class="w"> </span><span class="c1"># shares this generated/thrown MC dataset for all polarizations</span>
+<span class="l l-Scalar l-Scalar-Plain">bkgnd000.root</span><span class="w"> </span><span class="c1"># (optional) background MC datasets for each polarization</span>
+<span class="l l-Scalar l-Scalar-Plain">bkgnd045.root</span><span class="w"> </span><span class="c1"># (optional) background MC datasets for each polarization</span>
+<span class="l l-Scalar l-Scalar-Plain">bkgnd090.root</span><span class="w"> </span><span class="c1"># (optional) background MC datasets for each polarization</span>
+<span class="l l-Scalar l-Scalar-Plain">bkgnd135.root</span><span class="w"> </span><span class="c1"># (optional) background MC datasets for each polarization</span>
+</pre></div>
+</div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># PyAmpTools configuration file example</span>
+<span class="nt">defaults_location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span>
+<span class="nt">base_directory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/MY/WORKING/DIRECTORY</span><span class="w"> </span><span class="c1"># Dump ALL results relative to this directory</span>
+<span class="nt">data_folder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/MY/DATA/FOLDER</span><span class="w"> </span><span class="c1"># Path to the data, accmc, bkgnd, genmc datasets</span>
+<span class="nt">polarizations</span><span class="p">:</span>
+<span class="w">    </span><span class="s">&#39;000&#39;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.3519</span><span class="w"> </span><span class="c1"># (float) polarization fraction in each polarization: (000, 045, 090, 135) </span>
+<span class="w">    </span><span class="s">&#39;045&#39;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.3374</span>
+<span class="w">    </span><span class="s">&#39;090&#39;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.3303</span>
+<span class="w">    </span><span class="s">&#39;135&#39;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.3375</span>
+<span class="nt">waveset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dm1-_Dm2-_Dp0-_Dp1-_Dp2-_Sp0-_Dm1+_Dm2+_Dp0+_Dp1+_Dp2+_Sp0+_Pm1+_Pp0+_Pp1+_Pm1-_Pp0-_Pp1-</span><span class="w"> </span><span class="c1"># (string) all the waves to consider</span>
+<span class="nt">phase_reference</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dp2+_Dm1-</span><span class="w"> </span><span class="c1"># (string) use these phase references when making plots</span>
+<span class="nt">reaction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Beam Proton Pi0 Eta</span><span class="w"> </span><span class="c1"># AmpTools reaction scheme</span>
+<span class="nt">daughters</span><span class="p">:</span><span class="w"> </span><span class="c1"># Only 2-body decays are fully supported (phase space calculation might break)</span>
+<span class="w">    </span><span class="nt">Pi0</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.135</span><span class="w"> </span><span class="c1"># (float) mass of the daughter particle 1</span>
+<span class="w">    </span><span class="nt">Eta</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.548</span><span class="w"> </span><span class="c1"># (float) mass of the daughter particle 2</span>
+<span class="nt">acceptance_correct</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"> </span><span class="c1"># (bool) plot acceptance corrected data and fit results</span>
+<span class="nt">min_mass</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.9</span><span class="w"> </span><span class="c1"># (float) minimum mass</span>
+<span class="nt">max_mass</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.1</span><span class="w"> </span><span class="c1"># (float) maximum mass</span>
+<span class="nt">n_mass_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span><span class="w"> </span><span class="c1"># (int) number of mass bins</span>
+<span class="nt">min_t</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span><span class="w"> </span><span class="c1"># (float) minimum transfer momentum </span>
+<span class="nt">max_t</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w"> </span><span class="c1"># (float) maximum transfer momentum</span>
+<span class="nt">n_t_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"> </span><span class="c1"># (int) number of t bins</span>
+<span class="nt">init_one_val</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># (float) all amplitudes are initialized to this value for AmpTools</span>
+<span class="nt">datareader</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ROOTDataReader</span><span class="w"> </span><span class="c1"># (string) AmpTools data reader to use</span>
+<span class="nt">coordinate_system</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cartesian</span><span class="w"> </span><span class="c1"># (string) coordinate system to use: {cartesian, polar}</span>
+<span class="nt">real_waves</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w"> </span><span class="c1"># (string) same form as waveset, define which waves are purely real</span>
+<span class="nt">fixed_waves</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w"> </span><span class="c1"># (string) same form as waveset, define which waves are fixed</span>
+<span class="nt">add_amp_factor</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w"> </span><span class="c1"># (string) Add an amplitude factor to every amplitude. For example, OmegaDalitz 0.1212 0.0257 0.0 0.0 will create a factor for the dalitz decay of the omega</span>
+<span class="nt">append_to_decay</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w"> </span><span class="c1"># (string) append this string to the decay amplitude, i.e. &#39;omega3pi&#39; can be appended to Vec_ps_refl amplitude definition</span>
+<span class="nt">append_to_cfg</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w"> </span><span class="c1"># (string) dump contents to the bottom of the AmpTools configuration file</span>
+<span class="nt">amptools</span><span class="p">:</span><span class="w"> </span><span class="c1"># Configure AmpTools</span>
+<span class="w">    </span><span class="nt">output_directory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${base_directory}/AmpToolsFits</span><span class="w"> </span><span class="c1"># (string) directory to dump AmpTools results into</span>
+<span class="w">    </span><span class="nt">search_format</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">group</span><span class="w"> </span><span class="c1"># (string) calculate fit fractions for the AmpTools results for the grouped data bins (&#39;group&#39;) or every data bins (&#39;bin&#39;)</span>
+<span class="w">    </span><span class="nt">n_randomizations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w"> </span><span class="c1"># (int) number of random initialization fits to perform</span>
+<span class="w">    </span><span class="nt">mle_query_1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">status == 0 &amp; ematrix == 3</span><span class="w"> </span><span class="c1"># (string) query 1 to filter only minuit converged and positive definite error matrices</span>
+<span class="w">    </span><span class="nt">mle_query_2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">delta_nll==0</span><span class="w"> </span><span class="c1"># (string) delta_nll is calculated after query 1, apply this query to select the best fit</span>
+<span class="w">    </span><span class="nt">bins_per_group</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w"> </span><span class="c1"># (int) regrouping number, iftpwa uses finer bins than AmpTools. Must be divisible by n_mass_bins!</span>
+<span class="w">    </span><span class="nt">merge_grouped_trees</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"> </span><span class="c1"># (bool) remerge the trees in each group</span>
+<span class="w">    </span><span class="nt">constrain_grouped_production</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) if not remerging, we have the choice of constraining the amplitudes in each bin of a group to be the same</span>
+<span class="w">    </span><span class="nt">regex_merge</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--regex_merge &#39;.*reaction_(000|045|090|135)::(Pos|Neg)(?:Im|Re)::&#39;</span><span class="w"> </span><span class="c1"># (string) `pa fitfrac` argument to calculate fit fractions for certain coherent sums following this replacement pattern. See demos/extract_ff.ipynb for more information</span>
+<span class="w">    </span><span class="nt">prepare_for_nifty</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"> </span><span class="c1"># (bool) iftpwa require fixed scales between datasets (i.e. polarized datasets). This will modify AmpTools config to handle this</span>
+<span class="w">    </span><span class="nt">n_processes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span><span class="w"> </span><span class="c1"># (int) pool of processes to analyze all the amptools fits</span>
+<span class="nt">nifty</span><span class="p">:</span><span class="w"> </span><span class="c1"># Configure NIFTy</span>
+<span class="w">    </span><span class="nt">output_directory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${base_directory}/NiftyFits</span><span class="w"> </span><span class="c1"># (string) directory to dump NIFTy results into</span>
+<span class="w">    </span><span class="nt">yaml</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/LOCATION/OF/IFTPWA/YAML/FILE</span><span class="w"> </span><span class="c1"># (string) path to the iftpwa configuration file</span>
+<span class="w">    </span><span class="nt">synchronize</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"> </span><span class="c1"># (bool) Almost always true. Synchronize the iftpwa and PyAmpTools configuration files</span>
+<span class="w">    </span><span class="nt">mpi_processes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">41</span><span class="w"> </span><span class="c1"># (int) number of MPI processes to use for NIFTy</span>
+<span class="nt">dash</span><span class="p">:</span><span class="w"> </span><span class="c1"># Configure dash plots (optional)</span>
+<span class="w">    </span><span class="nt">t</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.55</span><span class="w"> </span><span class="c1"># (float) t-bin to draw the dash plots for</span>
+<span class="w">    </span><span class="nt">models</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">my_first_fit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/PATH/TO/COMPLETED/NIFTY/FIT/CONTAINING/NIFTYPWA_FIT.PKL</span><span class="w"> </span><span class="c1"># (string) path to the completed NIFTy fit</span>
+<span class="w">    </span><span class="nt">cache_loc</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.dash_ift_cache.pkl</span><span class="w"> </span><span class="c1"># (string) cache the dash plots for faster loading</span>
+<span class="w">    </span><span class="nt">no_browser</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"> </span><span class="c1"># (bool) if true, the dash plots will not open in the browser</span>
+<span class="w">    </span><span class="nt">pdf_dump</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dash_iftpwa.pdf</span><span class="w"> </span><span class="c1"># (string) path to the pdf dump</span>
+<span class="w">    </span><span class="nt">html_dump</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dash_iftpwa.html</span><span class="w"> </span><span class="c1"># (string) path to the html dump</span>
+<span class="w">    </span><span class="nt">html_dump_static</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) if true, the html dump will be static, otherwise it will be interactive</span>
+<span class="w">    </span><span class="nt">acceptance_correct</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"> </span><span class="c1"># (bool) if true, the dash plots will be acceptance corrected amplitude values</span>
+<span class="w">    </span><span class="nt">ntasks</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w"> </span><span class="c1"># (int) number of tasks to run in parallel for faster processing</span>
+</pre></div>
+</div>
+</section>
+<section id="iftpwa-configuration">
+<h3>IFTPWA Configuration<a class="headerlink" href="#iftpwa-configuration" title="Link to this heading">#</a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># IFTPWA configuration file example</span>
+<span class="nt">GENERAL</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">pwa_manager</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">GLUEX</span>
 <span class="w">    </span><span class="nt">seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span><span class="w"> </span><span class="c1"># (int) RNG seed for reproducible results. Optimizer can get stuck in local minima so freely change this or try multiple values</span>
 <span class="w">    </span><span class="nt">verbosityLevel</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"> </span><span class="c1"># (int) Greater than 0 will print a bit (slightly) more information to screen</span>
@@ -515,25 +601,6 @@ P(\vec{x}) &amp; = \text{Parametric component with parameters } \vec{x} \\
 
 <span class="c1"># Some parameters takes a list of lists which dictate the number of global iterations in a given setting</span>
 <span class="c1">#   See iftpwa/src/scripts/iftpwa_fit.py for calls to `makeCallableSimple` for parameters with this style</span>
-<span class="nt">LIKELIHOOD</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">approximation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) approximate the likelihood (with Gaussian, I believe)</span>
-<span class="w">    </span><span class="nt">metric_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">normal</span><span class="w"> </span><span class="c1"># (normal, studentt) type of metric to use for the likelihood</span>
-<span class="w">    </span><span class="nt">theta_studentt</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># (float) theta paraemeter for student-t distribution, this has to be set if metric_type is studentt</span>
-<span class="w">    </span><span class="nt">learn_metric</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) can learn the metric but not recommended</span>
-<span class="w">    </span><span class="nt">learn_metric_sigma</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w"> </span><span class="c1"># (float)</span>
-<span class="w">    </span><span class="nt">nKeepMetric</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"> </span><span class="c1"># (int) global iterations at nKeepMetric intervals will not approximate the likelihood. 1 means we never approximate the likelihood I guess</span>
-<span class="w">    </span><span class="c1"># </span>
-<span class="w">    </span><span class="nt">subSampleProb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w"> </span><span class="c1"># (float) subsample the data to speed up likelihood calculation</span>
-<span class="w">    </span><span class="nt">initialSubSampleProb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w"> </span><span class="c1"># (float) scales the initial signal field by this factor, in principle should match the initial subSampleProb</span>
-<span class="w">    </span><span class="nt">subSampleApproxIndep</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) Legacy, unused</span>
-<span class="w">    </span><span class="nt">bootstrap</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) bootstrap the data to introduce more stochasticity</span>
-<span class="w">    </span><span class="nt">external_approximation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># (path) pointing to an external pickle file, null if not used</span>
-<span class="w">    </span><span class="nt">dropout_prob</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span><span class="w"> </span><span class="c1"># (float) dropout probability for each kinematic bin. Introduces more stochasticity and can help with overfitting</span>
-<span class="w">    </span><span class="nt">rotate_phase</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># (bool) or null. Unused</span>
-<span class="w">    </span><span class="nt">clip_latent</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"> </span><span class="c1"># (float) if between [0, 1] then this is a fractional scaling of the latent space between (-clip_latent, clip_latent) to prevent large updates. </span>
-
-<span class="c1"># Some parameters takes a list of lists which dictate the number of global iterations in a given setting</span>
-<span class="c1">#   See iftpwa/src/scripts/iftpwa_fit.py for calls to `makeCallableSimple` for parameters with this style</span>
 <span class="nt">OPTIMIZATION</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">nSamples</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">],</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">4</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">5</span><span class="p p-Indicator">],</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">10</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">10</span><span class="p p-Indicator">],</span><span class="w"> </span><span class="nv">25</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># (int) Runs 0 sampling (point estimate) for 1 global iteration, 5 samples for next 4 global iterations, ...</span>
 <span class="w">    </span><span class="nt">nIterGlobal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"> </span><span class="c1"># (int) number of global iterations to run NIFTy optimize_kl for</span>
@@ -569,6 +636,25 @@ P(\vec{x}) &amp; = \text{Parametric component with parameters } \vec{x} \\
 <span class="w">    </span><span class="nt">sanityChecks</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) NIFTy - some sanity checks that are evaluated at the beginning. They are potentially expensive because all likelihoods have to be instantiated multiple times</span>
 <span class="w">    </span><span class="nt">constants</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">tamps_mass_dir_loglogavgslope</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># provide the names of the latent space variables that should be fixed [&#39;tamps_mass_dir_loglogavgslope&#39;] # examples: [&#39;tamps_mass_dir_loglogavgslope&#39;, &#39;tamps_mass_dir_flexibility&#39;, &#39;tamps_tprime_dir_loglogavgslope&#39;, &#39;tamps_tprime_dir_flexibility&#39;, &#39;tamps_zeromode&#39;]</span>
 
+<span class="c1"># Some parameters takes a list of lists which dictate the number of global iterations in a given setting</span>
+<span class="c1">#   See iftpwa/src/scripts/iftpwa_fit.py for calls to `makeCallableSimple` for parameters with this style</span>
+<span class="nt">LIKELIHOOD</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">approximation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) approximate the likelihood (with Gaussian, I believe)</span>
+<span class="w">    </span><span class="nt">metric_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">normal</span><span class="w"> </span><span class="c1"># (normal, studentt) type of metric to use for the likelihood</span>
+<span class="w">    </span><span class="nt">theta_studentt</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># (float) theta paraemeter for student-t distribution, this has to be set if metric_type is studentt</span>
+<span class="w">    </span><span class="nt">learn_metric</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) can learn the metric but not recommended</span>
+<span class="w">    </span><span class="nt">learn_metric_sigma</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w"> </span><span class="c1"># (float)</span>
+<span class="w">    </span><span class="nt">nKeepMetric</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"> </span><span class="c1"># (int) global iterations at nKeepMetric intervals will not approximate the likelihood. 1 means we never approximate the likelihood I guess</span>
+<span class="w">    </span><span class="c1"># </span>
+<span class="w">    </span><span class="nt">subSampleProb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w"> </span><span class="c1"># (float) subsample the data to speed up likelihood calculation</span>
+<span class="w">    </span><span class="nt">initialSubSampleProb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w"> </span><span class="c1"># (float) scales the initial signal field by this factor, in principle should match the initial subSampleProb</span>
+<span class="w">    </span><span class="nt">subSampleApproxIndep</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) Legacy, unused</span>
+<span class="w">    </span><span class="nt">bootstrap</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (bool) bootstrap the data to introduce more stochasticity</span>
+<span class="w">    </span><span class="nt">external_approximation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># (path) pointing to an external pickle file, null if not used</span>
+<span class="w">    </span><span class="nt">dropout_prob</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span><span class="w"> </span><span class="c1"># (float) dropout probability for each kinematic bin. Introduces more stochasticity and can help with overfitting</span>
+<span class="w">    </span><span class="nt">rotate_phase</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># (bool) or null. Unused</span>
+<span class="w">    </span><span class="nt">clip_latent</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"> </span><span class="c1"># (float) if between [0, 1] then this is a fractional scaling of the latent space between (-clip_latent, clip_latent) to prevent large updates. </span>
+
 <span class="c1"># Scans are performed by [Optuna](https://github.com/optuna/optuna). `iftpwa` naturally tracks the likelihood energy and the intensity of all individual amplitude components. </span>
 <span class="c1">#   If a ground truth is provided, the mean squared error or chi-squared (if number of samples &gt; 1) are also calculated. </span>
 <span class="c1">#   These metrics are all available to be optimized against. These metrics take the form `{amplitude_field_name}_{&quot;fit&quot;, resonance_name, &quot;bkg&quot;}_{&quot;intens&quot;, &quot;chi2&quot;}`. </span>
@@ -588,6 +674,7 @@ P(\vec{x}) &amp; = \text{Parametric component with parameters } \vec{x} \\
 <span class="w">    </span><span class="nt">IFT_MODEL.scale|suggest_int</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1000,</span><span class="nv"> </span><span class="s">21000,</span><span class="nv"> </span><span class="s">step=4000&quot;</span>
 </pre></div>
 </div>
+</section>
 </section>
 </section>
 
@@ -658,7 +745,11 @@ P(\vec{x}) &amp; = \text{Parametric component with parameters } \vec{x} \\
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#correlated-field-model-in-nifty">Correlated Field Model in NIFTy</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simplified-model">Simplified Model</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#default-configuration-for-gluex-pwa">Default Configuration for GlueX PWA</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#default-configuration">Default Configuration</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools-configuration">PyAmpTools Configuration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#iftpwa-configuration">IFTPWA Configuration</a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

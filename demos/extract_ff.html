@@ -168,7 +168,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="libraryLoading.html">Loading Libraries</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generation.html">Generating Data</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="fitting.html">Fitting</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="mle.html">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mcmc.html">Markov Chain Monte Carlo</a></li>
@@ -389,7 +388,7 @@
 <p>A fit results file (read in using AmpTools.FitResults) is dumped after an AmpTools fit is completed. These fit results can be parsed to extract the intensity (or fit fraction) of each amplitude. A typical procedure is to parse the fit results and dump the fit fractions for each unique amplitude and for <strong>user specified coherent sums</strong>.</p>
 <p>Each <strong>AmpTools</strong> amplitude name takes the form <code class="docutils literal notranslate"><span class="pre">REACTION::SUM::AMPLITUDE</span></code>. Everyone has their own naming schemes so a flexible way to form coherent sums is needed.</p>
 <p><code class="docutils literal notranslate"><span class="pre">pa</span> <span class="pre">fitfrac</span></code> takes a flag <code class="docutils literal notranslate"><span class="pre">--regex_merge</span></code> which allows a user to specify a substitution pattern to merge amplitudes</p>
-<p>An additional flag <code class="docutils literal notranslate"><span class="pre">--test_regex</span></code> can be used to test the regex pattern without calling AmpTools to return the intensity as is used everywhere in this tutorial.</p>
+<p>An additional flag <code class="docutils literal notranslate"><span class="pre">--test_regex</span></code> can be used to test the regex pattern without calling AmpTools to return the intensity and is used everywhere in this tutorial.</p>
 <section id="docstring-pa-fitfrac">
 <h2>Docstring: <code class="docutils literal notranslate"><span class="pre">pa</span> <span class="pre">fitfrac</span></code><a class="headerlink" href="#docstring-pa-fitfrac" title="Link to this heading">#</a></h2>
 <div class="cell docutils container">
@@ -436,14 +435,14 @@ extract_ff(results, outfileName=&#39;&#39;, fmt=&#39;.5f&#39;, test_regex=False,
 <section id="example-1">
 <h2>Example 1<a class="headerlink" href="#example-1" title="Link to this heading">#</a></h2>
 <p>In this fit results file we have several amplitudes:</p>
-<ul class="simple">
-<li><p>etapi::reZ::resAmp1</p></li>
-<li><p>etapi::imZ::resAmp1</p></li>
-<li><p>etapi::reZ::resAmp2</p></li>
-<li><p>etapi::imZ::resAmp2</p></li>
-<li><p>etapi::reZ::resAmp3</p></li>
-<li><p>etapi::imZ::resAmp3</p></li>
-</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">etapi</span><span class="p">::</span><span class="n">reZ</span><span class="p">::</span><span class="n">resAmp1</span>
+<span class="n">etapi</span><span class="p">::</span><span class="n">imZ</span><span class="p">::</span><span class="n">resAmp1</span>
+<span class="n">etapi</span><span class="p">::</span><span class="n">reZ</span><span class="p">::</span><span class="n">resAmp2</span>
+<span class="n">etapi</span><span class="p">::</span><span class="n">imZ</span><span class="p">::</span><span class="n">resAmp2</span>
+<span class="n">etapi</span><span class="p">::</span><span class="n">reZ</span><span class="p">::</span><span class="n">resAmp3</span>
+<span class="n">etapi</span><span class="p">::</span><span class="n">imZ</span><span class="p">::</span><span class="n">resAmp3</span>
+</pre></div>
+</div>
 <p>What if we wanted to calculate intensity for the coherent sums across all amplitudes that share the same SUM</p>
 <p><code class="docutils literal notranslate"><span class="pre">'.*::(.*)::.*~&gt;\\1'</span></code> will match the form of our amplitude names, capture the SUM, and replace the match with the SUM. <code class="docutils literal notranslate"><span class="pre">~&gt;</span></code> is our delimiter that separates the pattern from its replacement. In this case etapi::reZ::resAmp1 and etapi::reZ::resAmp2 will both reduce to reZ. Amplitudes with same reduced name will be put into a list which will be passed to <code class="docutils literal notranslate"><span class="pre">AmpTools.FitResults.intensity()</span></code>.</p>
 <div class="cell docutils container">
