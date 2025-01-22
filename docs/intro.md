@@ -38,9 +38,21 @@ source DockerInstall.sh
 
 # Docker Usage
 
-To be added
+```shell
+# /scratch needed for MPI and fontconfig for matplotlib(not so important)
+apptainer exec --contain \
+    --bind /working/directory \
+    --bind /data/directory \
+    --bind /scratch \
+    --bind ~/.cache/fontconfig \
+    --env BASH_ENV=/dev/null \
+    pyamptools.sif bash
 
+# INSIDE THE CONTAINER:
+source /etc/bash.bashrc
 
+pa -h # to see usage of pa
+```
 # Additional Information
 
 ## Jupyter notebooks in VSCode
