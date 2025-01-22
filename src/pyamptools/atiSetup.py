@@ -1,6 +1,7 @@
 import os
 
 import ROOT
+
 from pyamptools.utility.general import check_nvidia_devices, check_shared_lib_exists, get_pid_family
 from pyamptools.utility.pythonization import pythonize_parMgr  # noqa
 
@@ -38,8 +39,8 @@ def loadLibraries(accelerator, use_fsroot=False, use_genamp=False, verbose=True)
 
     if RANK_MPI == 0 and verbose:
         print("\n------------------------------------------------")
-        print(f'{kModule}| MPI is {"enabled" if USE_MPI else "disabled"}')
-        print(f'{kModule}| GPU is {"enabled" if USE_GPU else "disabled"}')
+        print(f"{kModule}| MPI is {'enabled' if USE_MPI else 'disabled'}")
+        print(f"{kModule}| GPU is {'enabled' if USE_GPU else 'disabled'}")
         print("------------------------------------------------\n\n")
     #################### LOAD LIBRARIES (ORDER MATTERS!) ###################
 
@@ -55,9 +56,9 @@ def loadLibraries(accelerator, use_fsroot=False, use_genamp=False, verbose=True)
     #  as python is interpreted.
     if RANK_MPI == 0 and verbose:
         print("\n\n------------------------------------------------")
-    ROOT.initialize(False) # (RANK_MPI == 0)
+    ROOT.initialize(False)  # (RANK_MPI == 0)
     if use_fsroot:
-        ROOT.initialize_fsroot(False) # (RANK_MPI == 0)
+        ROOT.initialize_fsroot(False)  # (RANK_MPI == 0)
     if RANK_MPI == 0 and verbose:
         print("------------------------------------------------\n")
 
@@ -96,7 +97,7 @@ def set_aliases(called_globals, USE_MPI, USE_GPU):
         "gInterpreter": ROOT.gInterpreter,
         ############### AmpTools RELATED ##############
         "AmpToolsInterface": ROOT.AmpToolsInterfaceMPI if USE_MPI else ROOT.AmpToolsInterface,
-        "NormIntInterface":  ROOT.NormIntInterface,
+        "NormIntInterface": ROOT.NormIntInterface,
         "AmplitudeManager": ROOT.AmplitudeManager,
         "ConfigFileParser": ROOT.ConfigFileParser,
         "ConfigurationInfo": ROOT.ConfigurationInfo,
@@ -129,9 +130,10 @@ def set_aliases(called_globals, USE_MPI, USE_GPU):
 
     called_globals.update(aliases)
     register_amps_dataio(called_globals)
-    
+
+
 def register_amps_dataio(globals):
-    """ REGISTER OBJECTS FOR AMPTOOLS """
+    """REGISTER OBJECTS FOR AMPTOOLS"""
     globals["AmpToolsInterface"].registerAmplitude(globals["Zlm"]())
     globals["AmpToolsInterface"].registerAmplitude(globals["Vec_ps_refl"]())
     globals["AmpToolsInterface"].registerAmplitude(globals["OmegaDalitz"]())
@@ -144,6 +146,7 @@ def register_amps_dataio(globals):
     globals["AmpToolsInterface"].registerDataReader(globals["DataReaderTEM"]())
     globals["AmpToolsInterface"].registerDataReader(globals["DataReaderFilter"]())
     globals["AmpToolsInterface"].registerDataReader(globals["DataReaderBootstrap"]())
+
 
 def prepare_mpigpu(accelerator, verbose=True):
     """

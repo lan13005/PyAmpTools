@@ -9,6 +9,7 @@
     "runArgs": [
         "--platform=linux/amd64"
     ],
+    "workspaceFolder": "/app", // this folder contains the PyAmpTools and iftpwa source code
     "customizations": {
         "vscode": {
             "extensions": [
