@@ -22,11 +22,6 @@ def test_gradients():
     parser = ConfigFileParser(cfgfile)
     cfgInfo: ConfigurationInfo = parser.getConfigurationInfo()
 
-    # ############## REGISTER OBJECTS FOR AMPTOOLS ##############
-    AmpToolsInterface.registerAmplitude(Zlm())
-    AmpToolsInterface.registerAmplitude(BreitWigner())
-    AmpToolsInterface.registerDataReader(DataReader())
-
     ati = AmpToolsInterface(cfgInfo)
 
     ParameterManager.setDoCovarianceUpdate(False)

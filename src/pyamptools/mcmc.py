@@ -528,19 +528,6 @@ def _cli_mcmc():
     parsers = [ConfigFileParser(cfgfile) for cfgfile in cfgfiles]
     cfgInfos = [parser.getConfigurationInfo() for parser in parsers]  # List of ConfigurationInfo
 
-    ############## REGISTER OBJECTS FOR AMPTOOLS ##############
-    AmpToolsInterface.registerAmplitude(Zlm())
-    AmpToolsInterface.registerAmplitude(Vec_ps_refl())
-    AmpToolsInterface.registerAmplitude(OmegaDalitz())
-    AmpToolsInterface.registerAmplitude(BreitWigner())
-    AmpToolsInterface.registerAmplitude(Piecewise())
-    AmpToolsInterface.registerAmplitude(PhaseOffset())
-    AmpToolsInterface.registerAmplitude(TwoPiAngles())
-    AmpToolsInterface.registerAmplitude(Uniform())
-    AmpToolsInterface.registerDataReader(DataReader())
-    AmpToolsInterface.registerDataReader(DataReaderTEM())
-    AmpToolsInterface.registerDataReader(DataReaderFilter())
-
     atis = [AmpToolsInterface(cfgInfo) for cfgInfo in cfgInfos]
     LoadParametersSamplers = [LoadParameters(cfgInfo) for cfgInfo in cfgInfos]
     [ati.parameterManager().setDoCovarianceUpdate(False) for ati in atis]  # No internal Minuit fit = no covariance matrix

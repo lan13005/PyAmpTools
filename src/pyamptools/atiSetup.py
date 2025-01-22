@@ -27,11 +27,6 @@ def setup(calling_globals, accelerator="mpigpu", use_fsroot=False, use_genamp=Fa
     USE_MPI, USE_GPU, RANK_MPI = loadLibraries(accelerator, use_fsroot, use_genamp, verbose=verbose)
     set_aliases(calling_globals, USE_MPI, USE_GPU)
 
-    # VSCode will load an environment but not run the scripts in activate.d
-    #    If this appears to be the case, activate it now
-    if "PYAMPTOOLS_HOME" not in os.environ and "CONDA_PREFIX" in os.environ:
-        os.system(f'source {os.environ["CONDA_PREFIX"]}/etc/conda/activate.d/set_environment.sh')
-
     return USE_MPI, USE_GPU, RANK_MPI
 
 
@@ -133,7 +128,22 @@ def set_aliases(called_globals, USE_MPI, USE_GPU):
         aliases["GPUManager"] = ROOT.GPUManager
 
     called_globals.update(aliases)
-
+    register_amps_dataio(called_globals)
+    
+def register_amps_dataio(globals):
+    """ REGISTER OBJECTS FOR AMPTOOLS """
+    globals["AmpToolsInterface"].registerAmplitude(globals["Zlm"]())
+    globals["AmpToolsInterface"].registerAmplitude(globals["Vec_ps_refl"]())
+    globals["AmpToolsInterface"].registerAmplitude(globals["OmegaDalitz"]())
+    globals["AmpToolsInterface"].registerAmplitude(globals["BreitWigner"]())
+    globals["AmpToolsInterface"].registerAmplitude(globals["Piecewise"]())
+    globals["AmpToolsInterface"].registerAmplitude(globals["PhaseOffset"]())
+    globals["AmpToolsInterface"].registerAmplitude(globals["TwoPiAngles"]())
+    globals["AmpToolsInterface"].registerAmplitude(globals["Uniform"]())
+    globals["AmpToolsInterface"].registerDataReader(globals["DataReader"]())
+    globals["AmpToolsInterface"].registerDataReader(globals["DataReaderTEM"]())
+    globals["AmpToolsInterface"].registerDataReader(globals["DataReaderFilter"]())
+    globals["AmpToolsInterface"].registerDataReader(globals["DataReaderBootstrap"]())
 
 def prepare_mpigpu(accelerator, verbose=True):
     """

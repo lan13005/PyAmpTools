@@ -66,20 +66,6 @@ if __name__ == "__main__":
 
     USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals(), verbose=verbose)
 
-    # # ############## REGISTER OBJECTS FOR AMPTOOLS ##############
-    AmpToolsInterface.registerAmplitude(Zlm())
-    AmpToolsInterface.registerAmplitude(Vec_ps_refl())
-    AmpToolsInterface.registerAmplitude(OmegaDalitz())
-    AmpToolsInterface.registerAmplitude(BreitWigner())
-    AmpToolsInterface.registerAmplitude(Piecewise())
-    AmpToolsInterface.registerAmplitude(PhaseOffset())
-    AmpToolsInterface.registerAmplitude(TwoPiAngles())
-    AmpToolsInterface.registerAmplitude(Uniform())
-    AmpToolsInterface.registerDataReader(DataReader())
-    AmpToolsInterface.registerDataReader(DataReaderTEM())
-    AmpToolsInterface.registerDataReader(DataReaderFilter())
-    AmpToolsInterface.registerDataReader(DataReaderBootstrap()) 
-
     start_time = time()
 
     # ############################################################################

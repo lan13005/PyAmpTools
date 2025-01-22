@@ -175,15 +175,6 @@ if __name__ == "__main__":
     parser = ConfigFileParser(cfgfile)
     cfgInfo: ConfigurationInfo = parser.getConfigurationInfo()
 
-    ############## REGISTER OBJECTS FOR AMPTOOLS ##############
-    AmpToolsInterface.registerAmplitude(Zlm())
-    AmpToolsInterface.registerAmplitude(BreitWigner())
-    AmpToolsInterface.registerAmplitude(Piecewise())
-    AmpToolsInterface.registerAmplitude(PhaseOffset())
-    AmpToolsInterface.registerAmplitude(TwoPiAngles())
-    AmpToolsInterface.registerDataReader(DataReader())
-    AmpToolsInterface.registerDataReader(DataReaderFilter())
-
     ### CURRENTLY, ONLY ALLOWS A SINGLE CFGFILE ###
     atis = [AmpToolsInterface(cfgInfo)]
     LoadParametersSamplers = [LoadParameters(cfgInfo)]

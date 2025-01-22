@@ -112,13 +112,6 @@ def test_mle_mcmc_chain():
 #     cfgInfo: ConfigurationInfo = parser.getConfigurationInfo()
 #     cfgInfo.display()
 
-#     ############## REGISTER OBJECTS FOR AMPTOOLS ##############
-#     AmpToolsInterface.registerAmplitude( Zlm() )
-#     AmpToolsInterface.registerDataReader( DataReader() )
-#     AmpToolsInterface.registerAmplitude( Vec_ps_refl() )
-#     AmpToolsInterface.registerAmplitude( OmegaDalitz() )
-#     AmpToolsInterface.registerDataReader( DataReaderTEM() )
-
 #     ati = AmpToolsInterface( cfgInfo )
 
 #     LoadParametersSampler = LoadParameters(cfgInfo)

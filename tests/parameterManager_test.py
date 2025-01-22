@@ -13,10 +13,6 @@ def test_parMgr():
     cfgInfo: ConfigurationInfo = parser.getConfigurationInfo()
     cfgInfo.display()
 
-    ############## REGISTER OBJECTS FOR AMPTOOLS ##############
-    AmpToolsInterface.registerAmplitude(Zlm())
-    AmpToolsInterface.registerDataReader(DataReader())
-
     ati = AmpToolsInterface(cfgInfo)
     parMgr: ParameterManager = ati.parameterManager()
 
