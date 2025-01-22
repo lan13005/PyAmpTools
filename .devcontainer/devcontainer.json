@@ -1,0 +1,24 @@
+{
+    "name": "PyAmpTools Development",
+    "image": "pyamptools:v3.2",
+    // "remoteUser": "vscode",
+    "remoteUser": "root", // if you are feeling brave
+    "remoteEnv": {
+        "SHELL": "/bin/bash"
+    },
+    "runArgs": [
+        "--platform=linux/amd64"
+    ],
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-toolsai.jupyter",
+                "ms-azuretools.vscode-docker",
+                "eamodio.gitlens"
+            ]
+        }
+    },
+    "forwardPorts": []
+}
