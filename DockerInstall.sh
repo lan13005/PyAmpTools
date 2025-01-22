@@ -52,30 +52,33 @@ source /etc/profile.d/modules.sh
 
 # Install Conda (Mamba) from Miniforge
 wget -O Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-bash Miniforge3.sh -b -p "${HOME}/conda"
+bash Miniforge3.sh -b -p "/opt/conda" # $HOME points to /root so install in /opt with read/execute permissions for vscode devcontainer
 rm -f Miniforge3.sh
-source "${HOME}/conda/etc/profile.d/conda.sh"
+source "/opt/conda/etc/profile.d/conda.sh"
 conda activate
 
-# Clone PyAmpTools using BuildKit Secrets
+# Clone PyAmpTools using BuildKit Secrets, then remove credentials from git config
 git clone https://${GH_USERNAME}:${GH_PAT}@github.com/lan13005/PyAmpTools.git --recurse-submodules
 cd PyAmpTools
+git remote set-url origin https://github.com/lan13005/PyAmpTools.git  # Remove credentials
 conda create --name pyamptools python=3.9 -y
 conda activate pyamptools
 pip install -e .[dev]
 conda install -c conda-forge tbb -y
 source set_environment.sh
-# update linker for mpi4py
+
+# Update linker for mpi4py otherwise will fail to build
 rm -f $CONDA_PREFIX/compiler_compat/ld
 ln -s /usr/bin/ld $CONDA_PREFIX/compiler_compat/ld
 module unload mpi && module load mpi
 pip install mpi4py
 cd ..
 
-# Clone IFTPWA using BuildKit Secrets
+# Clone IFTPWA using BuildKit Secrets, then remove credentials from git config
 git clone https://${GH_USERNAME}:${GH_PAT}@github.com/fmkroci/iftpwa.git
 cd iftpwa
 git checkout hyperopt
+git remote set-url origin https://github.com/fmkroci/iftpwa.git  # Remove credentials
 pip install -e .[dev]
 cd ..
 
@@ -86,9 +89,14 @@ sed -i 's/np.asfarray(x)/np.asarray(x, dtype=float)/g' $NIFTY_SITE/utilities.py
 sed -i '/^def _register_cmaps():/,/^def /s|import matplotlib\.pyplot as plt|from matplotlib import colormaps as cm|' $NIFTY_SITE/plot.py
 sed -i 's/plt.register_cmap/cm.register/g' $NIFTY_SITE/plot.py
 
-# Install and setup fzf using BuildKit Secrets
+# Install and setup fzf using BuildKit Secrets. I cannot code without this
+#   CTRL + R to fuzzy search command history
+#   CTRL + T to fuzzy search files
 git clone --depth 1 https://${GH_USERNAME}:${GH_PAT}@github.com/junegunn/fzf.git /app/fzf
+cd /app/fzf
+git remote set-url origin https://github.com/junegunn/fzf.git  # Remove credentials
 /app/fzf/install --all
+cd -
 
 # There is a known conflict between AmpTools' GPU usage and RooFit/TMVA which comes with the conda-forge binaries of ROOT. 
 # Currently, ROOT has to be built from source with roofit and tmva off. 
@@ -99,11 +107,11 @@ source build_root.sh
 cd ../..
 source set_environment.sh  # Reload environment variables
 
-# Build external dependencies with MPI support
+# Build external (AmpTools, FSROOT, halld_sim amplitude/dataio sources) dependencies with MPI support
 cd external
 make mpi
 
-# Add aliases to .bashrc
+# Make some modifications to rc files
 echo 'alias ls="ls --color=auto"' >> /etc/bash.bashrc && \
 echo 'alias ll="ls -l --color=auto"' >> /etc/bash.bashrc && \
 echo 'alias st="git status"' >> /etc/bash.bashrc && \
