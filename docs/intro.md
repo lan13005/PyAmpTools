@@ -36,10 +36,17 @@ Please make modifications to `DockerInstall.sh` to match your environment. These
 source DockerInstall.sh
 ```
 
-# Docker Usage
+## Build Docker Image (developers)
+
+```shell
+./DockerBuild.sh <GH_USERNAME> <GH_PAT> # github username and pat needed for now due to private repo access
+```
+
+# Apptainer Usage
 
 ```shell
 # /scratch needed for MPI and fontconfig for matplotlib(not so important)
+# NOTE: Do not bind ~
 apptainer exec --contain \
     --bind /working/directory \
     --bind /data/directory \
@@ -49,7 +56,7 @@ apptainer exec --contain \
     pyamptools.sif bash
 
 # INSIDE THE CONTAINER:
-source /etc/bash.bashrc
+source ~/.bashrc
 
 pa -h # to see usage of pa
 ```

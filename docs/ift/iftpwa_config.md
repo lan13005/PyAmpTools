@@ -31,6 +31,10 @@ $$
 - $n$ is the `preScale` factor for the parametric component. Correlated field model at this point is O(1) so this allows us to bias towards larger/smaller intensity from parameteric component
 - $P(\vec{x})$ is the `PARAMETRIC_MODEL` component with parameters $\vec{x}$ defined by `parameter_priors` (and also `static_paras`)
 
+```{note}
+This amplitude description is for a single real/imaginary component of a particular partial wave. The correlated field parameters (defined as priors), $s_i, f_i, a_i$, are shared across all partial waves. This does not mean all the particular $s_i, f_i, a_i$ across partial waves are the same, as they are random variables. Though the real/imaginary components of a partial wave do share the same parameter values. 
+```
+
 ## Default Configuration
 
 We almost always would like to compare the IFT results to a set of maximum likelihood fits obtained using `AmpTools` so we need to perform two types of fits. A set of Maximum Likelihood (MLE) fits is performed using `AmpTools` and an Information Field Theory (IFT) fit is performed using `iftpwa`. Each has its own configuration file to specify the initial state. `PyAmpTools` will be the main driver of both these fits and has a YAML field that points to the `iftpwa` configuration file. Likewise, the `iftpwa` configuration file has a field that points to the `PyAmpTools` configuration file as it uses it to construct a `pwa_manager` object that calculates likelihoods.
@@ -39,7 +43,7 @@ There are two configuration files that one needs to manage.
 - `PyAmpTools` uses a configuration file to define the reaction, dataset locations, partial waves used, and kinematic binning
 - `iftpwa` uses a configuration file but in this case to declare its IFT model, how to modify its likelihood (bootstrap, resampling, ...), and how to perform the IFT optimization.
 
-Below are the default YAML configurations for GlueX analyses of $\gamma p \rightarrow \eta\pi^0 p$. 
+Below are the default YAML configurations for GlueX analyses of $\gamma p \rightarrow \eta\pi^0 p$. We call them `pyamptools.yaml` and `iftpwa.yaml` but they can be anything.
 
 ### PyAmpTools Configuration
 
@@ -60,7 +64,7 @@ bkgnd135.root # (optional) background MC datasets for each polarization
 ```
 
 ```yaml
-# PyAmpTools configuration file example
+# EXAMPLE: pyamptools.yaml
 defaults_location: null 
 base_directory: /MY/WORKING/DIRECTORY # Dump ALL results relative to this directory
 data_folder: /MY/DATA/FOLDER # Path to the data, accmc, bkgnd, genmc datasets
@@ -104,10 +108,10 @@ amptools: # Configure AmpTools
     n_processes: 20 # (int) pool of processes to analyze all the amptools fits
 nifty: # Configure NIFTy
     output_directory: ${base_directory}/NiftyFits # (string) directory to dump NIFTy results into
-    yaml: /LOCATION/OF/IFTPWA/YAML/FILE # (string) path to the iftpwa configuration file
+    yaml: /LOCATION/OF/IFTPWA/YAML/FILE/iftpwa.yaml # (string) path to the iftpwa configuration file
     synchronize: true # (bool) Almost always true. Synchronize the iftpwa and PyAmpTools configuration files
     mpi_processes: 41 # (int) number of MPI processes to use for NIFTy
-dash: # Configure dash plots (optional)
+dash: # [OPTIONAL] Configure dash plots
     t: 0.55 # (float) t-bin to draw the dash plots for
     models:
         my_first_fit: /PATH/TO/COMPLETED/NIFTY/FIT/CONTAINING/NIFTYPWA_FIT.PKL # (string) path to the completed NIFTy fit
@@ -123,7 +127,7 @@ dash: # Configure dash plots (optional)
 ### IFTPWA Configuration
 
 ```yaml
-# IFTPWA configuration file example
+# EXAMPLE: iftpwa.yaml
 GENERAL:
     pwa_manager: GLUEX
     seed: 42 # (int) RNG seed for reproducible results. Optimizer can get stuck in local minima so freely change this or try multiple values
@@ -138,7 +142,7 @@ GENERAL:
 # pwa_manager for GlueX takes in another configuration file that defines the partial waves used and the kinematic binning: (mass, t)
 #   This maintains consistency between iftpwa results and results from a set of maximum likelihood fits obtained using AmpTools
 PWA_MANAGER:
-    yaml_file: /w/halld-scshelf2101/lng/WORK/PyAmpTools9/OTHER_CHANNELS/ETAPI0/jax_primary_P.yaml
+    yaml_file: /PATH/TO/PYAMPTools/YAML/FILE/pyamptools.yaml
 
 # Define our forward model containing correlated fields and parametric models
 IFT_MODEL:
@@ -251,7 +255,7 @@ OPTIMIZATION:
     niftyCache: ${GENERAL.outputFolder}/ # (path) path to dump NIFTy results
     overwriteCache: true # (bool) overwrite the cache
     sanityChecks: false # (bool) NIFTy - some sanity checks that are evaluated at the beginning. They are potentially expensive because all likelihoods have to be instantiated multiple times
-    constants: [tamps_mass_dir_loglogavgslope] # provide the names of the latent space variables that should be fixed ['tamps_mass_dir_loglogavgslope'] # examples: ['tamps_mass_dir_loglogavgslope', 'tamps_mass_dir_flexibility', 'tamps_tprime_dir_loglogavgslope', 'tamps_tprime_dir_flexibility', 'tamps_zeromode']
+    constants: [tamps_mass_dir_loglogavgslope] # provide the names of the latent space variables that should be fixed, examples: ['tamps_mass_dir_loglogavgslope', 'tamps_mass_dir_flexibility', 'tamps_tprime_dir_loglogavgslope', 'tamps_tprime_dir_flexibility', 'tamps_zeromode']
 
 # Some parameters takes a list of lists which dictate the number of global iterations in a given setting
 #   See iftpwa/src/scripts/iftpwa_fit.py for calls to `makeCallableSimple` for parameters with this style
