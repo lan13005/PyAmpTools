@@ -432,7 +432,21 @@
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="docker-usage">
 <h1>Docker Usage<a class="headerlink" href="#docker-usage" title="Link to this heading">#</a></h1>
-<p>To be added</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># /scratch needed for MPI and fontconfig for matplotlib(not so important)</span>
+apptainer<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>--contain<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/working/directory<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/data/directory<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/scratch<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>~/.cache/fontconfig<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--env<span class="w"> </span><span class="nv">BASH_ENV</span><span class="o">=</span>/dev/null<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>pyamptools.sif<span class="w"> </span>bash
+
+<span class="c1"># INSIDE THE CONTAINER:</span>
+<span class="nb">source</span><span class="w"> </span>/etc/bash.bashrc
+
+pa<span class="w"> </span>-h<span class="w"> </span><span class="c1"># to see usage of pa</span>
+</pre></div>
+</div>
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="additional-information">
 <h1>Additional Information<a class="headerlink" href="#additional-information" title="Link to this heading">#</a></h1>

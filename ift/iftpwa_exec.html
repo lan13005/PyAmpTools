@@ -381,7 +381,7 @@
 pa<span class="w"> </span>run_cfgGen<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="c1"># Generate an AmpTools configuration file to be distributed </span>
 pa<span class="w"> </span>run_divideData<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="c1"># Divide data into bins and distributes configuration files to each bin</span>
 pa<span class="w"> </span>run_mle<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="c1"># Perform all MLE fits across all bins and user specified randomly initialized fits</span>
-pa<span class="w"> </span>calc_ps<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="nv">$ps_file</span><span class="w"> </span><span class="c1"># Create phase space factor file that multiples each partial wave (at the moment it is the barrier factor squared)</span>
+pa<span class="w"> </span>calc_ps<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="nv">$ps_file</span><span class="w"> </span><span class="c1"># Create phase space factor file (pass to YAML field IFT_MODEL.phaseSpaceMultiplier) that multiples each partial wave (at the moment it is the barrier factor squared)</span>
 pa<span class="w"> </span>run_processEvents<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="c1"># Creates a data file (a representation of AmpVecs object in AmpTools) that GlueX iftpwa manager can use to reconstruct the likelihood for each bin</span>
 
 <span class="c1"># Ideally we would like to be able to do some prior predictive checks to see what our unoptimized model looks like</span>

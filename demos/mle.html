@@ -407,26 +407,22 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>atiSetup| jupyter-book called python
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">KeyError</span><span class="g g-Whitespace">                                  </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">line</span> <span class="mi">2</span>
+<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="c1">############## SET ENVIRONMENT VARIABLES ##############</span>
+<span class="ne">----&gt; </span><span class="mi">2</span> <span class="n">PYAMPTOOLS_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYAMPTOOLS_HOME&quot;</span><span class="p">]</span>
+<span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span>
+<span class="g g-Whitespace">      </span><span class="mi">5</span> <span class="n">cfgfile</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PYAMPTOOLS_HOME</span><span class="si">}</span><span class="s2">/tests/samples/SIMPLE_EXAMPLE/fitInit.cfg&quot;</span>
 
-------------------------------------------------
-atiSetup| MPI is disabled
-atiSetup| GPU is disabled
-------------------------------------------------
+<span class="nn">File /w/halld-scshelf2101/lng/micromamba/envs/pyamptools/lib/python3.9/os.py:679,</span> in <span class="ni">_Environ.__getitem__</span><span class="nt">(self, key)</span>
+<span class="g g-Whitespace">    </span><span class="mi">676</span>     <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">encodekey</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span>
+<span class="g g-Whitespace">    </span><span class="mi">677</span> <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">678</span>     <span class="c1"># raise KeyError with the original key value</span>
+<span class="ne">--&gt; </span><span class="mi">679</span>     <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
+<span class="g g-Whitespace">    </span><span class="mi">680</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decodevalue</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
-
-atiSetup| Loading library libIUAmpTools.so ............  ON
-atiSetup| Loading library libAmpTools.so ..............  ON
-atiSetup| Loading library libAmpPlotter.so ............  ON
-atiSetup| Loading library libAmpsDataIO.so ............  ON
-atiSetup| Loading library libFSRoot.so ................  OFF
-atiSetup| Loading library libAmpsGen.so ...............  OFF
-
-
-------------------------------------------------
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
+<span class="ne">KeyError</span>: &#39;PYAMPTOOLS_HOME&#39;
 </pre></div>
 </div>
 </div>
@@ -447,7 +443,7 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 Config file: /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/fitInit.cfg
 Seed file: seed_file
 Number of random fits: 0
-Random seed: 1737492671
+Random seed: 1737211444
  ============================= 
 </pre></div>
 </div>
@@ -459,21 +455,6 @@ Random seed: 1737492671
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">parser</span> <span class="o">=</span> <span class="n">ConfigFileParser</span><span class="p">(</span><span class="n">cfgfile</span><span class="p">)</span>
 <span class="n">cfgInfo</span><span class="p">:</span> <span class="n">ConfigurationInfo</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getConfigurationInfo</span><span class="p">()</span>
 <span class="n">cfgInfo</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   =================================================================
-   |        ^                                                      |
-   |       / \             Version:  v0.15.3-2-g0753-dirty         |
-   |      /---\                                                    |
-   |     /     \           GDouble:  8 bytes                       |
-   |    /       \ MP           MPI:  NO                            |
-   |     -------               GPU:  NO                            |
-   |        |                                                      |
-   |        |              doi.org/10.5281/zenodo.5039377          |
-   |        | OOLS                                                 |
-   =================================================================
 </pre></div>
 </div>
 </div>
@@ -505,14 +486,6 @@ Random seed: 1737492671
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">nll</span> <span class="o">=</span> <span class="n">runFits</span><span class="p">(</span><span class="n">ati</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="n">numRnd</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LIKELIHOOD BEFORE MINIMIZATION: 112356.11732090596
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): 14346.408126566821
 </pre></div>
 </div>
 </div>
