@@ -43,6 +43,9 @@ def extract_ff(results, outfileName="", fmt=".5f", test_regex=False, no_phases=F
         total_intensity_corr, total_error_corr = results.intensity(True)
         outfile.write("########################################################################\n")
         outfile.write("# Values on the left of | are acceptance corrected, on the right are not\n")
+        outfile.write(f"# bestMinimum = {results.bestMinimum()}\n")
+        outfile.write(f"# lastMinuitCommandStatus = {results.lastMinuitCommandStatus()}\n")
+        outfile.write(f"# eMatrixStatus = {results.eMatrixStatus()}\n")
         outfile.write("########################################################################\n\n")
         if only is None:
             outfile.write(f"TOTAL EVENTS = {total_intensity_corr:0.2f}|{total_intensity:0.2f} +- {total_error_corr:0.2f}|{total_error:0.2f}\n")
@@ -115,14 +118,8 @@ def extract_ff(results, outfileName="", fmt=".5f", test_regex=False, no_phases=F
                 phase, error = results.phaseDiff(amp1, amp2)
                 outfile.write(f"PHASE DIFFERENCE {amp1} {amp2} = {phase:{fmt}} +- {error:{fmt}}\n")
 
-    if not test_regex:
-        outfile.write("\n########### FIT STATUS ###########\n")
-        outfile.write(f"# bestMinimum = {results.bestMinimum()}\n")
-        outfile.write(f"# lastMinuitCommandStatus = {results.lastMinuitCommandStatus()}\n")
-        outfile.write(f"# eMatrixStatus = {results.eMatrixStatus()}\n")
-
-        if outfileName != "":
-            outfile.close()
+    if not test_regex and outfileName != "":
+        outfile.close()
 
 
 def _cli_extract_ff():
