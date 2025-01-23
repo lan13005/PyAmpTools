@@ -447,7 +447,7 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 Config file: /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/fitInit.cfg
 Seed file: seed_file
 Number of random fits: 0
-Random seed: 1737509822
+Random seed: 1737653708
  ============================= 
 </pre></div>
 </div>
@@ -474,18 +474,6 @@ Random seed: 1737509822
    |        |              doi.org/10.5281/zenodo.5039377          |
    |        | OOLS                                                 |
    =================================================================
-</pre></div>
-</div>
-</div>
-</div>
-<p>The confirguation file specifies a datareader called <code class="docutils literal notranslate"><span class="pre">ROOTDataReader</span></code> and the amplitude called <code class="docutils literal notranslate"><span class="pre">Zlm</span></code>. There are many datareaders (i.e. for <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code> and another for <code class="docutils literal notranslate"><span class="pre">Bootstrapping</span></code>) and amplitudes (i.e. <code class="docutils literal notranslate"><span class="pre">BreitWigner</span></code> and <code class="docutils literal notranslate"><span class="pre">Piecewise</span></code>). Below, <code class="docutils literal notranslate"><span class="pre">DataReader</span></code> is an alias for <code class="docutils literal notranslate"><span class="pre">ROOTDataReader</span></code> or its <code class="docutils literal notranslate"><span class="pre">MPI</span></code> implementation. These aliases are created by <code class="docutils literal notranslate"><span class="pre">atiSetup</span></code>.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="n">Zlm</span><span class="p">())</span>
-<span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span><span class="n">DataReader</span><span class="p">())</span>
-<span class="c1"># AmpToolsInterface.registerAmplitude( BreitWigner() )</span>
-<span class="c1"># AmpToolsInterface.registerAmplitude( Piecewise() )</span>
-<span class="c1"># AmpToolsInterface.registerDataReader( DataReaderBootstrap() )</span>
 </pre></div>
 </div>
 </div>

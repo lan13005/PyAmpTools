@@ -486,10 +486,7 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 <p>As always, we have to register the requested amplitudes and the datareaders. We can then create a <code class="docutils literal notranslate"><span class="pre">PlotGenerator</span></code> instance. The order matters as <code class="docutils literal notranslate"><span class="pre">PlotGenerator</span></code> uses these amplitudes and datareaders.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="n">Zlm</span><span class="p">())</span>
-<span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span><span class="n">DataReader</span><span class="p">())</span>
-
-<span class="n">plotGen</span> <span class="o">=</span> <span class="n">PlotGenerator</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plotGen</span> <span class="o">=</span> <span class="n">PlotGenerator</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

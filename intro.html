@@ -375,8 +375,11 @@
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">PyAmpTools</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-usage">Docker Usage</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-docker-image-developers">Build Docker Image (developers)</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#apptainer-usage">Apptainer Usage</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-information">Additional Information</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jupyter-notebooks-in-vscode">Jupyter notebooks in VSCode</a></li>
 </ul>
@@ -429,10 +432,17 @@
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>DockerInstall.sh
 </pre></div>
 </div>
+<section id="build-docker-image-developers">
+<h2>Build Docker Image (developers)<a class="headerlink" href="#build-docker-image-developers" title="Link to this heading">#</a></h2>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./DockerBuild.sh<span class="w"> </span>&lt;GH_USERNAME&gt;<span class="w"> </span>&lt;GH_PAT&gt;<span class="w"> </span><span class="c1"># github username and pat needed for now due to private repo access</span>
+</pre></div>
+</div>
 </section>
-<section class="tex2jax_ignore mathjax_ignore" id="docker-usage">
-<h1>Docker Usage<a class="headerlink" href="#docker-usage" title="Link to this heading">#</a></h1>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="apptainer-usage">
+<h1>Apptainer Usage<a class="headerlink" href="#apptainer-usage" title="Link to this heading">#</a></h1>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># /scratch needed for MPI and fontconfig for matplotlib(not so important)</span>
+<span class="c1"># NOTE: Do not bind ~</span>
 apptainer<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>--contain<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--bind<span class="w"> </span>/working/directory<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--bind<span class="w"> </span>/data/directory<span class="w"> </span><span class="se">\</span>
@@ -442,7 +452,7 @@ apptainer<span class="w"> </span><span class="nb">exec</span><span class="w"> </
 <span class="w">    </span>pyamptools.sif<span class="w"> </span>bash
 
 <span class="c1"># INSIDE THE CONTAINER:</span>
-<span class="nb">source</span><span class="w"> </span>/etc/bash.bashrc
+<span class="nb">source</span><span class="w"> </span>~/.bashrc
 
 pa<span class="w"> </span>-h<span class="w"> </span><span class="c1"># to see usage of pa</span>
 </pre></div>
@@ -550,8 +560,11 @@ pytest<span class="w"> </span>-k<span class="w"> </span><span class="o">[</span>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">PyAmpTools</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-usage">Docker Usage</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-docker-image-developers">Build Docker Image (developers)</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#apptainer-usage">Apptainer Usage</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-information">Additional Information</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jupyter-notebooks-in-vscode">Jupyter notebooks in VSCode</a></li>
 </ul>

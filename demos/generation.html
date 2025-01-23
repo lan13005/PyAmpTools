@@ -400,33 +400,6 @@
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Welcome to JupyROOT 6.28/06
-atiSetup| jupyter-book called python
-
-------------------------------------------------
-atiSetup| MPI is disabled
-atiSetup| GPU is disabled
-------------------------------------------------
-
-
-atiSetup| Loading library libIUAmpTools.so ............  ON
-atiSetup| Loading library libAmpTools.so ..............  ON
-atiSetup| Loading library libAmpPlotter.so ............  ON
-atiSetup| Loading library libAmpsDataIO.so ............  ON
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>atiSetup| Loading library libFSRoot.so ................  OFF
-atiSetup| Loading library libAmpsGen.so ...............  ON
-
-
-------------------------------------------------
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
-</pre></div>
-</div>
-</div>
 </div>
 <section id="configuration-file">
 <h2>Configuration File<a class="headerlink" href="#configuration-file" title="Link to this heading">#</a></h2>
@@ -444,95 +417,6 @@ atiSetup| Loading library libAmpsGen.so ...............  ON
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">cat</span> $cfgfile
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>#####################################
-####    THIS IS A CONFIG FILE    ####
-#####################################
-##
-##  Blank lines or lines beginning with a &quot;#&quot; are ignored.
-##
-##  Double colons (::) are treated like a space.
-##     This is sometimes useful for grouping (for example,
-##     grouping strings like &quot;reaction::sum::amplitudeName&quot;)
-##
-##  All non-comment lines must begin with one of the following keywords.
-##
-##  (note:  &lt;word&gt; means necessary
-##          (word) means optional)
-##
-##  include       &lt;file&gt;
-##  define        &lt;word&gt; (defn1) (defn2) (defn3) ...
-##  fit           &lt;fitname&gt;
-##  keyword       &lt;keyword&gt; &lt;min arguments&gt; &lt;max arguments&gt;
-##  reaction      &lt;reaction&gt; &lt;particle1&gt; &lt;particle2&gt; (particle3) ...
-##  data          &lt;reaction&gt; &lt;class&gt; (arg1) (arg2) (arg3) ...
-##  genmc         &lt;reaction&gt; &lt;class&gt; (arg1) (arg2) (arg3) ...
-##  accmc         &lt;reaction&gt; &lt;class&gt; (arg1) (arg2) (arg3) ...
-##  normintfile   &lt;reaction&gt; &lt;file&gt;
-##  sum           &lt;reaction&gt; &lt;sum&gt; (sum2) (sum3) ...
-##  amplitude     &lt;reaction&gt; &lt;sum&gt; &lt;amp&gt; &lt;class&gt; (arg1) (arg2) ([par]) ...
-##  initialize    &lt;reaction&gt; &lt;sum&gt; &lt;amp&gt; &lt;&quot;events&quot;/&quot;polar&quot;/&quot;cartesian&quot;&gt;
-##                  &lt;value1&gt; &lt;value2&gt; (&quot;fixed&quot;/&quot;real&quot;)
-##  scale         &lt;reaction&gt; &lt;sum&gt; &lt;amp&gt; &lt;value or [parameter]&gt;
-##  constrain     &lt;reaction1&gt; &lt;sum1&gt; &lt;amp1&gt; &lt;reaction2&gt; &lt;sum2&gt; &lt;amp2&gt; ...
-##  permute       &lt;reaction&gt; &lt;sum&gt; &lt;amp&gt; &lt;index1&gt; &lt;index2&gt; ...
-##  parameter     &lt;par&gt; &lt;value&gt; (&quot;fixed&quot;/&quot;bounded&quot;/&quot;gaussian&quot;)
-##                  (lower/central) (upper/error)
-##    DEPRECATED:
-##  datafile      &lt;reaction&gt; &lt;file&gt; (file2) (file3) ...
-##  genmcfile     &lt;reaction&gt; &lt;file&gt; (file2) (file3) ...
-##  accmcfile     &lt;reaction&gt; &lt;file&gt; (file2) (file3) ...
-##
-#####################################
-
-reaction etapi  Beam Proton Eta Pi0
-
-############# FOR FITTING #############
-fit result
-normintfile etapi normint
-genmc etapi ROOTDataReader /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-accmc etapi ROOTDataReader /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/samples/flat_generated_samples.root
-data  etapi ROOTDataReader /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/samples/data_generated_samples.root
-#######################################
-
-# polarization information -- use 100% polarization to enhance visual effect
-define polVal 1.0
-define polAngleDeg 0.0
-define polInfo polAngleDeg polVal
-
-### Amplitude LM projections
-define wave1 2 0
-define wave2 2 2
-define wave3 0 0
-
-# create two sums needed in the amplitude -- as long as we use
-# a single reflectivity, then two sums are sufficient
-sum etapi reZ
-sum etapi imZ
-
-# kinematic/angular dependence given by Zlm (GlueX-doc 4094)
-# (choose one of the two pairs below and comment out the other)
-
-### Define amplitudes
-amplitude etapi::reZ::resAmp1 Zlm wave1 +1 +1 polInfo
-amplitude etapi::imZ::resAmp1 Zlm wave1 -1 -1 polInfo
-amplitude etapi::reZ::resAmp2 Zlm wave2 +1 +1 polInfo
-amplitude etapi::imZ::resAmp2 Zlm wave2 -1 -1 polInfo
-amplitude etapi::reZ::resAmp3 Zlm wave3 +1 +1 polInfo
-amplitude etapi::imZ::resAmp3 Zlm wave3 -1 -1 polInfo
-
-# Initialize and constrain
-initialize etapi::reZ::resAmp1 cartesian 10 0 real
-constrain etapi::reZ::resAmp1 etapi::imZ::resAmp1
-initialize etapi::reZ::resAmp2 cartesian 10 0
-constrain etapi::reZ::resAmp2 etapi::imZ::resAmp2
-initialize etapi::reZ::resAmp3 cartesian 10 0
-constrain etapi::reZ::resAmp3 etapi::imZ::resAmp3
-
-include /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/mle.txt
 </pre></div>
 </div>
 </div>
@@ -554,32 +438,6 @@ include /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/m
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">generator</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>GEN_AMP: Simulation attributes:
-
------ General -----
-configfile:    Configuration file
-outname:       Output file name
-nEvents:       Number of events to generate
------ Kinematics -----
-genFlat:       Generate flat in M(X) (no physics)
-lowMass:       Lower edge of mass range (GeV)
-highMass:      Upper edge of mass range (GeV)
-beamMaxE:      Electron beam energy (or photon energy endpoint)
-beamPeakE:     Coherent peak photon energy
-beamLowE:      Minimum photon energy to simulate events
-beamHighE:     Maximum photon energy to simulate events
-slope:         Momentum transfer slope
-lowT:          Minimum momentum transfer
-highT:         Maximum momentum transfer
------ Output and Conditioning -----
-runNum:        Run number assigned to generated events
-seed:          Random number seed initialization
-diag:          Plot only diagnostic histograms
-fsRootFormat:  Enable output in FSRoot format
 </pre></div>
 </div>
 </div>
@@ -615,81 +473,11 @@ fsRootFormat:  Enable output in FSRoot format
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>centeredVertex       1
-diag                 0
-genFlat              0
-fsRootFormat         0
-lowMass              0.2
-highMass             2.0
-beamMaxE             12.0
-beamPeakE            9.0
-beamLowE             3.0
-beamHighE            12.0
-runNum               30731
-seed                 0
-lowT                 0.0
-highT                12.0
-slope                6.0
-nEvents              1000
-batchSize            10000
-configfile           /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/fit.cfg
-outname              test.root
-hddmname             
-</pre></div>
-</div>
-</div>
 </div>
 <p>After conditioning the generator, simulations can be performed!</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">generator</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   =================================================================
-   |        ^                                                      |
-   |       / \             Version:  v0.15.3-2-g0753-dirty         |
-   |      /---\                                                    |
-   |     /     \           GDouble:  8 bytes                       |
-   |    /       \ MP           MPI:  NO                            |
-   |     -------               GPU:  NO                            |
-   |        |                                                      |
-   |        |              doi.org/10.5281/zenodo.5039377          |
-   |        | OOLS                                                 |
-   =================================================================
-ConfigFileParser WARNING:  no known resonance found, seed with mass = width = 1GeV
-TRandom3 Seed : 3524303911
-
-[ AmplitudeManager ]:
-
-	Creating AmplitudeManager for the reaction:  etapi
-		 particle index assignment:  Beam -&gt; 0
-		 particle index assignment:  Proton -&gt; 1
-		 particle index assignment:  Eta -&gt; 2
-		 particle index assignment:  Pi0 -&gt; 3
-WARNING: Couldn&#39;t find beam configuration file -- write local version
-
-BeamProperties: Parsing config file local_beam.conf
-BeamProperties WARNING:  generateCombrems parameter Emittance missing: using default = 2.5e-09
-BeamProperties WARNING:  generateCombrems parameter RadiatorThickness missing: using default = 5e-05
-BeamProperties WARNING:  generateCombrems parameter CollimatorDiameter missing: using default = 0.005
-BeamProperties WARNING:  generateCombrems parameter CollimatorDistance missing: using default = 76
-
-Initialization for coherent bremsstralung calculation
- electron beam energy: 12 GeV
- primary coherent edge: 9 GeV
-ConfigFileParser WARNING:  Minimum photon energy not high enough to guarantee flat mass distribution!
-Generating four-vectors...
-Processing events...
-366 events were processed.
-Generating four-vectors...
-Processing events...
-804 events were processed.
-Generating four-vectors...
-Processing events...
-1000 events were processed.
 </pre></div>
 </div>
 </div>
@@ -706,51 +494,6 @@ Processing events...
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tree</span><span class="o">.</span><span class="n">Print</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>******************************************************************************
-*Tree    :kin       : Kinematics                                             *
-*Entries :     1000 : Total =           89780 bytes  File  Size =      60524 *
-*        :          : Tree compression factor =   1.42                       *
-******************************************************************************
-*Br    0 :NumFinalState : NumFinalState/I                                    *
-*Entries :     1000 : Total  Size=       4596 bytes  File Size  =        135 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=  30.21     *
-*............................................................................*
-*Br    1 :E_FinalState : E_FinalState[NumFinalState]/F                       *
-*Entries :     1000 : Total  Size=      16722 bytes  File Size  =      12705 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.27     *
-*............................................................................*
-*Br    2 :Px_FinalState : Px_FinalState[NumFinalState]/F                     *
-*Entries :     1000 : Total  Size=      16727 bytes  File Size  =      13094 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.23     *
-*............................................................................*
-*Br    3 :Py_FinalState : Py_FinalState[NumFinalState]/F                     *
-*Entries :     1000 : Total  Size=      16727 bytes  File Size  =      13152 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.22     *
-*............................................................................*
-*Br    4 :Pz_FinalState : Pz_FinalState[NumFinalState]/F                     *
-*Entries :     1000 : Total  Size=      16727 bytes  File Size  =      12947 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.24     *
-*............................................................................*
-*Br    5 :E_Beam    : E_Beam/F                                               *
-*Entries :     1000 : Total  Size=       4561 bytes  File Size  =       3644 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.12     *
-*............................................................................*
-*Br    6 :Px_Beam   : Px_Beam/F                                              *
-*Entries :     1000 : Total  Size=       4566 bytes  File Size  =        123 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=  33.11     *
-*............................................................................*
-*Br    7 :Py_Beam   : Py_Beam/F                                              *
-*Entries :     1000 : Total  Size=       4566 bytes  File Size  =        123 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=  33.11     *
-*............................................................................*
-*Br    8 :Pz_Beam   : Pz_Beam/F                                              *
-*Entries :     1000 : Total  Size=       4566 bytes  File Size  =       3645 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.12     *
-*............................................................................*
 </pre></div>
 </div>
 </div>

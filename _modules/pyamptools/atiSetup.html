@@ -327,6 +327,7 @@
 <span></span><span class="kn">import</span> <span class="nn">os</span>
 
 <span class="kn">import</span> <span class="nn">ROOT</span>
+
 <span class="kn">from</span> <span class="nn">pyamptools.utility.general</span> <span class="kn">import</span> <span class="n">check_nvidia_devices</span><span class="p">,</span> <span class="n">check_shared_lib_exists</span><span class="p">,</span> <span class="n">get_pid_family</span>
 <span class="kn">from</span> <span class="nn">pyamptools.utility.pythonization</span> <span class="kn">import</span> <span class="n">pythonize_parMgr</span>  <span class="c1"># noqa</span>
 
@@ -355,11 +356,6 @@
     <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">loadLibraries</span><span class="p">(</span><span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="p">,</span> <span class="n">use_genamp</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
     <span class="n">set_aliases</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">)</span>
 
-    <span class="c1"># VSCode will load an environment but not run the scripts in activate.d</span>
-    <span class="c1">#    If this appears to be the case, activate it now</span>
-    <span class="k">if</span> <span class="s2">&quot;PYAMPTOOLS_HOME&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="ow">and</span> <span class="s2">&quot;CONDA_PREFIX&quot;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;source </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;CONDA_PREFIX&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">/etc/conda/activate.d/set_environment.sh&#39;</span><span class="p">)</span>
-
     <span class="k">return</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span></div>
 
 
@@ -374,8 +370,8 @@
 
     <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">------------------------------------------------&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s1">| MPI is </span><span class="si">{</span><span class="s2">&quot;enabled&quot;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">USE_MPI</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s2">&quot;disabled&quot;</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s1">| GPU is </span><span class="si">{</span><span class="s2">&quot;enabled&quot;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">USE_GPU</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s2">&quot;disabled&quot;</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s2">| MPI is </span><span class="si">{</span><span class="s1">&#39;enabled&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">USE_MPI</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;disabled&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s2">| GPU is </span><span class="si">{</span><span class="s1">&#39;enabled&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">USE_GPU</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;disabled&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;------------------------------------------------</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="c1">#################### LOAD LIBRARIES (ORDER MATTERS!) ###################</span>
 
@@ -391,9 +387,9 @@
     <span class="c1">#  as python is interpreted.</span>
     <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">------------------------------------------------&quot;</span><span class="p">)</span>
-    <span class="n">ROOT</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span> <span class="c1"># (RANK_MPI == 0)</span>
+    <span class="n">ROOT</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># (RANK_MPI == 0)</span>
     <span class="k">if</span> <span class="n">use_fsroot</span><span class="p">:</span>
-        <span class="n">ROOT</span><span class="o">.</span><span class="n">initialize_fsroot</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span> <span class="c1"># (RANK_MPI == 0)</span>
+        <span class="n">ROOT</span><span class="o">.</span><span class="n">initialize_fsroot</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># (RANK_MPI == 0)</span>
     <span class="k">if</span> <span class="n">RANK_MPI</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;------------------------------------------------</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -438,7 +434,7 @@
         <span class="s2">&quot;gInterpreter&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">gInterpreter</span><span class="p">,</span>
         <span class="c1">############### AmpTools RELATED ##############</span>
         <span class="s2">&quot;AmpToolsInterface&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">AmpToolsInterfaceMPI</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">AmpToolsInterface</span><span class="p">,</span>
-        <span class="s2">&quot;NormIntInterface&quot;</span><span class="p">:</span>  <span class="n">ROOT</span><span class="o">.</span><span class="n">NormIntInterface</span><span class="p">,</span>
+        <span class="s2">&quot;NormIntInterface&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">NormIntInterface</span><span class="p">,</span>
         <span class="s2">&quot;AmplitudeManager&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">AmplitudeManager</span><span class="p">,</span>
         <span class="s2">&quot;ConfigFileParser&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ConfigFileParser</span><span class="p">,</span>
         <span class="s2">&quot;ConfigurationInfo&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ConfigurationInfo</span><span class="p">,</span>
@@ -469,7 +465,27 @@
     <span class="k">if</span> <span class="n">USE_GPU</span><span class="p">:</span>
         <span class="n">aliases</span><span class="p">[</span><span class="s2">&quot;GPUManager&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">GPUManager</span>
 
-    <span class="n">called_globals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">aliases</span><span class="p">)</span></div>
+    <span class="n">called_globals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">aliases</span><span class="p">)</span>
+    <span class="n">register_amps_dataio</span><span class="p">(</span><span class="n">called_globals</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="register_amps_dataio">
+<a class="viewcode-back" href="../../api/atiSetup.html#pyamptools.atiSetup.register_amps_dataio">[docs]</a>
+<span class="k">def</span> <span class="nf">register_amps_dataio</span><span class="p">(</span><span class="nb">globals</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;REGISTER OBJECTS FOR AMPTOOLS&quot;&quot;&quot;</span>
+    <span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;AmpToolsInterface&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;Zlm&quot;</span><span class="p">]())</span>
+    <span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;AmpToolsInterface&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;Vec_ps_refl&quot;</span><span class="p">]())</span>
+    <span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;AmpToolsInterface&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;OmegaDalitz&quot;</span><span class="p">]())</span>
+    <span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;AmpToolsInterface&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;BreitWigner&quot;</span><span class="p">]())</span>
+    <span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;AmpToolsInterface&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;Piecewise&quot;</span><span class="p">]())</span>
+    <span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;AmpToolsInterface&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;PhaseOffset&quot;</span><span class="p">]())</span>
+    <span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;AmpToolsInterface&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;TwoPiAngles&quot;</span><span class="p">]())</span>
+    <span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;AmpToolsInterface&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;Uniform&quot;</span><span class="p">]())</span>
+    <span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;AmpToolsInterface&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span><span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;DataReader&quot;</span><span class="p">]())</span>
+    <span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;AmpToolsInterface&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span><span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;DataReaderTEM&quot;</span><span class="p">]())</span>
+    <span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;AmpToolsInterface&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span><span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;DataReaderFilter&quot;</span><span class="p">]())</span>
+    <span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;AmpToolsInterface&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span><span class="nb">globals</span><span class="p">[</span><span class="s2">&quot;DataReaderBootstrap&quot;</span><span class="p">]())</span></div>
 
 
 

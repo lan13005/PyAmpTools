@@ -488,10 +488,6 @@
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid fit result in file: </span><span class="si">{</span><span class="n">fitFile</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">exit</span><span class="p">()</span>
 
-    <span class="c1">############## REGISTER OBJECTS FOR AMPTOOLS ##############</span>
-    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerAmplitude</span><span class="p">(</span><span class="n">Zlm</span><span class="p">())</span>
-    <span class="n">AmpToolsInterface</span><span class="o">.</span><span class="n">registerDataReader</span><span class="p">(</span><span class="n">DataReader</span><span class="p">())</span>
-
     <span class="c1">############## EXTRACT FIT FRACTIONS ##############</span>
     <span class="n">extract_ff</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">outfileName</span><span class="p">,</span> <span class="n">fmt</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">test_regex</span><span class="p">,</span> <span class="n">no_phases</span><span class="p">,</span> <span class="n">only</span><span class="p">,</span> <span class="n">regex_merge</span><span class="p">)</span>
 
