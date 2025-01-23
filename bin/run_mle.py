@@ -128,6 +128,9 @@ if __name__ == "__main__":
     search_format = yaml_file["amptools"]["search_format"]
     if search_format not in ["bin", "group"]:
         raise Exception("run_mle| search_format must be either 'bin' or 'group'")
+    if search_format == "group" and bins_per_group == 1:
+        search_format = "bin"
+        print("mle| search_format set to 'bin' since bins_per_group is 1 (no grouping...)")
 
     ###########################################
     # Perform MLE fit and extract fit fractions
