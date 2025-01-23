@@ -233,6 +233,7 @@ if __name__ == "__main__":
                             if line.startswith("reaction"):
                                 reactions.append(line.split(" ")[1].strip())
                     with open(cfg_path.format(k), "a") as f:
+                        f.write("\n") # do not assume that last line ended with a newline
                         for reaction in reactions:
                             f.write(f"normintfile {reaction} {output_directory}/bin_{k}/{reaction}.ni\n")
 
