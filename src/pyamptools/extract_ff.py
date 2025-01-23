@@ -159,10 +159,6 @@ def _cli_extract_ff():
         print(f"Invalid fit result in file: {fitFile}")
         exit()
 
-    ############## REGISTER OBJECTS FOR AMPTOOLS ##############
-    AmpToolsInterface.registerAmplitude(Zlm())
-    AmpToolsInterface.registerDataReader(DataReader())
-
     ############## EXTRACT FIT FRACTIONS ##############
     extract_ff(results, outfileName, fmt, args.test_regex, no_phases, only, regex_merge)
 

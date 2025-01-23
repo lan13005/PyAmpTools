@@ -204,10 +204,6 @@ def _cli_plotgen():
         print(f"Invalid fit result in file: {fitName}")
         exit()
 
-    ############## REGISTER OBJECTS FOR AMPTOOLS ##############
-    AmpToolsInterface.registerAmplitude(Zlm())
-    AmpToolsInterface.registerDataReader(DataReader())
-
     ############### PLOTTING TIME! ################
     print(" >> Loading FitResults into PlotGenerator...")
     # opt = PlotGenerator.Option

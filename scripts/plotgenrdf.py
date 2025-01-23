@@ -37,10 +37,6 @@ def _cli_plotgenrdf():
         print(f"Invalid fit result in file: {fit_results}")
         exit()
 
-    ############## REGISTER OBJECTS FOR AMPTOOLS ##############
-    AmpToolsInterface.registerAmplitude(Zlm())
-    AmpToolsInterface.registerDataReader(DataReader())
-
     ############### BOOKEEPING ################
     ## START WITH 1D HISTS SO WE CAN REUSE FUNCTION VALUES! ##
     ## FOR THIS EXAMPLE, WILL NOT INCLUDE 2D PLOTS SO WE CAN STACK 1D HISTS FOR FIT RESULTS ##
