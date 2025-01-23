@@ -60,6 +60,11 @@ source ~/.bashrc
 
 pa -h # to see usage of pa
 ```
+
+```{note}
+`vscode` works inside containers with `Remote - Containers` extension. Unfortunately, it does not work `apptainer`. I followed [this Github solution using ssh](https://github.com/oschulz/container-env) to get it working.  
+```
+
 # Additional Information
 
 ## Jupyter notebooks in VSCode
