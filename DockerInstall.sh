@@ -121,5 +121,5 @@ echo 'source /etc/profile.d/modules.sh' >> /etc/bash.bashrc && \
 echo 'module unload mpi && module load mpi' >> /etc/bash.bashrc && \
 echo 'source /root/conda/bin/activate' >> /etc/bash.bashrc && \
 echo 'conda activate pyamptools' >> /etc/bash.bashrc && \
-echo 'cd /app/PyAmpTools/ && source set_environment.sh && cd /app/PyAmpTools/' >> /etc/bash.bashrc && \
+echo 'cd /app/PyAmpTools/ && source set_environment.sh && cd -' >> /etc/bash.bashrc && \
 echo 'if [ -f /etc/bash.bashrc ]; then source /etc/bash.bashrc; fi' >> ~/.bashrc
