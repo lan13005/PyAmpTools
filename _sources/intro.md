@@ -42,12 +42,13 @@ source DockerInstall.sh
 ./DockerBuild.sh <GH_USERNAME> <GH_PAT> # github username and pat needed for now due to private repo access
 ```
 
-# Apptainer Usage
+## Apptainer Usage
 
 ```shell
 # /scratch needed for MPI and fontconfig for matplotlib(not so important)
-# NOTE: Do not bind ~
-apptainer exec --contain \
+# --writable-tmpfs allows temp modifications to sif contents. Ideally you can git pull and push updates changes to repos
+# --bind whatever directories you need access to
+apptainer exec --contain --writable-tmpfs \
     --bind /working/directory \
     --bind /data/directory \
     --bind /scratch \
@@ -60,6 +61,11 @@ source ~/.bashrc
 
 pa -h # to see usage of pa
 ```
+
+```{note}
+`vscode` works inside containers with `Remote - Containers` extension. Unfortunately, it does not work `apptainer`. I followed [this Github solution using ssh](https://github.com/oschulz/container-env) to get it working.  
+```
+
 # Additional Information
 
 ## Jupyter notebooks in VSCode

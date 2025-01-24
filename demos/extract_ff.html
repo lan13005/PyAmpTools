@@ -432,6 +432,10 @@ extract_ff(results, outfileName=&#39;&#39;, fmt=&#39;.5f&#39;, test_regex=False,
 </div>
 </div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">--regex_merge</span></code> takes at least one substitution pattern. Multiple patterns can be passed, i.e. the following two examples can be combined to produce two sets of coherent sums: <code class="docutils literal notranslate"><span class="pre">--regex_merge</span> <span class="pre">&quot;.*::(.*)::.*~&gt;\\1&quot;</span> <span class="pre">&quot;.*::.*::&quot;</span></code></p>
+</div>
 </section>
 <section id="example-1">
 <h2>Example 1<a class="headerlink" href="#example-1" title="Link to this heading">#</a></h2>

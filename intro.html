@@ -377,9 +377,9 @@
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-docker-image-developers">Build Docker Image (developers)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apptainer-usage">Apptainer Usage</a></li>
 </ul>
 </li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#apptainer-usage">Apptainer Usage</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-information">Additional Information</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jupyter-notebooks-in-vscode">Jupyter notebooks in VSCode</a></li>
 </ul>
@@ -438,12 +438,12 @@
 </pre></div>
 </div>
 </section>
-</section>
-<section class="tex2jax_ignore mathjax_ignore" id="apptainer-usage">
-<h1>Apptainer Usage<a class="headerlink" href="#apptainer-usage" title="Link to this heading">#</a></h1>
+<section id="apptainer-usage">
+<h2>Apptainer Usage<a class="headerlink" href="#apptainer-usage" title="Link to this heading">#</a></h2>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># /scratch needed for MPI and fontconfig for matplotlib(not so important)</span>
-<span class="c1"># NOTE: Do not bind ~</span>
-apptainer<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>--contain<span class="w"> </span><span class="se">\</span>
+<span class="c1"># --writable-tmpfs allows temp modifications to sif contents. Ideally you can git pull and push updates changes to repos</span>
+<span class="c1"># --bind whatever directories you need access to</span>
+apptainer<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>--contain<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--bind<span class="w"> </span>/working/directory<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--bind<span class="w"> </span>/data/directory<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--bind<span class="w"> </span>/scratch<span class="w"> </span><span class="se">\</span>
@@ -457,6 +457,11 @@ apptainer<span class="w"> </span><span class="nb">exec</span><span class="w"> </
 pa<span class="w"> </span>-h<span class="w"> </span><span class="c1"># to see usage of pa</span>
 </pre></div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">vscode</span></code> works inside containers with <code class="docutils literal notranslate"><span class="pre">Remote</span> <span class="pre">-</span> <span class="pre">Containers</span></code> extension. Unfortunately, it does not work <code class="docutils literal notranslate"><span class="pre">apptainer</span></code>. I followed <a class="reference external" href="https://github.com/oschulz/container-env">this Github solution using ssh</a> to get it working.</p>
+</div>
+</section>
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="additional-information">
 <h1>Additional Information<a class="headerlink" href="#additional-information" title="Link to this heading">#</a></h1>
@@ -562,9 +567,9 @@ pytest<span class="w"> </span>-k<span class="w"> </span><span class="o">[</span>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-docker-image-developers">Build Docker Image (developers)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apptainer-usage">Apptainer Usage</a></li>
 </ul>
 </li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#apptainer-usage">Apptainer Usage</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-information">Additional Information</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jupyter-notebooks-in-vscode">Jupyter notebooks in VSCode</a></li>
 </ul>
