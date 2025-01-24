@@ -57,7 +57,7 @@ apptainer exec --contain --writable-tmpfs \
     pyamptools.sif bash
 
 # INSIDE THE CONTAINER:
-source ~/.bashrc
+source /etc/bash.bashrc
 
 pa -h # to see usage of pa
 ```
