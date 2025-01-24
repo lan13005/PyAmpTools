@@ -335,6 +335,4 @@ reaction: Beam Proton Eta Pi0 Pi+ Pi-
 datareader: ROOTDataReaderTEM .1 .6 8.2 8.8 1.325 2.0
 add_amp_factor: OmegaDalitz 0.1212 0.0257 0.0 0.0
 append_to_decay: omega3pi
-amptools:
-    regex_merge: --regex_merge 'reaction_(000|045|090|135)::((Pos|Neg)(?:Im|Re)|BkgdIso)::'
 ```
