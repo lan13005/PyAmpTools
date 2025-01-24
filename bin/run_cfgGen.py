@@ -74,9 +74,9 @@ def generate_amptools_cfg(
     header=help_header,
     init_one_val=None,
     datareader="ROOTDataReader",
-    add_amp_factor=None,
-    append_to_cfg=None,
-    append_to_decay=None,
+    add_amp_factor='',
+    append_to_cfg='',
+    append_to_decay='',
 ):
     """
     Generate an AmpTools configuration file for a Zlm fit
@@ -416,9 +416,9 @@ def generate_amptools_cfg_from_dict(yaml_file):
             particles,
             header=help_header,
             datareader=yaml_file["datareader"],
-            add_amp_factor=yaml_file["add_amp_factor"].strip(),
-            append_to_cfg=yaml_file["append_to_cfg"].strip(),
-            append_to_decay=yaml_file["append_to_decay"].strip(),
+            add_amp_factor=yaml_file.get("add_amp_factor", "").strip(),
+            append_to_cfg=yaml_file.get("append_to_cfg", "").strip(),
+            append_to_decay=yaml_file.get("append_to_decay", "").strip(),
             init_one_val=yaml_file["init_one_val"],
         )
 
