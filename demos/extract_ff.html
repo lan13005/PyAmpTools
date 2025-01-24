@@ -407,23 +407,27 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">KeyError</span><span class="g g-Whitespace">                                  </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">line</span> <span class="mi">4</span>
-<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="kn">import</span> <span class="nn">os</span>
-<span class="g g-Whitespace">      </span><span class="mi">2</span> <span class="kn">from</span> <span class="nn">pyamptools.extract_ff</span> <span class="kn">import</span> <span class="n">extract_ff</span>
-<span class="ne">----&gt; </span><span class="mi">4</span> <span class="n">PYAMPTOOLS_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYAMPTOOLS_HOME&quot;</span><span class="p">]</span>
-<span class="g g-Whitespace">      </span><span class="mi">5</span> <span class="n">SRC</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PYAMPTOOLS_HOME</span><span class="si">}</span><span class="s2">/src/pyamptools&quot;</span>
-<span class="g g-Whitespace">      </span><span class="mi">6</span> <span class="n">fit_results</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PYAMPTOOLS_HOME</span><span class="si">}</span><span class="s2">/tests/samples/SIMPLE_EXAMPLE/result.fit&quot;</span>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Help on function extract_ff in module pyamptools.extract_ff:
 
-<span class="nn">File /w/halld-scshelf2101/lng/micromamba/envs/pyamptools/lib/python3.9/os.py:679,</span> in <span class="ni">_Environ.__getitem__</span><span class="nt">(self, key)</span>
-<span class="g g-Whitespace">    </span><span class="mi">676</span>     <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">encodekey</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span>
-<span class="g g-Whitespace">    </span><span class="mi">677</span> <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">678</span>     <span class="c1"># raise KeyError with the original key value</span>
-<span class="ne">--&gt; </span><span class="mi">679</span>     <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
-<span class="g g-Whitespace">    </span><span class="mi">680</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decodevalue</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-
-<span class="ne">KeyError</span>: &#39;PYAMPTOOLS_HOME&#39;
+extract_ff(results, outfileName=&#39;&#39;, fmt=&#39;.5f&#39;, test_regex=False, no_phases=False, only=None, regex_merge=None)
+    Extract fit fractions and phase differences between pairs of waves from a FitResults object.
+    
+    Args:
+        results (FitResults): FitResults object containing fit results
+        outfileName (str): Output root file name or dump to stdout if empty string
+        fmt (str): String format for printing numbers
+        test_regex (bool, optional): If True, only test and print regex grouping without calculating intensities
+        no_phases (bool, optional): If True, skip calculating phase differences
+        only (str, optional): Only dump fit fractions for &quot;acc&quot; or &quot;noacc&quot;. Default dumps both.
+        regex_merge (List[str], optional): List of regex pattern/replace pairs for merging amplitudes.
+            Pairs are separated by ~&gt;. The substitution happens for all amplitude names.
+            All amplitudes with same reduced name will be grouped into a list and a combined fit fraction
+            calculated. See AmpTools&#39; FitResults.intensity method.
+            Examples:
+                - &#39;.*::(.*)::.*~&gt;\1&#39;: Captures text between :: and replaces full match
+                - &#39;.*(.)$~&gt;\1&#39;: Captures last character and replaces full match
+                - &#39;.*reaction_(000|045|090|135)::(Pos|Neg)(?:Im|Re)::&#39;: Removes matched pattern,
+                  allowing grouping over polarizations and mirrored sums
 </pre></div>
 </div>
 </div>
@@ -465,6 +469,19 @@
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>pa fitfrac /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/result.fit --outputfileName /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/ff.txt --test_regex --regex_merge &#39;.*::(.*)::.*~&gt;\1&#39;
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   =================================================================
+   |        ^                                                      |
+   |       / \             Version:  v0.15.3-2-g0753-dirty         |
+   |      /---\                                                    |
+   |     /     \           GDouble:  8 bytes                       |
+   |    /       \ MP           MPI:  NO                            |
+   |     -------               GPU:  NO                            |
+   |        |                                                      |
+   |        |              doi.org/10.5281/zenodo.5039377          |
+   |        | OOLS                                                 |
+   =================================================================
 atiSetup| pa called python
 
 ------------------------------------------------
@@ -484,17 +501,6 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 ------------------------------------------------
 ------------------------------------------------
 
-   =================================================================
-   |        ^                                                      |
-   |       / \             Version:  v0.15.3-2-g0753-dirty         |
-   |      /---\                                                    |
-   |     /     \           GDouble:  8 bytes                       |
-   |    /       \ MP           MPI:  NO                            |
-   |     -------               GPU:  NO                            |
-   |        |                                                      |
-   |        |              doi.org/10.5281/zenodo.5039377          |
-   |        | OOLS                                                 |
-   =================================================================
 
 All Unique Amplitudes:
  -&gt; etapi::reZ::resAmp1
@@ -544,6 +550,19 @@ Merged Amplitude Groups based on regex sub: r&#39;.*::(.*)::.*&#39; -&gt; r&#39;
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>pa fitfrac /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/result.fit --outputfileName /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/ff.txt --test_regex --regex_merge &#39;.*::.*::&#39;
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   =================================================================
+   |        ^                                                      |
+   |       / \             Version:  v0.15.3-2-g0753-dirty         |
+   |      /---\                                                    |
+   |     /     \           GDouble:  8 bytes                       |
+   |    /       \ MP           MPI:  NO                            |
+   |     -------               GPU:  NO                            |
+   |        |                                                      |
+   |        |              doi.org/10.5281/zenodo.5039377          |
+   |        | OOLS                                                 |
+   =================================================================
 atiSetup| pa called python
 
 ------------------------------------------------
@@ -563,17 +582,6 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 ------------------------------------------------
 ------------------------------------------------
 
-   =================================================================
-   |        ^                                                      |
-   |       / \             Version:  v0.15.3-2-g0753-dirty         |
-   |      /---\                                                    |
-   |     /     \           GDouble:  8 bytes                       |
-   |    /       \ MP           MPI:  NO                            |
-   |     -------               GPU:  NO                            |
-   |        |                                                      |
-   |        |              doi.org/10.5281/zenodo.5039377          |
-   |        | OOLS                                                 |
-   =================================================================
 
 All Unique Amplitudes:
  -&gt; etapi::reZ::resAmp1

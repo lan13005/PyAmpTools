@@ -390,25 +390,29 @@
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Welcome to JupyROOT 6.28/06
+atiSetup| jupyter-book called python
+
+------------------------------------------------
+atiSetup| MPI is disabled
+atiSetup| GPU is disabled
+------------------------------------------------
+
+
+atiSetup| Loading library libIUAmpTools.so ............  ON
+atiSetup| Loading library libAmpTools.so ..............  ON
+atiSetup| Loading library libAmpPlotter.so ............
 </pre></div>
 </div>
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">KeyError</span><span class="g g-Whitespace">                                  </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">line</span> <span class="mi">7</span>
-<span class="g g-Whitespace">      </span><span class="mi">4</span> <span class="kn">from</span> <span class="nn">pyamptools</span> <span class="kn">import</span> <span class="n">atiSetup</span>
-<span class="g g-Whitespace">      </span><span class="mi">5</span> <span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span>
-<span class="ne">----&gt; </span><span class="mi">7</span> <span class="n">PYAMPTOOLS_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYAMPTOOLS_HOME&quot;</span><span class="p">]</span>
-<span class="g g-Whitespace">      </span><span class="mi">8</span> <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="g g-Whitespace">      </span><span class="mi">9</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ROOT</span><span class="o">.</span><span class="n">EnableImplicitMT</span><span class="p">()</span>  <span class="c1"># REMOVE THIS WHEN DEBUGGING</span>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  ON
+atiSetup| Loading library libAmpsDataIO.so ............  ON
+atiSetup| Loading library libFSRoot.so ................  ON
+atiSetup| Loading library libAmpsGen.so ...............  OFF
 
-<span class="nn">File /w/halld-scshelf2101/lng/micromamba/envs/pyamptools/lib/python3.9/os.py:679,</span> in <span class="ni">_Environ.__getitem__</span><span class="nt">(self, key)</span>
-<span class="g g-Whitespace">    </span><span class="mi">676</span>     <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">encodekey</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span>
-<span class="g g-Whitespace">    </span><span class="mi">677</span> <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">678</span>     <span class="c1"># raise KeyError with the original key value</span>
-<span class="ne">--&gt; </span><span class="mi">679</span>     <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
-<span class="g g-Whitespace">    </span><span class="mi">680</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decodevalue</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
-<span class="ne">KeyError</span>: &#39;PYAMPTOOLS_HOME&#39;
+------------------------------------------------
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
 </pre></div>
 </div>
 </div>
@@ -536,13 +540,28 @@
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Loaded data into PlotGenerator...
- &gt;&gt; Plotting waveset: all
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: all
  &gt;&gt;   Keeping all amplitudes: { &quot;resAmp1&quot;, &quot;resAmp2&quot;, &quot;resAmp3&quot; }
- &gt;&gt; Plotting waveset: resAmp1
- &gt;&gt; Plotting waveset: resAmp2
- &gt;&gt; Plotting waveset: resAmp3
- &gt;&gt; Plotting waveset: resAmp1;resAmp2
-	Creating AmplitudeManager for the reaction:  etapi
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: resAmp1
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: resAmp2
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: resAmp3
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> &gt;&gt; Plotting waveset: resAmp1;resAmp2
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>	Creating AmplitudeManager for the reaction:  etapi
 		 particle index assignment:  Beam -&gt; 0
 		 particle index assignment:  Proton -&gt; 1
 		 particle index assignment:  Eta -&gt; 2
