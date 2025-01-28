@@ -202,6 +202,6 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
     if len(missing_tm) > 0:
         print("\nloadAmpToolsResults did not collect the correct number of masses/tPrimes, perhaps mle_queries are too strict?")
         print(f"  --> Missing bin indices: {absolute_idxs}")
-        raise ValueError("Some kinematic bins had no converged MLE fits. See logs. Exiting...")
+        raise ValueError("Some kinematic bins had no converged MLE fits. This could be due to the YAML `mle_query_1` and `mle_query_2` could be too restrictive. Exiting...")
 
     return df

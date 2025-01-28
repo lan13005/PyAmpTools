@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
     nBins = n_mass_bins * n_t_bins
     if nBins % bins_per_group != 0:
-        raise ValueError(f"Number of bins ({nBins}) is not divisible by bins_per_group ({bins_per_group})")
+        raise ValueError(f"Number of bins ({nBins}) is not divisible by `bins_per_group` ({bins_per_group}). Please choose a different value for `bins_per_group` in your YAML file")
 
     try_split_mass = not args.nosplit
     try_merge_bins = not args.nomerge

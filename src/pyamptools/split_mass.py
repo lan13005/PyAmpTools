@@ -27,7 +27,7 @@ def process_bin(i, j, branches, digitized_bins, digitized_t_bins, nBins, outputB
     nevents = ak.sum((digitized_bins == i) & (digitized_t_bins == j))
 
     if nevents == 0:
-        raise ValueError(f"No events in bin (massBin={i}, tBin={j}). Currently we cannot proceed with empty bins for fitting")
+        raise ValueError(f"No events in bin (massBin={i}, tBin={j}). Currently we cannot proceed with empty bins. Please modify your mass and t ranges and binning!")
 
     output_data = {name: events_in_bin[name] for name in branches.fields}
 

@@ -70,15 +70,16 @@ if __name__ == "__main__":
 
     # ############################################################################
     # STEP 1) Ask AmpTools to dump ampvecs and normint to a ROOT file and a text file respectively
+    _verbose = False # instead of CLI verbose. There is not much useful information dumped by AmpTools in this process so hard code a False
     if args.ncores > 1:
         print(f"\nProcessing {len(cfgfiles)} config files using {args.ncores} processes...\n")
-        pool_args = [(cfgfile, verbose) for cfgfile in cfgfiles]
+        pool_args = [(cfgfile, _verbose) for cfgfile in cfgfiles]
         with Pool(args.ncores) as p:
             p.map(extract_normint_ampvecs, pool_args)
     else:
         print(f"\nProcessing {len(cfgfiles)} config files...\n")
         for cfgfile in cfgfiles:
-            extract_normint_ampvecs( (cfgfile, verbose) )
+            extract_normint_ampvecs( (cfgfile, _verbose) )
     print("\nAll config files have been processed!")
 
     ############################################################################
@@ -86,7 +87,7 @@ if __name__ == "__main__":
     print("\nRestructuring processed files into arrays and saving to pkl files")
     print("  This step cannot use multiple processes...")
     restructured_amps = restructure_amps(yaml_file, treename="kin", include_accmc=args.include_accmc, include_genmc=args.include_genmc)
-    restructued_normints = restructure_normints(yaml_file)
+    restructued_normints = restructure_normints(yaml_file, verbose=verbose)
     print(f"\nElapsed time: {time() - start_time:.2f} seconds\n")
 
 # intensityManager = ati.intensityManager(reactions[0].reactionName())

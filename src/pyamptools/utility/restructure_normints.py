@@ -133,7 +133,7 @@ def restructure_files(
     
     return reactions, nGens, nAccs, nterms, terms, ampIntss, normIntss
 
-def restructure_normints(yaml_file):
+def restructure_normints(yaml_file, verbose=False):
 
     ############################################
     base_directory = yaml_file["base_directory"]
@@ -164,12 +164,12 @@ def restructure_normints(yaml_file):
         raise ValueError("No normint files found! Your search string: ", searchFmt)
 
     normint_files = np.array(normint_files)
-    reactions, nGens, nAccs, nterms, terms, ampIntss, normIntss = restructure_files(normint_files, oshape)
+    reactions, nGens, nAccs, nterms, terms, ampIntss, normIntss = restructure_files(normint_files, oshape, verbose=verbose)
     normint_files = normint_files.reshape(*oshape, order='F')
 
     polScales = np.full(oshape, 1.0)
 
-    unique_sums = [tuple(x.split(".")[:2]) for x in terms]
+    unique_sums = [tuple(x.split(".")[:2]) for x in terms] # drop Amp name in Reaction::Sum::Amp AmpTools naming convention
     m_sumCoherently = coherenceMatrix(unique_sums)
 
     with open(f"{base_directory}/normint.pkl", "wb") as f:
@@ -185,6 +185,20 @@ def restructure_normints(yaml_file):
             "normint_files": normint_files,
             "polScales": polScales
         }
+        if verbose:
+            print("\n\n=========== SUMMARY OF EVENT PROCESSING (TO EXTRACT AMPVECS AND NORMINTS) ====================")
+            print(f"reactions (nmbReactions, nmbMasses, nmbTprimes): {reactions.shape}")
+            print(f"nGens (nmbReactions, nmbMasses, nmbTprimes): {nGens.shape}")
+            print(f"nAccs (nmbReactions, nmbMasses, nmbTprimes): {nAccs.shape}")
+            print(f"nTerms: {nterms}")
+            print(f"terms: {terms}")
+            print(f"m_sumCoherently (Coherence matrix for terms): \n{np.array(m_sumCoherently)}")
+            print(f"ampIntss (nmbReactions, nmbMasses, nmbTprimes, nterms, nterms): {ampIntss.shape}")
+            print(f"normIntss (nmbReactions, nmbMasses, nmbTprimes, nterms, nterms): {normIntss.shape}")
+            print(f"normint_files (nmbReactions, nmbMasses, nmbTprimes): {normint_files.shape}")
+            print(f"polScales (nmbReactions, nmbMasses, nmbTprimes): {polScales.shape}")
+            print("\n\n")
+
         pickle.dump(data, f)
 
     print(f"\nSaved normint.pkl to {base_directory}")
@@ -193,9 +207,10 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Restructure normalization integrals')
     parser.add_argument('yaml', type=str, help='yaml file with paths')
+    parser.add_argument('--verbose', action='store_true', help='print verbose output')
 
     args = parser.parse_args()
     yaml = args.yaml
     yaml_file = OmegaConf.load(yaml)
 
-    restructure_normints(yaml_file)
+    restructure_normints(yaml_file, verbose=True)
