@@ -247,7 +247,7 @@ OPTIMIZATION:
     nSamples: [[1, 0], [4, 5], 25] # (int) Runs 0 sampling (point estimate) for 1 global iteration, 5 samples for next 4 global iterations, 25 samples for all remaining global iterations
     nIterGlobal: 1 # (int) number of global iterations to run NIFTy optimize_kl for
     nMultiStart: 0 # (int) number of multiple restarts to perform (each only a fixed single global iteration) that optimizes multiStartObjective. This pair of keys allows a cheap search over initial conditions
-    multiStartObjective: "maximize|Dp2+_fit_intens" # (str) pipe separated direction|quantity to select best starting condition. i.e. "minimize|energy" will choose the minimum energy (KL divergence/ELBO/Loss/Cost)
+    multiStartObjective: "minimize|energy" # (str) pipe separated direction|quantity to select best starting condition. i.e. "maximize|Dp2+_fit_intens" maximizes the intensity of the Dp2+ amplitude
     
     # KL Minimizer
     algoOptKL: LBFGS # (string) algorithm
