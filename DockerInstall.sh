@@ -115,11 +115,12 @@ make mpi
 echo 'alias ls="ls --color=auto"' >> /etc/bash.bashrc && \
 echo 'alias ll="ls -l --color=auto"' >> /etc/bash.bashrc && \
 echo 'alias st="git status"' >> /etc/bash.bashrc && \
-echo 'alias log="git log --graph --abbrev-commit --decorate --format=format:'"'"'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)'"'"' --all"' >> /etc/bash.bashrc && \
+echo 'alias log="git log --graph --abbrev-commit --decorate --format=format:'"'"'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)'"'"'"' >> /etc/bash.bashrc && \
+echo 'alias loga="git log --graph --abbrev-commit --decorate --format=format:'"'"'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)'"'"' --all"' >> /etc/bash.bashrc && \
 echo 'alias root="root -l"' >> /etc/bash.bashrc && \
 echo 'source /etc/profile.d/modules.sh' >> /etc/bash.bashrc && \
 echo 'module unload mpi && module load mpi' >> /etc/bash.bashrc && \
-echo 'source /root/conda/bin/activate' >> /etc/bash.bashrc && \
+echo 'source /opt/conda/bin/activate' >> /etc/bash.bashrc && \
 echo 'conda activate pyamptools' >> /etc/bash.bashrc && \
-echo 'cd /app/PyAmpTools/ && source set_environment.sh && cd -' >> /etc/bash.bashrc && \
+echo 'OLD_DIR=$(pwd) && cd /app/PyAmpTools/ && source set_environment.sh && cd "$OLD_DIR"' >> /etc/bash.bashrc && \
 echo 'if [ -f /etc/bash.bashrc ]; then source /etc/bash.bashrc; fi' >> ~/.bashrc

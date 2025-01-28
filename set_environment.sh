@@ -104,8 +104,8 @@ export FSROOT=$PYAMPTOOLS_HOME/external/FSRoot
 
 ## Load Generator library if external/AMPTOOLS_GENERATORS was built
 if [ -d "$PYAMPTOOLS_HOME/external/AMPTOOLS_GENERATORS/ccdb" ]; then
-    # export CCDB_HOME=$PYAMPTOOLS_HOME/external/AMPTOOLS_GENERATORS/ccdb
-    # source $CCDB_HOME/environment.bash
+    export CCDB_HOME=$PYAMPTOOLS_HOME/external/AMPTOOLS_GENERATORS/ccdb
+    source $CCDB_HOME/environment.bash
     export LD_LIBRARY_PATH=$PYAMPTOOLS_HOME/external/AMPTOOLS_GENERATORS:$LD_LIBRARY_PATH
 fi
 
