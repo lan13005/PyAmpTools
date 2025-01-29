@@ -9,8 +9,12 @@ Q := @
 all: build
 
 # Build the Jupyter Book
+# CCDB uses a different sqlalchemy version which gets appended into PYTHONPATH. We have to remove it to avoid conflicts
+#    We run in a subshell to avoid changing the user's PYTHONPATH
 build:
 	@echo "Building Jupyter Book..."
+	@PYTHONPATH=$$(echo $$PYTHONPATH | tr ':' '\n' | grep -v 'ccdb/' | tr '\n' ':' | sed 's/:$$//'); \
+	export PYTHONPATH; \
 	jupyter-book build $(BOOK_DIR)
 
 push:
