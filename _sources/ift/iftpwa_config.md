@@ -72,6 +72,10 @@ bkgnd090.root # (optional) background MC datasets for each polarization
 bkgnd135.root # (optional) background MC datasets for each polarization
 ```
 
+```{note}
+NIFTy results are regularized so it is able to handle finer kinematic binning than binned MLE fits. To bridge the two, we can initially bin finely then regroup nearby bins for AmpTools by specifying the `amptools.bins_per_group` key. This key must be a divisor of `n_mass_bins`. For the default settings below, we double the bins NIFTy sees over what AmpTools sees.
+```
+
 ```yaml
 # EXAMPLE: pyamptools.yaml
 defaults_location: null # [Ignore] feature not yet implemented
@@ -83,7 +87,7 @@ polarizations:
     '090': 0.3303
     '135': 0.3375
 waveset: Dm1-_Dm2-_Dp0-_Dp1-_Dp2-_Sp0-_Dm1+_Dm2+_Dp0+_Dp1+_Dp2+_Sp0+_Pm1+_Pp0+_Pp1+_Pm1-_Pp0-_Pp1- # (string) all the waves to consider
-phase_reference: Dp2+_Dm1- # (string) use these phase references when making plots
+phase_reference: Dp2+_Dm1- # (string) use these phase references when making plots. A single wave must be provided for each incoherent sector (e.g. +/- reflectivity state) which will be used as the reference for all plotted waves in that sector
 reaction: Beam Proton Pi0 Eta # AmpTools reaction scheme
 daughters: # Define daughter particles and masses. NOTE: phase space calculation will crash ndaughters !=2. In this case, set phaseSpaceMultiplier to null and do not call `pa calc_ps` later on
     Pi0: 0.135 # (float) mass of the daughter particle 1
@@ -95,9 +99,9 @@ n_mass_bins: 80 # (int) number of mass bins
 min_t: 0.1 # (float) minimum transfer momentum 
 max_t: 1.0 # (float) maximum transfer momentum
 n_t_bins: 1 # (int) number of t bins
-init_one_val: null # (float) all amplitudes are initialized to this value for AmpTools
+init_one_val: null # (float) all amplitudes are initialized to this value for AmpTools configuration file
 datareader: ROOTDataReader # (string) AmpTools data reader to use
-coordinate_system: cartesian # (string) coordinate system to use: {cartesian, polar}
+coordinate_system: cartesian # (string) coordinate system to use: {cartesian, polar}. 'polar' likely will not work.
 real_waves: '' # (string) same form as waveset, define which waves are purely real
 fixed_waves: '' # (string) same form as waveset, define which waves are fixed
 add_amp_factor: '' # (string) Add an amplitude factor to every amplitude. For example, OmegaDalitz 0.1212 0.0257 0.0 0.0 will create a factor for the dalitz decay of the omega
@@ -112,7 +116,7 @@ amptools: # Configure AmpTools
     bins_per_group: 2 # (int) regrouping number, iftpwa uses finer bins than AmpTools. Must be divisible by n_mass_bins!
     merge_grouped_trees: true # (bool) remerge the trees in each group
     constrain_grouped_production: false # (bool) if not remerging, we have the choice of constraining the amplitudes in each bin of a group to be the same
-    regex_merge: --regex_merge '.*reaction_(000|045|090|135)::(Pos|Neg)(?:Im|Re)::' # (string) `pa fitfrac` argument to calculate fit fractions for certain coherent sums following this replacement pattern. See demos/extract_ff.ipynb for more information
+    regex_merge: --regex_merge '.*reaction_(000|045|090|135)::(Pos|Neg)(?:Im|Re)::' # (string) `pa fitfrac` argument to calculate fit fractions for certain coherent sums following this replacement pattern. See demos/extract_ff.ipynb for more information on the usage
     prepare_for_nifty: true # (bool) iftpwa require fixed scales between datasets (i.e. polarized datasets). This will modify AmpTools config to handle this
     n_processes: 20 # (int) pool of processes to analyze all the amptools fits. MLE fits are quite cheap so this does not have to be large
 nifty: # Configure NIFTy
@@ -136,6 +140,10 @@ nifty: # Configure NIFTy
 ```
 
 ### IFTPWA Configuration
+
+```{note}
+NIFTy provides [Metric Gaussian Variational Inference](https://arxiv.org/abs/1901.11033) and [Geometric Variational Inference](https://arxiv.org/abs/2105.10470) methods for optimization. Both of these approaches alternate between optimizing the KL divergence for a specific shape of the variational posterior and updating the shape of the variational posterior, see [here](https://github.com/NIFTy-PPL/NIFTy?tab=readme-ov-file). A *global iteration* (see `nIterGlobal` key below) is complete when both optimization steps conclude. Some reshaping of the posterior is performed to make it more Gaussian-like for more effective inference.
+```
 
 ```yaml
 # EXAMPLE: iftpwa.yaml
@@ -231,8 +239,8 @@ PARAMETRIC_MODEL:
     - a2_1700:
         name: "$a_2(1700)$"
         fun: "breitwigner_dyn"
-        preScale: 5 # 0.25
-        no_bkg: false # true
+        preScale: 5
+        no_bkg: false
         paras: {"mass": m_a2_1700, "width": w_a2_1700}
         static_paras: {"spin": 2, "mass1": 0.548, "mass2": 0.135}
         waves: ['Dm2-', 'Dm1-', 'Dp0-', 'Dp1-', 'Dp2-', 'Dm2+', 'Dm1+', 'Dp0+', 'Dp1+', 'Dp2+']
@@ -244,7 +252,7 @@ PARAMETRIC_MODEL:
 # Some parameters takes a list of lists which dictate the number of global iterations in a given setting
 #   See iftpwa/src/scripts/iftpwa_fit.py for calls to `makeCallableSimple` for parameters with this style
 OPTIMIZATION:
-    nSamples: [[1, 0], [4, 5], 25] # (int) Runs 0 sampling (point estimate) for 1 global iteration, 5 samples for next 4 global iterations, 25 samples for all remaining global iterations
+    nSamples: [[1, 0], [4, 5], 25] # (int) Runs 1 global iteration with 0 samples (point estimate), then 4 global iterations with 5 samples each, then 25 samples for all remaining global iterations
     nIterGlobal: 1 # (int) number of global iterations to run NIFTy optimize_kl for
     nMultiStart: 0 # (int) number of multiple restarts to perform (each only a fixed single global iteration) that optimizes multiStartObjective. This pair of keys allows a cheap search over initial conditions
     multiStartObjective: "minimize|energy" # (str) pipe separated direction|quantity to select best starting condition. i.e. "maximize|Dp2+_fit_intens" maximizes the intensity of the Dp2+ amplitude

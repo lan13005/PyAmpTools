@@ -372,7 +372,6 @@
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#information-field-theory-for-partial-wave-analysis-iftpwa">Information Field Theory for Partial Wave Analysis (iftpwa)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#design-requirements">Design Requirements</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#optimization">Optimization</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
 </ul>
 </li>
@@ -406,11 +405,7 @@
 <li><p>complex valued parameters</p></li>
 <li><p>modular and extensible / collaboration agnostic</p></li>
 </ul>
-<p>This led to the development of the Information Field Theory for Partial Wave Analysis (iftpwa) package by Florian Kaspar (et al.) at the Technical University of Munich (TUM) with support from the Max Planck Institute for Astrophysics (MPA), which develops the Numerical Information Field Theory (NIFTy) probabilistic programming framework for Bayesian inference. GlueX later joined in on the project which I am a part of as of this writing.</p>
-<section id="optimization">
-<h3>Optimization<a class="headerlink" href="#optimization" title="Link to this heading">#</a></h3>
-<p>NIFTy provides <a class="reference external" href="https://arxiv.org/abs/1901.11033">Metric Gaussian Variational Inference</a> and <a class="reference external" href="https://arxiv.org/abs/2105.10470">Geometric Variational Inference</a> methods for optimization. Both of these approaches alternate between KL optimization for a specific shape of the variational posterior and updating the shape of the variational posterior. A <em>global iteration</em> is complete when both optimization steps conclude. Some reshaping of the posterior is performed to make it more Gaussian-like for more effective inference.</p>
-</section>
+<p>This led to the development of the Information Field Theory for Partial Wave Analysis (iftpwa) package by Florian Kaspar (et al.) at the Technical University of Munich (TUM) with support from the Max Planck Institute for Astrophysics (MPA), which develops the Numerical Information Field Theory (NIFTy) probabilistic programming framework for Bayesian inference. GlueX later joined in on the project which I am a part of as of this writing. GlueX uses a polarized photon beam which allows access to additional information on the reaction dynamics. This additional information comes at the cost of increased complexity in the analysis and can lead to unstable results using traditional methods which Bayesian methods like NIFTy could help regulate.</p>
 <section id="references">
 <h3>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h3>
 <ul class="simple">
@@ -488,7 +483,6 @@
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#information-field-theory-for-partial-wave-analysis-iftpwa">Information Field Theory for Partial Wave Analysis (iftpwa)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#design-requirements">Design Requirements</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#optimization">Optimization</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
 </ul>
 </li>
