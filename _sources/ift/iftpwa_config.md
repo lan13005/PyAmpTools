@@ -56,7 +56,9 @@ Below are the default YAML configurations for GlueX analyses of $\gamma p \right
 
 ### PyAmpTools Configuration
 
-`PyAmpTools` enforces a specific format for how to name amplitudes given some quantum numbers (stored as a dictionary in `pyamptools/src/utilities/general.py`). It also expects several files in the directory specfied in the `data_folder` YAML key with specific naming conventions also. This restriction allows `PyAmpTools` to bin the data sources and generate a configuration file for each bin that `AmpTools` can use. `iftpwa` can handle much finer kinematic bins than AmpTools due to the prior's regularization effect. To account for this, we split the data into fine bins, usable by `iftpwa`, then regroup the data bins into coarser bins for `AmpTools`.
+`PyAmpTools` enforces a specific format for how to name amplitudes given some quantum numbers (stored as a dictionary in `pyamptools/src/utilities/general.py`). It also expects several files in the directory specfied in the `data_folder` YAML key with specific naming conventions also. This restriction allows `PyAmpTools` to bin the data sources and generate a configuration file for each bin that `AmpTools` can use. 
+
+`iftpwa` can handle much finer kinematic bins than AmpTools due to the prior's regularization effect. To account for this, we split the data into finer bins, usable by `iftpwa`, then regroup the data bins into coarser bins for `AmpTools` see `amptools.bins_per_group` key below.
 
 ```yaml
 # Example data folder structure
@@ -70,10 +72,6 @@ bkgnd000.root # (optional) background MC datasets for each polarization
 bkgnd045.root # (optional) background MC datasets for each polarization
 bkgnd090.root # (optional) background MC datasets for each polarization
 bkgnd135.root # (optional) background MC datasets for each polarization
-```
-
-```{note}
-NIFTy results are regularized so it is able to handle finer kinematic binning than binned MLE fits. To bridge the two, we can initially bin finely then regroup nearby bins for AmpTools by specifying the `amptools.bins_per_group` key. This key must be a divisor of `n_mass_bins`. For the default settings below, we double the bins NIFTy sees over what AmpTools sees.
 ```
 
 ```yaml
@@ -141,9 +139,7 @@ nifty: # Configure NIFTy
 
 ### IFTPWA Configuration
 
-```{note}
-NIFTy provides [Metric Gaussian Variational Inference](https://arxiv.org/abs/1901.11033) and [Geometric Variational Inference](https://arxiv.org/abs/2105.10470) methods for optimization. Both of these approaches alternate between optimizing the KL divergence for a specific shape of the variational posterior and updating the shape of the variational posterior, see [here](https://github.com/NIFTy-PPL/NIFTy?tab=readme-ov-file). A *global iteration* (see `nIterGlobal` key below) is complete when both optimization steps conclude. Some reshaping of the posterior is performed to make it more Gaussian-like for more effective inference.
-```
+NIFTy provides [Metric Gaussian Variational Inference](https://arxiv.org/abs/1901.11033) and [Geometric Variational Inference](https://arxiv.org/abs/2105.10470) methods for optimization. Both of these approaches alternate between optimizing the KL divergence for a specific shape of the variational posterior and updating the shape of the variational posterior, see [here](https://github.com/NIFTy-PPL/NIFTy?tab=readme-ov-file). A **global iteration** (see `nIterGlobal` key below) is complete when both optimization steps conclude. Some reshaping of the posterior is performed to make it more Gaussian-like for more effective inference.
 
 ```yaml
 # EXAMPLE: iftpwa.yaml

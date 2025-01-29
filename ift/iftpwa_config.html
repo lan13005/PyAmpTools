@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css?v=be8a1c11" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -450,7 +450,8 @@ A_i(m, t) = \kappa \cdot \rho_i \cdot C_i \cdot \Big[
 </div>
 <section id="pyamptools-configuration">
 <h3>PyAmpTools Configuration<a class="headerlink" href="#pyamptools-configuration" title="Link to this heading">#</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">PyAmpTools</span></code> enforces a specific format for how to name amplitudes given some quantum numbers (stored as a dictionary in <code class="docutils literal notranslate"><span class="pre">pyamptools/src/utilities/general.py</span></code>). It also expects several files in the directory specfied in the <code class="docutils literal notranslate"><span class="pre">data_folder</span></code> YAML key with specific naming conventions also. This restriction allows <code class="docutils literal notranslate"><span class="pre">PyAmpTools</span></code> to bin the data sources and generate a configuration file for each bin that <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> can use. <code class="docutils literal notranslate"><span class="pre">iftpwa</span></code> can handle much finer kinematic bins than AmpTools due to the prior’s regularization effect. To account for this, we split the data into fine bins, usable by <code class="docutils literal notranslate"><span class="pre">iftpwa</span></code>, then regroup the data bins into coarser bins for <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">PyAmpTools</span></code> enforces a specific format for how to name amplitudes given some quantum numbers (stored as a dictionary in <code class="docutils literal notranslate"><span class="pre">pyamptools/src/utilities/general.py</span></code>). It also expects several files in the directory specfied in the <code class="docutils literal notranslate"><span class="pre">data_folder</span></code> YAML key with specific naming conventions also. This restriction allows <code class="docutils literal notranslate"><span class="pre">PyAmpTools</span></code> to bin the data sources and generate a configuration file for each bin that <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> can use.</p>
+<p><code class="docutils literal notranslate"><span class="pre">iftpwa</span></code> can handle much finer kinematic bins than AmpTools due to the prior’s regularization effect. To account for this, we split the data into finer bins, usable by <code class="docutils literal notranslate"><span class="pre">iftpwa</span></code>, then regroup the data bins into coarser bins for <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> see <code class="docutils literal notranslate"><span class="pre">amptools.bins_per_group</span></code> key below.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example data folder structure</span>
 <span class="l l-Scalar l-Scalar-Plain">accmc.root</span><span class="w"> </span><span class="c1"># shares this acceptance MC dataset for all polarizations</span>
 <span class="l l-Scalar l-Scalar-Plain">data000.root</span><span class="w"> </span><span class="c1"># data MC datasets for each polarization</span>
@@ -463,10 +464,6 @@ A_i(m, t) = \kappa \cdot \rho_i \cdot C_i \cdot \Big[
 <span class="l l-Scalar l-Scalar-Plain">bkgnd090.root</span><span class="w"> </span><span class="c1"># (optional) background MC datasets for each polarization</span>
 <span class="l l-Scalar l-Scalar-Plain">bkgnd135.root</span><span class="w"> </span><span class="c1"># (optional) background MC datasets for each polarization</span>
 </pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>NIFTy results are regularized so it is able to handle finer kinematic binning than binned MLE fits. To bridge the two, we can initially bin finely then regroup nearby bins for AmpTools by specifying the <code class="docutils literal notranslate"><span class="pre">amptools.bins_per_group</span></code> key. This key must be a divisor of <code class="docutils literal notranslate"><span class="pre">n_mass_bins</span></code>. For the default settings below, we double the bins NIFTy sees over what AmpTools sees.</p>
 </div>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># EXAMPLE: pyamptools.yaml</span>
 <span class="nt">defaults_location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"> </span><span class="c1"># [Ignore] feature not yet implemented</span>
@@ -533,10 +530,7 @@ A_i(m, t) = \kappa \cdot \rho_i \cdot C_i \cdot \Big[
 </section>
 <section id="iftpwa-configuration">
 <h3>IFTPWA Configuration<a class="headerlink" href="#iftpwa-configuration" title="Link to this heading">#</a></h3>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>NIFTy provides <a class="reference external" href="https://arxiv.org/abs/1901.11033">Metric Gaussian Variational Inference</a> and <a class="reference external" href="https://arxiv.org/abs/2105.10470">Geometric Variational Inference</a> methods for optimization. Both of these approaches alternate between optimizing the KL divergence for a specific shape of the variational posterior and updating the shape of the variational posterior, see <a class="reference external" href="https://github.com/NIFTy-PPL/NIFTy?tab=readme-ov-file">here</a>. A <em>global iteration</em> (see <code class="docutils literal notranslate"><span class="pre">nIterGlobal</span></code> key below) is complete when both optimization steps conclude. Some reshaping of the posterior is performed to make it more Gaussian-like for more effective inference.</p>
-</div>
+<p>NIFTy provides <a class="reference external" href="https://arxiv.org/abs/1901.11033">Metric Gaussian Variational Inference</a> and <a class="reference external" href="https://arxiv.org/abs/2105.10470">Geometric Variational Inference</a> methods for optimization. Both of these approaches alternate between optimizing the KL divergence for a specific shape of the variational posterior and updating the shape of the variational posterior, see <a class="reference external" href="https://github.com/NIFTy-PPL/NIFTy?tab=readme-ov-file">here</a>. A <strong>global iteration</strong> (see <code class="docutils literal notranslate"><span class="pre">nIterGlobal</span></code> key below) is complete when both optimization steps conclude. Some reshaping of the posterior is performed to make it more Gaussian-like for more effective inference.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># EXAMPLE: iftpwa.yaml</span>
 <span class="nt">GENERAL</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">pwa_manager</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">GLUEX</span>
