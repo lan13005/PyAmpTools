@@ -63,6 +63,8 @@ def loadAmpToolsResultsFromYaml(yaml):
     # No support for multiple fits per bin, choose best
     mle_query_1 = yaml['amptools'].get('mle_query_1', '')
     mle_query_2 = yaml['amptools'].get('mle_query_2', '')
+    if mle_query_1 is None: mle_query_1 = ''
+    if mle_query_2 is None: mle_query_2 = ''
     n_randomizations = yaml['amptools']['n_randomizations']
     accCorrect = yaml['acceptance_correct']
     # print(f"Loading {len(cfgfiles)} fits...")
