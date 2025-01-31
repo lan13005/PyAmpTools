@@ -80,6 +80,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     yaml_name = args.yaml_name
     additional_args = args.additional_args
+    
+    if '-v' in args.additional_args or '--verbose' in args.additional_args:
+        raise ValueError("verbose flag has to be before positional argument! Example pa run_ift -v pyamptools.yaml")
 
     logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING, format='%(asctime)s| %(message)s', datefmt='%H:%M:%S')
     logger = logging.getLogger(__name__)
@@ -125,7 +128,8 @@ if __name__ == "__main__":
     dump_yaml(dest_yaml, ".nifty.yaml") # Create "synchronized" yaml file
     if output_directory is not None and not os.path.exists(output_directory):
         os.makedirs(output_directory)
-    os.system(f"cp {yaml_name} {output_directory}/.{yaml_name}") # Copy the source yaml file to the output directory
+    logger.info(f"Copying {yaml_name} to {output_directory}/.{os.path.basename(yaml_name)}")
+    os.system(f"cp {yaml_name} {output_directory}/.{os.path.basename(yaml_name)}") # Copy the source yaml file to the output directory
 
     mpi_processes = src_yaml['nifty']['mpi_processes'] if 'mpi_processes' in src_yaml['nifty'] else None
 
