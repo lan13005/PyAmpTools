@@ -106,7 +106,7 @@ distribute_makefiles:
 ### Allow getting of m_termNames
 	cp $(SRC_DIRS)/NormIntInterface.h AmpTools/AmpTools/IUAmpTools
 ### Allow getting of signal / bkgnd ampvecs
-	cp $(SRC_DIRS)/LikelihoodCalculator.h AmpTools/AmpTools/IUAmpTools
+	cp $(SRC_DIRS)/LikelihoodCalculator.* AmpTools/AmpTools/IUAmpTools
 ### Distribute FSRoot makefiles and src files
 	cp $(SRC_DIRS)/FSROOT_Makefile FSRoot/Makefile
 	cp $(SRC_DIRS)/FSROOT_EXECUTABLES_Makefile FSRoot/Executables/Makefile
