@@ -187,7 +187,7 @@ def generate_figure_with_multiprocessing(models, t, acceptance_correct, cache_lo
             cache = pkl.load(f)
             try:
                 if models == cache["models"]:
-                    print("Cache available. Loading...")
+                    print(f"Cache available in {cache_loc}. Loading...")
                     df = cache["df"]
                     avail_waves = cache["avail_waves"]
                     avail_phase_pairs = cache["avail_phase_pairs"]
@@ -248,8 +248,9 @@ def generate_figure_with_multiprocessing(models, t, acceptance_correct, cache_lo
     ################################################################
 
     # fig = None # for testing
+    fig = None
     if fig is not None:
-        print("loading figure from cache...")
+        print("reloading figure from cache...")
     else:
         print(f"creating {len(avail_waves)}x{len(avail_waves)} figure...")
 
@@ -326,9 +327,10 @@ def generate_figure_with_multiprocessing(models, t, acceptance_correct, cache_lo
             height=175 * len(avail_waves),
             width=175 * len(avail_waves),
             showlegend=True,
+            # dynamically set legend y position based on number of rows where it will be placed under the top left subplot where only upper triangle is plotted
             legend=dict(
                 x=0.0,
-                y=1.05,
+                y=0.985 - 1.0 / (len(avail_waves)+1),
                 xanchor="left",
                 yanchor="top",
                 bgcolor="rgba(255, 255, 255, 0)",  # Transparent background
@@ -361,12 +363,16 @@ if __name__ == "__main__":
     )
     parser.add_argument("-c", type=str, help=(
         "The YAML file should (some optional) define the following keys:\n\n"
-        "    - models: (required) A dictionary mapping model names to IFT PWA result folders.\n"
-        "    - t: (required) compare a specific t-bin\n"
-        "    - cache_loc (optional): Path to the cache file for storing intermediate results (default: '.dash_ift_cache.pkl').\n"
-        "    - ntasks (optional): Number of tasks to use for drawing plotly traces(default: 4).\n"
-        "    - acceptance_correct (optional): Whether to apply acceptance correction (default: True).\n"
-        "    - html_dump (optional): Name of the output HTML file, for sharing! (default: 'dash_iftpwa.html').\n\n"
+        "    - models: (required, dict) A dictionary mapping model names to IFT PWA result folders.\n"
+        "    - t: (required, float) compare a specific t-bin\n"
+        "    - no_browser (optional, bool): Do not open the browser, just dumo the results.\n"
+        "    - cache_loc (optional, str): Path to the cache file for storing intermediate results (default: '.dash_ift_cache.pkl').\n"
+        "    - ntasks (optional, int): Number of tasks to use for drawing plotly traces(default: 4).\n"
+        "    - acceptance_correct (optional, bool): Whether to apply acceptance correction (default: True).\n"
+        "    - html_dump (optional, str): Name of the output HTML file (default: 'dash_iftpwa.html').\n"
+        "    - html_dump_static (optional, str): Name of the output HTML file (default: 'dash_iftpwa.html').\n"
+        "    - pdf_dump (optional, str): Name of the output PDF file (default: 'dash_iftpwa.pdf').\n"
+        "    - static_html (optional, bool): save dumped html in static (non-interactive) form, can be faster\n"
         "Example YAML file:\n\n"
         "    dash:\n"
         "        models:\n"
@@ -374,9 +380,13 @@ if __name__ == "__main__":
         "            Model2: /path/to/ift_results_model2\n"
         "        t: 1.0\n"
         "        cache_loc: /path/to/cache.pkl\n"
+        "        no_browser: false\n"
         "        ntasks: 4\n"
-        "        acceptance_correct: True\n"
+        "        acceptance_correct: true\n"
+        "        html_dump_static: /path/to/dash_iftpwa.html\n"
         "        html_dump: /path/to/dash_iftpwa.html\n"
+        "        pdf_dump: /path/to/dash_iftpwa.pdf\n"
+        "        static_html: false\n"
         )
     )
 
@@ -392,11 +402,14 @@ if __name__ == "__main__":
     models = dash_cfg["models"]
     t = dash_cfg["t"] if "t" in dash_cfg else None
     cache_loc = dash_cfg["cache_loc"] if "cache_loc" in dash_cfg else ".dash_ift_cache.pkl"
+    no_browser = dash_cfg["no_browser"] if "no_browser" in dash_cfg else False
     ntasks = dash_cfg["ntasks"] if "ntasks" in dash_cfg else 4
     acceptance_correct = dash_cfg["acceptance_correct"] if "acceptance_correct" in dash_cfg else True
+    html_dump_static = dash_cfg["html_dump_static"] if "html_dump_static" in dash_cfg else None
     html_dump = dash_cfg["html_dump"] if "html_dump" in dash_cfg else "dash_iftpwa.html"
-    # static_html = dash_cfg["static_html"] if "static_html" in dash_cfg else None
-
+    pdf_dump  = dash_cfg["pdf_dump"]  if "pdf_dump"  in dash_cfg else None
+    static_html = dash_cfg["static_html"] if "static_html" in dash_cfg else None
+    
     if models is None or t is None:
         raise ValueError("models and t must be specified in the YAML file")
 
@@ -409,20 +422,27 @@ if __name__ == "__main__":
     start_time = time.time()
     fig = generate_figure_with_multiprocessing(models, t, acceptance_correct, cache_loc, ntasks)
 
-    print("writing exportable html for collaboration!")
     buffer = io.StringIO()
-    static_config = {  # This will not affect dash's interactivity. It will affect the static html dumped
-        "staticPlot": True,  # Disable full interactivity
-        "responsive": True,  # Ensure responsiveness
-        "displayModeBar": False,  # Hide the mode bar for a cleaner look
-    }
+    
     static_config = {}
+    if html_dump_static:
+        static_config = {  # This will not affect dash's interactivity. It will affect the static html dumped
+            "staticPlot": True,  # Disable full interactivity
+            "responsive": True,  # Ensure responsiveness
+            "displayModeBar": False,  # Hide the mode bar for a cleaner look
+        }
     fig.write_html(buffer, include_mathjax="cdn", config=static_config)
     html_bytes = buffer.getvalue().encode()
     encoded = b64encode(html_bytes).decode()
-    print(f"user requested static html dump. Writing to {html_dump}")
-    with open(html_dump, "wb") as f:
-        f.write(html_bytes)
+    if html_dump: # non-empty strings will eval to true also
+        print(f"user requested static html dump. Writing to {html_dump}")
+        with open(html_dump, "wb") as f:
+            f.write(html_bytes)
+        print(" -> html exported!")
+    if pdf_dump: 
+        print(f"user requested pdf dump. Writing to {pdf_dump}")
+        fig.write_image(pdf_dump)
+        print(" -> pdf exported!")
 
     gen_time = time.time() - start_time
 
@@ -431,19 +451,22 @@ if __name__ == "__main__":
 
     # Create Dash app
     iftpwa_folder = "/".join(iftpwa1.__file__.split("/")[:-2]) + "/docs/images"
-    app = dash.Dash(__name__, assets_folder=iftpwa_folder)
+    
+    if not no_browser:
+        
+        app = dash.Dash(__name__, assets_folder=iftpwa_folder)
 
-    app.layout = html.Div(
-        [
-            html.Div(
-                [
-                    html.Img(src=app.get_asset_url("logo.png"), style={"height": "50px", "float": "left", "margin-right": "10px"}),
-                ],
-                style={"display": "flex", "align-items": "center"},
-            ),  # Flexbox for alignment
-            html.A(html.Button("Download as HTML"), id="download", href="data:text/html;base64," + encoded, download=f"{html_dump}"),
-            dcc.Graph(id="dash_iftpwa", figure=fig, mathjax=True),  # need mathjax here to render latex
-        ]
-    )
+        app.layout = html.Div(
+            [
+                html.Div(
+                    [
+                        html.Img(src=app.get_asset_url("logo.png"), style={"height": "50px", "float": "left", "margin-right": "10px"}),
+                    ],
+                    style={"display": "flex", "align-items": "center"},
+                ),  # Flexbox for alignment
+                html.A(html.Button("Download as HTML"), id="download", href="data:text/html;base64," + encoded, download=f"{html_dump_static}"),
+                dcc.Graph(id="dash_iftpwa", figure=fig, mathjax=True),  # need mathjax here to render latex
+            ]
+        )
 
-    app.run_server(debug=True)
+        app.run_server(debug=True)
