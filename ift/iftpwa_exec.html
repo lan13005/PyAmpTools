@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css?v=be8a1c11" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -375,27 +375,35 @@
   <section class="tex2jax_ignore mathjax_ignore" id="iftpwa-default-execution">
 <h1>iftpwa - Default Execution<a class="headerlink" href="#iftpwa-default-execution" title="Link to this heading">#</a></h1>
 <p>Once we have a pair of configuration files we are ready to perform our two types of fits and compare the results. <code class="docutils literal notranslate"><span class="pre">pa</span></code> is a simple dispatch system that calls various python scripts which each perform a specific task in this workflow.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">yaml</span><span class="o">=</span>/LOCATION/TO/PYAMPTOOLS.YML
-<span class="nv">subdir</span><span class="o">=</span><span class="k">$(</span>grep<span class="w"> </span><span class="s2">&quot;base_directory:&quot;</span><span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{print $2}&#39;</span><span class="k">)</span><span class="w"> </span><span class="c1"># grabs the base directory from the yaml file</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="w"> </span>-e<span class="w"> </span><span class="c1"># Exit on error</span>
+<span class="nb">set</span><span class="w"> </span>-o<span class="w"> </span>pipefail<span class="w"> </span><span class="c1"># Exit on error in pipeline</span>
+
+<span class="nv">yaml</span><span class="o">=</span>/LOCATION/TO/PYAMPTOOLS.YML
+<span class="nv">base_directory</span><span class="o">=</span><span class="k">$(</span>grep<span class="w"> </span><span class="s2">&quot;base_directory:&quot;</span><span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{print $2}&#39;</span><span class="k">)</span><span class="w"> </span><span class="c1"># grabs the base directory from the yaml file</span>
+
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;yaml: </span><span class="nv">$yaml</span><span class="s2">&quot;</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;base_directory: </span><span class="nv">$base_directory</span><span class="s2">&quot;</span>
 
 pa<span class="w"> </span>run_cfgGen<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="c1"># Generate an AmpTools configuration file to be distributed </span>
 pa<span class="w"> </span>run_divideData<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="c1"># Divide data into bins and distributes configuration files to each bin</span>
 pa<span class="w"> </span>run_mle<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="c1"># Perform all MLE fits across all bins and user specified randomly initialized fits</span>
-pa<span class="w"> </span>calc_ps<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="nv">$ps_file</span><span class="w"> </span><span class="c1"># Create phase space factor file (pass to YAML field IFT_MODEL.phaseSpaceMultiplier) that multiples each partial wave (at the moment it is the barrier factor squared)</span>
+<span class="c1"># pa calc_ps $yaml $ps_file # Create phase space factor file (pass to YAML field IFT_MODEL.phaseSpaceMultiplier) that multiples each partial wave (at the moment it is the barrier factor squared)</span>
 pa<span class="w"> </span>run_processEvents<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="c1"># Creates a data file (a representation of AmpVecs object in AmpTools) that GlueX iftpwa manager can use to reconstruct the likelihood for each bin</span>
 
 <span class="c1"># Ideally we would like to be able to do some prior predictive checks to see what our unoptimized model looks like</span>
 <span class="c1"># Unfortunately we have to `pa run_ift` before `iftPwaPriorPredict` since expanded yaml doesnt exist yet. This should be be fixed in the future.</span>
-<span class="c1"># Example call: iftPwaPriorPredict --iftpwa_config $subdir/NiftyFits/.nifty_expanded.yaml --plotFolder $subdir/NiftyFits/prior_predictive</span>
+<span class="c1"># Example call: iftPwaPriorPredict --iftpwa_config $base_directory/NiftyFits/.nifty_expanded.yaml --plotFolder $base_directory/NiftyFits/prior_predictive</span>
 
-pa<span class="w"> </span>run_ift<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="c1"># Perform IFTPWA fit. If we wish to perform a hyperparameter search we can add the `--hyperopt` flag</span>
-rm<span class="w"> </span>-rf<span class="w"> </span><span class="nv">$subdir</span>/NiftyFits/plots<span class="w"> </span><span class="c1"># clean up plots from previous runs</span>
-iftPwaPlot<span class="w"> </span><span class="se">\ </span><span class="c1"># Draw diagnostic plots for the final fit results. Inside the output directory (see PyAmpTools YAML field: nifty.output_directory) is a diagnostics folder which draws the fit results on each global iteration</span>
-<span class="w">    </span>--fitResult<span class="w"> </span><span class="nv">$subdir</span>/NiftyFits/niftypwa_fit.pkl<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--plotFolder<span class="w"> </span><span class="nv">$subdir</span>/NiftyFits/plots<span class="w"> </span><span class="se">\</span>
+pa<span class="w"> </span>run_ift<span class="w"> </span>-v<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="c1"># Perform IFTPWA fit. If we wish to perform a hyperparameter search we can add the `--hyperopt` flag</span>
+rm<span class="w"> </span>-rf<span class="w"> </span><span class="nv">$base_directory</span>/NiftyFits/plots<span class="w"> </span><span class="c1"># clean up plots from previous runs</span>
+<span class="c1"># Draw diagnostic plots for the final fit results. Inside the output directory (see PyAmpTools YAML field: nifty.output_directory) is a diagnostics folder which draws the fit results on each global iteration</span>
+iftPwaPlot<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--fitResult<span class="w"> </span><span class="nv">$base_directory</span>/NiftyFits/niftypwa_fit.pkl<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--plotFolder<span class="w"> </span><span class="nv">$base_directory</span>/NiftyFits/plots<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--n_prior_samples<span class="w"> </span><span class="m">1000</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--massIndepFit<span class="w"> </span><span class="nv">$subdir</span>/NiftyFits/.nifty_expanded.yaml
-plotConvergence<span class="w"> </span>--inputFolder<span class="w"> </span><span class="nv">$subdir</span>/NiftyFits/fit_parameter_history<span class="w"> </span>--plotFolder<span class="w"> </span><span class="nv">$subdir</span>/NiftyFits/convergence_plots<span class="w"> </span><span class="c1"># Draws some convergence plots to see global iteration dependence of resonance parameters, distributions, etc</span>
+<span class="w">    </span>--massIndepFit<span class="w"> </span><span class="nv">$base_directory</span>/NiftyFits/.nifty_expanded.yaml
+<span class="c1"># Draws some convergence plots to see global iteration dependence of resonance parameters, distributions, etc</span>
+plotConvergence<span class="w"> </span>--inputFolder<span class="w"> </span><span class="nv">$base_directory</span>/NiftyFits/fit_parameter_history<span class="w"> </span>--plotFolder<span class="w"> </span><span class="nv">$base_directory</span>/NiftyFits/convergence_plots
 </pre></div>
 </div>
 </section>
