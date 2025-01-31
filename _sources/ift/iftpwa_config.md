@@ -61,12 +61,12 @@ Below are the default YAML configurations for GlueX analyses of $\gamma p \right
 `iftpwa` can handle much finer kinematic bins than AmpTools due to the prior's regularization effect. To account for this, we split the data into finer bins, usable by `iftpwa`, then regroup the data bins into coarser bins for `AmpTools` see `amptools.bins_per_group` key below.
 
 ```yaml
-# Example data folder structure
+# Example data folder structure. Sharing accmc and genmc is optional.
 accmc.root # shares this acceptance MC dataset for all polarizations
-data000.root # data MC datasets for each polarization
-data045.root # data MC datasets for each polarization
-data090.root # data MC datasets for each polarization
-data135.root # data MC datasets for each polarization
+data000.root # data datasets for each polarization
+data045.root # data datasets for each polarization
+data090.root # data datasets for each polarization
+data135.root # data datasets for each polarization
 genmc.root # shares this generated/thrown MC dataset for all polarizations
 bkgnd000.root # (optional) background MC datasets for each polarization
 bkgnd045.root # (optional) background MC datasets for each polarization
@@ -248,8 +248,9 @@ PARAMETRIC_MODEL:
 # Some parameters takes a list of lists which dictate the number of global iterations in a given setting
 #   See iftpwa/src/scripts/iftpwa_fit.py for calls to `makeCallableSimple` for parameters with this style
 OPTIMIZATION:
-    nSamples: [[1, 0], [4, 5], 25] # (int) Runs 1 global iteration with 0 samples (point estimate), then 4 global iterations with 5 samples each, then 25 samples for all remaining global iterations
-    nIterGlobal: 1 # (int) number of global iterations to run NIFTy optimize_kl for
+    # Posterior samples. We actually get 2x nSamples in the end due to 'antithetic' sampling
+    nSamples: [[1, 0], [4, 5], [10, 10], 25] # (int) Runs 1 global iteration with 0 samples (point estimate), then 4 iters with 5 samples, 10 iters with 10 samples, then 25 samples for all remaining global iterations
+    nIterGlobal: 1 # (int) number of global iterations to run NIFTy optimize_kl. ~20 is pretty deep convergence already with above nSamples.
     nMultiStart: 0 # (int) number of multiple restarts to perform (each only a fixed single global iteration) that optimizes multiStartObjective. This pair of keys allows a cheap search over initial conditions
     multiStartObjective: "minimize|energy" # (str) pipe separated direction|quantity to select best starting condition. i.e. "maximize|Dp2+_fit_intens" maximizes the intensity of the Dp2+ amplitude
     
