@@ -146,6 +146,7 @@ def dump_yaml(cfg, output_file_path, indent=4, resolve=False):
             raise ValueError("cfg could not be converted to OmegaConf object")
     _ensure_container(cfg)
     container = OmegaConf.to_container(cfg, resolve=resolve, enum_to_str=True)
+    print(f"Writing yaml file to: {output_file_path}")
     with open(output_file_path, "w") as f:
         yaml.dump(  # type: ignore
             container,

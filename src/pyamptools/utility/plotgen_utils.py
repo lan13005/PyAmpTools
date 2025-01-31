@@ -214,7 +214,7 @@ def draw_histograms(
 						value_map[k] = []
 					value_map[k].extend(v)
 			value_map = {k: np.array(v, dtype=np.float32) for k, v in value_map.items()}
-			df = ROOT.RDF.FromNumpy(value_map)
+			df = ROOT.RDF.FromNumpy(value_map) # NOTE: This is a zero-copy operation
 			columns = df.GetColumnNames()
 
 			######### ADD NEW COLUMNS DATA FOR NICER CALCULATIONS #########
