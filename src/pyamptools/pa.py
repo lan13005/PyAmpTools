@@ -53,9 +53,9 @@ def main():
         "run_divideData": (f"{PYAMPTOOLS_HOME}/bin/run_divideData.py", "Binned analysis: Divide data into mass bins (separate folders)"),
         "run_processEvents": (f"{PYAMPTOOLS_HOME}/bin/processEvents.py", "Binned analysis: Process binned datasets and generate ampvecs and normints"),
         "run_mle": (f"{PYAMPTOOLS_HOME}/bin/run_mle.py", "Binned analysis: Run MLE fits over bins"),
-        "run_ift": (f"{PYAMPTOOLS_HOME}/bin/run_ift.py", "(IN DEVELOPMENT) Binned analysis: Run IFT fit over bins"),
-        "run_iftsyst": (f"{PYAMPTOOLS_HOME}/bin/run_systematics.py", "(IN DEVELOPMENT) Binned analysis: Run IFT systematic variations"),
-        "run_submit": (f"{PYAMPTOOLS_HOME}/bin/run_submit.py", "Binned analysis: Submit jobs to the batch system to perform complete binned analysis"),
+        "run_ift": (f"{PYAMPTOOLS_HOME}/bin/run_ift.py", "Run IFT fit over bins"),
+        "run_momentPlotter": (f"{PYAMPTOOLS_HOME}/bin/run_momentPlotter.py", "After running IFT/MLE fits we can attempt to plot all the moments"),
+        "run_iftsyst": (f"{PYAMPTOOLS_HOME}/bin/run_systematics.py", "Run IFT systematic variations"),
     }
 
     availability_map = {**func_map, **analysis_map}
@@ -73,19 +73,19 @@ def main():
             help_message = super().format_help()
             command_help = "\nCommands:\n"
             for command, (path, description) in func_map.items():
-                command_help += f"  * {command:15} {description}\n"
+                command_help += f"  * {command:25} {description}\n"
             command_help += "\n  ==== YAML based commands below (takes a single YAML file argument to configure setup) ====\n"
             for command, (path, description) in analysis_map.items():
-                command_help += f"  * {command:15} {description}\n"
+                command_help += f"  * {command:25} {description}\n"
             return help_message + "\n" + command_help
 
         def format_files(self):
             file_help = "Command file locations:\n"
             for command, (path, description) in func_map.items():
-                file_help += f"  * {command:15} {path}\n"
+                file_help += f"  * {command:25} {path}\n"
             file_help += "\n  ==== YAML based command files ====\n"
             for command, (path, description) in analysis_map.items():
-                file_help += f"  * {command:15} {path}\n"
+                file_help += f"  * {command:25} {path}\n"
             return file_help
 
     parser = HelpOnErrorParser(description="Dispatch pyamptools commands. Select a command from the Commands section below. Remaning arguments will be passed to the selected command.")
