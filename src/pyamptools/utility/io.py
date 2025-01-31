@@ -2,7 +2,7 @@ import glob
 import itertools
 import os
 import re
-
+from collections import defaultdict
 from pyamptools.utility.general import glob_sort_captured
 
 import numpy as np
@@ -42,6 +42,60 @@ def get_nEventsInBin(base, acceptance_correct=True):
                     break
 
     return np.array(values), np.array(errors)
+
+# NOTE: This could in principle be done directly with amptools FitResults class but
+#       when running nifty mpi fits it causes a crash. Unsure about the problem, but
+#       this is a workaround for now. Parsing the file is not slow anyways
+def parse_fit_file(filename):
+    
+    # Dictionary to store real and imaginary parts
+    complex_amps_builder = defaultdict(int) # default value is 0 for ints
+    status_dict = {}
+    
+    # Read the file
+    with open(filename, 'r') as f:
+        for line in f:
+            line = line.replace("\s+", " ").strip()
+            
+            if "bestMinimum" in line:
+                status_dict["bestMinimum"] = float(line.split()[1]); continue
+            elif "lastMinuitCommandStatus" in line:
+                status_dict["lastMinuitCommandStatus"] = int(line.split()[1]); continue
+            elif "eMatrixStatus" in line:
+                status_dict["eMatrixStatus"] = int(line.split()[1]); continue
+
+            if "_re" not in line and "_im" not in line: continue
+            
+            # Split line into name and value
+            name, value_str = line.strip().split('\t')
+            try:
+                value = float(value_str)
+            except ValueError: continue
+                
+            # Parse the amplitude name
+            parts = name.split('::')
+            if len(parts) != 3: continue
+            reaction, sum_type, amp_part = parts
+            
+            # Split amp_part into base name and re/im indicator
+            match = re.match(r'(.+)_(re|im)$', amp_part)
+            if not match: continue
+            base_name, component = match.groups()
+            
+            # Store value
+            key = (reaction, sum_type, base_name)
+            complex_amps_builder[key] += value * (1j if component == 'im' else 1)
+            
+    complex_amps = {}
+    for key, value in complex_amps_builder.items():
+        if key[2] not in complex_amps:
+            complex_amps[key[2]] = value
+        else:
+            if complex_amps[key[2]] != value:
+                print(f"io| ERROR: {key[2]} is expected to be the same as it should be constrained to be the same")
+                print(f"io|  {key[2]} = {value}")
+    
+    return complex_amps, status_dict
 
 def loadAmpToolsResultsFromYaml(yaml):
     """ Helper function to load the amptools results from a yaml file """
@@ -103,14 +157,6 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
     _statuses = []
     _ematrix = []
 
-    def loadParValueFromFit(fitFile, key):
-        with open(fitFile, "r") as f:
-            for line in f:
-                line = line.replace("\s+", " ").strip()
-                if key in line:
-                    return float(line.split()[1])
-        return None
-
     for cfgfile, i in itertools.product(cfgfiles, range(niters)):
 
         basedir = os.path.dirname(cfgfile)
@@ -121,16 +167,25 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
         if not os.path.exists(fit_file):
             # print(f"{fit_file} expected, but not found!")
             continue
+
+        amps, status_dict = parse_fit_file(fit_file)
+        value = status_dict["bestMinimum"]
+        status = status_dict["lastMinuitCommandStatus"]
+        ematrix = status_dict["eMatrixStatus"]
+        
+        for key, value in amps.items():
+            key = f"{key}_amp"
+            if key in df:
+                df[key].append(value)
+            else:
+                df[key] = [value]
     
-        value = loadParValueFromFit(fit_file, "bestMinimum")
         _nlls.append(value)
         binNum = int(binTag.split("_")[-1])
         _masses.append(masses[binNum % len(masses)])
         _tPrimes.append(tPrimes[binNum // len(masses)])
         _iterations.append(i)
-        status = int(loadParValueFromFit(fit_file, "lastMinuitCommandStatus"))
         _statuses.append(status)
-        ematrix = int(loadParValueFromFit(fit_file, "eMatrixStatus"))
         _ematrix.append(ematrix)
 
         observed_pairs = set()
@@ -139,7 +194,16 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
             totalYield = 0
             for line in f.readlines():
                 if line.startswith("TOTAL EVENTS"):
-                    totalYield = float(line.split()[3].split("|")[lor])
+                    
+                    # intensity, intensity_corr are always stored
+                    intensity_corr, intensity = line.split()[3].split("|")
+                    if 'intensity' not in df: df['intensity'] = [float(intensity)]
+                    else: df['intensity'].append(float(intensity))
+                    if 'intensity_corr' not in df: df['intensity_corr'] = [float(intensity_corr)]
+                    else: df['intensity_corr'].append(float(intensity_corr))
+                    
+                    # total key holds the user selected total yield (acceptance corrected or not). Abit redundant I know
+                    totalYield = float(intensity_corr if accCorrect else intensity)
                     if "total" in df:
                         df["total"].append(totalYield)
                     else:
@@ -199,7 +263,7 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
     # Apply Query 1
     if mle_query_1 != "":
         df = df.query(mle_query_1)
-        print(f"Remaining number of rows after `mle_query_1` ({mle_query_1}): {len(df)}")
+        print(f"io| Remaining number of rows after `mle_query_1` ({mle_query_1}): {len(df)}")
 
     # groupby mass and subtract the min nll in each kinematic bin
     # create a new column called delta_nll and subtract the min nll in each kinematic bin
@@ -208,7 +272,7 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
     # Apply Query 2
     if mle_query_2 != "":
         df = df.query(mle_query_2)
-        print(f"Remaining number of rows after `mle_query_2` ({mle_query_2}): {len(df)}")
+        print(f"io| Remaining number of rows after `mle_query_2` ({mle_query_2}): {len(df)}")
 
     # This is the case if there are 0 fit result files loaded
     if len(df) == 0:
@@ -236,8 +300,8 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
     absolute_idxs = np.sort(absolute_idxs)
 
     if len(missing_tm) > 0:
-        print("\nloadAmpToolsResults did not collect the correct number of masses/tPrimes, perhaps mle_queries are too strict?")
-        print(f"  --> Missing bin indices: {absolute_idxs}")
+        print("\nio| loadAmpToolsResults did not collect the correct number of masses/tPrimes, perhaps mle_queries are too strict?")
+        print(f"io|  --> Missing bin indices: {absolute_idxs}")
         raise ValueError("Some kinematic bins had no converged MLE fits. This could be due to the YAML `mle_query_1` and `mle_query_2` could be too restrictive. Exiting...")
 
     return df

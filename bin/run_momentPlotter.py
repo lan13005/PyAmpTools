@@ -165,7 +165,7 @@ def plot_moment(moment_name, t, amptools_df, ift_df, show_samples=True, no_error
             df_sample = ift_df.query(f'sample == {sample}')
             moment_value = df_sample[moment_name].values
             moment_value = moment_value * bpg # ift generally uses finer binning than amptools, rescale to match
-            label = "IFT" if sample == ift_df['sample'].unique()[0] else None
+            label = "IFT Result" if sample == ift_df['sample'].unique()[0] else None
             ax_intens.plot(df_sample['mass'], moment_value, color="xkcd:sea blue", alpha=0.2, zorder=0, label=label)
         
     if not no_errorbands:
@@ -173,19 +173,20 @@ def plot_moment(moment_name, t, amptools_df, ift_df, show_samples=True, no_error
         std  = ift_mom_df.groupby(['tprime', 'mass'])[moment_name].std().reset_index()
         moment_value_low  = (mean[moment_name] - std[moment_name]) * bpg
         moment_value_high = (mean[moment_name] + std[moment_name]) * bpg
-        label = label if show_samples else "IFT"
+        label = label if show_samples else "IFT Result"
         ax_intens.fill_between(mass_centers, moment_value_low, moment_value_high, color="xkcd:sea blue", alpha=0.2, label=label)
         
     ## PLOT THE AMPTOOLS RESULT
     moment_value = amptools_df[moment_name].values
-    ax_intens.scatter(amptools_df['mass'], moment_value, color="black", marker="o", s=20, label='Binned MLE')
+    ax_intens.scatter(amptools_df['mass'], moment_value, color="black", marker="o", s=20, label='Mass Indep. Result')
     ax_intens.axhline(0, color="black", linestyle="--", linewidth=1)
-    ax_intens.legend(labelcolor="linecolor", handlelength=0, handletextpad=0, frameon=False)
+    ax_intens.legend(labelcolor="linecolor", handlelength=0.2, handletextpad=0.2, frameon=False)
     
     if save_file:
-        print(f"Saving Figure: {save_file}")
+        print(f"momentPlotter| Saving Figure: {save_file}")
         fig.savefig(save_file, bbox_inches="tight")
 
+    plt.close(fig)
     del fig, ax_intens
 
 if __name__ == "__main__":
@@ -206,7 +207,7 @@ if __name__ == "__main__":
     ###############################
     #### LOAD AMPTOOLS RESULTS
     ###############################
-    print("Loading AmpTools results...")
+    print("momentPlotter| Loading AmpTools results...")
     yaml_primary = OmegaConf.load(yaml_name)
     yaml_secondary = yaml_primary['nifty']['yaml']
     yaml_secondary = OmegaConf.load(yaml_secondary)
@@ -276,12 +277,15 @@ if __name__ == "__main__":
     ift_df['intensity_corr'] = intensity_samples_no_acc
 
     # Perform check
-    assert set(ift_df.columns.drop('sample')) <= set(amptools_df.columns) # ensure ift_df.columns is a subset of amptools_df.columns
+    if not set(ift_df.columns.drop('sample')) <= set(amptools_df.columns):
+        # print the missing columns in amptools_df that is in ift_df
+        missing_columns = set(ift_df.columns.drop('sample')) - set(amptools_df.columns)
+        raise ValueError(f"IFT and AmpTools columns do not match. Missing columns: {missing_columns}")
 
     ###########################################
     #### PROCESS THE AMPTOOLS AND IFT RESULTS
     ###########################################
-    print("Processing AmpTools and IFT results...")
+    print("momentPlotter| Processing AmpTools and IFT results...")
     amptools_momentMan = MomentManager(amptools_df, wave_names)
     amptools_mom_df = amptools_momentMan.process_and_return_df(normalization_scheme=1, pool_size=10)
 
