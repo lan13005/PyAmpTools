@@ -3,6 +3,8 @@ import itertools
 import os
 import re
 
+from pyamptools.utility.general import glob_sort_captured
+
 import numpy as np
 import pandas as pd
 
@@ -41,6 +43,35 @@ def get_nEventsInBin(base, acceptance_correct=True):
 
     return np.array(values), np.array(errors)
 
+def loadAmpToolsResultsFromYaml(yaml):
+    """ Helper function to load the amptools results from a yaml file """
+    search_format = yaml['amptools']['search_format']
+    cfgfiles = glob_sort_captured(yaml['amptools']['output_directory']+f"/{search_format}_*/bin_[].cfg")
+    min_mass = yaml['min_mass']
+    max_mass = yaml['max_mass']
+    if yaml['n_mass_bins'] % yaml['amptools']['bins_per_group'] != 0:
+        raise ValueError("n_mass_bins must be divisible by amptools.bins_per_group")
+    bpg = yaml['amptools']['bins_per_group']
+    n_mass_bins = int(yaml['n_mass_bins'] / bpg)
+    massBins = np.linspace(min_mass, max_mass, n_mass_bins+1)
+    masses = 0.5 * (massBins[1:] + massBins[:-1])
+    min_t = yaml['min_t']
+    max_t = yaml['max_t']
+    n_t_bins = yaml['n_t_bins']
+    tPrimeBins = np.linspace(min_t, max_t, n_t_bins+1)
+    tPrimes = 0.5 * (tPrimeBins[1:] + tPrimeBins[:-1])
+    # No support for multiple fits per bin, choose best
+    mle_query_1 = yaml['amptools'].get('mle_query_1', '')
+    mle_query_2 = yaml['amptools'].get('mle_query_2', '')
+    n_randomizations = yaml['amptools']['n_randomizations']
+    accCorrect = yaml['acceptance_correct']
+    # print(f"Loading {len(cfgfiles)} fits...")
+    df = loadAmpToolsResults(cfgfiles, masses, tPrimes, n_randomizations, mle_query_1, mle_query_2, accCorrect)
+    unique_kin_pairs = df.value_counts(subset=['mass', 'tprime'])
+    if len(unique_kin_pairs) != len(df):
+        # NOTE: seems like we only need to implement t'-summed intensity section. ATM it seems like it would just sum over all fit results in a bin
+        raise ValueError("Currently there is no support for plotting multiple fits per kinematic bin with 'iftpwa_plot' program. Tighten your mle_queries. For example, you can try `mle_query_1: ''` and `mle_query_2: 'delta_nll==0'` which choose the best MLE fit out of all fits (not just converged ones)")
+    return df, (masses, tPrimeBins, bpg)
 
 def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_query_2, accCorrect):
     """
@@ -157,22 +188,25 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
     df["ematrix"] = _ematrix
 
     df = pd.DataFrame(df)
+        
+    # reorder columns so important ones are first
+    cols = ["tprime", "mass", "nll", "iteration", "status", "ematrix"]
+    cols.extend([k for k in df.keys() if k not in cols])
+    df = df[cols]
 
     # Apply Query 1
     if mle_query_1 != "":
         df = df.query(mle_query_1)
-        # print(f"Remaining number of rows after query 1 ({mle_query_1}): {len(df)}")
+        print(f"Remaining number of rows after `mle_query_1` ({mle_query_1}): {len(df)}")
 
     # groupby mass and subtract the min nll in each kinematic bin
     # create a new column called delta_nll and subtract the min nll in each kinematic bin
-    df["delta_nll"] = df.groupby(["mass","tprime"])["nll"].transform(lambda x: x - x.min())
+    df["delta_nll"] = df.groupby(["tprime","mass"])["nll"].transform(lambda x: x - x.min())
 
     # Apply Query 2
     if mle_query_2 != "":
         df = df.query(mle_query_2)
-        # print(f"Remaining number of rows after query 2 ({mle_query_2}): {len(df)}")
-
-    df = pd.DataFrame(df)
+        print(f"Remaining number of rows after `mle_query_2` ({mle_query_2}): {len(df)}")
 
     # This is the case if there are 0 fit result files loaded
     if len(df) == 0:
