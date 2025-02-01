@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css?v=be8a1c11" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -404,6 +404,10 @@
 </section>
 <section id="simplified-model">
 <h2>Simplified Model<a class="headerlink" href="#simplified-model" title="Link to this heading">#</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><code class="docutils literal notranslate"><span class="pre">t</span></code> and <code class="docutils literal notranslate"><span class="pre">tPrime</span></code> are used interchangeably everywhere in the framework but generally variables in source code will have <code class="docutils literal notranslate"><span class="pre">tPrime</span></code> as part of their name. <code class="docutils literal notranslate"><span class="pre">PyAmpTools</span></code> currently forms the kinematic binning using <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p>
+</div>
 <p>The following simplified amplitude description is used to depict how the configuration file key-value fields affect the model for each amplitude. The first term in the brackets describes a non-parameteric component which can be adept at describing unknown background contributions. The second term describes a parameteric component which we generally have a physical description for (i.e. Breit-Wigner, Flatté, …)</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}
