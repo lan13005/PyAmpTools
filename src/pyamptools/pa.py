@@ -43,18 +43,18 @@ def main():
         "gen_vec_ps": (f"{PYAMPTOOLS_HOME}/bin/gen_vec_ps.py", "Generate vector-pseduoscalar data for a given configuration file"),
         "nentries": (f"{PYAMPTOOLS_HOME}/bin/get_nentries.py", "Print number of entries in a list of ROOT files (* wildcard supported)"),
         "calc_ps": (f"{PYAMPTOOLS_HOME}/bin/calc_ps.py", "Calculate the phase space factor for IFT fits"),
-        "dash_ift_cmp": (f"{PYAMPTOOLS_HOME}/bin/dash_ift_cmp.py", "Compare multiple IFT fits (intensity and phase)"),
+        "dash_ift_cmp": (f"{PYAMPTOOLS_HOME}/bin/dash_ift_cmp.py", "Compare multiple IFT fits (intensity and phase) using dash package"),
         "dx_normint": (f"{PYAMPTOOLS_HOME}/bin/dx_normint.py", "Make diagnostic heatmaps for (norm)alizaton and (amp)litude integrals. Can tracks matrix elements over all mass bins"),
     }
 
     analysis_map = {
         # 'command' : (path, description)
-        "run_cfgGen": (f"{PYAMPTOOLS_HOME}/bin/run_cfgGen.py", "Generate AmpTools fit configuration files"),
-        "run_divideData": (f"{PYAMPTOOLS_HOME}/bin/run_divideData.py", "Binned analysis: Divide data into mass bins (separate folders)"),
-        "run_processEvents": (f"{PYAMPTOOLS_HOME}/bin/processEvents.py", "Binned analysis: Process binned datasets and generate ampvecs and normints"),
-        "run_mle": (f"{PYAMPTOOLS_HOME}/bin/run_mle.py", "Binned analysis: Run MLE fits over bins"),
-        "run_ift": (f"{PYAMPTOOLS_HOME}/bin/run_ift.py", "Run IFT fit over bins"),
-        "run_momentPlotter": (f"{PYAMPTOOLS_HOME}/bin/run_momentPlotter.py", "After running IFT/MLE fits we can attempt to plot all the moments"),
+        "run_cfgGen": (f"{PYAMPTOOLS_HOME}/bin/run_cfgGen.py", "Generate an AmpTools fit configuration file"),
+        "run_divideData": (f"{PYAMPTOOLS_HOME}/bin/run_divideData.py", "Divide data into kinematic bins (separate folders)"),
+        "run_processEvents": (f"{PYAMPTOOLS_HOME}/bin/processEvents.py", "Process binned datasets to dump AmpTools' ampvecs data structure and normalization integrals into pkl files"),
+        "run_mle": (f"{PYAMPTOOLS_HOME}/bin/run_mle.py", "Run MLE fits over kinematic bins using AmpTools"),
+        "run_ift": (f"{PYAMPTOOLS_HOME}/bin/run_ift.py", "Run IFT fit over kinematic bins. MLE fits must be run first!"),
+        "run_momentPlotter": (f"{PYAMPTOOLS_HOME}/bin/run_momentPlotter.py", "After running IFT + MLE fits we can attempt to plot all the moments"),
         "run_iftsyst": (f"{PYAMPTOOLS_HOME}/bin/run_systematics.py", "Run IFT systematic variations"),
     }
 
