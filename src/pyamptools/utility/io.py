@@ -4,9 +4,13 @@ import os
 import re
 from collections import defaultdict
 from pyamptools.utility.general import glob_sort_captured
+from pyamptools.utility.MomentUtilities import MomentManager
 
 import numpy as np
 import pandas as pd
+import pickle as pkl
+from omegaconf import OmegaConf
+from omegaconf.errors import MissingMandatoryValue
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -47,6 +51,12 @@ def get_nEventsInBin(base, acceptance_correct=True):
 #       when running nifty mpi fits it causes a crash. Unsure about the problem, but
 #       this is a workaround for now. Parsing the file is not slow anyways
 def parse_fit_file(filename):
+    
+    """
+    Parse the fit file and return a pair of dictionaries:
+    - complex amplitudes
+    - convergence status + likelihood
+    """
     
     # Dictionary to store real and imaginary parts
     complex_amps_builder = defaultdict(int) # default value is 0 for ints
@@ -97,10 +107,210 @@ def parse_fit_file(filename):
     
     return complex_amps, status_dict
 
-def loadAmpToolsResultsFromYaml(yaml):
-    """ Helper function to load the amptools results from a yaml file """
-    search_format = yaml['amptools']['search_format']
-    cfgfiles = glob_sort_captured(yaml['amptools']['output_directory']+f"/{search_format}_*/bin_[].cfg")
+def loadAllResultsFromYaml(yaml, pool_size=10):
+    
+    """
+    Loads the AmpTools and IFT results from the provided yaml file. Moments will be calculated if possible with multiprocessing.Pool with pool_size
+    
+    Args:
+        yaml (OmegaConf): OmegaConf object (dict-like) for PyAmpTools (not iftpwa)
+        pool_size (int): Number of processes to use by multiprocessing.Pool
+        
+    Returns:
+        pd.DataFrame: AmpTools binned fit results
+        pd.DataFrame: IFT binned fit results
+        list: wave names
+        np.array: masses (bin centers)
+        np.array: tPrimeBins (bin centers)
+        int: bins per group (is an additional scale factor to align IFT and AmpTools results)
+        dict: latex naming of moments
+    """
+    
+    # Be nice and accept a string path to a yaml file in case user didnt read docs
+    if isinstance(yaml, str):
+        yaml = OmegaConf.load(yaml)
+    
+    amptools_df = None
+    ift_df = None
+
+    ###########################################
+    #### LOAD ADDITIONAL INFORMATION FROM YAML
+    ###########################################
+    wave_names = yaml['waveset'].split('_')
+    min_mass = yaml['min_mass']
+    max_mass = yaml['max_mass']
+    n_mass_bins = yaml['n_mass_bins']
+    min_t = yaml['min_t']
+    max_t = yaml['max_t']
+    n_t_bins = yaml['n_t_bins']
+    masses = np.linspace(min_mass, max_mass, n_mass_bins+1)
+    tPrimeBins = np.linspace(min_t, max_t, n_t_bins+1)
+    masses = 0.5 * (masses[:-1] + masses[1:])
+    tPrimeBins = 0.5 * (tPrimeBins[:-1] + tPrimeBins[1:])
+    bpg = yaml['amptools']['bins_per_group']
+
+    ###############################
+    #### LOAD AMPTOOLS RESULTS
+    ###############################
+    print("io| Attempting to load AmpTools results...")
+    loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=False)
+    try:
+        # hardcode check to False since hopefully if user calls this function they would want all fits
+        #   across all randomizations and kinematic bins
+        amptools_df, (_, _, _) = loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=False)
+    except Exception as e:
+        print(f"io| Error loading AmpTools results: {e}")
+
+    ###############################
+    #### LOAD NIFTY RESULTS
+    ###############################
+    print("io| Attempting to load NIFTY results...")
+    try:
+        ift_df = loadIFTResultsFromYaml(yaml)
+    except Exception as e:
+        print(f"io| Error loading NIFTY results: {e}")
+        
+    if amptools_df is None and ift_df is None:
+        raise ValueError("io| No results from AmpTools binned fits nor IFT can be found! Terminating...")
+
+    ###########################################
+    #### CHECK IF THE RESULTS ARE COMPATIBLE
+    ###########################################
+    # if both exists and not missing the expected columns
+    if amptools_df is not None and ift_df is not None:
+        if not set(ift_df.columns.drop('sample')) <= set(amptools_df.columns):
+            # print the missing columns in amptools_df that is in ift_df
+            missing_columns = set(ift_df.columns.drop('sample')) - set(amptools_df.columns)
+            print(f"io| IFT columns: {ift_df.columns}")
+            print(f"io| AmpTools columns: {amptools_df.columns}")
+            raise ValueError(f"IFT and AmpTools columns do not match. Missing columns: {missing_columns}")
+
+    ###########################################
+    #### PROCESS THE AMPTOOLS AND IFT RESULTS
+    ###########################################
+    print("io| Processing AmpTools and IFT results...")
+    latex_name_dict_amp, latex_name_dict_ift = None, None
+    if amptools_df is not None:
+        amptools_df = MomentManager(amptools_df, wave_names)
+        amptools_df, latex_name_dict_amp = amptools_df.process_and_return_df(normalization_scheme=1, pool_size=pool_size, append=True)
+
+    if ift_df is not None:
+        ift_df = MomentManager(ift_df, wave_names)
+        ift_df, latex_name_dict_ift = ift_df.process_and_return_df(normalization_scheme=1, pool_size=pool_size, append=True)
+    
+    if latex_name_dict_amp is not None and latex_name_dict_ift is not None and latex_name_dict_amp != latex_name_dict_ift:
+        raise ValueError("IFT and AmpTools moment dictionaries do not match but is expected to!")
+    
+    # think its safe? If they are not None by this point they must be the same dictionary
+    latex_name_dict = latex_name_dict_amp if latex_name_dict_amp is not None else latex_name_dict_ift
+    
+    return amptools_df, ift_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict
+
+def loadIFTResultsFromYaml(yaml):
+    
+    """
+    Loads the NIFTY results from the provided yaml file
+    NOTE: This only loads the IFT coherent sums in each partial wave. Complex amplitudes of each component still needs to be coded up here
+    
+    Args:
+        yaml (OmegaConf): OmegaConf object (dict-like) for PyAmpTools (not iftpwa)
+        
+    Returns:
+        pd.DataFrame: DataFrame of results
+    """
+
+    # Be nice and accept a string path to a yaml file in case user didnt read docs
+    if isinstance(yaml, str):
+        yaml = OmegaConf.load(yaml)
+    
+    yaml_secondary = yaml['nifty']['yaml']
+    yaml_secondary = OmegaConf.load(yaml_secondary)
+    
+    try: 
+        yaml_secondary['GENERAL']['outputFolder']
+    except MissingMandatoryValue:
+        outputFolder = yaml['nifty']['output_directory']
+        yaml_secondary['GENERAL']['outputFolder'] = outputFolder
+    nifty_pkl = yaml_secondary['GENERAL']['fitResultPath']
+
+    with open(nifty_pkl, "rb") as f:
+        data = pkl.load(f)
+        
+    wave_names = data['pwa_manager_base_information']['wave_names']
+    mass_bins = data['pwa_manager_base_information']['mass_bins']
+    tprime_bins = data['pwa_manager_base_information']['tprime_bins']
+    mass_centers = (mass_bins[:-1] + mass_bins[1:]) / 2
+    tprime_centers = (tprime_bins[:-1] + tprime_bins[1:]) / 2
+    nmb_waves = len(wave_names)
+    nmb_masses = len(mass_centers)
+    nmb_tprimes = len(tprime_centers)
+
+    # Get complex signal field values
+    signal_field_sample_values = data['signal_field_sample_values'] # ~ (nmb_samples, 2*n_waves, n_masses, n_tprime)
+    signal_field_sample_values = signal_field_sample_values[:, :2*nmb_waves:2, :, :] + 1j * signal_field_sample_values[:, 1:2*nmb_waves:2, :, :]
+
+    # Get number of samples
+    nmb_samples = signal_field_sample_values.shape[0]
+
+    # Reshape to flatten across samples, masses, tprime
+    signal_field_sample_values = np.transpose(signal_field_sample_values, (0, 2, 3, 1)) # -> (nmb_samples, n_masses, n_tprime, n_waves)
+    signal_field_sample_values = signal_field_sample_values.reshape(-1, nmb_waves) # -> (nmb_samples * n_masses * n_tprime, n_waves)
+
+    # Create arrays for sample, mass, tprime indices
+    sample_indices = np.repeat(np.arange(nmb_samples), nmb_masses * nmb_tprimes)
+    mass_indices = np.tile(np.repeat(mass_centers, nmb_tprimes), nmb_samples)
+    tprime_indices = np.tile(tprime_centers, nmb_samples * nmb_masses)
+
+    # Stack all columns together
+    ift_df = np.column_stack((sample_indices, mass_indices, tprime_indices, signal_field_sample_values))
+
+    cols = ['sample', 'mass', 'tprime'] + [f'{wave_name}_amp' for wave_name in wave_names]
+    ift_df = pd.DataFrame(ift_df, columns=cols)
+
+    # Reorder columns
+    cols = ['tprime', 'mass', 'sample'] + [f'{wave_name}_amp' for wave_name in wave_names]
+    ift_df = ift_df[cols]
+
+    # sample column is int, mass as float, tprime as float, wave_name_amp as complex
+    ift_df['sample'] = ift_df['sample'].values.real.astype(int)
+    ift_df['mass'] = ift_df['mass'].values.real.astype(float)
+    ift_df['tprime'] = ift_df['tprime'].values.real.astype(float)
+    ift_df[cols[3:]] = ift_df[cols[3:]].astype(complex)
+
+    # Get the (fitted) total intensity
+    intensity_samples = np.array(data['expected_nmb_events'], dtype=float) # ~ (nmb_samples, nmb_masses, nmb_tprimes)
+    intensity_samples_no_acc = np.array(data['expected_nmb_events_no_acc'], dtype=float) # ~ (nmb_samples, nmb_masses, nmb_tprimes)
+    intensity_samples = intensity_samples.reshape(-1, 1)
+    intensity_samples_no_acc = intensity_samples_no_acc.reshape(-1, 1)
+    ift_df['intensity'] = intensity_samples
+    ift_df['intensity_corr'] = intensity_samples_no_acc
+    
+    return ift_df
+
+def loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=True):
+    """ 
+    Helper function to load the amptools results from a yaml file 
+    
+    Args:
+        yaml (OmegaConf): OmegaConf object (dict-like) for PyAmpTools (not iftpwa)
+        ensure_one_fit_per_bin (bool):  Raise error if there are multiple fits results per kinematic bin. This flag is necessary to ensure `iftpwa_plot` program works as expected.
+                                        If you are not using `iftpwa_plot` program, you can set this flag to False.
+                                        NOTE: seems like we only need to implement t'-summed intensity section. ATM it seems like it would just sum over all fit results in a bin
+
+        
+    Returns:
+        pd.DataFrame: DataFrame of results
+        tuple: (masses, tPrimeBins, bpg) where masses and tPrimeBins correspond to the bin centers
+    """
+    
+    # Be nice and accept a string path to a yaml file in case user didnt read docs
+    if isinstance(yaml, str):
+        yaml = OmegaConf.load(yaml)
+    
+    search_format = yaml['amptools']['search_format'] if yaml['amptools']['bins_per_group'] > 1 else 'bin'
+    pattern = yaml['amptools']['output_directory']+f'/{search_format}_*/bin_[].cfg'
+    print(f"io| Searching for amptools files using this pattern: {pattern}")
+    cfgfiles = glob_sort_captured(pattern)
     min_mass = yaml['min_mass']
     max_mass = yaml['max_mass']
     if yaml['n_mass_bins'] % yaml['amptools']['bins_per_group'] != 0:
@@ -121,12 +331,20 @@ def loadAmpToolsResultsFromYaml(yaml):
     if mle_query_2 is None: mle_query_2 = ''
     n_randomizations = yaml['amptools']['n_randomizations']
     accCorrect = yaml['acceptance_correct']
-    # print(f"Loading {len(cfgfiles)} fits...")
     df = loadAmpToolsResults(cfgfiles, masses, tPrimes, n_randomizations, mle_query_1, mle_query_2, accCorrect)
     unique_kin_pairs = df.value_counts(subset=['mass', 'tprime'])
-    if len(unique_kin_pairs) != len(df):
-        # NOTE: seems like we only need to implement t'-summed intensity section. ATM it seems like it would just sum over all fit results in a bin
-        raise ValueError("Currently there is no support for plotting multiple fits per kinematic bin with 'iftpwa_plot' program. Tighten your mle_queries. For example, you can try `mle_query_1: ''` and `mle_query_2: 'delta_nll==0'` which choose the best MLE fit out of all fits (not just converged ones)")
+    if ensure_one_fit_per_bin:
+        if len(unique_kin_pairs) < len(df):
+            raise ValueError(
+                "Currently there is no support for plotting multiple fits per kinematic bin. "
+                "Tighten your mle_queries. Plotting the best fit uses: mle_query_1: 'status==0 & ematrix==3' and mle_query_2: 'delta_nll==0'"
+            )
+        elif len(unique_kin_pairs) > len(df):
+            raise ValueError(
+                "Your mle_query_1 and mle_query_2 combination are too restrictive. If you were selecting fits with proper convergence codes:"
+                "status=0 and ematrix=3, you can try mle_query_1: 'status==0' or mle_query_1: '' and mle_query_2: 'delta_nll==0' "
+                "which would choose the best fit out of all fits that converges with any error matrix status or the entire set of fits."
+            )
     return df, (masses, tPrimeBins, bpg)
 
 def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_query_2, accCorrect):
@@ -156,7 +374,7 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
     _iterations = []
     _statuses = []
     _ematrix = []
-
+    
     for cfgfile, i in itertools.product(cfgfiles, range(niters)):
 
         basedir = os.path.dirname(cfgfile)
@@ -256,7 +474,8 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
     # Apply Query 1
     if mle_query_1 != "":
         df = df.query(mle_query_1)
-        print(f"io| Remaining number of rows after `mle_query_1` ({mle_query_1}): {len(df)}")
+    print(f"io| Remaining number of AmpTools fits (across randomizations and kinematic bins) after applying mle_query_1 = '{mle_query_1}': {len(df)}")
+    print(f"io| Calculating delta_nll...")
 
     # groupby mass and subtract the min nll in each kinematic bin
     # create a new column called delta_nll and subtract the min nll in each kinematic bin
@@ -265,7 +484,7 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
     # Apply Query 2
     if mle_query_2 != "":
         df = df.query(mle_query_2)
-        print(f"io| Remaining number of rows after `mle_query_2` ({mle_query_2}): {len(df)}")
+    print(f"io| Remaining number of AmpTools fits (across randomizations and kinematic bins) after applying mle_query_2 = '{mle_query_2}': {len(df)}")
 
     # This is the case if there are 0 fit result files loaded
     if len(df) == 0:

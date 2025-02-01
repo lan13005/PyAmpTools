@@ -48,6 +48,7 @@ def vps_amp_name(refl, J, M, l):
 
 
 converter = {}  # i.e. {'Sp0+': [1, 0, 0]}
+channel_map = {}
 prettyLabels = {}  # i.e. {'Sp0+': '$S_{0}^{+}$'}
 example_zlm_names = []  # i.e. ['Sp0+', 'Pp1+', 'Dm2-']
 example_vps_names = []
@@ -61,8 +62,9 @@ for e, refl in zip([-1, 1], refls):
             example_zlm_names.append(amp)
             converter[amp] = [e, l, m]
             prettyLabels[amp] = rf"${spectroscopic_map[l]}_{{{m}}}^{{{refl}}}$"
+            channel_map[amp] = 'TwoPseudoscalar'
 
-        ### For Vps two pseudoscalar waves
+        ### For vector-pseudoscalar waves
         for J in range(abs(1 - l), abs(1 + l + 1)):
             for M in range(-J, J + 1):
                 amp = vps_amp_name(e, J, M, l)
@@ -72,6 +74,7 @@ for e, refl in zip([-1, 1], refls):
                 C = "-"  # vector-pseudoscalar is always -1
                 sM = f"+{M}" if M > 0 else f"{M}" # include + in front
                 prettyLabels[amp] = rf"${J}^{{{P}{C}}}[{spectroscopic_map[l]}_{{{sM}}}^{{{refl}}}]$"
+                channel_map[amp] = 'VectorPseudoscalar'
 
 # If there is no prettyLabel version, just pass back the key
 class KeyReturningDict(dict):
@@ -386,6 +389,7 @@ def glob_sort_captured(files):
     if "[]" not in files and "*" not in files:
         return [files]
 
+    files = re.sub('/+', '/', files) # replace repeated / with single /
     files = files.rstrip("/")  # Remove right trailing slashes
 
     # Find location of capture []
