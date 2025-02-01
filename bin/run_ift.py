@@ -87,7 +87,8 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING, format='%(asctime)s| %(message)s', datefmt='%H:%M:%S')
     logger = logging.getLogger(__name__)
 
-    logger.info("\n---------------------")
+    print()
+    logger.info("---------------------")
     logger.info(f"Running {__file__}")
     logger.info(f"  yaml location: {yaml_name}")
     logger.info("---------------------\n")
@@ -109,7 +110,8 @@ if __name__ == "__main__":
     dest_yaml = load_yaml(dest_name, resolve=False)
 
     if synchronize:
-        logger.info("\n------------------ SYNCHRONIZING YAML FILES ------------------")
+        print()
+        logger.info("------------------ SYNCHRONIZING YAML FILES ------------------")
         logger.info(f"Base YAML file used for IFTPWA: {dest_name}")
         logger.info(f"    will be synchronized with values found in your provided yaml file: {yaml_name}")
         for dest_keys, src_keys in mappings.items():

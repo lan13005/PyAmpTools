@@ -195,19 +195,12 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
             for line in f.readlines():
                 if line.startswith("TOTAL EVENTS"):
                     
-                    # intensity, intensity_corr are always stored
+                    # Store both intensity and acceptance corrected intensity
                     intensity_corr, intensity = line.split()[3].split("|")
                     if 'intensity' not in df: df['intensity'] = [float(intensity)]
                     else: df['intensity'].append(float(intensity))
                     if 'intensity_corr' not in df: df['intensity_corr'] = [float(intensity_corr)]
                     else: df['intensity_corr'].append(float(intensity_corr))
-                    
-                    # total key holds the user selected total yield (acceptance corrected or not). Abit redundant I know
-                    totalYield = float(intensity_corr if accCorrect else intensity)
-                    if "total" in df:
-                        df["total"].append(totalYield)
-                    else:
-                        df["total"] = [totalYield]
 
                 if line.startswith("FIT FRACTION") and "::" not in line:  # Regex-merged to group Re/Im + Pols
                     amp = line.split()[2]
