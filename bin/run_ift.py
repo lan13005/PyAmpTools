@@ -146,15 +146,19 @@ if __name__ == "__main__":
     if mpi_processes is not None and mpi_processes > 1:
         prefix  = f"mpiexec -v -n {mpi_processes} "
         prefix += "--mca btl ^openib " # Disable openib
+
+    add_args = ' '.join(additional_args)
+    if add_args != '': 
+        add_args = f' {add_args}'
     if num_gpus > 0:
         # Distribute mpi work across all GPUs
         cmd = (f"{prefix}bash -c 'export CUDA_VISIBLE_DEVICES=$(($OMPI_COMM_WORLD_RANK % {num_gpus})); "
             f'export XLA_PYTHON_CLIENT_MEM_FRACTION=1; '
             f'export TF_FORCE_GPU_ALLOW_GROWTH=true; '
-            f"iftPwaFit --iftpwa_config .nifty.yaml {' '.join(additional_args)}'")
+            f"iftPwaFit --iftpwa_config .nifty.yaml{add_args}'")
     else:
         cmd = (f"{prefix}bash -c 'export JAX_PLATFORMS=cpu; "
-                f"iftPwaFit --iftpwa_config .nifty.yaml {' '.join(additional_args)}'")
+                f"iftPwaFit --iftpwa_config .nifty.yaml{add_args}'")
     
     print(f"\nmpiexec command:\n {cmd}\n")
     os.system(cmd) # Run IFT pwa fit
