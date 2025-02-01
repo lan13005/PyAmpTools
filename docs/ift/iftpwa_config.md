@@ -10,6 +10,10 @@ The correlated field model is no longer a Gaussian process but it does make unde
 
 ## Simplified Model
 
+```{warning}
+`t` and `tPrime` are used interchangeably everywhere in the framework but generally variables in source code will have `tPrime` as part of their name. `PyAmpTools` currently forms the kinematic binning using `t`.
+```
+
 The following simplified amplitude description is used to depict how the configuration file key-value fields affect the model for each amplitude. The first term in the brackets describes a non-parameteric component which can be adept at describing unknown background contributions. The second term describes a parameteric component which we generally have a physical description for (i.e. Breit-Wigner, Flatté, ...)
 
 $$
