@@ -387,9 +387,6 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
             continue
 
         amps, status_dict = parse_fit_file(fit_file)
-        value = status_dict["bestMinimum"]
-        status = status_dict["lastMinuitCommandStatus"]
-        ematrix = status_dict["eMatrixStatus"]
         
         for key, value in amps.items():
             key = f"{key}_amp"
@@ -397,6 +394,10 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
                 df[key].append(value)
             else:
                 df[key] = [value]
+                
+        value = status_dict["bestMinimum"]
+        status = status_dict["lastMinuitCommandStatus"]
+        ematrix = status_dict["eMatrixStatus"]
     
         _nlls.append(value)
         binNum = int(binTag.split("_")[-1])
