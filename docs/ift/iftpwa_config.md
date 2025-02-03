@@ -128,6 +128,8 @@ nifty: # Configure NIFTy
     mpi_processes: 41 # (int) number of MPI processes to use for NIFTy. Choice depends on number of cores available and n_mass_bins * n_t_bins
 
 ############ [OPTIONAL] ################
+# NOTE: This section can be in its own YAML file as it does not need any additional information
+#       But then we would have another file to manage, so keep here
 # dash: # Configure dash plots
 #     t: 0.55 # (float) t-bin to draw the dash plots for
 #     models:
