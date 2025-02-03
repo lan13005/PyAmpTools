@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css?v=be8a1c11" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -518,6 +518,8 @@ A_i(m, t) = \kappa \cdot \rho_i \cdot C_i \cdot \Big[
 <span class="w">    </span><span class="nt">mpi_processes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">41</span><span class="w"> </span><span class="c1"># (int) number of MPI processes to use for NIFTy. Choice depends on number of cores available and n_mass_bins * n_t_bins</span>
 
 <span class="c1">############ [OPTIONAL] ################</span>
+<span class="c1"># NOTE: This section can be in its own YAML file as it does not need any additional information</span>
+<span class="c1">#       But then we would have another file to manage, so keep here</span>
 <span class="c1"># dash: # Configure dash plots</span>
 <span class="c1">#     t: 0.55 # (float) t-bin to draw the dash plots for</span>
 <span class="c1">#     models:</span>
