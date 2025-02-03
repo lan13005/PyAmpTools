@@ -7,18 +7,21 @@ import subprocess
 import time
 import unittest
 
+import importlib.util
+from git import Repo
+
 import psutil
 import yaml
 from IPython.display import Code
 from omegaconf import OmegaConf
 from omegaconf._utils import OmegaConfDumper, _ensure_container
 
+
 # ===================================================================================================
 # ===================================================================================================
 
 spectroscopic_map = {0: "S", 1: "P", 2: "D", 3: "F"}
 lmax = max(spectroscopic_map.keys())
-
 
 def zlm_amp_name(refl, l, m):
     if l < 0:
@@ -94,8 +97,23 @@ def load_yaml(path_to_yaml, resolve=True):
         path_to_yaml (str): Path to the yaml file
         resolve (bool): Whether to resolve (variable interpolation) the yaml file
     """
+    
     try:
         yaml = OmegaConf.load(path_to_yaml)
+
+        # Dump git commit hash into yaml file, do not resolve variables. Dont update yaml if exist.
+        changed = False
+        pyamptools_commit_hash = get_git_commit_hash_for_package("pyamptools")
+        iftpwa_commit_hash = get_git_commit_hash_for_package("iftpwa1")
+        if "pyamptools_commit_hash" not in yaml or yaml.pyamptools_commit_hash != pyamptools_commit_hash:
+                yaml.pyamptools_commit_hash = pyamptools_commit_hash
+                changed = True
+        if "iftpwa_commit_hash" not in yaml or yaml.iftpwa_commit_hash != iftpwa_commit_hash:
+                yaml.iftpwa_commit_hash = iftpwa_commit_hash
+                changed = True
+        if changed:
+            dump_yaml(yaml, path_to_yaml, resolve=False)
+        
         yaml = OmegaConf.to_container(yaml, resolve=resolve)
         if "default_yaml" in yaml:
             default = OmegaConf.load(yaml["default_yaml"])
@@ -476,3 +494,39 @@ class Silencer:
             os.dup2(self._original_stderr_fd, 2)
             os.close(self._devnull_fd)
             os.close(self._original_stderr_fd)
+            
+def get_git_commit_hash_for_package(package_name):
+    try:
+        # Find package location, only works if package is installed in editable mode!
+        spec = importlib.util.find_spec(package_name)
+        if spec is None or spec.origin is None:
+            raise ValueError(f"Package '{package_name}' not found or not installed in editable mode.")
+
+        package_dir = os.path.dirname(os.path.abspath(spec.origin))
+
+        # Traverse upwards to find the Git root directory
+        git_dir = package_dir
+        while git_dir and git_dir != "/":
+            if os.path.isdir(os.path.join(git_dir, ".git")):
+                break
+            git_dir = os.path.dirname(git_dir)
+        else:
+            raise ValueError(f"Could not find a Git repository for package '{package_name}'.")
+
+        # Get commit hash using subprocess
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=git_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        
+        if result.returncode == 0:
+            return result.stdout.strip()
+        else:
+            raise ValueError(f"Git command failed: {result.stderr.strip()}")
+
+    except Exception as e:
+        print(e)
+        return 'unknown, package must be installed in editable mode: `pip install -e .`'

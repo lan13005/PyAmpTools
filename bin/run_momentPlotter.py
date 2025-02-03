@@ -5,8 +5,8 @@ import os
 import argparse
 from pyamptools.utility.general import Timer
 from pyamptools.utility.io import loadAllResultsFromYaml
-from omegaconf import OmegaConf
 from omegaconf.errors import MissingMandatoryValue
+from pyamptools.utility.general import load_yaml
 
 mpl.rcParams.update({
     'font.size': 16,
@@ -95,9 +95,9 @@ if __name__ == "__main__":
 
     timer = Timer()
     
-    yaml_primary = OmegaConf.load(yaml_name)
+    yaml_primary = load_yaml(yaml_name)
     yaml_secondary = yaml_primary['nifty']['yaml']
-    yaml_secondary = OmegaConf.load(yaml_secondary)
+    yaml_secondary = load_yaml(yaml_secondary)
 
     amptools_df, ift_df, wave_names, masses, tprime_centers, bpg, latex_name_dict = loadAllResultsFromYaml(yaml_name, npool)
     
@@ -116,9 +116,11 @@ if __name__ == "__main__":
     #### Plot the moments
     ####################################################
     print("momentPlotter| Plotting moments...")
+    # synchronization of yaml pair currently only happens automatically when running `run_ift`
+    #   We catch exceptions from OmegaConf for missing values or Python type errors for None type
     try: 
         yaml_secondary['GENERAL']['outputFolder']
-    except MissingMandatoryValue: # synchronization of yaml pair currently only happens automaticallywhen running `run_ift`
+    except (MissingMandatoryValue, TypeError):
         outputFolder = yaml_primary['nifty']['output_directory']
     outputFolder = os.path.join(outputFolder, "plots/moments")
     os.makedirs(outputFolder, exist_ok=True)

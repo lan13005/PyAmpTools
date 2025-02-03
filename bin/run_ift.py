@@ -3,8 +3,6 @@ import logging
 import os
 import subprocess
 
-from omegaconf import OmegaConf
-
 from pyamptools.utility.general import Timer, dump_yaml, load_yaml
 
 ############################################################################

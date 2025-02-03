@@ -1,7 +1,7 @@
 from pyamptools.utility.io import loadAllResultsFromYaml
 import numpy as np
 from rich.console import Console
-from omegaconf import OmegaConf
+from pyamptools.utility.general import load_yaml
 import os
 import argparse
 
@@ -17,7 +17,7 @@ if __name__ == "__main__":
     console = Console()
     
     if output_dir is None:
-        yaml_primary = OmegaConf.load(yaml_file)
+        yaml_primary = load_yaml(yaml_file)
         base_directory = yaml_primary['base_directory']
         output_dir = base_directory
         console.print(f"\nOutput directory not specified, using YAML file's base directory: {output_dir}\n\n\n")

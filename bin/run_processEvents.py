@@ -2,9 +2,8 @@ import argparse
 from multiprocessing import Pool
 from time import time
 
-from omegaconf import OmegaConf
 from pyamptools import atiSetup
-from pyamptools.utility.general import Silencer, glob_sort_captured
+from pyamptools.utility.general import Silencer, glob_sort_captured, load_yaml
 from pyamptools.utility.restructure_amps import restructure_amps
 from pyamptools.utility.restructure_normints import restructure_normints
 
@@ -53,7 +52,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     yaml = args.yaml
-    yaml_file = OmegaConf.load(yaml)
+    yaml_file = load_yaml(yaml)
     verbose = args.verbose
 
     output_directory = yaml_file["amptools"]["output_directory"]

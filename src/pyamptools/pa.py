@@ -51,11 +51,10 @@ def main():
         # 'command' : (path, description)
         "run_cfgGen": (f"{PYAMPTOOLS_HOME}/bin/run_cfgGen.py", "Generate an AmpTools fit configuration file"),
         "run_divideData": (f"{PYAMPTOOLS_HOME}/bin/run_divideData.py", "Divide data into kinematic bins (separate folders)"),
-        "run_processEvents": (f"{PYAMPTOOLS_HOME}/bin/processEvents.py", "Process binned datasets to dump AmpTools' ampvecs data structure and normalization integrals into pkl files"),
+        "run_processEvents": (f"{PYAMPTOOLS_HOME}/bin/run_processEvents.py", "Process binned datasets to dump AmpTools' ampvecs data structure and normalization integrals into pkl files"),
         "run_mle": (f"{PYAMPTOOLS_HOME}/bin/run_mle.py", "Run MLE fits over kinematic bins using AmpTools"),
         "run_ift": (f"{PYAMPTOOLS_HOME}/bin/run_ift.py", "Run IFT fit over kinematic bins. MLE fits must be run first!"),
         "run_momentPlotter": (f"{PYAMPTOOLS_HOME}/bin/run_momentPlotter.py", "After running IFT + MLE fits we can attempt to plot all the moments"),
-        "run_iftsyst": (f"{PYAMPTOOLS_HOME}/bin/run_systematics.py", "Run IFT systematic variations"),
         "run_resultDump": (f"{PYAMPTOOLS_HOME}/bin/run_resultDump.py", "Dump IFT and AmpTools results to csv files"),
     }
 

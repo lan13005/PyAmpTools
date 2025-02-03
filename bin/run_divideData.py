@@ -249,7 +249,6 @@ if __name__ == "__main__":
             output_yaml.update({"mass_edges": mass_edges, "t_edges": t_edges, "nBars": nBars, "nBar_errs": nBar_errs, "share_mc": mc_already_shared})
             dump_yaml(output_yaml, yaml_name)
 
-
     if try_merge_bins:
 
         ###################################################
