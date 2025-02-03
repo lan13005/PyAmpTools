@@ -6,26 +6,13 @@ import argparse
 from pyamptools.utility.general import Timer
 from pyamptools.utility.io import loadAllResultsFromYaml
 from omegaconf.errors import MissingMandatoryValue
-from pyamptools.utility.general import load_yaml
-
-mpl.rcParams.update({
-    'font.size': 16,
-    'axes.labelsize': 16,
-    'axes.titlesize': 18,
-    'xtick.labelsize': 14,
-    'ytick.labelsize': 14,
-    'legend.fontsize': 14,
-    'figure.figsize': (10, 6),
-    'lines.linewidth': 2,
-    'lines.markersize': 6,
-    'errorbar.capsize': 3,
-    'axes.grid': True,
-    'grid.alpha': 0.7,
-    'grid.linestyle': '--',
-    'grid.linewidth': 0.5,
-})
+from pyamptools.utility.general import load_yaml, Styler
 
 def plot_moment(moment_name, t, masses, _amptools_df, _ift_df, latex_name_dict, show_samples=True, no_errorbands=False, save_file=None):
+
+    ### SET THE STYLE
+    style = Styler()
+    style.setPlotStyle()
 
     fig, ax_intens = plt.subplots()
     
@@ -36,14 +23,8 @@ def plot_moment(moment_name, t, masses, _amptools_df, _ift_df, latex_name_dict, 
         ift_df = _ift_df.query(f'tprime == {t}')
     
     mass_width = np.round(masses[1] - masses[0], 4)
-
-    ### SET THE STYLE
-    ax_intens.set_title(latex_name_dict[moment_name], loc="right")
-    ax_intens.set_box_aspect(1.0)
-    ax_intens.tick_params(direction="in", which="both")
-    ax_intens.minorticks_on()
+    
     ax_intens.set_ylabel(f"Moment Value / {mass_width} GeV$/c^2$")
-    ax_intens.ticklabel_format(axis="y", style="sci", scilimits=(-1, 3))
     ax_intens.set_xlabel("$m_X$ [GeV$/c^2$]")
     
     ## PLOT THE IFT RESULT
@@ -69,9 +50,9 @@ def plot_moment(moment_name, t, masses, _amptools_df, _ift_df, latex_name_dict, 
         ax_intens.scatter(amptools_df['mass'], moment_value, color="black", marker="o", s=20, label='Mass Indep. Result')
     
     ax_intens.axhline(0, color="black", linestyle="--", linewidth=1)
-    legend = ax_intens.legend(labelcolor="linecolor", handlelength=0.2, handletextpad=0.2, frameon=False)
-    for line in legend.get_lines():
-        line.set_alpha(1)  # Ensure legend markers have full opacity
+    ax_intens.set_title(latex_name_dict[moment_name])
+    
+    style.setAxisStyle(ax_intens)
     
     if save_file:
         print(f"momentPlotter| Saving Figure: {save_file}")
@@ -97,7 +78,7 @@ if __name__ == "__main__":
     
     yaml_primary = load_yaml(yaml_name)
     yaml_secondary = yaml_primary['nifty']['yaml']
-    yaml_secondary = load_yaml(yaml_secondary)
+    yaml_secondary = load_yaml(yaml_secondary, resolve=False)
 
     amptools_df, ift_df, wave_names, masses, tprime_centers, bpg, latex_name_dict = loadAllResultsFromYaml(yaml_name, npool)
     
@@ -119,7 +100,9 @@ if __name__ == "__main__":
     # synchronization of yaml pair currently only happens automatically when running `run_ift`
     #   We catch exceptions from OmegaConf for missing values or Python type errors for None type
     try: 
-        yaml_secondary['GENERAL']['outputFolder']
+        outputFolder = yaml_secondary['GENERAL']['outputFolder']
+        if outputFolder == '???':
+            outputFolder = yaml_primary['nifty']['output_directory']
     except (MissingMandatoryValue, TypeError):
         outputFolder = yaml_primary['nifty']['output_directory']
     outputFolder = os.path.join(outputFolder, "plots/moments")

@@ -7,6 +7,7 @@ import subprocess
 import time
 import unittest
 
+import matplotlib as mpl
 import importlib.util
 from git import Repo
 
@@ -88,6 +89,69 @@ prettyLabels = KeyReturningDict(prettyLabels)
 # ===================================================================================================
 # ===================================================================================================
 
+class Styler:
+    def __init__(self):
+        pass
+
+    def setPlotStyle(
+        self,
+        small_size: int = 14,
+        big_size: int = 16,
+        figsize: tuple = (6, 6),
+    ) -> None:
+
+        """Set the global plotting style."""
+
+        settings = {
+            
+            # Define common rcParams
+            "font.size": big_size,
+            "axes.labelsize": big_size,
+            "axes.titlesize": big_size + 2,
+            "xtick.labelsize": small_size,
+            "ytick.labelsize": small_size,
+            "legend.fontsize": small_size,
+            "figure.titlesize": big_size,
+            'figure.figsize': figsize,
+            
+            # grid settings
+            "axes.grid": True,
+            "grid.alpha": 0.7,
+            "grid.linestyle": "--",
+            "grid.linewidth": 0.5,
+            
+            # line settings
+            "lines.linewidth": 2,
+            "lines.markersize": 6,
+            "errorbar.capsize": 3,
+
+            # tick settings
+            "xtick.direction": "in",
+            "ytick.direction": "in",
+            "xtick.minor.visible": True,
+            "ytick.minor.visible": True,
+
+            # scientific formatting
+            "axes.formatter.use_mathtext": True,  # LaTeX-style formatting
+            "axes.formatter.limits": (-1, 3),  # Scientific notation range
+        }
+
+        # Apply the consolidated rcParams
+        mpl.rcParams.update({**settings})
+
+    def setAxisStyle(self, ax, right_title: bool = True) -> None:
+        """
+        Apply consistent formatting to an axis
+        
+        Parameters:
+        - ax: matplotlib.axes.Axes object
+        - title: str, optional title for the plot
+        - right_title: bool, places title on the right if True
+        """
+            
+        legend = ax.legend(labelcolor="linecolor", handlelength=0.2, handletextpad=0.2, frameon=False)
+        for line in legend.get_lines():
+            line.set_alpha(1)  # Ensure legend markers have full opacity
 
 def load_yaml(path_to_yaml, resolve=True):
     """
@@ -287,6 +351,7 @@ def get_function_by_pid(pid):
 def get_pid_family():
     """
     Returns the function or executable associated with the current process ID and its parent process ID
+    This is how we dynamically load the relevant libraries for the given task
 
     Example:
         1) python example.py              -> python, bash
@@ -441,27 +506,6 @@ def safe_getsize(file_path):
         return os.path.getsize(file_path)
     except FileNotFoundError:
         return 0
-
-
-def setPlotStyle(
-    small_size: int = 14,
-    big_size: int = 16,
-) -> None:
-    import matplotlib as mpl
-    import matplotlib.pyplot as plt
-    import mplhep as hep
-
-    """Set the plotting style."""
-    mpl.rcParams.update(mpl.rcParamsDefault)
-    plt.style.use([hep.styles.ATLAS])
-    plt.rc("font", size=small_size)  # controls default text sizes
-    plt.rc("axes", titlesize=small_size)  # fontsize of the axes title
-    plt.rc("axes", labelsize=big_size)  # fontsize of the x and y labels
-    plt.rc("xtick", labelsize=small_size)  # fontsize of the tick labels
-    plt.rc("ytick", labelsize=small_size)  # fontsize of the tick labels
-    plt.rc("legend", fontsize=small_size)  # legend fontsize
-    plt.rc("figure", titlesize=big_size)  # fontsize of the figure title
-
 
 class Silencer:
 
