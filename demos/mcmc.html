@@ -691,7 +691,7 @@ nwalkers: 32
 burnIn: 0
 nsamples: 200
 params_dict: {}
-moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7f408edc6490&gt;]
+moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7f4f1ca4d190&gt;]
 sampler_kwargs: {&#39;progress&#39;: False}
  ========================================================================= 
 
@@ -700,10 +700,10 @@ Initializing walkers in an N-ball around the initial estimate
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Calculating intensity with amplitudes dictionary:
-  resAmp1 -&gt; [&#39;etapi::imZ::resAmp1&#39;, &#39;etapi::reZ::resAmp1&#39;]
-  resAmp2 -&gt; [&#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp2&#39;]
-  resAmp3 -&gt; [&#39;etapi::reZ::resAmp3&#39;, &#39;etapi::imZ::resAmp3&#39;]
-  total -&gt; [&#39;etapi::imZ::resAmp1&#39;, &#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp3&#39;, &#39;etapi::imZ::resAmp3&#39;, &#39;etapi::reZ::resAmp2&#39;, &#39;etapi::reZ::resAmp1&#39;]
+  resAmp1 -&gt; [&#39;etapi::reZ::resAmp1&#39;, &#39;etapi::imZ::resAmp1&#39;]
+  resAmp3 -&gt; [&#39;etapi::imZ::resAmp3&#39;, &#39;etapi::reZ::resAmp3&#39;]
+  resAmp2 -&gt; [&#39;etapi::reZ::resAmp2&#39;, &#39;etapi::imZ::resAmp2&#39;]
+  total -&gt; [&#39;etapi::reZ::resAmp1&#39;, &#39;etapi::imZ::resAmp3&#39;, &#39;etapi::reZ::resAmp2&#39;, &#39;etapi::imZ::resAmp1&#39;, &#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp3&#39;]
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The chain is shorter than 50 times the integrated autocorrelation time for 5 parameter(s). Use this estimate with caution and run a longer chain!
@@ -731,7 +731,7 @@ Autocorrelation time: 16.447 steps
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MCMC intensity samples saved to mcmc/samples_intensity.feather
   shape: (6400, 4)
 
-Fit time: 4.474042892456055 seconds
+Fit time: 4.219515800476074 seconds
 </pre></div>
 </div>
 </div>
