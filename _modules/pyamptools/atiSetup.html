@@ -167,6 +167,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../demos/libraryLoading.html">Loading Libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demos/fsroot.html">FSROOT For Analysis</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../demos/fitting.html">Fitting</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../demos/mle.html">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../demos/mcmc.html">Markov Chain Monte Carlo</a></li>
@@ -354,7 +355,7 @@
 <span class="sd">        use_genamp (bool): True if GenAmp library should be loaded</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span> <span class="o">=</span> <span class="n">loadLibraries</span><span class="p">(</span><span class="n">accelerator</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="p">,</span> <span class="n">use_genamp</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
-    <span class="n">set_aliases</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">)</span>
+    <span class="n">set_aliases</span><span class="p">(</span><span class="n">calling_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">RANK_MPI</span></div>
 
@@ -417,51 +418,96 @@
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="get_linked_objects_to_alias">
+<a class="viewcode-back" href="../../api/atiSetup.html#pyamptools.atiSetup.get_linked_objects_to_alias">[docs]</a>
+<span class="k">def</span> <span class="nf">get_linked_objects_to_alias</span><span class="p">():</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function for set_aliases. Searches for objects in FSROOT + AmpTools shared libraries Linkdef.h files</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Dict[str, List[str]]: keys = full path location to Linkdef.h file, values = list of objects to alias</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">PYAMPTOOLS_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;PYAMPTOOLS_HOME&quot;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PYAMPTOOLS_HOME</span><span class="si">}</span><span class="s2">/src/pyamptools/.aliases.txt&quot;</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PYAMPTOOLS_HOME</span><span class="si">}</span><span class="s2">/src/pyamptools/.aliases.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]</span>
+
+    <span class="c1"># PyROOT dumps a Linkdef.h file when it binds objects from a shared library</span>
+    <span class="c1">#   we can parse it to get the objects to alias</span>
+    <span class="c1">#   Currently only care about FSROOT and AmpTools</span>
+    <span class="n">linkdef_files</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">external_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PYAMPTOOLS_HOME</span><span class="p">,</span> <span class="s2">&quot;external&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">dirs</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">external_dir</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;root&quot;</span> <span class="ow">in</span> <span class="n">root</span> <span class="ow">or</span> <span class="s2">&quot;GENERATORS&quot;</span> <span class="ow">in</span> <span class="n">root</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;MPI&quot;</span> <span class="ow">in</span> <span class="n">file</span> <span class="ow">or</span> <span class="s2">&quot;GPU&quot;</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;Linkdef.h&quot;</span><span class="p">):</span>
+                <span class="n">linkdef_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">file</span><span class="p">))</span>
+                
+    <span class="c1"># Loop through Linkdef files and extract the bound objects</span>
+    <span class="c1">#   Ignore specific keys to handle later, for instance MPI needs to manually set as it requires a different setup</span>
+    <span class="n">objects_to_alias</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">ignore_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;dict&quot;</span><span class="p">,</span> <span class="s2">&quot;LING&quot;</span><span class="p">,</span> <span class="s1">&#39;initialize&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">linkdef_file</span> <span class="ow">in</span> <span class="n">linkdef_files</span><span class="p">:</span>
+        <span class="n">objects_to_alias</span><span class="p">[</span><span class="n">linkdef_file</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">linkdef_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">symbols</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;#pragma link C++ defined_in&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.h&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">key</span> <span class="ow">in</span> <span class="n">line</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">ignore_keys</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;AmpToolsInterface&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;DataReader&quot;</span><span class="p">):</span> <span class="c1"># handle later</span>
+                    <span class="k">continue</span>
+                <span class="n">objects_to_alias</span><span class="p">[</span><span class="n">linkdef_file</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                
+    <span class="c1"># Dump the objects to a file to avoid re-parsing if exists</span>
+    <span class="n">flat_objects_to_alias</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PYAMPTOOLS_HOME</span><span class="si">}</span><span class="s2">/src/pyamptools/.aliases.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">objects</span> <span class="ow">in</span> <span class="n">objects_to_alias</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">flat_objects_to_alias</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">objects</span><span class="p">)</span>
+            <span class="k">for</span> <span class="nb">object</span> <span class="ow">in</span> <span class="n">objects</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">object</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                
+    <span class="k">return</span> <span class="n">flat_objects_to_alias</span></div>
+
 
 <div class="viewcode-block" id="set_aliases">
 <a class="viewcode-back" href="../../api/atiSetup.html#pyamptools.atiSetup.set_aliases">[docs]</a>
-<span class="k">def</span> <span class="nf">set_aliases</span><span class="p">(</span><span class="n">called_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">set_aliases</span><span class="p">(</span><span class="n">called_globals</span><span class="p">,</span> <span class="n">USE_MPI</span><span class="p">,</span> <span class="n">USE_GPU</span><span class="p">,</span> <span class="n">use_fsroot</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Due to MPI requiring c++ templates and the fact that all classes live under the ROOT namespace, aliasing can clean up the code significantly.</span>
 <span class="sd">    A dictionary of aliases is appended to the globals() function of the calling function thereby making the aliases available in the calling function.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        called_globals (dict): globals() from the calling function</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">aliases</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="c1">############### PyROOT RELATED ################</span>
+    
+    <span class="n">aliases</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">get_linked_objects_to_alias</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">use_fsroot</span> <span class="ow">and</span> <span class="n">obj</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;FS&quot;</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">aliases</span><span class="p">[</span><span class="n">obj</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ROOT</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">kModule</span><span class="si">}</span><span class="s2">| minor warning: Unable to alias </span><span class="si">{</span><span class="n">obj</span><span class="si">}</span><span class="s2"> - doesn&#39;t exist under ROOT namespace&quot;</span><span class="p">)</span>
+            <span class="k">pass</span>
+    
+    <span class="n">aliases</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+        <span class="c1">########### MANUALLY HANDLE SPECIAL CASES ############</span>
         <span class="s2">&quot;gInterpreter&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">gInterpreter</span><span class="p">,</span>
-        <span class="c1">############### AmpTools RELATED ##############</span>
         <span class="s2">&quot;AmpToolsInterface&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">AmpToolsInterfaceMPI</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">AmpToolsInterface</span><span class="p">,</span>
-        <span class="s2">&quot;NormIntInterface&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">NormIntInterface</span><span class="p">,</span>
-        <span class="s2">&quot;AmplitudeManager&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">AmplitudeManager</span><span class="p">,</span>
-        <span class="s2">&quot;ConfigFileParser&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ConfigFileParser</span><span class="p">,</span>
-        <span class="s2">&quot;ConfigurationInfo&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ConfigurationInfo</span><span class="p">,</span>
-        <span class="s2">&quot;Zlm&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">Zlm</span><span class="p">,</span>
-        <span class="s2">&quot;Vec_ps_refl&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">Vec_ps_refl</span><span class="p">,</span>
-        <span class="s2">&quot;OmegaDalitz&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">OmegaDalitz</span><span class="p">,</span>
-        <span class="s2">&quot;BreitWigner&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">BreitWigner</span><span class="p">,</span>
-        <span class="s2">&quot;Piecewise&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">Piecewise</span><span class="p">,</span>
-        <span class="s2">&quot;PhaseOffset&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">PhaseOffset</span><span class="p">,</span>
-        <span class="s2">&quot;TwoPiAngles&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TwoPiAngles</span><span class="p">,</span>
-        <span class="s2">&quot;Uniform&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">Uniform</span><span class="p">,</span>
-        <span class="s2">&quot;ParameterManager&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ParameterManager</span><span class="p">,</span>
-        <span class="s2">&quot;MinuitMinimizationManager&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">MinuitMinimizationManager</span><span class="p">,</span>
-        <span class="c1">############## DataReader RELATED ##############</span>
-        <span class="c1"># DataReaderMPI is a template; use [] to specify the type</span>
         <span class="s2">&quot;DataReader&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">DataReaderMPI</span><span class="p">[</span><span class="s2">&quot;ROOTDataReader&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ROOTDataReader</span><span class="p">,</span>
         <span class="s2">&quot;DataReaderTEM&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">DataReaderMPI</span><span class="p">[</span><span class="s2">&quot;ROOTDataReaderTEM&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ROOTDataReaderTEM</span><span class="p">,</span>
         <span class="s2">&quot;DataReaderFilter&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">DataReaderMPI</span><span class="p">[</span><span class="s2">&quot;ROOTDataReaderFilter&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ROOTDataReaderFilter</span><span class="p">,</span>
         <span class="s2">&quot;DataReaderBootstrap&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">DataReaderMPI</span><span class="p">[</span><span class="s2">&quot;ROOTDataReaderBootstrap&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">USE_MPI</span> <span class="k">else</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">ROOTDataReaderBootstrap</span><span class="p">,</span>
-        <span class="c1">########### PLOTTER / RESULTS RELATED ###########</span>
-        <span class="s2">&quot;FitResults&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">FitResults</span><span class="p">,</span>
-        <span class="s2">&quot;EtaPiPlotGenerator&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">EtaPiPlotGenerator</span><span class="p">,</span>
-        <span class="s2">&quot;PlotGenerator&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">PlotGenerator</span><span class="p">,</span>
-        <span class="s2">&quot;TH1&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TH1</span><span class="p">,</span>
-        <span class="s2">&quot;TFile&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TFile</span><span class="p">,</span>
-        <span class="s2">&quot;AmplitudeInfo&quot;</span><span class="p">:</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">AmplitudeInfo</span><span class="p">,</span>
-    <span class="p">}</span>
+    <span class="p">})</span>
     <span class="k">if</span> <span class="n">USE_GPU</span><span class="p">:</span>
         <span class="n">aliases</span><span class="p">[</span><span class="s2">&quot;GPUManager&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">GPUManager</span>
 

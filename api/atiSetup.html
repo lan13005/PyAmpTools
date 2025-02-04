@@ -168,6 +168,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../demos/libraryLoading.html">Loading Libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos/fsroot.html">FSROOT For Analysis</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../demos/fitting.html">Fitting</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../demos/mle.html">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../demos/mcmc.html">Markov Chain Monte Carlo</a></li>
@@ -370,6 +371,7 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.atiSetup.get_linked_objects_to_alias"><code class="docutils literal notranslate"><span class="pre">get_linked_objects_to_alias()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.atiSetup.loadLibraries"><code class="docutils literal notranslate"><span class="pre">loadLibraries()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.atiSetup.loadLibrary"><code class="docutils literal notranslate"><span class="pre">loadLibrary()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.atiSetup.prepare_mpigpu"><code class="docutils literal notranslate"><span class="pre">prepare_mpigpu()</span></code></a></li>
@@ -389,6 +391,20 @@
                   
   <section id="module-pyamptools.atiSetup">
 <span id="atisetup"></span><h1>atiSetup<a class="headerlink" href="#module-pyamptools.atiSetup" title="Link to this heading">#</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="pyamptools.atiSetup.get_linked_objects_to_alias">
+<span class="sig-name descname"><span class="pre">get_linked_objects_to_alias</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyamptools/atiSetup.html#get_linked_objects_to_alias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyamptools.atiSetup.get_linked_objects_to_alias" title="Link to this definition">#</a></dt>
+<dd><p>Helper function for set_aliases. Searches for objects in FSROOT + AmpTools shared libraries Linkdef.h files</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>keys = full path location to Linkdef.h file, values = list of objects to alias</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[str, List[str]]</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="pyamptools.atiSetup.loadLibraries">
 <span class="sig-name descname"><span class="pre">loadLibraries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">accelerator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fsroot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_genamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyamptools/atiSetup.html#loadLibraries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyamptools.atiSetup.loadLibraries" title="Link to this definition">#</a></dt>
@@ -431,7 +447,7 @@ RANK_MPI (int): MPI rank of the process (0 by default even if MPI is not used)</
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyamptools.atiSetup.set_aliases">
-<span class="sig-name descname"><span class="pre">set_aliases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">called_globals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">USE_MPI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">USE_GPU</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyamptools/atiSetup.html#set_aliases"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyamptools.atiSetup.set_aliases" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_aliases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">called_globals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">USE_MPI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">USE_GPU</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fsroot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyamptools/atiSetup.html#set_aliases"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyamptools.atiSetup.set_aliases" title="Link to this definition">#</a></dt>
 <dd><p>Due to MPI requiring c++ templates and the fact that all classes live under the ROOT namespace, aliasing can clean up the code significantly.
 A dictionary of aliases is appended to the globals() function of the calling function thereby making the aliases available in the calling function.</p>
 <dl class="field-list simple">
@@ -506,6 +522,7 @@ A dictionary of aliases is appended to the globals() function of the calling fun
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.atiSetup.get_linked_objects_to_alias"><code class="docutils literal notranslate"><span class="pre">get_linked_objects_to_alias()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.atiSetup.loadLibraries"><code class="docutils literal notranslate"><span class="pre">loadLibraries()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.atiSetup.loadLibrary"><code class="docutils literal notranslate"><span class="pre">loadLibrary()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyamptools.atiSetup.prepare_mpigpu"><code class="docutils literal notranslate"><span class="pre">prepare_mpigpu()</span></code></a></li>
