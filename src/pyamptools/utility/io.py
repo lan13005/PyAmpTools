@@ -5,7 +5,7 @@ import re
 from collections import defaultdict
 from pyamptools.utility.general import glob_sort_captured
 from pyamptools.utility.MomentUtilities import MomentManager
-
+from iftpwa1.utilities.helpers import reload_fields_and_components
 import numpy as np
 import pandas as pd
 import pickle as pkl
@@ -166,24 +166,12 @@ def loadAllResultsFromYaml(yaml, pool_size=10):
     ###############################
     print("io| Attempting to load NIFTY results...")
     try:
-        ift_df = loadIFTResultsFromYaml(yaml)
+        ift_df, ift_res_df = loadIFTResultsFromYaml(yaml)
     except Exception as e:
         print(f"io| Error loading NIFTY results: {e}")
         
     if amptools_df is None and ift_df is None:
         raise ValueError("io| No results from AmpTools binned fits nor IFT can be found! Terminating...")
-
-    ###########################################
-    #### CHECK IF THE RESULTS ARE COMPATIBLE
-    ###########################################
-    # if both exists and not missing the expected columns
-    if amptools_df is not None and ift_df is not None:
-        if not set(ift_df.columns.drop('sample')) <= set(amptools_df.columns):
-            # print the missing columns in amptools_df that is in ift_df
-            missing_columns = set(ift_df.columns.drop('sample')) - set(amptools_df.columns)
-            print(f"io| IFT columns: {ift_df.columns}")
-            print(f"io| AmpTools columns: {amptools_df.columns}")
-            raise ValueError(f"IFT and AmpTools columns do not match. Missing columns: {missing_columns}")
 
     ###########################################
     #### PROCESS THE AMPTOOLS AND IFT RESULTS
@@ -204,7 +192,7 @@ def loadAllResultsFromYaml(yaml, pool_size=10):
     # think its safe? If they are not None by this point they must be the same dictionary
     latex_name_dict = latex_name_dict_amp if latex_name_dict_amp is not None else latex_name_dict_ift
     
-    return amptools_df, ift_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict
+    return amptools_df, ift_df, ift_res_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict
 
 def loadIFTResultsFromYaml(yaml):
     
@@ -234,58 +222,117 @@ def loadIFTResultsFromYaml(yaml):
     nifty_pkl = yaml_secondary['GENERAL']['fitResultPath']
 
     with open(nifty_pkl, "rb") as f:
-        data = pkl.load(f)
+        resultData = pkl.load(f)
         
-    wave_names = data['pwa_manager_base_information']['wave_names']
-    mass_bins = data['pwa_manager_base_information']['mass_bins']
-    tprime_bins = data['pwa_manager_base_information']['tprime_bins']
-    mass_centers = (mass_bins[:-1] + mass_bins[1:]) / 2
-    tprime_centers = (tprime_bins[:-1] + tprime_bins[1:]) / 2
+    _result = reload_fields_and_components(resultData=resultData)
+
+    # signal_field_sample_values, amp_field, _res_amps_waves_tprime, _bkg_amps_waves_tprime, kinematic_mutliplier = _result
+    signal_field_sample_values, amp_field, res_amps_waves_tprime, bkg_amps_waves_tprime, kinematic_mutliplier, \
+        threshold_selector, modelName, wave_names, wave_parametrizations, paras, resonances, calc_intens = _result
+
+    threshold_selector = kinematic_mutliplier > 0
+
+    # Reload general information
+    wave_names = resultData["pwa_manager_base_information"]["wave_names"]
+    wave_names = [wave.split("::")[-1] for wave in wave_names]
     nmb_waves = len(wave_names)
-    nmb_masses = len(mass_centers)
-    nmb_tprimes = len(tprime_centers)
 
-    # Get complex signal field values
-    signal_field_sample_values = data['signal_field_sample_values'] # ~ (nmb_samples, 2*n_waves, n_masses, n_tprime)
-    signal_field_sample_values = signal_field_sample_values[:, :2*nmb_waves:2, :, :] + 1j * signal_field_sample_values[:, 1:2*nmb_waves:2, :, :]
+    mass_bins = resultData["pwa_manager_base_information"]["mass_bins"]
+    masses = 0.5 * (mass_bins[1:] + mass_bins[:-1])
+    mass_limits = (np.min(mass_bins), np.max(mass_bins))
 
-    # Get number of samples
-    nmb_samples = signal_field_sample_values.shape[0]
+    tprime_bins = resultData["pwa_manager_base_information"]["tprime_bins"]
+    tprimes = 0.5 * (tprime_bins[1:] + tprime_bins[:-1])
 
-    # Reshape to flatten across samples, masses, tprime
-    signal_field_sample_values = np.transpose(signal_field_sample_values, (0, 2, 3, 1)) # -> (nmb_samples, n_masses, n_tprime, n_waves)
-    signal_field_sample_values = signal_field_sample_values.reshape(-1, nmb_waves) # -> (nmb_samples * n_masses * n_tprime, n_waves)
+    nmb_samples, dim_signal, nmb_masses, nmb_tprime = signal_field_sample_values.shape  # Dimensions
 
-    # Create arrays for sample, mass, tprime indices
-    sample_indices = np.repeat(np.arange(nmb_samples), nmb_masses * nmb_tprimes)
-    mass_indices = np.tile(np.repeat(mass_centers, nmb_tprimes), nmb_samples)
-    tprime_indices = np.tile(tprime_centers, nmb_samples * nmb_masses)
+    # Stage 1:  Flatten the original dictionary structure into a single flat DataFrame
+    #           Stores complex amplitude values (unnormalized)for each partial wave component, columns ending with "_amp"
+    #               1. Amplitudes describe parametrically have a name <wave_name>_<resonance_name>_amp
+    #               2. Residual (Correlated field) amplitudes have a name <wave_name>_cf_amp
+    flat_amps_waves_tprime = {}
+    for tbin in range(nmb_tprime):
+        
+        # For kinematics and sampling
+        if 'tprime' not in flat_amps_waves_tprime:
+            flat_amps_waves_tprime['tprime'] = np.repeat(tprimes[tbin], nmb_samples * nmb_masses)
+        else:
+            flat_amps_waves_tprime['tprime'] = np.concatenate((flat_amps_waves_tprime['tprime'], np.repeat(tprimes[tbin], nmb_samples * nmb_masses)))
+        if 'mass' not in flat_amps_waves_tprime:
+            flat_amps_waves_tprime['mass'] = np.tile(masses, nmb_samples)
+        else:
+            flat_amps_waves_tprime['mass'] = np.concatenate((flat_amps_waves_tprime['mass'], np.tile(masses, nmb_samples)))
+        if 'sample' not in flat_amps_waves_tprime:
+            flat_amps_waves_tprime['sample'] = np.repeat(np.arange(nmb_samples), nmb_masses)
+        else:
+            flat_amps_waves_tprime['sample'] = np.concatenate((flat_amps_waves_tprime['sample'], np.repeat(np.arange(nmb_samples), nmb_masses)))
+            
+        # For the total signal
+        for wave_name in wave_names:
+            if f'{wave_name}' not in flat_amps_waves_tprime:
+                flat_amps_waves_tprime[f'{wave_name}_amp'] = amp_field[:, wave_names.index(wave_name), :, tbin].flatten()
+            else:
+                flat_amps_waves_tprime[f'{wave_name}_amp'] = np.concatenate((flat_amps_waves_tprime[f'{wave_name}'], amp_field[:, wave_names.index(wave_name), :, tbin].flatten()))
 
-    # Stack all columns together
-    ift_df = np.column_stack((sample_indices, mass_indices, tprime_indices, signal_field_sample_values))
+        # For the parametric models
+        for wave_name in wave_names:
+            if wave_name not in res_amps_waves_tprime: # there was no parameteric model for this partial wave
+                continue
+            for res in res_amps_waves_tprime[wave_name][tbin].keys():
+                if f'{wave_name}_{res}_amp' not in flat_amps_waves_tprime:
+                    flat_amps_waves_tprime[f'{wave_name}_{res}_amp'] = res_amps_waves_tprime[wave_name][tbin][res].flatten()
+                else:
+                    flat_amps_waves_tprime[f'{wave_name}_{res}_amp'] = np.concatenate((flat_amps_waves_tprime[f'{wave_name}_{res}_amp'], res_amps_waves_tprime[wave_name][tbin][res].flatten()))
+                    
+        # For the background / residual correlated field backgrounds
+        for wave_name in wave_names:
+            if wave_name not in bkg_amps_waves_tprime:
+                continue
+            if f'{wave_name}_cf_amp' not in flat_amps_waves_tprime:
+                flat_amps_waves_tprime[f'{wave_name}_cf_amp'] = bkg_amps_waves_tprime[wave_name][tbin].flatten()
+            else:
+                flat_amps_waves_tprime[f'{wave_name}_cf_amp'] = np.concatenate((flat_amps_waves_tprime[f'{wave_name}_cf_amp'], bkg_amps_waves_tprime[wave_name][tbin].flatten()))
+                
+    flat_amps_waves_tprime = pd.DataFrame(flat_amps_waves_tprime)
 
-    cols = ['sample', 'mass', 'tprime'] + [f'{wave_name}_amp' for wave_name in wave_names]
-    ift_df = pd.DataFrame(ift_df, columns=cols)
+    # Stage 2: Loop over amp columns and calculate+store the normalized intensity
+    cols = list(flat_amps_waves_tprime.keys())
+    flat_intens_waves_tprime = {}
+    for tprime in tprimes:
+        for col in cols:
+            if col.endswith('_amp'):
+                wave = col.split('_')[0]
+                tmp = flat_amps_waves_tprime.query('tprime == @tprime')
+                intens = calc_intens([wave], tbin, [tmp[col].values.reshape(nmb_samples, nmb_masses)])
+                if f'{col.strip("_amp")}' not in flat_amps_waves_tprime:
+                    flat_intens_waves_tprime[f'{col.strip("_amp")}'] = intens.flatten().real
+                else:
+                    flat_intens_waves_tprime[f'{col.strip("_amp")}'] = np.concatenate((flat_amps_waves_tprime[f'{col.strip("_amp")}'], intens.flatten().real))
 
-    # Reorder columns
-    cols = ['tprime', 'mass', 'sample'] + [f'{wave_name}_amp' for wave_name in wave_names]
-    ift_df = ift_df[cols]
+    flat_intens_waves_tprime = pd.DataFrame(flat_intens_waves_tprime)
 
-    # sample column is int, mass as float, tprime as float, wave_name_amp as complex
-    ift_df['sample'] = ift_df['sample'].values.real.astype(int)
-    ift_df['mass'] = ift_df['mass'].values.real.astype(float)
-    ift_df['tprime'] = ift_df['tprime'].values.real.astype(float)
-    ift_df[cols[3:]] = ift_df[cols[3:]].astype(complex)
+    ift_pwa_df = pd.concat([flat_amps_waves_tprime, flat_intens_waves_tprime], axis=1)
 
-    # Get the (fitted) total intensity
-    intensity_samples = np.array(data['expected_nmb_events'], dtype=float) # ~ (nmb_samples, nmb_masses, nmb_tprimes)
-    intensity_samples_no_acc = np.array(data['expected_nmb_events_no_acc'], dtype=float) # ~ (nmb_samples, nmb_masses, nmb_tprimes)
+    # Get the expected number of events (intensity)
+    intensity_samples = np.array(resultData['expected_nmb_events'], dtype=float) # ~ (nmb_samples, nmb_masses, nmb_tprimes)
+    intensity_samples_no_acc = np.array(resultData['expected_nmb_events_no_acc'], dtype=float) # ~ (nmb_samples, nmb_masses, nmb_tprimes)
     intensity_samples = intensity_samples.reshape(-1, 1)
     intensity_samples_no_acc = intensity_samples_no_acc.reshape(-1, 1)
-    ift_df['intensity'] = intensity_samples
-    ift_df['intensity_corr'] = intensity_samples_no_acc
+    ift_pwa_df['intensity'] = intensity_samples
+    ift_pwa_df['intensity_corr'] = intensity_samples_no_acc
     
-    return ift_df
+    # Extract (res)onance parameter samples, dump into independent DataFrame/csv
+    #   This is only an array over samples, and is the same value for all masses and tprimes
+    #   Therefore, it doesn't make sense to store it in the same DataFrame as the partial wave amplitudes
+    ift_res_df = {}
+    for resonance_parameter in resultData["fit_parameters_dict"]:
+        if "scale" not in resonance_parameter:
+            ift_res_df[resonance_parameter] = np.array(
+                resultData["fit_parameters_dict"][resonance_parameter]
+            )
+    ift_res_df = pd.DataFrame(ift_res_df)
+    
+    return ift_pwa_df, ift_res_df
 
 def loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=True):
     """ 

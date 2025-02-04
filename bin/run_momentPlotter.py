@@ -80,7 +80,7 @@ if __name__ == "__main__":
     yaml_secondary = yaml_primary['nifty']['yaml']
     yaml_secondary = load_yaml(yaml_secondary, resolve=False)
 
-    amptools_df, ift_df, wave_names, masses, tprime_centers, bpg, latex_name_dict = loadAllResultsFromYaml(yaml_name, npool)
+    amptools_df, ift_df, ift_res_df, wave_names, masses, tprime_centers, bpg, latex_name_dict = loadAllResultsFromYaml(yaml_name, npool)
     
     if latex_name_dict is None:
         raise ValueError("momentPlotter| latex_name_dict is None. This means that moments were not calculated properly for the ift and amptools dataframes!")

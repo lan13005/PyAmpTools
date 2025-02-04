@@ -21,11 +21,11 @@ if __name__ == "__main__":
         base_directory = yaml_primary['base_directory']
         output_dir = base_directory
         console.print(f"\nOutput directory not specified, using YAML file's base directory: {output_dir}\n\n\n")
-        
 
-    amptools_df, ift_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict = loadAllResultsFromYaml(yaml_file)
+    amptools_df, ift_df, ift_res_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict = loadAllResultsFromYaml(yaml_file)
 
     ift_csv_path = os.path.join(base_directory, 'ift_results.csv')
+    ift_res_csv_path = os.path.join(base_directory, 'ift_res_results.csv')
     amptools_csv_path = os.path.join(base_directory, 'amptools_results.csv')
     
     print_schema = (
@@ -38,8 +38,17 @@ if __name__ == "__main__":
             "- [cyan]IFT DataFrame:[/cyan] Quantities per (t, mass, posterior sample).\n"
             "    - [bold]'intensity_corr'[/bold]: Fitted acceptance corrected intensity values. Aggregate over samples to get mean/std.\n"
             "    - [bold]'intensity'[/bold]: Fitted intensity values. Aggregate over samples to get mean and standard deviation.\n"
-            "    - [bold]'<wave>_amp' columns[/bold]: Contain complex amplitude values.\n"
+            "    - [bold]'<wave>_<res>_amp' columns[/bold]: Contain complex amplitude values for parameteric components.\n"
+            "    - [bold]'<wave>_cf_amp' columns[/bold]: Contain complex amplitude values for correlated field components.\n"
+            "    - [bold]'<wave>_amp' columns[/bold]: Contain complex amplitude values for the coherent sum of parameteric and correlated field components.\n"
+            "    - [bold]'<wave>_<res>' columns[/bold]: Contain intensity values for parameteric components.\n"
+            "    - [bold]'<wave>_cf' columns[/bold]: Contain intensity values for correlated field components.\n"
+            "    - [bold]'<wave>' columns[/bold]: Contain intensity values for the coherent sum of parameteric and correlated field components.\n"
             "    - [bold]'Hi_LM'[/bold]: Moment with index i for given LM quantum number. i.e. H0_00 is the $H_{0}(0,0)$ moment.\n"
+            "- [cyan]IFT (Res)onance DataFrame:[/cyan] Quantities per (sample).\n"
+            "    - [bold]'index' of the DataFrame[/bold]: Sample index\n"
+            "    - [bold]'<prior_parameter_name>' columns[/bold]: Contain the value of the resonance parameter.\n"
+            ""
         )
     if amptools_df is not None:
         print_schema += (
@@ -67,6 +76,9 @@ if __name__ == "__main__":
         console.print(f" [red]Writing IFT DataFrame to csv located at: {ift_csv_path}[/red]")
         console.print(f" Shape of IFT results DataFrame {ift_df.shape} with columns: {ift_df.columns}")
         ift_df.to_csv(ift_csv_path, index=False)
+        console.print(f" [red]Writing IFT (Res)onance DataFrame to csv located at: {ift_res_csv_path}[/red]")
+        console.print(f" Shape of IFT results DataFrame {ift_res_df.shape} with columns: {ift_res_df.columns}")
+        ift_res_df.to_csv(ift_res_csv_path, index=False)
     else:
         console.print(" [red]No IFT results found, skipping...[/red]")
     
