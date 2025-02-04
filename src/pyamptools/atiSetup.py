@@ -26,7 +26,7 @@ def setup(calling_globals, accelerator="mpigpu", use_fsroot=False, use_genamp=Fa
         use_genamp (bool): True if GenAmp library should be loaded
     """
     USE_MPI, USE_GPU, RANK_MPI = loadLibraries(accelerator, use_fsroot, use_genamp, verbose=verbose)
-    set_aliases(calling_globals, USE_MPI, USE_GPU)
+    set_aliases(calling_globals, USE_MPI, USE_GPU, use_fsroot, verbose=verbose)
 
     return USE_MPI, USE_GPU, RANK_MPI
 
@@ -82,49 +82,91 @@ def loadLibrary(libName, RANK_MPI=0, IS_REQUESTED=True, verbose=True):
     if RANK_MPI == 0 and verbose:
         print(f"  {status}")
 
+def get_linked_objects_to_alias():
+    
+    """
+    Helper function for set_aliases. Searches for objects in FSROOT + AmpTools shared libraries Linkdef.h files
+    
+    Returns:
+        Dict[str, List[str]]: keys = full path location to Linkdef.h file, values = list of objects to alias
+    """
+    
+    PYAMPTOOLS_HOME = os.getenv("PYAMPTOOLS_HOME")
+    
+    if os.path.exists(f"{PYAMPTOOLS_HOME}/src/pyamptools/.aliases.txt"):
+        with open(f"{PYAMPTOOLS_HOME}/src/pyamptools/.aliases.txt", "r") as f:
+            lines = f.readlines()
+            return [line.strip() for line in lines]
 
-def set_aliases(called_globals, USE_MPI, USE_GPU):
+    # PyROOT dumps a Linkdef.h file when it binds objects from a shared library
+    #   we can parse it to get the objects to alias
+    #   Currently only care about FSROOT and AmpTools
+    linkdef_files = []
+    external_dir = os.path.join(PYAMPTOOLS_HOME, "external")
+    for root, dirs, files in os.walk(external_dir):
+        if "root" in root or "GENERATORS" in root:
+            continue
+        for file in files:
+            if "MPI" in file or "GPU" in file:
+                continue
+            if file.endswith("Linkdef.h"):
+                linkdef_files.append(os.path.join(root, file))
+                
+    # Loop through Linkdef files and extract the bound objects
+    #   Ignore specific keys to handle later, for instance MPI needs to manually set as it requires a different setup
+    objects_to_alias = {}
+    ignore_keys = ["dict", "LING", 'initialize']
+    for linkdef_file in linkdef_files:
+        objects_to_alias[linkdef_file] = []
+        with open(linkdef_file, "r") as symbols:
+            for line in symbols:
+                line = line.strip().strip("#pragma link C++ defined_in").split("/")[-1].split('.h')[0].strip('"')
+                if any(key in line for key in ignore_keys) or len(line) == 0:
+                    continue
+                if line.startswith("AmpToolsInterface") or line.startswith("DataReader"): # handle later
+                    continue
+                objects_to_alias[linkdef_file].append(line)
+                
+    # Dump the objects to a file to avoid re-parsing if exists
+    flat_objects_to_alias = []
+    with open(f"{PYAMPTOOLS_HOME}/src/pyamptools/.aliases.txt", "w") as f:
+        for _, objects in objects_to_alias.items():
+            flat_objects_to_alias.extend(objects)
+            for object in objects:
+                f.write(f"{object}\n")
+                
+    return flat_objects_to_alias
+
+def set_aliases(called_globals, USE_MPI, USE_GPU, use_fsroot, verbose=False):
     """
     Due to MPI requiring c++ templates and the fact that all classes live under the ROOT namespace, aliasing can clean up the code significantly.
     A dictionary of aliases is appended to the globals() function of the calling function thereby making the aliases available in the calling function.
 
     Args:
         called_globals (dict): globals() from the calling function
-
     """
-    aliases = {
-        ############### PyROOT RELATED ################
+    
+    aliases = {}
+    
+    for obj in get_linked_objects_to_alias():
+        if not use_fsroot and obj.startswith("FS"):
+            continue
+        try:
+            aliases[obj] = getattr(ROOT, obj)
+        except AttributeError:
+            if verbose:
+                print(f"{kModule}| minor warning: Unable to alias {obj} - doesn't exist under ROOT namespace")
+            pass
+    
+    aliases.update({
+        ########### MANUALLY HANDLE SPECIAL CASES ############
         "gInterpreter": ROOT.gInterpreter,
-        ############### AmpTools RELATED ##############
         "AmpToolsInterface": ROOT.AmpToolsInterfaceMPI if USE_MPI else ROOT.AmpToolsInterface,
-        "NormIntInterface": ROOT.NormIntInterface,
-        "AmplitudeManager": ROOT.AmplitudeManager,
-        "ConfigFileParser": ROOT.ConfigFileParser,
-        "ConfigurationInfo": ROOT.ConfigurationInfo,
-        "Zlm": ROOT.Zlm,
-        "Vec_ps_refl": ROOT.Vec_ps_refl,
-        "OmegaDalitz": ROOT.OmegaDalitz,
-        "BreitWigner": ROOT.BreitWigner,
-        "Piecewise": ROOT.Piecewise,
-        "PhaseOffset": ROOT.PhaseOffset,
-        "TwoPiAngles": ROOT.TwoPiAngles,
-        "Uniform": ROOT.Uniform,
-        "ParameterManager": ROOT.ParameterManager,
-        "MinuitMinimizationManager": ROOT.MinuitMinimizationManager,
-        ############## DataReader RELATED ##############
-        # DataReaderMPI is a template; use [] to specify the type
         "DataReader": ROOT.DataReaderMPI["ROOTDataReader"] if USE_MPI else ROOT.ROOTDataReader,
         "DataReaderTEM": ROOT.DataReaderMPI["ROOTDataReaderTEM"] if USE_MPI else ROOT.ROOTDataReaderTEM,
         "DataReaderFilter": ROOT.DataReaderMPI["ROOTDataReaderFilter"] if USE_MPI else ROOT.ROOTDataReaderFilter,
         "DataReaderBootstrap": ROOT.DataReaderMPI["ROOTDataReaderBootstrap"] if USE_MPI else ROOT.ROOTDataReaderBootstrap,
-        ########### PLOTTER / RESULTS RELATED ###########
-        "FitResults": ROOT.FitResults,
-        "EtaPiPlotGenerator": ROOT.EtaPiPlotGenerator,
-        "PlotGenerator": ROOT.PlotGenerator,
-        "TH1": ROOT.TH1,
-        "TFile": ROOT.TFile,
-        "AmplitudeInfo": ROOT.AmplitudeInfo,
-    }
+    })
     if USE_GPU:
         aliases["GPUManager"] = ROOT.GPUManager
 
