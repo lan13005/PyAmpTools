@@ -54,7 +54,8 @@ apptainer exec --contain --writable-tmpfs \
     --bind /scratch \
     --bind ~/.cache/fontconfig \
     --env BASH_ENV=/dev/null \
-    pyamptools.sif bash
+    /LOCATION/OF/pyamptools.sif bash
+# Location on the jlab farm: /w/halld-scshelf2101/lng/WORK/PyAmpTools/pyamptools.sif
 
 # INSIDE THE CONTAINER:
 source /etc/bash.bashrc
