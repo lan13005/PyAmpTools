@@ -10,10 +10,6 @@ parts:
     chapters:
       - file: demos/libraryLoading
 #      - file: demos/generation
-      - file: fsroot
-        sections:
-          - file: demos/fsroot_intro
-          - file: demos/fsroot_advanced
       - file: demos/fitting
         sections:
           - file: demos/mle
@@ -26,6 +22,10 @@ parts:
       - file: ift/iftpwa_config
       - file: ift/iftpwa_exec
       - file: ift/iftpwa_tips
+  - caption: FSROOT Related Tutorials
+    chapters:
+      - file: demos/fsroot_intro
+      - file: demos/fsroot_advanced
   # - caption: API
   #   chapters:
   #     - file: api/atiSetup
