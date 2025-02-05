@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>FSROOT For Analysis &#8212; PyAmpTools</title>
+    <title>FSROOT Introductory Tutorial &#8212; PyAmpTools</title>
   
   
   
@@ -60,11 +60,11 @@
     <script async="async" src="../_static/sphinx-thebe.js?v=c100c467"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'demos/fsroot';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'demos/fsroot_intro';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Fitting" href="fitting.html" />
-    <link rel="prev" title="Loading Libraries" href="libraryLoading.html" />
+    <link rel="next" title="FSROOT Advanced Tutorial" href="fsroot_advanced.html" />
+    <link rel="prev" title="FSROOT Tutorials" href="../fsroot.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -168,7 +168,14 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="libraryLoading.html">Loading Libraries</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">FSROOT For Analysis</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../fsroot.html">FSROOT Tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">FSROOT Introductory Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fsroot_advanced.html">FSROOT Advanced Tutorial</a></li>
+
+
+
+</ul>
+</details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="fitting.html">Fitting</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="mle.html">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mcmc.html">Markov Chain Monte Carlo</a></li>
@@ -255,7 +262,7 @@
       
       
       
-      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2Fdemos/fsroot.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2Fdemos/fsroot_intro.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -285,7 +292,7 @@
       
       
       
-      <li><a href="../_sources/demos/fsroot.ipynb" target="_blank"
+      <li><a href="../_sources/demos/fsroot_intro.ipynb" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -359,7 +366,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>FSROOT For Analysis</h1>
+    <h1>FSROOT Introductory Tutorial</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -373,8 +380,8 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="fsroot-for-analysis">
-<h1>FSROOT For Analysis<a class="headerlink" href="#fsroot-for-analysis" title="Link to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="fsroot-introductory-tutorial">
+<h1>FSROOT Introductory Tutorial<a class="headerlink" href="#fsroot-introductory-tutorial" title="Link to this heading">#</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">FSROOT</span></code> is an alternative way to process <code class="docutils literal notranslate"><span class="pre">ROOT</span></code> data. It is a <code class="docutils literal notranslate"><span class="pre">c++</span></code> library that is also python bound into the <code class="docutils literal notranslate"><span class="pre">PyAmpTools</span></code> package. This example is a work in progress but it shows a minimal example (thanks to Daniel Barton) of how to make a simple histogram. As I do not personally use <code class="docutils literal notranslate"><span class="pre">FSROOT</span></code> I cannot guarantee all functionality is python bound but in principle (most?) of it should be and is avaible in the global namespace after running <code class="docutils literal notranslate"><span class="pre">atiSetup.setup(globals(),</span> <span class="pre">use_fsroot=True)</span></code>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -421,6 +428,7 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
 
+atiSetup| Saved aliases found in /w/halld-scshelf2101/lng/WORK/PyAmpTools9/src/pyamptools/.aliases.txt, attempting to load...
 atiSetup| minor warning: Unable to alias FSFitFunctions - doesn&#39;t exist under ROOT namespace
 atiSetup| minor warning: Unable to alias FSFitPrivate - doesn&#39;t exist under ROOT namespace
 </pre></div>
@@ -435,7 +443,7 @@ atiSetup| minor warning: Unable to alias URConfig - doesn&#39;t exist under ROOT
 </div>
 </div>
 </div>
-<p>We will reuse the test sample and plot the real part of some amplitude since this the only dataset available as part of this package</p>
+<p>We will reuse the test sample (fake data) and plot the real part of some amplitude since this the only dataset available as part of this package</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">### Location of the data</span>
@@ -512,20 +520,20 @@ atiSetup| minor warning: Unable to alias URConfig - doesn&#39;t exist under ROOT
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="libraryLoading.html"
+       href="../fsroot.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Loading Libraries</p>
+        <p class="prev-next-title">FSROOT Tutorials</p>
       </div>
     </a>
     <a class="right-next"
-       href="fitting.html"
+       href="fsroot_advanced.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Fitting</p>
+        <p class="prev-next-title">FSROOT Advanced Tutorial</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

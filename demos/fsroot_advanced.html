@@ -1,0 +1,1068 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>FSROOT Advanced Tutorial &#8212; PyAmpTools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!-- 
+    this give us a css class that will be invisible only if js is disabled 
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'demos/fsroot_advanced';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Fitting" href="fitting.html" />
+    <link rel="prev" title="FSROOT Introductory Tutorial" href="fsroot_intro.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../intro.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">PyAmpTools</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../intro.html">
+                    PyAmpTools
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../additional_info.html">Potential Build Errors</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="libraryLoading.html">Loading Libraries</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../fsroot.html">FSROOT Tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="fsroot_intro.html">FSROOT Introductory Tutorial</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">FSROOT Advanced Tutorial</a></li>
+
+
+
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="fitting.html">Fitting</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="mle.html">Maximum Likelihood Estimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mcmc.html">Markov Chain Monte Carlo</a></li>
+
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="extract_ff.html">Extracting Fit Fractions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plotgen.html">Plotting Fit Results</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_intro.html">iftpwa - Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_config.html">iftpwa - Default Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_exec.html">iftpwa - Default Execution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_tips.html">iftpwa - Tips</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/lan13005/PyAmpTools" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2Fdemos/fsroot_advanced.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/demos/fsroot_advanced.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>FSROOT Advanced Tutorial</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">FSROOT Advanced Tutorial</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#draw-first-set-of-plots">Draw first set of plots</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#draw-second-set-of-plots">Draw second set of plots</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#draw-third-set-of-plots">Draw third set of plots</a></li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="fsroot-advanced-tutorial">
+<h1>FSROOT Advanced Tutorial<a class="headerlink" href="#fsroot-advanced-tutorial" title="Link to this heading">#</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This tutorial is a PyROOT port of <a class="reference external" href="https://github.com/JeffersonLab/gluex_workshops/blob/master/tutorial_2022/session2d/plots.C">GlueX 2022 Tutorial Session 2d</a> by Malte Albrecht. You must be on the JLab farm to run this tutorial to access the ROOT data files. Translating form <code class="docutils literal notranslate"><span class="pre">c++</span></code> FSROOT to <code class="docutils literal notranslate"><span class="pre">PyROOT</span></code> <code class="docutils literal notranslate"><span class="pre">FSROOT</span></code> is as simple as changing how attributes are accessed (i.e. <code class="docutils literal notranslate"><span class="pre">-&gt;</span></code> to <code class="docutils literal notranslate"><span class="pre">.</span></code>). <code class="docutils literal notranslate"><span class="pre">FSROOT</span></code> syntax is pythonic already but now you have access to python string manipulation.</p>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyamptools</span> <span class="kn">import</span> <span class="n">atiSetup</span>
+<span class="kn">import</span> <span class="nn">ROOT</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Welcome to JupyROOT 6.28/06
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>atiSetup| jupyter-book called python
+
+------------------------------------------------
+atiSetup| MPI is disabled
+atiSetup| GPU is disabled
+------------------------------------------------
+
+
+atiSetup| Loading library libIUAmpTools.so ............  ON
+atiSetup| Loading library libAmpTools.so ..............  ON
+atiSetup| Loading library libAmpPlotter.so ............  ON
+atiSetup| Loading library libAmpsDataIO.so ............
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  ON
+atiSetup| Loading library libFSRoot.so ................  ON
+atiSetup| Loading library libAmpsGen.so ...............  OFF
+
+
+------------------------------------------------
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
+
+atiSetup| Saved aliases found in /w/halld-scshelf2101/lng/WORK/PyAmpTools9/src/pyamptools/.aliases.txt, attempting to load...
+atiSetup| minor warning: Unable to alias FSFitFunctions - doesn&#39;t exist under ROOT namespace
+atiSetup| minor warning: Unable to alias FSFitPrivate - doesn&#39;t exist under ROOT namespace
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>atiSetup| minor warning: Unable to alias omegapiAngles - doesn&#39;t exist under ROOT namespace
+atiSetup| minor warning: Unable to alias URtypes - doesn&#39;t exist under ROOT namespace
+atiSetup| minor warning: Unable to alias URConfig - doesn&#39;t exist under ROOT namespace
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(False, False, 0)
+</pre></div>
+</div>
+</div>
+</div>
+<p>General Specifications</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">FND</span> <span class="o">=</span> <span class="s2">&quot;/work/halld/gluex_workshop_data/tutorial_2022/session2d/skim/tree_pi0eta__B4_M17_M7_DATA_sp17_*_GENERAL_SKIM.root&quot;</span>
+<span class="n">NT</span> <span class="o">=</span> <span class="s2">&quot;ntFSGlueX_MODECODE&quot;</span>
+<span class="n">bggen</span> <span class="o">=</span> <span class="kc">False</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Define event selections in FSROOT</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">FSCut</span><span class="o">.</span><span class="n">defineCut</span><span class="p">(</span><span class="s2">&quot;unusedE&quot;</span><span class="p">,</span><span class="s2">&quot;EnUnusedSh&lt;0.1&quot;</span><span class="p">)</span>
+<span class="n">FSCut</span><span class="o">.</span><span class="n">defineCut</span><span class="p">(</span><span class="s2">&quot;unusedTracks&quot;</span><span class="p">,</span><span class="s2">&quot;NumUnusedTracks&lt;1&quot;</span><span class="p">)</span>
+<span class="n">FSCut</span><span class="o">.</span><span class="n">defineCut</span><span class="p">(</span><span class="s2">&quot;zProton&quot;</span><span class="p">,</span><span class="s2">&quot;ProdVz&gt;=52&amp;&amp;ProdVz&lt;=78&quot;</span><span class="p">)</span>
+<span class="n">FSCut</span><span class="o">.</span><span class="n">defineCut</span><span class="p">(</span><span class="s2">&quot;protMom&quot;</span><span class="p">,</span><span class="s2">&quot;MOMENTUM([p+])&gt;=0.3&quot;</span><span class="p">)</span>
+<span class="n">FSCut</span><span class="o">.</span><span class="n">defineCut</span><span class="p">(</span><span class="s2">&quot;cet0103&quot;</span><span class="p">,</span><span class="s2">&quot;OR(abs(-1*MASS2(GLUEXTARGET,-[p+])-0.2)&lt;0.1)&quot;</span><span class="p">)</span>
+<span class="n">FSCut</span><span class="o">.</span><span class="n">defineCut</span><span class="p">(</span><span class="s2">&quot;e8288&quot;</span><span class="p">,</span><span class="s2">&quot;(EnPB&gt;8.2&amp;&amp;EnPB&lt;8.8)&quot;</span><span class="p">)</span>
+<span class="n">FSCut</span><span class="o">.</span><span class="n">defineCut</span><span class="p">(</span><span class="s2">&quot;chi2&quot;</span><span class="p">,</span><span class="s2">&quot;Chi2DOF&lt;3.3&quot;</span><span class="p">,</span><span class="s2">&quot;Chi2DOF&gt;10.0&amp;&amp;Chi2DOF&lt;15.0&quot;</span><span class="p">)</span>
+<span class="n">FSCut</span><span class="o">.</span><span class="n">defineCut</span><span class="p">(</span><span class="s2">&quot;photFiducialA&quot;</span><span class="p">,</span><span class="s2">&quot;(acos(COSINE([eta]a))*180/3.141&gt;2.5 &amp;&amp; acos(COSINE([eta]a))*180/3.141&lt;10.3) || (acos(COSINE([eta]a))*180/3.141&gt;11.9)&quot;</span><span class="p">)</span>
+<span class="n">FSCut</span><span class="o">.</span><span class="n">defineCut</span><span class="p">(</span><span class="s2">&quot;photFiducialB&quot;</span><span class="p">,</span><span class="s2">&quot;(acos(COSINE([eta]b))*180/3.141&gt;2.5 &amp;&amp; acos(COSINE([eta]b))*180/3.141&lt;10.3) || (acos(COSINE([eta]b))*180/3.141&gt;11.9)&quot;</span><span class="p">)</span>
+<span class="n">FSCut</span><span class="o">.</span><span class="n">defineCut</span><span class="p">(</span><span class="s2">&quot;photFiducialC&quot;</span><span class="p">,</span><span class="s2">&quot;(acos(COSINE([pi0]a))*180/3.141&gt;2.5 &amp;&amp; acos(COSINE([pi0]a))*180/3.141&lt;10.3) || (acos(COSINE([pi0]a))*180/3.141&gt;11.9)&quot;</span><span class="p">)</span>
+<span class="n">FSCut</span><span class="o">.</span><span class="n">defineCut</span><span class="p">(</span><span class="s2">&quot;photFiducialD&quot;</span><span class="p">,</span><span class="s2">&quot;(acos(COSINE([pi0]b))*180/3.141&gt;2.5 &amp;&amp; acos(COSINE([pi0]b))*180/3.141&lt;10.3) || (acos(COSINE([pi0]b))*180/3.141&gt;11.9)&quot;</span><span class="p">)</span>
+<span class="n">FSCut</span><span class="o">.</span><span class="n">defineCut</span><span class="p">(</span><span class="s2">&quot;rejectOmega&quot;</span><span class="p">,</span><span class="s2">&quot;!((MASS([pi0]a,[eta]a)&lt;0.15 &amp;&amp; MASS([pi0]b,[eta]b)&lt;0.15) || (MASS([pi0]a,[eta]b)&lt;0.15 &amp;&amp; MASS([pi0]b,[eta]a)&lt;0.15) || (MASS([pi0]a,[eta]a)&lt;0.12 &amp;&amp; MASS([pi0]b,[eta]a)&lt;0.12) || (MASS([pi0]a,[eta]b)&lt;0.12 &amp;&amp; MASS([pi0]b,[eta]b)&lt;0.12))&quot;</span><span class="p">)</span>
+<span class="n">FSCut</span><span class="o">.</span><span class="n">defineCut</span><span class="p">(</span><span class="s2">&quot;delta&quot;</span><span class="p">,</span><span class="s2">&quot;MASS([p+],[pi0])&gt;1.4&quot;</span><span class="p">)</span>
+<span class="n">FSCut</span><span class="o">.</span><span class="n">defineCut</span><span class="p">(</span><span class="s2">&quot;rf&quot;</span><span class="p">,</span><span class="s2">&quot;OR(abs(RFDeltaT)&lt;2.0)&quot;</span><span class="p">,</span> <span class="s2">&quot;abs(RFDeltaT)&gt;2.0&quot;</span><span class="p">,</span><span class="mf">0.125</span><span class="p">)</span>
+<span class="n">FSCut</span><span class="o">.</span><span class="n">defineCut</span><span class="p">(</span><span class="s2">&quot;eta&quot;</span><span class="p">,</span><span class="s2">&quot;abs(MASS([eta])-0.548)&lt;0.05&quot;</span><span class="p">,</span><span class="s2">&quot;(abs(MASS([eta])-0.548+0.107)&lt;0.025 || abs(MASS([eta])-0.548-0.103)&lt;0.025)&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+<span class="n">FSCut</span><span class="o">.</span><span class="n">defineCut</span><span class="p">(</span><span class="s2">&quot;pi0&quot;</span><span class="p">,</span><span class="s2">&quot;abs(MASS([pi0])-0.135)&lt;0.025&quot;</span><span class="p">,</span><span class="s2">&quot;(abs(MASS([pi0])-0.135+0.0425)&lt;0.0125 || abs(MASS([pi0])-0.135-0.0425)&lt;0.0125)&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">FSHistogram</span><span class="o">.</span><span class="n">readHistogramCache</span><span class="p">();</span>
+<span class="n">FSModeCollection</span><span class="o">.</span><span class="n">addModeInfo</span><span class="p">(</span><span class="s2">&quot;101_1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">addCategory</span><span class="p">(</span><span class="s2">&quot;m101_1&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>READING CACHE: 
+    root file = /w/halld-scshelf2101/lng/WORK/PyAmpTools9/demos/.cache.root
+    data file = /w/halld-scshelf2101/lng/WORK/PyAmpTools9/demos/.cache.dat
+FSHistogram:  READ HISTOGRAM...          FSRootHist:000001   101_1             OKAY           (entries = 36081)
+FSHistogram:  READ HISTOGRAM...          FSRootHist:000002   101_1             OKAY           (entries = 36081)
+FSHistogram:  READ HISTOGRAM...          FSRootHist:000003   101_1             OKAY           (entries = 36081)
+FSHistogram:  READ HISTOGRAM...          FSRootHist:000004   101_1             OKAY           (entries = 36081)
+FSHistogram:  READ HISTOGRAM...          FSRootHist:000005   101_1             OKAY           (entries = 36081)
+FSHistogram:  READ HISTOGRAM...          FSRootHist:000006   101_1             OKAY           (entries = 36081)
+FSHistogram:  READ HISTOGRAM...          FSRootHist:000007   101_1             OKAY           (entries = 60608)
+FSHistogram:  READ HISTOGRAM...          FSRootHist:000008   101_1             OKAY           (entries = 60608)
+FSHistogram:  READ HISTOGRAM...          FSRootHist:000009   101_1             OKAY           (entries = 36081)
+FSHistogram:  READ HISTOGRAM...          FSRootHist:000010   101_1             OKAY           (entries = 90785)
+FSHistogram:  READ HISTOGRAM...          FSRootHist:000011   101_1             OKAY           (entries = 36081)
+FSHistogram:  READ HISTOGRAM...          FSRootHist:000012   101_1             OKAY           (entries = 0)
+FSHistogram:  READ HISTOGRAM...          FSRootHist:000013   101_1             OKAY           (entries = 0)
+FSHistogram:  READ HISTOGRAM...          FSRootHist:000014   101_1             OKAY           (entries = 0)
+FSHistogram:  READ HISTOGRAM...          FSRootHist:000015   101_1             OKAY           (entries = 0)
+FSHistogram:  READ HISTOGRAM...          FSRootHist:000016   101_1             OKAY           (entries = 0)
+FSHistogram:  READ HISTOGRAM...          FSRootHist:000017   101_1             OKAY           (entries = 0)
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># prepare and cleanup previous plots</span>
+<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;rm -rf plots&quot;</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;mkdir plots&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="draw-first-set-of-plots">
+<h1>Draw first set of plots<a class="headerlink" href="#draw-first-set-of-plots" title="Link to this heading">#</a></h1>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">c1</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TCanvas</span><span class="p">(</span><span class="s2">&quot;c1&quot;</span><span class="p">,</span><span class="s2">&quot;c1&quot;</span><span class="p">,</span><span class="mi">1200</span><span class="p">,</span><span class="mi">800</span><span class="p">)</span>
+<span class="n">c1</span><span class="o">.</span><span class="n">Divide</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">c1</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">hM1</span> <span class="o">=</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">getTH1F</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;EnUnusedSh&quot;</span><span class="p">,</span><span class="s2">&quot;(100,0.0,1.0)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,zProton,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,rf,eta,pi0,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">hM1</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="s2">&quot;MC: E_</span><span class="si">{unused}</span><span class="s2"> for -t in (0.1,0.3)&quot;</span><span class="p">)</span>
+<span class="n">hM1</span><span class="o">.</span><span class="n">SetXTitle</span><span class="p">(</span><span class="s2">&quot;E_</span><span class="si">{unused}</span><span class="s2">  [GeV/c^</span><span class="si">{2}</span><span class="s2">]&quot;</span><span class="p">)</span>
+<span class="n">hM1</span><span class="o">.</span><span class="n">SetYTitle</span><span class="p">(</span><span class="s2">&quot;Events&quot;</span><span class="p">)</span>
+<span class="n">hM1</span><span class="o">.</span><span class="n">Draw</span><span class="p">()</span>
+<span class="n">cutUnusedE</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="n">hM1</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutUnusedE</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutUnusedE</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">bggen</span><span class="p">:</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">drawMCComponentsSame</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;EnUnusedSh&quot;</span><span class="p">,</span><span class="s2">&quot;(100,0.0,1.0)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,zProton,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,rf,eta,pi0,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">c1</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">hM6</span> <span class="o">=</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">getTH1F</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;ProdVz&quot;</span><span class="p">,</span><span class="s2">&quot;(100,0.,100.0)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,unusedE,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,rf,eta,pi0,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">hM6</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="s2">&quot;MC: ProdVz for -t in (0.1,0.3)&quot;</span><span class="p">)</span>
+<span class="n">hM6</span><span class="o">.</span><span class="n">SetXTitle</span><span class="p">(</span><span class="s2">&quot;ProdVz  [GeV/c^</span><span class="si">{2}</span><span class="s2">]&quot;</span><span class="p">)</span>
+<span class="n">hM6</span><span class="o">.</span><span class="n">SetYTitle</span><span class="p">(</span><span class="s2">&quot;Events&quot;</span><span class="p">)</span>
+<span class="n">hM6</span><span class="o">.</span><span class="n">Draw</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">bggen</span><span class="p">:</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">drawMCComponentsSame</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;ProdVz&quot;</span><span class="p">,</span><span class="s2">&quot;(100,0.,100.0)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,unusedE,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,rf,eta,pi0,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">cutVz_low</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mi">52</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">52</span><span class="p">,</span><span class="n">hM6</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutVz_low</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutVz_low</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">cutVz_hi</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mi">78</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">78</span><span class="p">,</span><span class="n">hM6</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutVz_hi</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutVz_hi</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">c1</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">hM4a</span> <span class="o">=</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">getTH1F</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;abs(-1*MASS2(GLUEXTARGET,-[p+]))&quot;</span><span class="p">,</span><span class="s2">&quot;(100,0,1)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,zProton,chi2,unusedE,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,rf,eta,pi0,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">hM4a</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="s2">&quot;MC: |-t|&quot;</span><span class="p">)</span>
+<span class="n">hM4a</span><span class="o">.</span><span class="n">SetXTitle</span><span class="p">(</span><span class="s2">&quot;|-t| [GeV^</span><span class="si">{2}</span><span class="s2">]&quot;</span><span class="p">)</span>
+<span class="n">hM4a</span><span class="o">.</span><span class="n">SetYTitle</span><span class="p">(</span><span class="s2">&quot;Entries&quot;</span><span class="p">)</span>
+<span class="n">cutt_low</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="n">hM4a</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutt_low</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">hM4a</span><span class="o">.</span><span class="n">Draw</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">bggen</span><span class="p">:</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">drawMCComponentsSame</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;abs(-1*MASS2(GLUEXTARGET,-[p+]))&quot;</span><span class="p">,</span><span class="s2">&quot;(100,0,1)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,zProton,chi2,unusedE,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,rf,eta,pi0,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">cutt_low</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">cutt_hi</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.3</span><span class="p">,</span><span class="n">hM4a</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutt_hi</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutt_hi</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">c1</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">hM4b</span> <span class="o">=</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">getTH1F</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;EnPB&quot;</span><span class="p">,</span><span class="s2">&quot;(125,5,12)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,zProton,chi2,unusedE,cet0103,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,rf,eta,pi0,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">hM4b</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="s2">&quot;MC: E_</span><span class="si">{beam}</span><span class="s2"> for -t in (0.1,0.3)&quot;</span><span class="p">)</span>
+<span class="n">hM4b</span><span class="o">.</span><span class="n">SetXTitle</span><span class="p">(</span><span class="s2">&quot;E_</span><span class="si">{beam}</span><span class="s2"> [GeV]&quot;</span><span class="p">)</span>
+<span class="n">hM4b</span><span class="o">.</span><span class="n">SetYTitle</span><span class="p">(</span><span class="s2">&quot;Entries&quot;</span><span class="p">)</span>
+<span class="n">cutEb_low</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">8.2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">8.2</span><span class="p">,</span><span class="n">hM4b</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutEb_low</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">hM4b</span><span class="o">.</span><span class="n">Draw</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">bggen</span><span class="p">:</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">drawMCComponentsSame</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;EnPB&quot;</span><span class="p">,</span><span class="s2">&quot;(125,5,12)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,zProton,chi2,unusedE,cet0103,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,rf,eta,pi0,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">cutEb_low</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">cutEb_hi</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">8.8</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">8.8</span><span class="p">,</span><span class="n">hM4b</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutEb_hi</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutEb_hi</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">c1</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">hM4</span> <span class="o">=</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">getTH1F</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;Chi2DOF&quot;</span><span class="p">,</span><span class="s2">&quot;(80,0,20)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,zProton,unusedE,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,rf,eta,pi0,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">hM4</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="s2">&quot;MC: #chi^</span><span class="si">{2}</span><span class="s2">/dof for -t in (0.1,0.3)&quot;</span><span class="p">)</span>
+<span class="n">hM4</span><span class="o">.</span><span class="n">SetXTitle</span><span class="p">(</span><span class="s2">&quot;#chi^</span><span class="si">{2}</span><span class="s2">/dof&quot;</span><span class="p">)</span>
+<span class="n">hM4</span><span class="o">.</span><span class="n">SetYTitle</span><span class="p">(</span><span class="s2">&quot;Events&quot;</span><span class="p">)</span>
+<span class="n">cutChi2</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">3.3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">3.3</span><span class="p">,</span><span class="n">hM4</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutChi2</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">hM4</span><span class="o">.</span><span class="n">Draw</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">bggen</span><span class="p">:</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">drawMCComponentsSame</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;Chi2DOF&quot;</span><span class="p">,</span><span class="s2">&quot;(80,0,20)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,zProton,unusedE,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,rf,eta,pi0,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">cutChi2</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">c1</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">hM8</span> <span class="o">=</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">getTH1F</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;acos(COSINE([eta]a))*180/3.141&quot;</span><span class="p">,</span><span class="s2">&quot;(240,0.,60)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,unusedE,zProton,chi2,cet0103,e8288,delta,rf,eta,pi0,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">hM8</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="s2">&quot;MC: #vartheta_{#gamma} for -t in (0.1,0.3)&quot;</span><span class="p">)</span>
+<span class="n">hM8</span><span class="o">.</span><span class="n">SetXTitle</span><span class="p">(</span><span class="s2">&quot;#vartheta_{#gamma}  [#circ]&quot;</span><span class="p">)</span>
+<span class="n">hM8</span><span class="o">.</span><span class="n">SetYTitle</span><span class="p">(</span><span class="s2">&quot;Entries&quot;</span><span class="p">)</span>
+<span class="n">hM8</span><span class="o">.</span><span class="n">Draw</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">bggen</span><span class="p">:</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">drawMCComponentsSame</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;acos(COSINE([eta]a))*180/3.141&quot;</span><span class="p">,</span><span class="s2">&quot;(240,0.,60)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,unusedE,zProton,chi2,cet0103,e8288,delta,rf,eta,pi0,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">cutFidu1</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">2.5</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">2.5</span><span class="p">,</span><span class="n">hM8</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutFidu1</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutFidu1</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">cutFidu2</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">10.3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">10.3</span><span class="p">,</span><span class="n">hM8</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutFidu2</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutFidu2</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">cutFidu3</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">11.9</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">11.9</span><span class="p">,</span><span class="n">hM8</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutFidu3</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutFidu3</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+
+<span class="n">c11</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TCanvas</span><span class="p">(</span><span class="s2">&quot;c11&quot;</span><span class="p">,</span><span class="s2">&quot;c11&quot;</span><span class="p">,</span><span class="mi">800</span><span class="p">,</span><span class="mi">800</span><span class="p">)</span>
+<span class="n">c11</span><span class="o">.</span><span class="n">Divide</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">c11</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">hM2</span> <span class="o">=</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">getTH1F</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;MASS([eta])&quot;</span><span class="p">,</span><span class="s2">&quot;(60,0.2,0.8)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,zProton,unusedE,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,rf,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">hM2</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="s2">&quot;MC: M(#gamma#gamma) for -t in (0.1,0.3)&quot;</span><span class="p">)</span>
+<span class="n">hM2</span><span class="o">.</span><span class="n">SetXTitle</span><span class="p">(</span><span class="s2">&quot;M(#gamma#gamma)  [GeV/c^</span><span class="si">{2}</span><span class="s2">]&quot;</span><span class="p">)</span>
+<span class="n">hM2</span><span class="o">.</span><span class="n">SetYTitle</span><span class="p">(</span><span class="s2">&quot;Events / 10 MeV/c^</span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">hM2</span><span class="o">.</span><span class="n">Draw</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">bggen</span><span class="p">:</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">drawMCComponentsSame</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;MASS([eta])&quot;</span><span class="p">,</span><span class="s2">&quot;(60,0.2,0.8)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,zProton,unusedE,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,rf,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">cutEtaSigL</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">0.548</span><span class="o">-</span><span class="mf">0.05</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.548</span><span class="o">-</span><span class="mf">0.05</span><span class="p">,</span><span class="n">hM2</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutEtaSigR</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">0.548</span><span class="o">+</span><span class="mf">0.05</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.548</span><span class="o">+</span><span class="mf">0.05</span><span class="p">,</span><span class="n">hM2</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutEtaSBLowL</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">0.42</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.42</span><span class="p">,</span><span class="n">hM2</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutEtaSBLowR</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">0.47</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.47</span><span class="p">,</span><span class="n">hM2</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutEtaSBHiL</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">0.63</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.63</span><span class="p">,</span><span class="n">hM2</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutEtaSBHiR</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">0.68</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.68</span><span class="p">,</span><span class="n">hM2</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutEtaSigL</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutEtaSigR</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutEtaSBLowL</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutEtaSBLowR</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutEtaSBHiL</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutEtaSBHiR</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutEtaSigL</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">cutEtaSigR</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">cutEtaSBLowL</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">cutEtaSBLowR</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">cutEtaSBHiL</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">cutEtaSBHiR</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">c11</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">hM9</span> <span class="o">=</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">getTH1F</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;MASS([pi0])&quot;</span><span class="p">,</span><span class="s2">&quot;(60,0.0,0.3)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,zProton,unusedE,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,rf,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">hM9</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="s2">&quot;MC: M(#gamma#gamma) for -t in (0.1,0.3)&quot;</span><span class="p">)</span>
+<span class="n">hM9</span><span class="o">.</span><span class="n">SetXTitle</span><span class="p">(</span><span class="s2">&quot;M(#gamma#gamma)  [GeV/c^</span><span class="si">{2}</span><span class="s2">]&quot;</span><span class="p">)</span>
+<span class="n">hM9</span><span class="o">.</span><span class="n">SetYTitle</span><span class="p">(</span><span class="s2">&quot;Events / 10 MeV/c^</span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">hM9</span><span class="o">.</span><span class="n">Draw</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">bggen</span><span class="p">:</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">drawMCComponentsSame</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;MASS([pi0])&quot;</span><span class="p">,</span><span class="s2">&quot;(60,0.0,0.3)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,zProton,unusedE,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,rf,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">hM9</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="s2">&quot;MC: M(#gamma#gamma) for -t in (0.1,0.3)&quot;</span><span class="p">)</span>
+<span class="n">cutPi0SigL</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">0.135</span><span class="o">-</span><span class="mf">0.025</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.135</span><span class="o">-</span><span class="mf">0.025</span><span class="p">,</span><span class="n">hM9</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutPi0SigR</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">0.135</span><span class="o">+</span><span class="mf">0.025</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.135</span><span class="o">+</span><span class="mf">0.025</span><span class="p">,</span><span class="n">hM9</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutPi0SBLowL</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">0.08</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.08</span><span class="p">,</span><span class="n">hM9</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutPi0SBLowR</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">0.105</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.105</span><span class="p">,</span><span class="n">hM9</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutPi0SBHiL</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">0.165</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.165</span><span class="p">,</span><span class="n">hM9</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutPi0SBHiR</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">0.19</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.19</span><span class="p">,</span><span class="n">hM9</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutPi0SigL</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutPi0SigR</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutPi0SBLowL</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutPi0SBLowR</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutPi0SBHiL</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutPi0SBHiR</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutPi0SigL</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">cutPi0SigR</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">cutPi0SBLowL</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">cutPi0SBLowR</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">cutPi0SBHiL</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">cutPi0SBHiR</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">c11</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">hM3</span> <span class="o">=</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">getTH1F</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;MASS([p+],[pi0])&quot;</span><span class="p">,</span><span class="s2">&quot;(100,0.8,1.8)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,zProton,unusedE,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,rf,eta,pi0,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">hM3</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="s2">&quot;MC: M(p#pi^</span><span class="si">{0}</span><span class="s2">) for -t in (0.1,0.3)&quot;</span><span class="p">)</span>
+<span class="n">hM3</span><span class="o">.</span><span class="n">SetXTitle</span><span class="p">(</span><span class="s2">&quot;M(#p#pi^</span><span class="si">{0}</span><span class="s2">)  [GeV/c^</span><span class="si">{2}</span><span class="s2">]&quot;</span><span class="p">)</span>
+<span class="n">hM3</span><span class="o">.</span><span class="n">SetYTitle</span><span class="p">(</span><span class="s2">&quot;Events / 10 MeV/c^</span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">cutDelta</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">1.4</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.4</span><span class="p">,</span><span class="n">hM3</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutDelta</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">hM3</span><span class="o">.</span><span class="n">Draw</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">bggen</span><span class="p">:</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">drawMCComponentsSame</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;MASS([p+],[pi0])&quot;</span><span class="p">,</span><span class="s2">&quot;(100,0.8,1.8)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,zProton,unusedE,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,rf,eta,pi0,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">cutDelta</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">c11</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">hM5</span> <span class="o">=</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">getTH1F</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;RFDeltaT&quot;</span><span class="p">,</span><span class="s2">&quot;(400,-20,20)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,zProton,unusedE,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,eta,pi0,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">hM5</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="s2">&quot;MC: #Delta t_</span><span class="si">{RF}</span><span class="s2"> for -t in (0.1,0.3)&quot;</span><span class="p">)</span>
+<span class="n">hM5</span><span class="o">.</span><span class="n">SetXTitle</span><span class="p">(</span><span class="s2">&quot;#Delta t_</span><span class="si">{RF}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">hM5</span><span class="o">.</span><span class="n">SetYTitle</span><span class="p">(</span><span class="s2">&quot;Events&quot;</span><span class="p">)</span>
+<span class="n">cutRFSigL</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="o">-</span><span class="mf">2.0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mf">2.0</span><span class="p">,</span><span class="n">hM5</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutRFSigR</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TLine</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">2.0</span><span class="p">,</span><span class="n">hM5</span><span class="o">.</span><span class="n">GetMaximum</span><span class="p">())</span>
+<span class="n">cutRFSigL</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">cutRFSigR</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">hM5</span><span class="o">.</span><span class="n">Draw</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">bggen</span><span class="p">:</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">drawMCComponentsSame</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;RFDeltaT&quot;</span><span class="p">,</span><span class="s2">&quot;(400,-20,20)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,zProton,unusedE,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,eta,pi0,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">cutRFSigL</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">cutRFSigR</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+
+<span class="n">c1</span><span class="o">.</span><span class="n">Print</span><span class="p">(</span><span class="s2">&quot;plots/p001_etapi.pdf&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>    FOUND HISTOGRAM...    FSRootHist:000001   101_1             OKAY           (entries = 36081)
+    FOUND HISTOGRAM...    FSRootHist:000002   101_1             OKAY           (entries = 36081)
+    FOUND HISTOGRAM...    FSRootHist:000003   101_1             OKAY           (entries = 36081)
+    FOUND HISTOGRAM...    FSRootHist:000004   101_1             OKAY           (entries = 36081)
+    FOUND HISTOGRAM...    FSRootHist:000005   101_1             OKAY           (entries = 36081)
+    FOUND HISTOGRAM...    FSRootHist:000006   101_1             OKAY           (entries = 36081)
+    FOUND HISTOGRAM...    FSRootHist:000007   101_1             OKAY           (entries = 60608)
+    FOUND HISTOGRAM...    FSRootHist:000008   101_1             OKAY           (entries = 60608)
+    FOUND HISTOGRAM...    FSRootHist:000009   101_1             OKAY           (entries = 36081)
+    FOUND HISTOGRAM...    FSRootHist:000010   101_1             OKAY           (entries = 90785)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Info in &lt;TCanvas::Print&gt;: pdf file plots/p001_etapi.pdf has been created
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="draw-second-set-of-plots">
+<h1>Draw second set of plots<a class="headerlink" href="#draw-second-set-of-plots" title="Link to this heading">#</a></h1>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">c2</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TCanvas</span><span class="p">(</span><span class="s2">&quot;c2&quot;</span><span class="p">,</span><span class="s2">&quot;c2&quot;</span><span class="p">,</span><span class="mi">1200</span><span class="p">,</span><span class="mi">400</span><span class="p">)</span>
+<span class="n">c2</span><span class="o">.</span><span class="n">Divide</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">c2</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">hMetapi</span> <span class="o">=</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">getTH1F</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;MASS([eta],[pi0])&quot;</span><span class="p">,</span><span class="s2">&quot;(100,0.5,2.5)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,unusedE,zProton,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,rf,eta,pi0,rejectOmega,protMom)&quot;</span><span class="p">)</span>
+<span class="n">hMetapiSig</span> <span class="o">=</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">getTH1F</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;MASS([eta],[pi0])&quot;</span><span class="p">,</span><span class="s2">&quot;(100,0.5,2.5)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,unusedE,zProton,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,rejectOmega,protMom)*CUTWT(rf,eta,pi0)&quot;</span><span class="p">)</span>
+<span class="n">hMetapiBg</span> <span class="o">=</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">getTH1F</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;MASS([eta],[pi0])&quot;</span><span class="p">,</span><span class="s2">&quot;(100,0.5,2.5)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,unusedE,zProton,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,rejectOmega,protMom)*CUTSBWT(rf,eta,pi0)*(-1.0)&quot;</span><span class="p">)</span>
+<span class="n">hMetapiSig</span><span class="o">.</span><span class="n">SetFillColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kBlue</span><span class="p">)</span>
+<span class="n">hMetapiBg</span><span class="o">.</span><span class="n">SetFillColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">hMetapi</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="s2">&quot;MC: M(#eta#pi^</span><span class="si">{0}</span><span class="s2">) for -t in (0.1,0.3)&quot;</span><span class="p">)</span>
+<span class="n">hMetapi</span><span class="o">.</span><span class="n">SetXTitle</span><span class="p">(</span><span class="s2">&quot;M(#eta#pi^</span><span class="si">{0}</span><span class="s2">) [GeV/c^</span><span class="si">{2}</span><span class="s2">]&quot;</span><span class="p">)</span>
+<span class="n">hMetapi</span><span class="o">.</span><span class="n">SetYTitle</span><span class="p">(</span><span class="s2">&quot;Events&quot;</span><span class="p">)</span>
+<span class="n">hMetapi</span><span class="o">.</span><span class="n">Draw</span><span class="p">()</span>
+<span class="n">hMetapiSig</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;hist,same&quot;</span><span class="p">)</span>
+<span class="n">hMetapiBg</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;hist,same&quot;</span><span class="p">)</span>
+
+<span class="n">c2</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">hMetapiSig</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="s2">&quot;MC: M(#eta#pi^</span><span class="si">{0}</span><span class="s2">) for -t in (0.1,0.3)&quot;</span><span class="p">)</span>
+<span class="n">hMetapiSig</span><span class="o">.</span><span class="n">SetXTitle</span><span class="p">(</span><span class="s2">&quot;M(#eta#pi^</span><span class="si">{0}</span><span class="s2">) [GeV/c^</span><span class="si">{2}</span><span class="s2">]&quot;</span><span class="p">)</span>
+<span class="n">hMetapiSig</span><span class="o">.</span><span class="n">SetYTitle</span><span class="p">(</span><span class="s2">&quot;Events&quot;</span><span class="p">)</span>
+<span class="n">hMetapiSig</span><span class="o">.</span><span class="n">DrawClone</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">bggen</span><span class="p">:</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">drawMCComponentsSame</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;MASS([eta],[pi0])&quot;</span><span class="p">,</span><span class="s2">&quot;(100,0.5,2.5)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,unusedE,zProton,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,protMom)*CUTWT(rf,eta,pi0)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">hMetapiSig</span><span class="o">.</span><span class="n">Integral</span><span class="p">())</span>
+
+<span class="n">FSFitUtilities</span><span class="o">.</span><span class="n">createFunction</span><span class="p">(</span><span class="n">FSFitPOLY</span><span class="p">(</span><span class="s2">&quot;p&quot;</span><span class="p">,</span><span class="mf">1.04</span><span class="p">,</span><span class="mf">1.56</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">0.0</span><span class="p">),</span><span class="mf">1600.0</span><span class="p">,</span><span class="o">-</span><span class="mi">900</span><span class="p">)</span>
+<span class="n">FSFitUtilities</span><span class="o">.</span><span class="n">createFunction</span><span class="p">(</span><span class="n">FSFitGAUS</span><span class="p">(</span><span class="s2">&quot;g&quot;</span><span class="p">,</span><span class="mf">1.04</span><span class="p">,</span><span class="mf">1.56</span><span class="p">),</span><span class="mf">500.0</span><span class="p">,</span><span class="mf">1.32</span><span class="p">,</span><span class="mf">0.05</span><span class="p">)</span>
+<span class="n">FSFitUtilities</span><span class="o">.</span><span class="n">createFunction</span><span class="p">(</span><span class="s2">&quot;pg&quot;</span><span class="p">,</span><span class="s2">&quot;p+g&quot;</span><span class="p">)</span>
+<span class="n">FSFitUtilities</span><span class="o">.</span><span class="n">fixParameters</span><span class="p">(</span><span class="s2">&quot;p&quot;</span><span class="p">)</span>
+<span class="n">FSFitUtilities</span><span class="o">.</span><span class="n">migrad</span><span class="p">(</span><span class="n">hMetapiSig</span><span class="p">,</span><span class="s2">&quot;pg&quot;</span><span class="p">)</span>
+<span class="n">fpg</span> <span class="o">=</span> <span class="n">FSFitUtilities</span><span class="o">.</span><span class="n">getTF1</span><span class="p">(</span><span class="s2">&quot;pg&quot;</span><span class="p">)</span>
+<span class="n">fpg</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kRed</span><span class="p">)</span>
+<span class="n">fpg</span><span class="o">.</span><span class="n">SetLineStyle</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kSolid</span><span class="p">)</span>
+<span class="n">fpg</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="n">fg</span> <span class="o">=</span> <span class="n">FSFitUtilities</span><span class="o">.</span><span class="n">getTF1</span><span class="p">(</span><span class="s2">&quot;g&quot;</span><span class="p">)</span>
+<span class="n">fg</span><span class="o">.</span><span class="n">SetLineColor</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kBlue</span><span class="p">)</span>
+<span class="n">fg</span><span class="o">.</span><span class="n">SetLineStyle</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">kSolid</span><span class="p">)</span>
+<span class="n">fg</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;fg Integral:&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">Integral</span><span class="p">(</span><span class="mf">1.04</span><span class="p">,</span><span class="mf">1.56</span><span class="p">))</span>
+
+<span class="n">c2</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">hMetapiVsGJCosTheta</span> <span class="o">=</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">getTH2F</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;GJCOSTHETA([eta];[pi0];GLUEXBEAM):MASS([eta],[pi0])&quot;</span><span class="p">,</span><span class="s2">&quot;(100,0.7,2.7,50,-1.,1.)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,unusedE,zProton,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,rejectOmega,protMom)*CUTWT(rf,eta,pi0)&quot;</span><span class="p">)</span>
+<span class="n">hMetapiVsGJCosTheta</span><span class="o">.</span><span class="n">SetXTitle</span><span class="p">(</span><span class="s2">&quot;M(#eta#pi^</span><span class="si">{0}</span><span class="s2">) [GeV/c^</span><span class="si">{2}</span><span class="s2">]&quot;</span><span class="p">)</span>
+<span class="n">hMetapiVsGJCosTheta</span><span class="o">.</span><span class="n">SetYTitle</span><span class="p">(</span><span class="s2">&quot;cos#theta_</span><span class="si">{GJ}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">hMetapiVsGJCosTheta</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="s2">&quot;colz&quot;</span><span class="p">)</span>
+
+<span class="n">c2</span><span class="o">.</span><span class="n">Print</span><span class="p">(</span><span class="s2">&quot;plots/p002_etapi.pdf&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.0
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>fg Integral: 499.999597944485
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>    FOUND HISTOGRAM...    FSRootHist:000011   101_1             OKAY           (entries = 36081)
+    FOUND HISTOGRAM...    FSRootHist:000012   101_1             OKAY           (entries = 0)
+    FOUND HISTOGRAM...    FSRootHist:000013   101_1             OKAY           (entries = 0)
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+     1 p:a          1.60000e+03  1.60000e+02     no limits
+ **********
+ **    1 **FIX           1
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+     2 p:b         -9.00000e+02  9.00000e+01     no limits
+ **********
+ **    2 **FIX           2
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+     3 g:N          5.00000e+02  5.00000e+01     no limits
+     4 g:M          1.32000e+00  1.32000e-01     no limits
+     5 g:W          5.00000e-02  5.00000e-03     no limits
+ **********
+ **    3 **SET STRATEGY            1
+ **********
+ NOW USING STRATEGY  1: TRY TO BALANCE SPEED AGAINST RELIABILITY
+ **********
+ **    4 **MIGRAD       1e+04
+ **********
+ FIRST CALL TO USER FUNCTION AT NEW START POINT, WITH IFLAG=4.
+ START MIGRAD MINIMIZATION.  STRATEGY  1.  CONVERGENCE WHEN EDM .LT. 1.00e-04
+ FCN=0 FROM MIGRAD    STATUS=INITIATE       97 CALLS          98 TOTAL
+                     EDM= unknown      STRATEGY= 1      NO ERROR MATRIX       
+  EXT PARAMETER               CURRENT GUESS       STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  p:a          1.60000e+03     fixed    
+   2  p:b         -9.00000e+02     fixed    
+   3  g:N          5.00000e+02   5.00000e+01   0.00000e+00   0.00000e+00
+   4  g:M          1.32000e+00   1.32000e-01   0.00000e+00   0.00000e+00
+   5  g:W          5.00000e-02   5.00000e-03   0.00000e+00   0.00000e+00
+ MIGRAD MINIMIZATION HAS CONVERGED.
+ MIGRAD WILL VERIFY CONVERGENCE AND ERROR MATRIX.
+ MINUIT WARNING IN HESSE
+ ============== Second derivative zero for parameter3
+  MNHESS FAILS AND WILL RETURN DIAGONAL MATRIX. 
+ FCN=0 FROM HESSE     STATUS=FAILED         11 CALLS         109 TOTAL
+                     EDM=0    STRATEGY= 1  ERROR MATRIX UNCERTAINTY 100.0 per cent
+  EXT PARAMETER                APPROXIMATE        STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  p:a          1.60000e+03     fixed    
+   2  p:b         -9.00000e+02     fixed    
+   3  g:N          5.00000e+02   1.41421e+00   0.00000e+00   0.00000e+00
+   4  g:M          1.32000e+00   1.41421e+00   0.00000e+00   0.00000e+00
+   5  g:W          5.00000e-02   1.41421e+00   0.00000e+00   0.00000e+00
+ MIGRAD MINIMIZATION HAS CONVERGED.
+ MIGRAD WILL VERIFY CONVERGENCE AND ERROR MATRIX.
+ MINUIT WARNING IN HESSE
+ ============== Second derivative zero for parameter3
+  MNHESS FAILS AND WILL RETURN DIAGONAL MATRIX. 
+ FCN=0 FROM MIGRAD    STATUS=CONVERGED     119 CALLS         120 TOTAL
+                     EDM=0    STRATEGY= 1  ERROR MATRIX UNCERTAINTY 100.0 per cent
+  EXT PARAMETER                APPROXIMATE        STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  p:a          1.60000e+03     fixed    
+   2  p:b         -9.00000e+02     fixed    
+   3  g:N          5.00000e+02   1.41421e+00   0.00000e+00   0.00000e+00
+   4  g:M          1.32000e+00   1.41421e+00   0.00000e+00   0.00000e+00
+   5  g:W          5.00000e-02   1.41421e+00   0.00000e+00   0.00000e+00
+ EXTERNAL ERROR MATRIX.    NDIM=1001    NPAR=  3    ERR DEF=1
+  2.000e+00  0.000e+00  0.000e+00 
+  0.000e+00  2.000e+00  0.000e+00 
+  0.000e+00  0.000e+00  2.000e+00 
+ERR MATRIX APPROXIMATE
+ PARAMETER  CORRELATION COEFFICIENTS  
+       NO.  GLOBAL      3      4      5
+        3  0.00000   1.000  0.000  0.000
+        4  0.00000   0.000  1.000  0.000
+        5  0.00000   0.000  0.000  1.000
+ ERR MATRIX APPROXIMATE
+    FOUND HISTOGRAM...    FSRootHist:000014   101_1             OKAY           (entries = 0)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Info in &lt;TCanvas::Print&gt;: pdf file plots/p002_etapi.pdf has been created
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="draw-third-set-of-plots">
+<h1>Draw third set of plots<a class="headerlink" href="#draw-third-set-of-plots" title="Link to this heading">#</a></h1>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">c3</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TCanvas</span><span class="p">(</span><span class="s2">&quot;c3&quot;</span><span class="p">,</span><span class="s2">&quot;c3&quot;</span><span class="p">,</span><span class="mi">800</span><span class="p">,</span><span class="mi">800</span><span class="p">)</span>
+<span class="n">c3</span><span class="o">.</span><span class="n">Divide</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">c3</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">hMetapiSig</span><span class="o">.</span><span class="n">DrawClone</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">bggen</span><span class="p">:</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">drawMCComponentsSame</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;MASS([eta],[pi0])&quot;</span><span class="p">,</span><span class="s2">&quot;(100,0.5,2.5)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,unusedE,zProton,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,protMom,rejectOmega)*CUTWT(rf,eta,pi0)&quot;</span><span class="p">)</span>
+
+<span class="n">c3</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">hMpiproton</span> <span class="o">=</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">getTH1F</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;MASS([p+],[pi0])&quot;</span><span class="p">,</span><span class="s2">&quot;(100,0.9,3.9)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,unusedE,zProton,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,protMom,rejectOmega)*CUTWT(rf,eta,pi0)&quot;</span><span class="p">)</span>
+<span class="n">hMpiproton</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="s2">&quot;MC: M(p#pi^</span><span class="si">{0}</span><span class="s2">) for -t in (0.1,0.3)&quot;</span><span class="p">)</span>
+<span class="n">hMpiproton</span><span class="o">.</span><span class="n">SetXTitle</span><span class="p">(</span><span class="s2">&quot;M(p#pi^</span><span class="si">{0}</span><span class="s2">) [GeV/c^</span><span class="si">{2}</span><span class="s2">]&quot;</span><span class="p">)</span>
+<span class="n">hMpiproton</span><span class="o">.</span><span class="n">SetYTitle</span><span class="p">(</span><span class="s2">&quot;Events&quot;</span><span class="p">)</span>
+<span class="n">hMpiproton</span><span class="o">.</span><span class="n">Draw</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">bggen</span><span class="p">:</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">drawMCComponentsSame</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;MASS([p+],[pi0])&quot;</span><span class="p">,</span><span class="s2">&quot;(100,0.9,3.9)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,unusedE,zProton,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,protMom,rejectOmega)*CUTWT(rf,eta,pi0)&quot;</span><span class="p">)</span>
+
+<span class="n">c3</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">hMetaproton</span> <span class="o">=</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">getTH1F</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;MASS([p+],[eta])&quot;</span><span class="p">,</span><span class="s2">&quot;(100,1.4,3.9)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,unusedE,zProton,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,protMom,rejectOmega)*CUTWT(rf,eta,pi0)&quot;</span><span class="p">)</span>
+<span class="n">hMetaproton</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="s2">&quot;MC: M(p#eta) for -t in (0.1,0.3)&quot;</span><span class="p">)</span>
+<span class="n">hMetaproton</span><span class="o">.</span><span class="n">SetXTitle</span><span class="p">(</span><span class="s2">&quot;M(p#eta) [GeV/c^</span><span class="si">{2}</span><span class="s2">]&quot;</span><span class="p">)</span>
+<span class="n">hMetaproton</span><span class="o">.</span><span class="n">SetYTitle</span><span class="p">(</span><span class="s2">&quot;Events&quot;</span><span class="p">)</span>
+<span class="n">hMetaproton</span><span class="o">.</span><span class="n">Draw</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">bggen</span><span class="p">:</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">drawMCComponentsSame</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;MASS([p+],[eta])&quot;</span><span class="p">,</span><span class="s2">&quot;(100,1.4,3.9)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,unusedE,zProton,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,protMom,rejectOmega)*CUTWT(rf,eta,pi0)&quot;</span><span class="p">)</span>
+
+<span class="n">c3</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">hMpi0g</span> <span class="o">=</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">getTH1F</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;MASS([pi0],[eta]b)&quot;</span><span class="p">,</span><span class="s2">&quot;(100,0.,2.)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,unusedE,zProton,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,protMom,rejectOmega)*CUTWT(rf,eta,pi0)&quot;</span><span class="p">)</span>
+<span class="n">hMpi0g</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="s2">&quot;MC: M(#pi^</span><span class="si">{0}</span><span class="s2">#gamma) for -t in (0.1,0.3)&quot;</span><span class="p">)</span>
+<span class="n">hMpi0g</span><span class="o">.</span><span class="n">SetXTitle</span><span class="p">(</span><span class="s2">&quot;M(#pi^</span><span class="si">{0}</span><span class="s2">#gamma) [GeV/c^</span><span class="si">{2}</span><span class="s2">]&quot;</span><span class="p">)</span>
+<span class="n">hMpi0g</span><span class="o">.</span><span class="n">SetYTitle</span><span class="p">(</span><span class="s2">&quot;Events&quot;</span><span class="p">)</span>
+<span class="n">hMpi0g</span><span class="o">.</span><span class="n">Draw</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">bggen</span><span class="p">:</span> <span class="n">FSModeHistogram</span><span class="o">.</span><span class="n">drawMCComponentsSame</span><span class="p">(</span><span class="n">FND</span><span class="p">,</span><span class="n">NT</span><span class="p">,</span><span class="s2">&quot;m101_1&quot;</span><span class="p">,</span><span class="s2">&quot;MASS([pi0],[eta]b)&quot;</span><span class="p">,</span><span class="s2">&quot;(100,0.,2.)&quot;</span><span class="p">,</span><span class="s2">&quot;CUT(unusedTracks,unusedE,zProton,chi2,cet0103,e8288,photFiducialA,photFiducialB,photFiducialC,photFiducialD,delta,protMom,rejectOmega)*CUTWT(rf,eta,pi0)&quot;</span><span class="p">)</span>
+<span class="n">FSHistogram</span><span class="o">.</span><span class="n">dumpHistogramCache</span><span class="p">()</span>
+
+<span class="n">c3</span><span class="o">.</span><span class="n">Print</span><span class="p">(</span><span class="s2">&quot;plots/p003_etapi.pdf&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>    FOUND HISTOGRAM...    FSRootHist:000015   101_1             OKAY           (entries = 0)
+    FOUND HISTOGRAM...    FSRootHist:000016   101_1             OKAY           (entries = 0)
+    FOUND HISTOGRAM...    FSRootHist:000017   101_1             OKAY           (entries = 0)
+    FOUND HISTOGRAM...    FSRootHist:000001   101_1             OKAY           (entries = 36081)
+    FOUND HISTOGRAM...    FSRootHist:000002   101_1             OKAY           (entries = 36081)
+    FOUND HISTOGRAM...    FSRootHist:000003   101_1             OKAY           (entries = 36081)
+    FOUND HISTOGRAM...    FSRootHist:000004   101_1             OKAY           (entries = 36081)
+    FOUND HISTOGRAM...    FSRootHist:000005   101_1             OKAY           (entries = 36081)
+    FOUND HISTOGRAM...    FSRootHist:000006   101_1             OKAY           (entries = 36081)
+    FOUND HISTOGRAM...    FSRootHist:000007   101_1             OKAY           (entries = 60608)
+    FOUND HISTOGRAM...    FSRootHist:000008   101_1             OKAY           (entries = 60608)
+    FOUND HISTOGRAM...    FSRootHist:000009   101_1             OKAY           (entries = 36081)
+    FOUND HISTOGRAM...    FSRootHist:000010   101_1             OKAY           (entries = 90785)
+    FOUND HISTOGRAM...    FSRootHist:000011   101_1             OKAY           (entries = 36081)
+    FOUND HISTOGRAM...    FSRootHist:000012   101_1             OKAY           (entries = 0)
+    FOUND HISTOGRAM...    FSRootHist:000013   101_1             OKAY           (entries = 0)
+    FOUND HISTOGRAM...    FSRootHist:000014   101_1             OKAY           (entries = 0)
+    FOUND HISTOGRAM...    FSRootHist:000015   101_1             OKAY           (entries = 0)
+    FOUND HISTOGRAM...    FSRootHist:000016   101_1             OKAY           (entries = 0)
+    FOUND HISTOGRAM...    FSRootHist:000017   101_1             OKAY           (entries = 0)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Info in &lt;TCanvas::Print&gt;: pdf file plots/p003_etapi.pdf has been created
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># cleanup again</span>
+<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;rm -rf plots&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./demos"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="fsroot_intro.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">FSROOT Introductory Tutorial</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="fitting.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Fitting</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">FSROOT Advanced Tutorial</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#draw-first-set-of-plots">Draw first set of plots</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#draw-second-set-of-plots">Draw second set of plots</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#draw-third-set-of-plots">Draw third set of plots</a></li>
+</ul>
+
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Lawrence Ng
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

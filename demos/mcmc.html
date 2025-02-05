@@ -170,7 +170,14 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="libraryLoading.html">Loading Libraries</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fsroot.html">FSROOT For Analysis</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../fsroot.html">FSROOT Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="fsroot_intro.html">FSROOT Introductory Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fsroot_advanced.html">FSROOT Advanced Tutorial</a></li>
+
+
+
+</ul>
+</details></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="fitting.html">Fitting</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="mle.html">Maximum Likelihood Estimation</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Markov Chain Monte Carlo</a></li>
@@ -422,11 +429,11 @@ atiSetup| GPU is disabled
 
 atiSetup| Loading library libIUAmpTools.so ............  ON
 atiSetup| Loading library libAmpTools.so ..............  ON
-atiSetup| Loading library libAmpPlotter.so ............  ON
-atiSetup| Loading library libAmpsDataIO.so ............
+atiSetup| Loading library libAmpPlotter.so ............
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  ON
+atiSetup| Loading library libAmpsDataIO.so ............  ON
 atiSetup| Loading library libFSRoot.so ................  OFF
 atiSetup| Loading library libAmpsGen.so ...............  OFF
 
@@ -436,6 +443,7 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
 
+atiSetup| Saved aliases found in /w/halld-scshelf2101/lng/WORK/PyAmpTools9/src/pyamptools/.aliases.txt, attempting to load...
 atiSetup| minor warning: Unable to alias omegapiAngles - doesn&#39;t exist under ROOT namespace
 atiSetup| minor warning: Unable to alias URtypes - doesn&#39;t exist under ROOT namespace
 atiSetup| minor warning: Unable to alias URConfig - doesn&#39;t exist under ROOT namespace
@@ -699,7 +707,7 @@ nwalkers: 32
 burnIn: 0
 nsamples: 200
 params_dict: {}
-moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7fec9cd862e0&gt;]
+moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7fedacd88250&gt;]
 sampler_kwargs: {&#39;progress&#39;: False}
  ========================================================================= 
 
@@ -708,10 +716,10 @@ Initializing walkers in an N-ball around the initial estimate
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Calculating intensity with amplitudes dictionary:
-  resAmp3 -&gt; [&#39;etapi::imZ::resAmp3&#39;, &#39;etapi::reZ::resAmp3&#39;]
-  resAmp1 -&gt; [&#39;etapi::reZ::resAmp1&#39;, &#39;etapi::imZ::resAmp1&#39;]
   resAmp2 -&gt; [&#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp2&#39;]
-  total -&gt; [&#39;etapi::imZ::resAmp3&#39;, &#39;etapi::reZ::resAmp1&#39;, &#39;etapi::reZ::resAmp3&#39;, &#39;etapi::imZ::resAmp1&#39;, &#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp2&#39;]
+  resAmp1 -&gt; [&#39;etapi::imZ::resAmp1&#39;, &#39;etapi::reZ::resAmp1&#39;]
+  resAmp3 -&gt; [&#39;etapi::imZ::resAmp3&#39;, &#39;etapi::reZ::resAmp3&#39;]
+  total -&gt; [&#39;etapi::imZ::resAmp2&#39;, &#39;etapi::imZ::resAmp1&#39;, &#39;etapi::reZ::resAmp1&#39;, &#39;etapi::reZ::resAmp2&#39;, &#39;etapi::imZ::resAmp3&#39;, &#39;etapi::reZ::resAmp3&#39;]
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The chain is shorter than 50 times the integrated autocorrelation time for 5 parameter(s). Use this estimate with caution and run a longer chain!
@@ -739,7 +747,7 @@ Autocorrelation time: 16.447 steps
 MCMC intensity samples saved to mcmc/samples_intensity.feather
   shape: (6400, 4)
 
-Fit time: 4.315652847290039 seconds
+Fit time: 5.297304153442383 seconds
 </pre></div>
 </div>
 </div>
