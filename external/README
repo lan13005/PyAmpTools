@@ -1,0 +1,6 @@
+Unfortunately we need to manually add our modifications to use newer amptools versions
+
+General steps:
+1) cd into amptools
+2) get a list of all changed files between two commits: git diff --name-only <commit1> <commit2>
+3) manually update
