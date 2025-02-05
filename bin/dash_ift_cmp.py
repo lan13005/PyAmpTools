@@ -13,8 +13,9 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import Dash, dcc, html
-from iftpwa1.utilities.helpers import load_callable_from_module, reload_fields_and_components
+from iftpwa1.utilities.helpers import reload_fields_and_components
 from omegaconf import OmegaConf
+from omegaconf.dictconfig import DictConfig
 from plotly.subplots import make_subplots
 
 from pyamptools.utility.general import prettyLabels
@@ -27,10 +28,12 @@ from pyamptools.utility.general import prettyLabels
 #   similarly the DF should not recreate subsets. If the data exists then just load it and draw the figure
 
 
-def append_info(resultData, model_name, df, avail_waves, avail_phase_pairs, acceptance_correct=True):
+def append_info(resultData, model_info, df, avail_waves, avail_phase_pairs, acceptance_correct=True):
     """
     Read a iftpwa results pkl file and store intensites and phases in a dataframe
     """
+    model_name = model_info['name']
+    scale_factor = model_info.get('scale', 1.0)  # Default to 1.0 if not specified
 
     resonance_paramater_data_frame = {}
     for resonance_parameter in resultData["fit_parameters_dict"]:
@@ -38,14 +41,6 @@ def append_info(resultData, model_name, df, avail_waves, avail_phase_pairs, acce
             resonance_paramater_data_frame[resonance_parameter] = np.array(resultData["fit_parameters_dict"][resonance_parameter])
 
     resonance_paramater_data_frame = pd.DataFrame(resonance_paramater_data_frame)
-
-    aux_info = resultData["pwa_manager_aux_information"]
-    using_custom_intens = "calc_intensity" in aux_info and "calc_intensity_args" in aux_info
-    if using_custom_intens:
-        module_path, callable_name = resultData["pwa_manager_aux_information"]["calc_intensity"]
-        calc_kwargs = resultData["pwa_manager_aux_information"]["calc_intensity_args"]
-        calc_intens = load_callable_from_module(module_path, callable_name)(**calc_kwargs)
-        calc_intens.acceptance_correct = acceptance_correct
 
     ##################################################################################################
     # THIS SECTION CONTAINS BASICALLY ALL YOU NEED TO START CREATING CUSTOM PLOTS
@@ -83,7 +78,7 @@ def append_info(resultData, model_name, df, avail_waves, avail_phase_pairs, acce
             amp = [signal_field_sample_values[:, 2 * iw, :, it] + 1j * signal_field_sample_values[:, 2 * iw + 1, :, it]]
             intens = calc_intens([wave], it, amp)
             assert len(intens.shape) == 2  # (nmb_samples, nmb_masses)
-            intes = intens.flatten()
+            intes = intens.flatten() * scale_factor  # Apply scaling factor here
             df[wave] += intes.tolist()
 
         # Some models might have less waves than others
@@ -206,8 +201,8 @@ def generate_figure_with_multiprocessing(models, t, acceptance_correct, cache_lo
         resultDatas = {}
 
         avail_waves = set()
-        for model_name, ift_folder in models.items():
-            resultData = pkl.load(open(f"{ift_folder}/niftypwa_fit.pkl", "rb"))
+        for model_name, model_info in models.items():
+            resultData = pkl.load(open(f"{model_info['path']}", "rb"))
             resultDatas[model_name] = resultData
             avail_waves.update(resultData["pwa_manager_base_information"]["wave_names"])
 
@@ -227,7 +222,7 @@ def generate_figure_with_multiprocessing(models, t, acceptance_correct, cache_lo
         df = {k: [] for k in ["mass", "t", "sample", "model"] + list(avail_waves) + avail_phase_pairs}
 
         for model_name, resultData in resultDatas.items():
-            df = append_info(resultData, model_name, df, avail_waves, avail_phase_pairs, acceptance_correct)
+            df = append_info(resultData, models[model_name], df, avail_waves, avail_phase_pairs, acceptance_correct)
 
         try:
             df = pd.DataFrame(df)
@@ -361,7 +356,7 @@ if __name__ == "__main__":
         description="Generate a Dash app comparing IFT PWA results (intensity and phases)",
         formatter_class=argparse.RawTextHelpFormatter,
     )
-    parser.add_argument("-c", type=str, help=(
+    parser.add_argument("yaml_file", type=str, help=(
         "The YAML file should (some optional) define the following keys:\n\n"
         "    - models: (required, dict) A dictionary mapping model names to IFT PWA result folders.\n"
         "    - t: (required, float) compare a specific t-bin\n"
@@ -376,8 +371,12 @@ if __name__ == "__main__":
         "Example YAML file:\n\n"
         "    dash:\n"
         "        models:\n"
-        "            Model1: /path/to/ift_results_model1\n"
-        "            Model2: /path/to/ift_results_model2\n"
+        "            Model1:\n"
+        "               path: '/path/to/ift_results_model1'\n"
+        "               scale: 1.0\n"
+        "            Model2:\n"
+        "               path: '/path/to/ift_results_model2'\n"
+        "               scale: 1.0\n"
         "        t: 1.0\n"
         "        cache_loc: /path/to/cache.pkl\n"
         "        no_browser: false\n"
@@ -391,7 +390,7 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    yaml_file = args.c
+    yaml_file = args.yaml_file
 
     config = OmegaConf.load(yaml_file)
     dash_cfg = config["dash"]
@@ -399,7 +398,21 @@ if __name__ == "__main__":
         raise ValueError("models must be specified in the YAML file")
     if "t" not in dash_cfg:
         raise ValueError("t must be specified in the YAML file")
-    models = dash_cfg["models"]
+    models = {}
+    for model_name, model_config in dash_cfg["models"].items():
+        if isinstance(model_config, str):
+            # Support old format where model_config is just a path
+            models[model_name] = {'name': model_name, 'path': model_config, 'scale': 1.0}
+        elif isinstance(model_config, (dict, DictConfig)):
+            # New format with path and scale
+            models[model_name] = {
+                'name': model_name,
+                'path': model_config['path'],
+                'scale': model_config.get('scale', 1.0)
+            }
+        else:
+            raise ValueError(f"Invalid model configuration for {model_name}")
+
     t = dash_cfg["t"] if "t" in dash_cfg else None
     cache_loc = dash_cfg["cache_loc"] if "cache_loc" in dash_cfg else ".dash_ift_cache.pkl"
     no_browser = dash_cfg["no_browser"] if "no_browser" in dash_cfg else False
@@ -414,8 +427,8 @@ if __name__ == "__main__":
         raise ValueError("models and t must be specified in the YAML file")
 
     print(f"\n-> Generating figure for models at t={t}:")
-    for model_name, ift_folder in models.items():
-        print(f"    - {model_name}: {ift_folder}")
+    for model_name, model_info in models.items():
+        print(f"    - {model_name}: {model_info['path']} (scale: {model_info['scale']})")
     print(f"-> Writing/reading Cache location: {cache_loc}")
     print(f"-> Number of tasks for drawing: {ntasks}\n")
 
