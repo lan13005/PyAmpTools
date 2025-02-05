@@ -95,6 +95,7 @@ def get_linked_objects_to_alias():
     
     if os.path.exists(f"{PYAMPTOOLS_HOME}/src/pyamptools/.aliases.txt"):
         with open(f"{PYAMPTOOLS_HOME}/src/pyamptools/.aliases.txt", "r") as f:
+            print(f"atiSetup| Saved aliases found in {PYAMPTOOLS_HOME}/src/pyamptools/.aliases.txt, attempting to load...")
             lines = f.readlines()
             return [line.strip() for line in lines]
 
@@ -115,12 +116,13 @@ def get_linked_objects_to_alias():
     # Loop through Linkdef files and extract the bound objects
     #   Ignore specific keys to handle later, for instance MPI needs to manually set as it requires a different setup
     objects_to_alias = {}
-    ignore_keys = ["dict", "LING", 'initialize']
+    ignore_keys = ["dict", "LING", 'initialize', "endif"]
     for linkdef_file in linkdef_files:
         objects_to_alias[linkdef_file] = []
         with open(linkdef_file, "r") as symbols:
-            for line in symbols:
-                line = line.strip().strip("#pragma link C++ defined_in").split("/")[-1].split('.h')[0].strip('"')
+            for line in symbols:      
+                line = line.split(' ')[-1].strip().strip(';').strip('"').strip('\'').strip('+') # remove puncutation 
+                line = line.split('/')[-1].split('.h')[0] # remove parent directory and file extension
                 if any(key in line for key in ignore_keys) or len(line) == 0:
                     continue
                 if line.startswith("AmpToolsInterface") or line.startswith("DataReader"): # handle later
