@@ -10,7 +10,10 @@ parts:
     chapters:
       - file: demos/libraryLoading
 #      - file: demos/generation
-      - file: demos/fsroot
+      - file: fsroot
+        sections:
+          - file: demos/fsroot_intro
+          - file: demos/fsroot_advanced
       - file: demos/fitting
         sections:
           - file: demos/mle
