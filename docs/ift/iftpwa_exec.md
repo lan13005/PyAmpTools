@@ -32,4 +32,6 @@ iftPwaPlot \
     --massIndepFit $base_directory/NiftyFits/.nifty_expanded.yaml
 # Draws some convergence plots to see global iteration dependence of resonance parameters, distributions, etc
 plotConvergence --inputFolder $base_directory/NiftyFits/fit_parameter_history --plotFolder $base_directory/NiftyFits/convergence_plots
+pa run_momentPlotter $yaml -n 10 # make a subdirectory at NiftyFits/plots/moments overlaying projected moments from nifty and amptools fits
+pa run_resultDump $yaml -n 10 # dump all results to csv files (if possible, it will calculate the moments also)
 ```
