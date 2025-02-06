@@ -1,7 +1,7 @@
 from pyamptools.utility.IO import loadAllResultsFromYaml
 import numpy as np
 from rich.console import Console
-from pyamptools.utility.general import load_yaml
+from pyamptools.utility.general import load_yaml, Timer
 import os
 import argparse
 
@@ -10,19 +10,22 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="Dump (AmpTools, IFT) results to separate csv files")
     argparser.add_argument("yaml_file", type=str, help="Path to the yaml file containing the results")
     argparser.add_argument("-o", "--output_dir", type=str, help="Path to the output directory")
+    argparser.add_argument("-p", "--pool_size", type=int, help="Number of processes to use by multiprocessing.Pool")
     args = argparser.parse_args()
     yaml_file = args.yaml_file
     output_dir = args.output_dir
+    pool_size = args.pool_size
     
     console = Console()
-    
     if output_dir is None:
         yaml_primary = load_yaml(yaml_file)
         base_directory = yaml_primary['base_directory']
         output_dir = base_directory
         console.print(f"\nOutput directory not specified, using YAML file's base directory: {output_dir}\n\n\n")
 
-    amptools_df, ift_df, ift_res_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict = loadAllResultsFromYaml(yaml_file)
+    timer = Timer()
+
+    amptools_df, ift_df, ift_res_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict = loadAllResultsFromYaml(yaml_file, pool_size=pool_size)
 
     ift_csv_path = os.path.join(base_directory, 'ift_results.csv')
     ift_res_csv_path = os.path.join(base_directory, 'ift_res_results.csv')
@@ -58,7 +61,7 @@ if __name__ == "__main__":
             "    - [bold]'status'[/bold]: minuit return status (0=success)\n"
             "    - [bold]'ematrix'[/bold]: error matrix status (3=success)\n"
             "    - [bold]'<wave>_amp'[/bold]: Fitted complex amplitude values\n"
-            "    - [bold]'<wave>'[/bold]: Fitted intensity values\n"
+            "    - [bold]'<wave>'[/bold]: Fitted intensity (not amp^2 due to normalization integrals)\n"
             "    - [bold]'<wave> err'[/bold]: Error on fitted intensity values\n"
             "    - [bold]'<wave1> <wave2>'[/bold]: Relative phase between wave1 and wave2\n"
             "    - [bold]'<wave1> <wave2> err'[/bold]: Error on relative phase between wave1 and wave2\n"
@@ -88,3 +91,6 @@ if __name__ == "__main__":
         amptools_df.to_csv(amptools_csv_path, index=False)
     else:
         console.print(" [red]No AmpTools results found, skipping...[/red]")
+        
+    elapsed_time = timer.read()[2]
+    console.print(f" [bold]Total time taken: {elapsed_time}[/bold]")

@@ -44,7 +44,7 @@ def main():
         "nentries": (f"{PYAMPTOOLS_HOME}/bin/get_nentries.py", "Print number of entries in a list of ROOT files (* wildcard supported)"),
         "calc_ps": (f"{PYAMPTOOLS_HOME}/bin/calc_ps.py", "Calculate the phase space factor for IFT fits"),
         "dash_ift_cmp": (f"{PYAMPTOOLS_HOME}/bin/dash_ift_cmp.py", "Compare multiple IFT fits (intensity and phase) using dash package"),
-        "ift_pkl_summary": (f"{PYAMPTOOLS_HOME}/bin/ift_pkl_summary.py", "Summarize the contents of an IFT pickle file"),
+        "ift_pkl_summary": (f"{PYAMPTOOLS_HOME}/bin/ift_pkl_summary.py", "Summarize the contents of an IFT results pickle file"),
         "dx_normint": (f"{PYAMPTOOLS_HOME}/bin/dx_normint.py", "Make diagnostic heatmaps for (norm)alizaton and (amp)litude integrals. Can tracks matrix elements over all mass bins"),
     }
 

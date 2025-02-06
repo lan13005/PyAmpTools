@@ -6,6 +6,7 @@ import re
 import subprocess
 import time
 import unittest
+from typing import List
 
 import matplotlib as mpl
 import importlib.util
@@ -79,6 +80,15 @@ for e, refl in zip([-1, 1], refls):
                 sM = f"+{M}" if M > 0 else f"{M}" # include + in front
                 prettyLabels[amp] = rf"${J}^{{{P}{C}}}[{spectroscopic_map[l]}_{{{sM}}}^{{{refl}}}]$"
                 channel_map[amp] = 'VectorPseudoscalar'
+                
+def identify_channel(wave_names: List[str]) -> str:
+    """ Loops over wave_names and checks if all reaction channels (i.e. TwoPseudoscalar or VectorPseudoscalar) are the same """
+    channels = []
+    for w in wave_names:
+        channels.append(channel_map[w])
+    if len(set(channels)) > 1:
+        raise ValueError(f"io| wave_names appears to use multiple channels. This is not supported! wave_names = {wave_names}")
+    return channels[0]
 
 # If there is no prettyLabel version, just pass back the key
 class KeyReturningDict(dict):
