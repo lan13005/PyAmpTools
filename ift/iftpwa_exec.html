@@ -412,6 +412,8 @@ iftPwaPlot<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--massIndepFit<span class="w"> </span><span class="nv">$base_directory</span>/NiftyFits/.nifty_expanded.yaml
 <span class="c1"># Draws some convergence plots to see global iteration dependence of resonance parameters, distributions, etc</span>
 plotConvergence<span class="w"> </span>--inputFolder<span class="w"> </span><span class="nv">$base_directory</span>/NiftyFits/fit_parameter_history<span class="w"> </span>--plotFolder<span class="w"> </span><span class="nv">$base_directory</span>/NiftyFits/convergence_plots
+pa<span class="w"> </span>run_momentPlotter<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span>-n<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="c1"># make a subdirectory at NiftyFits/plots/moments overlaying projected moments from nifty and amptools fits</span>
+pa<span class="w"> </span>run_resultDump<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span>-n<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="c1"># dump all results to csv files (if possible, it will calculate the moments also)</span>
 </pre></div>
 </div>
 </section>
