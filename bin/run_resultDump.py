@@ -1,4 +1,4 @@
-from pyamptools.utility.io import loadAllResultsFromYaml
+from pyamptools.utility.IO import loadAllResultsFromYaml
 import numpy as np
 from rich.console import Console
 from pyamptools.utility.general import load_yaml
@@ -77,7 +77,7 @@ if __name__ == "__main__":
         console.print(f" Shape of IFT results DataFrame {ift_df.shape} with columns: {ift_df.columns}")
         ift_df.to_csv(ift_csv_path, index=False)
         console.print(f" [red]Writing IFT (Res)onance DataFrame to csv located at: {ift_res_csv_path}[/red]")
-        console.print(f" Shape of IFT results DataFrame {ift_res_df.shape} with columns: {ift_res_df.columns}")
+        console.print(f" Shape of IFT (Res)onance results DataFrame {ift_res_df.shape} with columns: {ift_res_df.columns}")
         ift_res_df.to_csv(ift_res_csv_path, index=False)
     else:
         console.print(" [red]No IFT results found, skipping...[/red]")

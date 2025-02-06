@@ -4,7 +4,7 @@ import matplotlib as mpl
 import os
 import argparse
 from pyamptools.utility.general import Timer
-from pyamptools.utility.io import loadAllResultsFromYaml
+from pyamptools.utility.IO import loadAllResultsFromYaml
 from omegaconf.errors import MissingMandatoryValue
 from pyamptools.utility.general import load_yaml, Styler
 

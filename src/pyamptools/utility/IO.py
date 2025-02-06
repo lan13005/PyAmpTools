@@ -4,7 +4,7 @@ import os
 import re
 from collections import defaultdict
 from pyamptools.utility.general import glob_sort_captured
-from pyamptools.utility.MomentUtilities import MomentManager
+from pyamptools.utility.MomentUtilities import MomentManagerTwoPS, MomentManagerVecPS
 from iftpwa1.utilities.helpers import reload_fields_and_components
 import numpy as np
 import pandas as pd
@@ -74,7 +74,8 @@ def parse_fit_file(filename):
             elif "eMatrixStatus" in line:
                 status_dict["eMatrixStatus"] = int(line.split()[1]); continue
 
-            if "_re" not in line and "_im" not in line: continue
+            # must end in space! _re could exist in vec_ps_refl
+            if "_re " not in line and "_im " not in line: continue
             
             # Split line into name and value
             name, value_str = line.strip().split('\t')
@@ -179,11 +180,11 @@ def loadAllResultsFromYaml(yaml, pool_size=10):
     print("io| Processing AmpTools and IFT results...")
     latex_name_dict_amp, latex_name_dict_ift = None, None
     if amptools_df is not None:
-        amptools_df = MomentManager(amptools_df, wave_names)
+        amptools_df = MomentManagerTwoPS(amptools_df, wave_names)
         amptools_df, latex_name_dict_amp = amptools_df.process_and_return_df(normalization_scheme=1, pool_size=pool_size, append=True)
 
     if ift_df is not None:
-        ift_df = MomentManager(ift_df, wave_names)
+        ift_df = MomentManagerTwoPS(ift_df, wave_names)
         ift_df, latex_name_dict_ift = ift_df.process_and_return_df(normalization_scheme=1, pool_size=pool_size, append=True)
     
     if latex_name_dict_amp is not None and latex_name_dict_ift is not None and latex_name_dict_amp != latex_name_dict_ift:
