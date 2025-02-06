@@ -118,7 +118,7 @@ def parse_fit_file(filename):
     
     return complex_amps, status_dict
 
-def loadAllResultsFromYaml(yaml, pool_size=10):
+def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False):
     
     """
     Loads the AmpTools and IFT results from the provided yaml file. Moments will be calculated if possible with multiprocessing.Pool with pool_size
@@ -126,6 +126,7 @@ def loadAllResultsFromYaml(yaml, pool_size=10):
     Args:
         yaml (OmegaConf): OmegaConf object (dict-like) for PyAmpTools (not iftpwa)
         pool_size (int): Number of processes to use by multiprocessing.Pool
+        skip_moments (bool): If True, only load partial wave amplitudes and do not calculate moments
         
     Returns:
         pd.DataFrame: AmpTools binned fit results
@@ -190,28 +191,30 @@ def loadAllResultsFromYaml(yaml, pool_size=10):
     #### PROCESS THE AMPTOOLS AND IFT RESULTS
     ###########################################
     print("io| Processing AmpTools and IFT results...")
-    latex_name_dict_amp, latex_name_dict_ift = None, None
-    if amptools_df is not None:
-        if channel == "TwoPseudoscalar":
-            amptools_manager = MomentManagerTwoPS(amptools_df, wave_names)
-        elif channel == "VectorPseudoscalar":
-            amptools_manager = MomentManagerVecPS(amptools_df, wave_names)
-        # for col in amptools_df.columns:
-        #     print(f"{col} {amptools_df[col].dtype}")
-        amptools_df, latex_name_dict_amp = amptools_manager.process_and_return_df(normalization_scheme=1, pool_size=pool_size, append=True)
+    latex_name_dict = None
+    if not skip_moments:
+        latex_name_dict_amp, latex_name_dict_ift = None, None
+        if amptools_df is not None:
+            if channel == "TwoPseudoscalar":
+                amptools_manager = MomentManagerTwoPS(amptools_df, wave_names)
+            elif channel == "VectorPseudoscalar":
+                amptools_manager = MomentManagerVecPS(amptools_df, wave_names)
+            # for col in amptools_df.columns:
+            #     print(f"{col} {amptools_df[col].dtype}")
+            amptools_df, latex_name_dict_amp = amptools_manager.process_and_return_df(normalization_scheme=1, pool_size=pool_size, append=True)
 
-    if ift_df is not None:
-        if channel == "TwoPseudoscalar":
-            ift_manager = MomentManagerTwoPS(ift_df, wave_names)
-        elif channel == "VectorPseudoscalar":
-            ift_manager = MomentManagerVecPS(ift_df, wave_names)
-        ift_df, latex_name_dict_ift = ift_manager.process_and_return_df(normalization_scheme=1, pool_size=pool_size, append=True)
-    
-    if latex_name_dict_amp is not None and latex_name_dict_ift is not None and latex_name_dict_amp != latex_name_dict_ift:
-        raise ValueError("IFT and AmpTools moment dictionaries do not match but is expected to!")
-    
-    # think its safe? If they are not None by this point they must be the same dictionary
-    latex_name_dict = latex_name_dict_amp if latex_name_dict_amp is not None else latex_name_dict_ift
+        if ift_df is not None:
+            if channel == "TwoPseudoscalar":
+                ift_manager = MomentManagerTwoPS(ift_df, wave_names)
+            elif channel == "VectorPseudoscalar":
+                ift_manager = MomentManagerVecPS(ift_df, wave_names)
+            ift_df, latex_name_dict_ift = ift_manager.process_and_return_df(normalization_scheme=1, pool_size=pool_size, append=True)
+        
+        if latex_name_dict_amp is not None and latex_name_dict_ift is not None and latex_name_dict_amp != latex_name_dict_ift:
+            raise ValueError("IFT and AmpTools moment dictionaries do not match but is expected to!")
+        
+        # think its safe? If they are not None by this point they must be the same dictionary
+        latex_name_dict = latex_name_dict_amp if latex_name_dict_amp is not None else latex_name_dict_ift
     
     return amptools_df, ift_df, ift_res_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict
 

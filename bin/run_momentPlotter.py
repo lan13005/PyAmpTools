@@ -64,7 +64,7 @@ def plot_moment(moment_name, t, masses, _amptools_df, _ift_df, latex_name_dict, 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Perform maximum likelihood fits (using AmpTools) on all cfg files")
     parser.add_argument("yaml_name", type=str, default="conf/configuration.yaml", help="Path a configuration yaml file")
-    parser.add_argument("-n", "--npool", type=int, default=4, help="Number of processes to use by multiprocessing.Pool")
+    parser.add_argument("-n", "--npool", type=int, default=4, help="Number of processes to use by multiprocessing.Pool (only for moments calculation)")
     args = parser.parse_args()
     yaml_name = args.yaml_name
     npool = args.npool
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     yaml_secondary = yaml_primary['nifty']['yaml']
     yaml_secondary = load_yaml(yaml_secondary, resolve=False)
 
-    amptools_df, ift_df, ift_res_df, wave_names, masses, tprime_centers, bpg, latex_name_dict = loadAllResultsFromYaml(yaml_name, npool)
+    amptools_df, ift_df, ift_res_df, wave_names, masses, tprime_centers, bpg, latex_name_dict = loadAllResultsFromYaml(yaml_name, pool_size=npool)
     
     if latex_name_dict is None:
         raise ValueError("momentPlotter| latex_name_dict is None. This means that moments were not calculated properly for the ift and amptools dataframes!")

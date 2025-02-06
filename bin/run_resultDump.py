@@ -10,11 +10,13 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="Dump (AmpTools, IFT) results to separate csv files")
     argparser.add_argument("yaml_file", type=str, help="Path to the yaml file containing the results")
     argparser.add_argument("-o", "--output_dir", type=str, help="Path to the output directory")
-    argparser.add_argument("-p", "--pool_size", type=int, help="Number of processes to use by multiprocessing.Pool")
+    argparser.add_argument("-n", "--npool", type=int, help="Number of processes to use by multiprocessing.Pool (only for moments calculation)")
+    argparser.add_argument("--skip_moments", action="store_true", help="Skip moments calculation")
     args = argparser.parse_args()
     yaml_file = args.yaml_file
     output_dir = args.output_dir
-    pool_size = args.pool_size
+    npool = args.npool
+    skip_moments = args.skip_moments
     
     console = Console()
     if output_dir is None:
@@ -25,14 +27,19 @@ if __name__ == "__main__":
 
     timer = Timer()
 
-    amptools_df, ift_df, ift_res_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict = loadAllResultsFromYaml(yaml_file, pool_size=pool_size)
+    amptools_df, ift_df, ift_res_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict = loadAllResultsFromYaml(yaml_file, pool_size=npool, skip_moments=skip_moments)
 
     ift_csv_path = os.path.join(base_directory, 'ift_results.csv')
     ift_res_csv_path = os.path.join(base_directory, 'ift_res_results.csv')
     amptools_csv_path = os.path.join(base_directory, 'amptools_results.csv')
     
-    print_schema = (
-        "\n\n\n## [bold]SUMMARY OF COLLECTED RESULTS[/bold] ##\n\n"
+    print_schema = "\n\n\n## [bold]SUMMARY OF COLLECTED RESULTS[/bold] ##\n"
+    if skip_moments:
+        print_schema += "## [red]Moments were not calculated as user requested...[/red]\n"
+    else:
+        print_schema += "## [green]Moments were calculated and dumped to csv also...[/green]\n"
+    print_schema += (
+        "\n\n\n"
         "[bold]SCHEMA:[/bold]\n"
         "- [cyan]t-bins / mass-bins:[/cyan] Bin centers.\n"
     )
