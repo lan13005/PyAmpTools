@@ -10,7 +10,6 @@ For example, the positive reflectivity, JP=1+, m=0, S-wave amplitude would be wr
 in the cfg file as [reaction]::RealNegSign::p1p0S. If you have a different format, then
 you'll have to account for it when parsing the amplitude name in the get_waves function.
 
-
 TODO: handle free floating parameters like the D/S ratio
 TODO: Parse Breit-Wigners instead of hard-coding them
 TODO: Coefficient table is calculated for every file, but only the last one is saved
@@ -20,6 +19,12 @@ TODO: Coefficient table is calculated for every file, but only the last one is s
     so a bool flag is needed through every function to avoid this redundancy. Or I could
     simply save the table for every file, but this could create a massive set of files
 """
+
+################################################## NOTE ######################################################################
+# This code is taken from the amazing Kevin Scheuer https://github.com/kevScheuer/neutralb1/blob/main/submission/batch_scripts/project_moments.py#L76
+#   on his commit: c070866
+# Only lightly modified if you ignore all the commented out code used for testing and comparisons
+##############################################################################################################################
 
 import argparse
 import concurrent.futures
@@ -36,14 +41,127 @@ import numpy as np
 import pandas as pd
 import spherical
 
+from pyamptools.utility.general import converter
+
+## NOTE: This was used to compare to Kevin's results and is not used anymore
+##       It is kept here for reference
+# BREIT_WIGNERS = {
+#     (1,  1): {"mass": 1.235, "width": 0.142},
+#     (1, -1): {"mass": 1.465, "width": 0.4},
+# }
+# def breit_wigner_fcn(
+#     mass: float,
+#     bw_mass: float,
+#     bw_width: float,
+#     bw_l: int,
+#     daughter1_mass: float = 0.1349768,
+#     daughter2_mass: float = 0.78266,
+# ) -> complex:
+#     """Halld_sim parameterization of the breit wigner function
+
+#     To avoid discrepancies, this function copies the parameterization of the breit
+#     wigner function found in https://github.com/JeffersonLab/halld_sim/blob/master/src/
+#     libraries/AMPTOOLS_AMPS/BreitWigner.cc.
+
+#     NOTE: all masses / widths must be in GeV. Daughter particle masses are typically
+#     obtained from event 4-vectors, but since they're not available post-fit, we
+#     approximate them by constraining their mass to the pdg value
+
+#     Args:
+#         mass (float): mass value to evaluate breit wigner function at. If using a mass
+#             bin, approximate by passing the center of the bin
+#         bw_mass (float): breit wigner central mass
+#         bw_width (float): breit wigner width
+#         bw_l (int): orbital angular momentum of the breit wigner i.e. rho->(omega,pi0)
+#             is in the P-wave, so bw_l = 1
+#         daughter1_mass (float, optional): mass of 1st daughter particle.
+#             Defaults to 0.1349768 for the pi0 mass
+#         daughter2_mass (float, optional): mass of 2nd daughter particle.
+#             Defaults to 0.78266 for the omega mass
+
+#     Returns:
+#         complex: value of the breit wigner at the mass value
+#     """
+
+#     def breakup_momentum(m0: float, m1: float, m2: float):
+#         # breakup momenta of parent (m0) -> daughter particles (m1,m2) in center of
+#         # momenta frame
+#         return np.sqrt(
+#             np.abs(
+#                 np.power(m0, 4)
+#                 + np.power(m1, 4)
+#                 + np.power(m2, 4)
+#                 - 2.0 * np.square(m0) * np.square(m1)
+#                 - 2.0 * np.square(m0) * np.square(m2)
+#                 - 2.0 * np.square(m1) * np.square(m2)
+#             )
+#         ) / (2.0 * m0)
+
+#     def barrier_factor(q: float, l: int):
+#         # barrier factor suppression based on angular momenta
+#         z = np.square(q) / np.square(0.1973)
+#         if l == 0:
+#             barrier = 1.0
+#         elif l == 1:
+#             barrier = (2.0 * z) / (z + 1.0)
+#         elif l == 2:
+#             barrier = (13.0 * np.square(z)) / (np.square(z - 3.0) + 9.0 * z)
+#         elif l == 3:
+#             barrier = (277.0 * np.power(z, 3)) / (
+#                 z * np.square(z - 15.0) + 9.0 * np.square(2.0 * z - 5.0)
+#             )
+#         elif l == 4:
+#             barrier = (12746.0 * np.power(z, 4)) / (
+#                 np.square((np.square(z) - 45.0 * z + 105.0))
+#                 + 25.0 * z * np.square(2.0 * z - 21.0)
+#             )
+#         else:
+#             barrier = 0.0
+
+#         return np.sqrt(barrier)
+
+#     q0 = np.abs(breakup_momentum(bw_mass, daughter1_mass, daughter2_mass))
+#     q = np.abs(breakup_momentum(mass, daughter1_mass, daughter2_mass))
+
+#     F0 = barrier_factor(q0, bw_l)
+#     F = barrier_factor(q, bw_l)
+
+#     width = bw_width * (bw_mass / mass) * (q / q0) * np.square(F / F0)
+
+#     numerator = complex(np.sqrt((bw_mass * bw_width) / np.pi), 0.0)
+#     denominator = complex(np.square(bw_mass) - np.square(mass), -1.0 * bw_mass * width)
+
+#     return F * numerator / denominator
+
+
 # imports below need the path to work
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
-from analysis.scripts import pwa_tools, utils
 
-BREIT_WIGNERS = {
-    "1p": {"mass": 1.235, "width": 0.142},
-    "1m": {"mass": 1.465, "width": 0.4},
-}
+def sort_input_files(input_files: list, position: int = -1) -> list:
+    """Sort the input files based off the last number in the file name or path
+
+    Args:
+        input_files (list): input files to be sorted
+        position (int, optional): Index position of the number to be sorted on in the
+            full path. Defaults to -1, meaning the last number is used for sorting. Be
+            careful using this, as it will assume all path names have the same amount of
+            distinct numbers, and thus the same indices.
+
+    Returns:
+        list: sorted list of files
+    """
+
+    def extract_last_number(full_path: str) -> float:
+        numbers = re.findall(r"(?:\d*\.*\d+)", full_path)
+        return float(numbers[position]) if numbers else float("inf")
+
+    return sorted(input_files, key=extract_last_number)
+
+def parse_amplitude(amp: str) -> Tuple[int, int, int, int, int]:
+    """ interface Kevin's expected notation to PyAmpTools notation"""
+    e, L, M, J = converter[amp] # [int, int, int, int]
+    P = (-1) ** L
+    return (e, J, P, M, L)
 
 # define the structure of the Wave class for numba to compile
 spec = [
@@ -59,7 +177,7 @@ spec = [
 ]
 
 
-@numba.experimental.jitclass(spec)
+# @numba.experimental.jitclass(spec)
 class Wave:
     def __init__(self, name, reflectivity, spin, parity, m, l, real, imaginary, scale):
         self.name = name
@@ -104,7 +222,7 @@ def main(args: dict) -> None:
         raise ValueError("Input file(s) must be .fit files")
 
     # sort the input files if requested
-    input_files = utils.sort_input_files(input_files) if args["sorted"] else input_files
+    input_files = sort_input_files(input_files) if args["sorted"] else input_files
 
     # only print out the files that will be processed if preview flag is passed
     if args["preview"]:
@@ -112,6 +230,23 @@ def main(args: dict) -> None:
         for file in input_files:
             print(f"\t{file}")
         return
+
+    df, table_df = process_all_return_df(args, input_files)
+    
+     # save moments to csv file
+    df.to_csv(args["output"], index_label="file")
+    print("Moments saved to", args["output"])
+    
+    # save table of production coefficient pairs that contribute to each moment
+    table_df.to_csv(
+        args["output"].replace(".csv", "_table.csv"), index=False
+    )
+    print("Moment table saved to", args["output"].replace(".csv", "_table.csv"))
+
+    end_time = timeit.default_timer()
+    print(f"Total time taken: {end_time - start_time:.4f} seconds")
+
+def process_all_return_df(args: dict, input_files: list) -> pd.DataFrame:
 
     # ===PROCESS each file in parallel===
     with concurrent.futures.ProcessPoolExecutor(
@@ -141,26 +276,15 @@ def main(args: dict) -> None:
             else:
                 moment_dict[key].append(complex(0, 0))
         table_dict = file_table
-
-    # save moments to csv file
     df = pd.DataFrame.from_dict(moment_dict)
-    df.index = input_files
-    df.to_csv(args["output"], index_label="file")
-    print("Moments saved to", args["output"])
 
     # save a table of the production coefficient pairs that contribute to each moment,
     # with the clebsch-gordan values that multiply them in the cells
     table_df = pd.DataFrame.from_dict(table_dict, orient="index").T
     table_df.fillna(0, inplace=True)
-    table_df.reset_index(names=["wave1", "wave2"]).to_csv(
-        args["output"].replace(".csv", "_table.csv"), index=False
-    )
-    print("Moment table saved to", args["output"].replace(".csv", "_table.csv"))
+    table_df = table_df.reset_index(names=["wave1", "wave2"])
 
-    end_time = timeit.default_timer()
-    print(f"Total time taken: {end_time - start_time:.4f} seconds")
-    pass
-
+    return df, table_df
 
 def process_file(
     file: str, args: dict
@@ -186,15 +310,17 @@ def process_file(
         value_type=numba.types.float64,
     )
 
-    if args["breit_wigner"]:
-        # obtain center of mass bin for BW calculation. Split off the file name to make
-        # use of function cache for repeated mass values
-        mass = get_mass(file.rsplit("/", 1)[0])
-    else:
-        mass = 0.0
+    # if args["breit_wigner"]:
+    #     # obtain center of mass bin for BW calculation. Split off the file name to make
+    #     # use of function cache for repeated mass values
+    #     # mass = get_mass(file.rsplit("/", 1)[0])
+    #     # mass = 1.210
+    # else:
+    #     mass = 0.0
 
     # find all the partial waves in the file
-    waves = get_waves(file, mass, args["breit_wigner"])
+    waves = get_waves(file)
+    # waves = get_waves(file, mass, args["breit_wigner"])
 
     if args["verbose"]:
         start_time = timeit.default_timer()
@@ -260,15 +386,13 @@ def get_mass(file: str) -> float:
     return mass
 
 
-def get_waves(file: str, mass: float, use_breit_wigner: bool) -> List[Wave]:
+def get_waves(file: str) -> List[Wave]:
+# def get_waves(file: str, mass: float, use_breit_wigner: bool) -> List[Wave]:
     """Obtain the set of waves, with their real and imaginary parts, from a fit result
 
     Args:
         file (str): best fit parameters file, obtained using the "-s" flag on the fit
             command, that contains the real and imaginary parts of the best fit result
-        mass (float): center of mass bin, only used for the Breit Wigner calculations
-        use_breit_wigner (bool): whether to modify the production coefficients by the
-            appropriate Breit-Wigner values
     Returns:
         Set[Wave]: all the waves and their information found in the file
     """
@@ -312,12 +436,8 @@ def get_waves(file: str, mass: float, use_breit_wigner: bool) -> List[Wave]:
 
                 amplitude = parts[0].split("::")[-1]
                 # parse amplitude into its quantum numbers
-                parsed_amp = pwa_tools.parse_amplitude(amplitude.split("_")[0])
-                reflectivity = pwa_tools.char_to_int(parsed_amp["e"])
-                spin = int(parsed_amp["j"])
-                parity = pwa_tools.char_to_int(parsed_amp["p"])
-                m = pwa_tools.char_to_int(parsed_amp["m"])
-                l = pwa_tools.char_to_int(parsed_amp["l"])
+                parsed_amp = parse_amplitude(amplitude.split("_")[0])
+                reflectivity, spin, parity, m, l = parsed_amp
 
                 # add scale parameter and amplitude info to wave set
                 waves[amplitude] = Wave(
@@ -343,32 +463,32 @@ def get_waves(file: str, mass: float, use_breit_wigner: bool) -> List[Wave]:
                 if wave is None:
                     raise ValueError(f"Amplitude {amplitude} not found in file {file}")
                 scaled_part = wave.scale * float(parts[-1])
-                match re_im_flag:
-                    case "re":
-                        wave.real = scaled_part
-                    case "im":
-                        wave.imaginary = scaled_part
-                    case _:
-                        raise ValueError(
-                            f"Unexpected amplitude format {amplitude} in file {file}"
-                        )
+                if re_im_flag == "re":
+                    wave.real = scaled_part
+                elif re_im_flag == "im":
+                    wave.imaginary = scaled_part
+                else:
+                    raise ValueError(
+                        f"Unexpected amplitude format {amplitude} in file {file}"
+                    )
 
     # If breit wigners are used, we need to multiply the re/im parts for each wave
     # get breit wigner if requested
-    if use_breit_wigner:
-        for wave in waves.values():
-            try:
-                bw_mass = BREIT_WIGNERS[wave.name[1:3]]["mass"]
-                bw_width = BREIT_WIGNERS[wave.name[1:3]]["width"]
-            except KeyError:
-                print(
-                    f"Breit-Wigner parameters not found for wave {wave.name}, skipping."
-                )
-                continue
-            breit_wigner = pwa_tools.breit_wigner(mass, bw_mass, bw_width, wave.l)
-            c = complex(wave.real, wave.imaginary) * breit_wigner
-            wave.real = c.real
-            wave.imaginary = c.imag
+    # if use_breit_wigner:
+    #     for wave in waves.values():
+    #         try:
+    #             JP = (wave.spin, wave.parity)
+    #             bw_mass = BREIT_WIGNERS[JP]["mass"]
+    #             bw_width = BREIT_WIGNERS[JP]["width"]
+    #         except KeyError:
+    #             print(
+    #                 f"Breit-Wigner parameters not found for wave {wave.name}, skipping."
+    #             )
+    #             continue
+    #         breit_wigner = breit_wigner_fcn(mass, bw_mass, bw_width, wave.l)
+    #         c = complex(wave.real, wave.imaginary) * breit_wigner
+    #         wave.real = c.real
+    #         wave.imaginary = c.imag
 
     # Check that real and imaginary parts were found for all waves
     if not all(w.real and w.imaginary for w in waves.values()):
@@ -379,7 +499,7 @@ def get_waves(file: str, mass: float, use_breit_wigner: bool) -> List[Wave]:
     return list(waves.values())
 
 
-@numba.njit(cache=True)
+# @numba.njit(cache=True)
 def calculate_moment(
     alpha: int,
     Jv: int,
@@ -427,7 +547,7 @@ def calculate_moment(
                         for mj in range(-Jj, Jj + 1):
                             # calculate the sdme and save the production coefficient
                             # pairs that contribute to it in the dictionary
-                            sdme, pairs = calculate_SDME(
+                            sdme, pairs = cached_sdme(
                                 alpha,
                                 Ji,
                                 li,
@@ -468,13 +588,19 @@ def calculate_moment(
     return moment
 
 
-@numba.njit(cache=True)
+# @numba.njit(cache=True)
 def sign(i):
     # replaces calculating costly (-1)^x powers in the SDMEs
     return 1 if i % 2 == 0 else -1
 
+_sdme_cache = {}
+def cached_sdme(alpha, Ji, li, mi, Jj, lj, mj, waves):
+    key = (alpha, Ji, li, mi, Jj, lj, mj, waves)
+    if key not in _sdme_cache:
+        _sdme_cache[key] = calculate_SDME(alpha, Ji, li, mi, Jj, lj, mj, waves)
+    return _sdme_cache[key]
 
-@numba.njit(cache=True)
+# @numba.njit(cache=True)
 def calculate_SDME(
     alpha: int,
     Ji: int,
@@ -524,25 +650,24 @@ def calculate_SDME(
             waves, Ji, li, mi, Jj, lj, mj, e, alpha
         )
         pairs.extend(new_pairs)
-        match alpha:
-            case 0:
-                result += c1 * c2 + sign(mi + mj + li + lj + Ji + Jj) * c3 * c4
-            case 1:
-                result += e * (
-                    sign(1 + mi + li + Ji) * c1 * c2 + sign(1 + mj + lj + Jj) * c3 * c4
-                )
-            case 2:
-                result += e * (
-                    sign(mi + li + Ji) * c1 * c2 - sign(mj + lj + Jj) * c3 * c4
-                )
-            case _:
-                raise ValueError(f"Invalid alpha value {alpha}")
+        if alpha == 0:
+            result += c1 * c2 + sign(mi + mj + li + lj + Ji + Jj) * c3 * c4
+        elif alpha == 1:
+            result += e * (
+                sign(1 + mi + li + Ji) * c1 * c2 + sign(1 + mj + lj + Jj) * c3 * c4
+            )
+        elif alpha == 2:
+            result += e * (
+                sign(mi + li + Ji) * c1 * c2 - sign(mj + lj + Jj) * c3 * c4
+            )
+        else:
+            raise ValueError(f"Invalid alpha value {alpha}")
     if alpha == 2:
         result *= complex(0, 1)
     return result, pairs
 
 
-@numba.njit(cache=True)
+# @numba.njit(cache=True)
 def process_waves(
     waves: List[Wave],
     Ji: int,
@@ -613,8 +738,13 @@ def process_waves(
             pairs.append((c3_name, c4_name))
     return c1, c2, c3, c4, pairs
 
+_cg_cache = {}
+def cached_clebsch_gordan(l1, m1, l2, m2, L, M):
+    key = (l1, m1, l2, m2, L, M)
+    if key not in _cg_cache:
+        _cg_cache[key] = spherical.clebsch_gordan(l1, m1, l2, m2, L, M)
+    return _cg_cache[key]
 
-@numba.njit(cache=True)
 def calculate_clebsch_gordans(
     Jv: int,
     Lambda: int,
@@ -631,12 +761,12 @@ def calculate_clebsch_gordans(
 ) -> float:
     """Calculate the clebsch gordan coefficients for a generic moment"""
     cgs = (
-        spherical.clebsch_gordan(li, 0, 1, lambda_i, Ji, lambda_i)
-        * spherical.clebsch_gordan(lj, 0, 1, lambda_j, Jj, lambda_j)
-        * spherical.clebsch_gordan(1, lambda_i, Jv, Lambda, 1, lambda_j)
-        * spherical.clebsch_gordan(1, 0, Jv, 0, 1, 0)
-        * spherical.clebsch_gordan(Ji, mi, J, M, Jj, mj)
-        * spherical.clebsch_gordan(Ji, lambda_i, J, Lambda, Jj, lambda_j)
+        cached_clebsch_gordan(li, 0, 1, lambda_i, Ji, lambda_i)
+        * cached_clebsch_gordan(lj, 0, 1, lambda_j, Jj, lambda_j)
+        * cached_clebsch_gordan(1, lambda_i, Jv, Lambda, 1, lambda_j)
+        * cached_clebsch_gordan(1, 0, Jv, 0, 1, 0)
+        * cached_clebsch_gordan(Ji, mi, J, M, Jj, mj)
+        * cached_clebsch_gordan(Ji, lambda_i, J, Lambda, Jj, lambda_j)
     )
 
     return cgs
@@ -676,15 +806,15 @@ def parse_args() -> dict:
         action="store_true",
         help=("When passed, print out the files that will be processed and exit."),
     )
-    parser.add_argument(
-        "-b",
-        "--breit-wigner",
-        action="store_true",
-        help=(
-            "When passed, modify the production coefficients by the appropriate"
-            " Breit-Wigner values. Note these are currently hard-coded in the script."
-        ),
-    )
+    # parser.add_argument(
+    #     "-b",
+    #     "--breit-wigner",
+    #     action="store_true",
+    #     help=(
+    #         "When passed, modify the production coefficients by the appropriate"
+    #         " Breit-Wigner values. Note these are currently hard-coded in the script."
+    #     ),
+    # )
     parser.add_argument(
         "-v",
         "--verbose",

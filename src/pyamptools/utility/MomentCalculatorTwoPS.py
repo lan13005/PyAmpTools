@@ -1,7 +1,7 @@
 """Module that provides classes and functions to calculate moments for photoproduction of two-(pseudo)scalar mesons"""
 
 ################################################## NOTE ######################################################################
-# This code is donated (stolen) from the amazing Boris Grube: https://github.com/bgrube/Moments/blob/main/MomentCalculator.py
+# This code is taken from the amazing Boris Grube: https://github.com/bgrube/Moments/blob/main/MomentCalculator.py
 #   on his commit: 6a1f801
 ##############################################################################################################################
 
@@ -1154,7 +1154,7 @@ class BootstrapIndices:
 
 
 @dataclass
-class MomentCalculator:
+class MomentCalculatorTwoPS:
   """Container class that holds all information needed to calculate moments for a single kinematic bin"""
   indices:              MomentIndices  # index mapping and iterators
   dataSet:              DataSet  # info on data samples
@@ -1295,30 +1295,30 @@ class MomentCalculator:
     if normalize:
       self._HPhys.normalize()
 
-# functions that read bin labels and titles from MomentCalculator or MomentResult
-def binLabels(obj: MomentCalculator | MomentResult) -> list[str]:
+# functions that read bin labels and titles from MomentCalculatorTwoPS or MomentResult
+def binLabels(obj: MomentCalculatorTwoPS | MomentResult) -> list[str]:
   """Returns list of bin labels; naming scheme of entries is '<binning var>_<bin center>'"""
   return [f"{var.name}_" + (f"{center:.{var.nmbDigits}f}" if var.nmbDigits is not None else f"{center}") for var, center in obj.binCenters.items()]
 
-def binLabel(obj: MomentCalculator | MomentResult) -> str:
+def binLabel(obj: MomentCalculatorTwoPS | MomentResult) -> str:
   """Returns label for bin; scheme is '<binning var 0>_<bin center 0>_ ...'"""
   return "_".join(binLabels(obj))
 
-def binTitles(obj: MomentCalculator | MomentResult) -> list[str]:
+def binTitles(obj: MomentCalculatorTwoPS | MomentResult) -> list[str]:
   """Returns list of `TLatex` expressions for bin centers; scheme of entries is '<binning var> = <bin center> <unit>'"""
   return [f"{var.label} = " + (f"{center:.{var.nmbDigits}f}" if var.nmbDigits is not None else f"{center}") + f" {var.unit}" for var, center in obj.binCenters.items()]
 
-def binTitle(obj: MomentCalculator | MomentResult) -> str:
+def binTitle(obj: MomentCalculatorTwoPS | MomentResult) -> str:
   """Returns `TLatex` expressions for kinematic bin centers; scheme is '<binning var 0> = <bin center 0> <unit>, ...'"""
   return ", ".join(binTitles(obj))
 
 
 @dataclass
-class MomentCalculatorsKinematicBinning:
+class MomentCalculatorTwoPSsKinematicBinning:
   """Container class that holds all information needed to calculate moments for several kinematic bins"""
-  calculators: list[MomentCalculator]  # data for all bins of the kinematic binning
+  calculators: list[MomentCalculatorTwoPS]  # data for all bins of the kinematic binning
 
-  # make MomentCalculatorsKinematicBinning behave like a list of MomentCalculators
+  # make MomentCalculatorTwoPSsKinematicBinning behave like a list of MomentCalculatorTwoPSs
   def __len__(self) -> int:
     """Returns number of kinematic bins"""
     return len(self.calculators)
@@ -1326,19 +1326,19 @@ class MomentCalculatorsKinematicBinning:
   def __getitem__(
     self,
     subscript: int,
-  ) -> MomentCalculator:
-    """Returns `MomentCalculator` that correspond to given bin index"""
+  ) -> MomentCalculatorTwoPS:
+    """Returns `MomentCalculatorTwoPS` that correspond to given bin index"""
     return self.calculators[subscript]
 
-  def __iter__(self) -> Iterator[MomentCalculator]:
-    """Iterates over `MomentCalculators` in kinematic bins"""
+  def __iter__(self) -> Iterator[MomentCalculatorTwoPS]:
+    """Iterates over `MomentCalculatorTwoPSs` in kinematic bins"""
     return iter(self.calculators)
 
   def append(
     self,
-    calculator: MomentCalculator
+    calculator: MomentCalculatorTwoPS
   ) -> None:
-    """Appends a new `MomentCalculator`"""
+    """Appends a new `MomentCalculatorTwoPS`"""
     self.calculators.append(calculator)
 
   def calculateIntegralMatrices(
@@ -1352,7 +1352,7 @@ class MomentCalculatorsKinematicBinning:
 
   def calculateMoments(
     self,
-    dataSource:          MomentCalculator.MomentDataSource = MomentCalculator.MomentDataSource.DATA,  # type of data to calculate moments from
+    dataSource:          MomentCalculatorTwoPS.MomentDataSource = MomentCalculatorTwoPS.MomentDataSource.DATA,  # type of data to calculate moments from
     normalize:           bool = True,   # if set physical moments are normalized to H_0(0, 0)
     nmbBootstrapSamples: int  = 0,      # number of bootstrap samples; 0 means no bootstrapping
     bootstrapSeed:       int  = 12345,  # seed for random number generator used for bootstrap samples

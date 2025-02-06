@@ -3,7 +3,7 @@ import itertools
 import os
 import re
 from collections import defaultdict
-from pyamptools.utility.general import glob_sort_captured
+from pyamptools.utility.general import glob_sort_captured, identify_channel
 from pyamptools.utility.MomentUtilities import MomentManagerTwoPS, MomentManagerVecPS
 from iftpwa1.utilities.helpers import reload_fields_and_components
 import numpy as np
@@ -65,7 +65,8 @@ def parse_fit_file(filename):
     # Read the file
     with open(filename, 'r') as f:
         for line in f:
-            line = line.replace("\s+", " ").strip()
+            # Use regex sub to replace all whitespace with single space
+            line = re.sub(r'\s+', ' ', line).strip()
             
             if "bestMinimum" in line:
                 status_dict["bestMinimum"] = float(line.split()[1]); continue
@@ -73,12 +74,21 @@ def parse_fit_file(filename):
                 status_dict["lastMinuitCommandStatus"] = int(line.split()[1]); continue
             elif "eMatrixStatus" in line:
                 status_dict["eMatrixStatus"] = int(line.split()[1]); continue
+                
+            # you have gone too far by now
+            if "+++ Normalization Integrals +++" in line:
+                break
+
+            # skip over lines that start looking like a numeric including sign -
+            #    (could match the parameter covariance matrix before the normalization integrals dump)
+            if re.match(r'^-?\d', line):
+                continue
 
             # must end in space! _re could exist in vec_ps_refl
             if "_re " not in line and "_im " not in line: continue
-            
+                        
             # Split line into name and value
-            name, value_str = line.strip().split('\t')
+            name, value_str = line.strip().split(' ')
             try:
                 value = float(value_str)
             except ValueError: continue
@@ -96,7 +106,7 @@ def parse_fit_file(filename):
             # Store value
             key = (reaction, sum_type, base_name)
             complex_amps_builder[key] += value * (1j if component == 'im' else 1)
-            
+
     complex_amps = {}
     for key, value in complex_amps_builder.items():
         if key[2] not in complex_amps:
@@ -133,6 +143,7 @@ def loadAllResultsFromYaml(yaml, pool_size=10):
     
     amptools_df = None
     ift_df = None
+    ift_res_df = None
 
     ###########################################
     #### LOAD ADDITIONAL INFORMATION FROM YAML
@@ -149,6 +160,7 @@ def loadAllResultsFromYaml(yaml, pool_size=10):
     masses = 0.5 * (masses[:-1] + masses[1:])
     tPrimeBins = 0.5 * (tPrimeBins[:-1] + tPrimeBins[1:])
     bpg = yaml['amptools']['bins_per_group']
+    channel = identify_channel(wave_names)
 
     ###############################
     #### LOAD AMPTOOLS RESULTS
@@ -180,12 +192,20 @@ def loadAllResultsFromYaml(yaml, pool_size=10):
     print("io| Processing AmpTools and IFT results...")
     latex_name_dict_amp, latex_name_dict_ift = None, None
     if amptools_df is not None:
-        amptools_df = MomentManagerTwoPS(amptools_df, wave_names)
-        amptools_df, latex_name_dict_amp = amptools_df.process_and_return_df(normalization_scheme=1, pool_size=pool_size, append=True)
+        if channel == "TwoPseudoscalar":
+            amptools_manager = MomentManagerTwoPS(amptools_df, wave_names)
+        elif channel == "VectorPseudoscalar":
+            amptools_manager = MomentManagerVecPS(amptools_df, wave_names)
+        # for col in amptools_df.columns:
+        #     print(f"{col} {amptools_df[col].dtype}")
+        amptools_df, latex_name_dict_amp = amptools_manager.process_and_return_df(normalization_scheme=1, pool_size=pool_size, append=True)
 
     if ift_df is not None:
-        ift_df = MomentManagerTwoPS(ift_df, wave_names)
-        ift_df, latex_name_dict_ift = ift_df.process_and_return_df(normalization_scheme=1, pool_size=pool_size, append=True)
+        if channel == "TwoPseudoscalar":
+            ift_manager = MomentManagerTwoPS(ift_df, wave_names)
+        elif channel == "VectorPseudoscalar":
+            ift_manager = MomentManagerVecPS(ift_df, wave_names)
+        ift_df, latex_name_dict_ift = ift_manager.process_and_return_df(normalization_scheme=1, pool_size=pool_size, append=True)
     
     if latex_name_dict_amp is not None and latex_name_dict_ift is not None and latex_name_dict_amp != latex_name_dict_ift:
         raise ValueError("IFT and AmpTools moment dictionaries do not match but is expected to!")
