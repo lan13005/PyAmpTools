@@ -378,7 +378,10 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#analysis-tips">Analysis Tips</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#analysis-tips">Analysis Tips</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hyperparameter-scans">Hyperparameter scans</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#developing-tips">Developing Tips</a></li>
 </ul>
             </nav>
@@ -395,6 +398,15 @@
 <h1>iftpwa - Tips<a class="headerlink" href="#iftpwa-tips" title="Link to this heading">#</a></h1>
 <section id="analysis-tips">
 <h2>Analysis Tips<a class="headerlink" href="#analysis-tips" title="Link to this heading">#</a></h2>
+<section id="hyperparameter-scans">
+<h3>Hyperparameter scans<a class="headerlink" href="#hyperparameter-scans" title="Link to this heading">#</a></h3>
+<p>Hyperparameter scans are performed under the hood using <code class="docutils literal notranslate"><span class="pre">optuna</span></code> python package. <code class="docutils literal notranslate"><span class="pre">PyAmpTools</span></code> streamlines this interaction, see the configuration file tutorial. We can hijack this interface to perform scans over any hyperparameter defined in the config file. It is a very expressive feature.</p>
+<ol class="arabic simple">
+<li><p><strong>Waveset Scans:</strong> Currently only <code class="docutils literal notranslate"><span class="pre">pa</span> <span class="pre">run_ift</span></code> is aware of hyperparameter scanning but one can imagine doing waveset scans with <code class="docutils literal notranslate"><span class="pre">run_mle</span></code> fits (to be added). Use <code class="docutils literal notranslate"><span class="pre">optuna</span></code>’s <code class="docutils literal notranslate"><span class="pre">BruteForceSampler</span></code> to perform scans over a list of waveset strings.</p></li>
+<li><p><strong>Randomized Fits:</strong> If we wanted to do random fits with <code class="docutils literal notranslate"><span class="pre">pa</span> <span class="pre">run_ift</span></code>, one can use <code class="docutils literal notranslate"><span class="pre">optuna</span></code>’s <code class="docutils literal notranslate"><span class="pre">BruteForceSampler</span></code> to scan over <code class="docutils literal notranslate"><span class="pre">GENERAL.seeds</span></code> YAML key.</p></li>
+<li><p><strong>Systematic Uncertainties:</strong> We can additionally hijack this system to extract our systematic uncertainties. <code class="docutils literal notranslate"><span class="pre">NIFTy</span></code> researchers estimates systematic uncertainties by randomly moving the prior mean (of all prior distributions) around the prior std (leaving std unchanged), performs a fit, then aggregates the shifts.</p></li>
+</ol>
+</section>
 </section>
 <section id="developing-tips">
 <h2>Developing Tips<a class="headerlink" href="#developing-tips" title="Link to this heading">#</a></h2>
@@ -493,7 +505,10 @@
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#analysis-tips">Analysis Tips</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#analysis-tips">Analysis Tips</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hyperparameter-scans">Hyperparameter scans</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#developing-tips">Developing Tips</a></li>
 </ul>
   </nav></div>
