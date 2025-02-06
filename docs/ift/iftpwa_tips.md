@@ -3,7 +3,7 @@
 ## Analysis Tips
 
 ### Hyperparameter scans
-Hyperparameter scans are performed under the hood using `optuna` python package. `PyAmpTools` streamlines this interaction, see the configuration file tutorial. We can hijack this interface to perform scans over any hyperparameter defined in the config file. It is a very expressive feature.
+Hyperparameter scans are performed under the hood using `optuna` python package. `PyAmpTools` streamlines this interaction, see the configuration file tutorial. We can hijack this interface to perform scans over **any** hyperparameter/key defined in the config file. Since the entire model is defined in this config file, you have full control.
 
 1. **Waveset Scans:** Currently only `pa run_ift` is aware of hyperparameter scanning but one can imagine doing waveset scans with `run_mle` fits (to be added). Use `optuna`'s `BruteForceSampler` to perform scans over a list of waveset strings.
 2. **Randomized Fits:** If we wanted to do random fits with `pa run_ift`, one can use `optuna`'s `BruteForceSampler` to scan over `GENERAL.seeds` YAML key.
