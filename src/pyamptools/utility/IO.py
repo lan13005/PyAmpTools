@@ -11,8 +11,11 @@ import pandas as pd
 import pickle as pkl
 from omegaconf import OmegaConf
 from omegaconf.errors import MissingMandatoryValue
+from rich.console import Console
 
 pd.options.mode.chained_assignment = None  # default='warn'
+
+console = Console()
 
 def get_nEventsInBin(base, acceptance_correct=True):
     """
@@ -113,8 +116,8 @@ def parse_fit_file(filename):
             complex_amps[key[2]] = value
         else:
             if complex_amps[key[2]] != value:
-                print(f"io| ERROR: {key[2]} is expected to be the same as it should be constrained to be the same")
-                print(f"io|  {key[2]} = {value} != {complex_amps[key[2]]}")
+                console.print(f"io| ERROR: {key[2]} is expected to be the same as it should be constrained to be the same")
+                console.print(f"io|  {key[2]} = {value} != {complex_amps[key[2]]}")
     
     return complex_amps, status_dict
 
@@ -142,6 +145,15 @@ def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False):
     if isinstance(yaml, str):
         yaml = OmegaConf.load(yaml)
     
+    # Store a cache of the results to avoid recalculating them, calculating moments is quite time consuming
+    cache = f"{yaml['base_directory']}/.moment_cache.pkl"
+    if os.path.exists(cache):
+        console.print(f"[red]loadAllResultsFromYaml| Loading cache from {cache}[/red]\n")
+        with open(cache, "rb") as f:
+            cache = pkl.load(f)
+        return cache
+    console.print(f"[green]loadAllResultsFromYaml| Cache not found at {cache}\n  Calculating moments...[/green]\n")
+    
     amptools_df = None
     ift_df = None
     ift_res_df = None
@@ -166,7 +178,7 @@ def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False):
     ###############################
     #### LOAD AMPTOOLS RESULTS
     ###############################
-    print("io| Attempting to load AmpTools results...")
+    console.print("io| Attempting to load AmpTools results...")
     loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=False)
     try:
         # hardcode check to False since hopefully if user calls this function they would want all fits
@@ -178,11 +190,11 @@ def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False):
     ###############################
     #### LOAD NIFTY RESULTS
     ###############################
-    print("io| Attempting to load NIFTY results...")
+    console.print("io| Attempting to load NIFTY results...")
     try:
         ift_df, ift_res_df = loadIFTResultsFromYaml(yaml)
     except Exception as e:
-        print(f"io| Error loading NIFTY results: {e}")
+        console.print(f"io| Error loading NIFTY results: {e}")
         
     if amptools_df is None and ift_df is None:
         raise ValueError("io| No results from AmpTools binned fits nor IFT can be found! Terminating...")
@@ -190,7 +202,7 @@ def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False):
     ###########################################
     #### PROCESS THE AMPTOOLS AND IFT RESULTS
     ###########################################
-    print("io| Processing AmpTools and IFT results...")
+    console.print("io| Processing AmpTools and IFT results...")
     latex_name_dict = None
     if not skip_moments:
         latex_name_dict_amp, latex_name_dict_ift = None, None
@@ -215,6 +227,11 @@ def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False):
         
         # think its safe? If they are not None by this point they must be the same dictionary
         latex_name_dict = latex_name_dict_amp if latex_name_dict_amp is not None else latex_name_dict_ift
+        
+    with open(cache, "wb") as f:
+        console.print(f"[green]loadAllResultsFromYaml| Dumping cache to {cache}[/green]")
+        cache = (amptools_df, ift_df, ift_res_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict)
+        pkl.dump(cache, f)
     
     return amptools_df, ift_df, ift_res_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict
 
@@ -380,7 +397,7 @@ def loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=True):
     
     search_format = yaml['amptools']['search_format'] if yaml['amptools']['bins_per_group'] > 1 else 'bin'
     pattern = yaml['amptools']['output_directory']+f'/{search_format}_*/bin_[].cfg'
-    print(f"io| Searching for amptools files using this pattern: {pattern}")
+    console.print(f"io| Searching for amptools files using this pattern: {pattern}")
     cfgfiles = glob_sort_captured(pattern)
     min_mass = yaml['min_mass']
     max_mass = yaml['max_mass']
@@ -557,8 +574,8 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
     # Apply Query 1
     if mle_query_1 != "":
         df = df.query(mle_query_1)
-    print(f"io| Remaining number of AmpTools fits (across randomizations and kinematic bins) after applying mle_query_1 = '{mle_query_1}': {len(df)}")
-    print(f"io| Calculating delta_nll...")
+    console.print(f"io| Remaining number of AmpTools fits (across randomizations and kinematic bins) after applying mle_query_1 = '{mle_query_1}': {len(df)}")
+    console.print(f"io| Calculating delta_nll...")
 
     # groupby mass and subtract the min nll in each kinematic bin
     # create a new column called delta_nll and subtract the min nll in each kinematic bin
@@ -567,7 +584,7 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
     # Apply Query 2
     if mle_query_2 != "":
         df = df.query(mle_query_2)
-    print(f"io| Remaining number of AmpTools fits (across randomizations and kinematic bins) after applying mle_query_2 = '{mle_query_2}': {len(df)}")
+    console.print(f"io| Remaining number of AmpTools fits (across randomizations and kinematic bins) after applying mle_query_2 = '{mle_query_2}': {len(df)}")
 
     # This is the case if there are 0 fit result files loaded
     if len(df) == 0:
@@ -595,8 +612,8 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
     absolute_idxs = np.sort(absolute_idxs)
 
     if len(missing_tm) > 0:
-        print("\nio| loadAmpToolsResults did not collect the correct number of masses/tPrimes, perhaps mle_queries are too strict?")
-        print(f"io|  --> Missing bin indices: {absolute_idxs}")
+        console.print("\nio| loadAmpToolsResults did not collect the correct number of masses/tPrimes, perhaps mle_queries are too strict?")
+        console.print(f"io|  --> Missing bin indices: {absolute_idxs}")
         raise ValueError("Some kinematic bins had no converged MLE fits. This could be due to the YAML `mle_query_1` and `mle_query_2` could be too restrictive. Exiting...")
 
     return df
