@@ -36,16 +36,15 @@ def main():
 
     func_map = {
         # 'command' : (path, description)
+        "nentries": (f"{PYAMPTOOLS_HOME}/bin/get_nentries.py", "Print number of entries in a list of ROOT files (* wildcard supported). Allows integration over a branch if provided."),
         "fit": (f"{PYAMPTOOLS_HOME}/src/pyamptools/mle.py", "Perform a set of MLE fits given an amptools config file"),
         "fitfrac": (f"{PYAMPTOOLS_HOME}/src/pyamptools/extract_ff.py", "Extract fit fractions from a given amptools FitResults file"),
         "mcmc": (f"{PYAMPTOOLS_HOME}/src/pyamptools/mcmc.py", "Perform a MCMC fit given an amptools config file"),
         "gen_amp": (f"{PYAMPTOOLS_HOME}/bin/gen_amp.py", "Generate data for a given configuration file"),
         "gen_vec_ps": (f"{PYAMPTOOLS_HOME}/bin/gen_vec_ps.py", "Generate vector-pseduoscalar data for a given configuration file"),
-        "nentries": (f"{PYAMPTOOLS_HOME}/bin/get_nentries.py", "Print number of entries in a list of ROOT files (* wildcard supported). Allows integration over a branch if provided."),
-        "calc_ps": (f"{PYAMPTOOLS_HOME}/bin/calc_ps.py", "Calculate the phase space factor for IFT fits"),
-        "dash_ift_cmp": (f"{PYAMPTOOLS_HOME}/bin/dash_ift_cmp.py", "Compare multiple IFT fits (intensity and phase) using dash package"),
         "ift_pkl_summary": (f"{PYAMPTOOLS_HOME}/bin/ift_pkl_summary.py", "Summarize the contents of an IFT results pickle file"),
         "dx_normint": (f"{PYAMPTOOLS_HOME}/bin/dx_normint.py", "Make diagnostic heatmaps for (norm)alizaton and (amp)litude integrals. Can tracks matrix elements over all mass bins"),
+        "calc_ps": (f"{PYAMPTOOLS_HOME}/bin/calc_ps.py", "[In Development] Calculate the phase space factor for IFT fits"),
     }
 
     analysis_map = {
@@ -57,6 +56,7 @@ def main():
         "run_ift": (f"{PYAMPTOOLS_HOME}/bin/run_ift.py", "Run IFT fit over kinematic bins. MLE fits must be run first!"),
         "run_momentPlotter": (f"{PYAMPTOOLS_HOME}/bin/run_momentPlotter.py", "After running IFT + MLE fits we can attempt to plot all the moments"),
         "run_resultDump": (f"{PYAMPTOOLS_HOME}/bin/run_resultDump.py", "Dump IFT and AmpTools results to csv files"),
+        "dash_ift_cmp": (f"{PYAMPTOOLS_HOME}/bin/dash_ift_cmp.py", "Compare multiple IFT fits (intensity and phase) using dash package"),
     }
 
     availability_map = {**func_map, **analysis_map}
