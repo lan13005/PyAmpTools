@@ -553,10 +553,9 @@ def get_git_commit_hash_for_package(package_name):
     try:
         # Find package location, only works if package is installed in editable mode!
         spec = importlib.util.find_spec(package_name)
-        if spec is None or spec.origin is None:
+        if spec is None or spec.submodule_search_locations[0] is None:
             raise ValueError(f"Package '{package_name}' not found or not installed in editable mode.")
-
-        package_dir = os.path.dirname(os.path.abspath(spec.origin))
+        package_dir = os.path.dirname(os.path.abspath(str(spec.submodule_search_locations[0])))
 
         # Traverse upwards to find the Git root directory
         git_dir = package_dir
