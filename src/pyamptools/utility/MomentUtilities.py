@@ -194,22 +194,19 @@ class MomentManagerTwoPS(MomentManager):
         moment_results = pd.DataFrame(moment_results, index=self.df.index)
         moment_results = moment_results.drop(columns=['index'])
         
-        # Boris uses notation Hi_L_M. I like Kevin's notation for VecPS better
-        replace_dict = {}
-        cols = [col for col in moment_results.columns if col.startswith("H")]
-        for col in cols:
-            alpha, Jv, Lambda, J, M = col[1], col[3], col[5], col[7], col[9]
-            replace_dict[col] = f"H{alpha}({Jv},{Lambda},{J},{M})"
-        moment_results.rename(columns=replace_dict, inplace=True)
-        
-        # Perform symmetry checks and gather latex naming
+        # Boris uses notation Hi_L_M. I like Kevin's notation for VecPS better Hi(L,M)
+        # Also, Perform symmetry checks and gather latex naming
         moment_names = [col for col in moment_results.columns if col.startswith("H")]
+        replace_dict = {}
         latex_name_dict = {}
-        for moment_name in moment_names:
-            values, part_taken = symmetry_check(moment_results[moment_name])
-            moment_results[moment_name] = values
-            i, L, M = moment_name[1], moment_name[3], moment_name[5]
-            latex_name_dict[moment_name] = rf"$\{part_taken}[H_{{{i}}}({L}, {M})]$"
+        for old_name in moment_names:
+            values, part_taken = symmetry_check(moment_results[old_name])
+            moment_results[old_name] = values
+            i, L, M = old_name[1], old_name[3], old_name[5]
+            new_name = f"H{i}({L},{M})"
+            replace_dict[old_name] = new_name
+            latex_name_dict[new_name] = rf"$\{part_taken}[H_{{{i}}}({L}, {M})]$"
+        moment_results.rename(columns=replace_dict, inplace=True)
 
         if append: moment_results = pd.concat([self.df, moment_results], axis=1)
         
@@ -237,7 +234,7 @@ class MomentManagerTwoPS(MomentManager):
         amplitudes = read_partial_wave_amplitudes_twops(self.df.iloc[i], self.wave_names)
         amplitude_set = AmplitudeSet(amps=amplitudes, tolerance=1e-10)
         moment_result = amplitude_set.photoProdMomentSet(
-            maxL=self.max_L,
+            maxL=self.max_J,
             normalize=normalization,
             printMomentFormulas=False
         )

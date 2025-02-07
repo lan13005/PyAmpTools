@@ -86,7 +86,7 @@ def parse_fit_file(filename):
 
             # must end in space! _re could exist in vec_ps_refl
             if "_re " not in line and "_im " not in line: continue
-                        
+
             # Split line into name and value
             name, value_str = line.strip().split(' ')
             try:
@@ -114,7 +114,7 @@ def parse_fit_file(filename):
         else:
             if complex_amps[key[2]] != value:
                 print(f"io| ERROR: {key[2]} is expected to be the same as it should be constrained to be the same")
-                print(f"io|  {key[2]} = {value}")
+                print(f"io|  {key[2]} = {value} != {complex_amps[key[2]]}")
     
     return complex_amps, status_dict
 
@@ -402,6 +402,11 @@ def loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=True):
     if mle_query_2 is None: mle_query_2 = ''
     n_randomizations = yaml['amptools']['n_randomizations']
     accCorrect = yaml['acceptance_correct']
+    
+    if bpg > 1 and not yaml['amptools']['merge_grouped_trees']:
+        # The error is that the checks in parse_fit_file will fail
+        raise ValueError("Currently we must merge grouped trees if YAML key amptools.bins_per_group > 1. Please set amptools.merge_grouped_trees=True")
+    
     df = loadAmpToolsResults(cfgfiles, masses, tPrimes, n_randomizations, mle_query_1, mle_query_2, accCorrect)
     unique_kin_pairs = df.value_counts(subset=['mass', 'tprime'])
     if ensure_one_fit_per_bin:
@@ -481,18 +486,24 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
         observed_pairs = set()
         fname = f"{basedir}/intensities_{i}.txt"
         with open(fname) as f:
-            totalYield = 0
+            totalYield = None
             for line in f.readlines():
                 if line.startswith("TOTAL EVENTS"):
-                    
                     # Store both intensity and acceptance corrected intensity
                     intensity_corr, intensity = line.split()[3].split("|")
-                    if 'intensity' not in df: df['intensity'] = [float(intensity)]
-                    else: df['intensity'].append(float(intensity))
-                    if 'intensity_corr' not in df: df['intensity_corr'] = [float(intensity_corr)]
-                    else: df['intensity_corr'].append(float(intensity_corr))
+                    intensity_corr, intensity = float(intensity_corr), float(intensity)
+                    if 'intensity' not in df: df['intensity'] = [intensity]
+                    else: df['intensity'].append(intensity)
+                    if 'intensity_corr' not in df: df['intensity_corr'] = [intensity_corr]
+                    else: df['intensity_corr'].append(intensity_corr)
+                    
+                    totalYield = intensity_corr if accCorrect else intensity
 
                 if line.startswith("FIT FRACTION") and "::" not in line:  # Regex-merged to group Re/Im + Pols
+                    
+                    if totalYield is None:
+                        raise ValueError(f"io| totalYield is not expected to be None by now! File in question: {fname}")
+                    
                     amp = line.split()[2]
 
                     # FILL VALUES
