@@ -1,6 +1,13 @@
-# Analysis Chain Example 1
+# Analysis Chain Script
 
 Once we have a pair of configuration files we are ready to perform our two types of fits and compare the results. `pa` is a simple dispatch system that calls various python scripts which each perform a specific task in this workflow.
+
+This workflow goes from:
+1. the raw data
+2. splits the data into kinematic bins
+3. performs AmpTools fits
+4. performs IFT fits
+5. draws tons of diagnostic plots
 
 ```bash
 set -e # Exit on error
