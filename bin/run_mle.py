@@ -2,6 +2,7 @@ import argparse
 import glob
 import multiprocessing
 import os
+import re
 
 from pyamptools import atiSetup
 from pyamptools.utility.general import Silencer, Timer, load_yaml
@@ -55,7 +56,7 @@ class MLE:
         elif self.dump != '':
             if not os.path.exists(f"{self.dump}"):
                 os.makedirs(f"{self.dump}")
-            cmd += f" >> {self.dump}/log_{binNum}.txt"
+            cmd += f" >> {self.dump}/log_{binNum}.txt 2>&1"
         os.system(cmd)
 
         if not os.path.exists(f"{base_fname}.fit"):
@@ -70,6 +71,8 @@ class MLE:
         cmd = f"{pyamptools_ff_cmd} {base_fname}.fit --outputfileName intensities_bin{binNum}.txt {self.ff_args}"
         if self.dump == 'null':
             cmd += " > /dev/null"
+        elif self.dump != '':
+            cmd += f" >> {self.dump}/log_{binNum}.txt 2>&1"
         print(cmd)
         os.system(cmd)
         os.system(f"mv intensities_bin{binNum}.txt {folder}/intensities.txt")
@@ -80,6 +83,8 @@ class MLE:
             cmd = f"{pyamptools_ff_cmd} {base_fname}_{i}.fit --outputfileName intensities_bin{binNum}_{i}.txt {self.ff_args}"
             if self.dump == 'null':
                 cmd += " > /dev/null"
+            elif self.dump != '':
+                cmd += f" >> {self.dump}/log_{binNum}.txt 2>&1"
             print(cmd)
             os.system(cmd)
             os.system(f"mv intensities_bin{binNum}_{i}.txt {folder}/intensities_{i}.txt")
@@ -96,23 +101,47 @@ class MLE:
             os.system(f"sed -i 's|$| fixed|' {folder}/{seed_file}")  # append fixed to the remaning lines
 
 
+pat_fit = re.compile("bin_.*.fit")
+pat_txt = re.compile("seed_.*.txt")
+pat_reac = re.compile("reaction_.*.ni")
+pat_int = re.compile("intensities.*.txt")
+def cleanup(directories):
+    for root in directories:
+        for file in os.listdir(root):
+            if pat_fit.match(file) or pat_txt.match(file) or pat_reac.match(file) or pat_int.match(file):
+                cmd = f"rm -f {os.path.join(root, file)}"
+                # print(cmd)
+                os.system(cmd)
+        if not os.path.exists(os.path.join(root, "seed_nifty.txt")):
+            os.system(f"touch {os.path.join(root, 'seed_nifty.txt')}")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Perform maximum likelihood fits (using AmpTools) on all cfg files")
     parser.add_argument("yaml_name", type=str, default="conf/configuration.yaml", help="Path a configuration yaml file")
-    parser.add_argument("-d", type=str, default='null', help="Dump log files for each bin to this relative path. If empty str will dump to stdout")
+    parser.add_argument("-d", type=str, default='null', help="Dump log files for each bin to this directory path. If empty str will dump to stdout")
+    parser.add_argument("--clean", action="store_true", help="Cleanup all fit files, fitfrac files, and reaction files")
     args = parser.parse_args()
     yaml_name = args.yaml_name
     dump = args.d
+    
+    timer = Timer()
+    cwd = os.getcwd()
 
     print("\n---------------------")
     print(f"Running {__file__}")
     print(f"  yaml location: {yaml_name}")
+    print(f"  dump logs to folder: {os.path.join(cwd, dump)}")
     print("---------------------\n")
 
-    timer = Timer()
-    cwd = os.getcwd()
-
     yaml_file = load_yaml(yaml_name)
+    
+    if args.clean:
+        print(f"run_mle| Cleaning all fit files, fitfrac files, and reaction files in {yaml_file['base_directory']}")
+        subdirs = ['.']
+        for root, dirs, files in os.walk(yaml_file["base_directory"]):
+            for dir in dirs:
+                subdirs.append(os.path.join(root, dir))    
+        cleanup(subdirs)
 
     mle = MLE(yaml_file, dump=dump)
 
