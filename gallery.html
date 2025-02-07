@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>PyAmpTools &#8212; PyAmpTools</title>
+    <title>Analysis Chain Gallery &#8212; PyAmpTools</title>
   
   
   
@@ -60,12 +60,11 @@
     <script async="async" src="_static/sphinx-thebe.js?v=c100c467"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
-    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'intro';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'gallery';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Potential Build Errors" href="additional_info.html" />
+    <link rel="next" title="FSROOT Introductory Tutorial" href="demos/fsroot_intro.html" />
+    <link rel="prev" title="Analysis Chain Example" href="demos/analysis_chain.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -117,8 +116,6 @@
       
       
       
-        
-      
       <dialog id="pst-primary-sidebar-modal"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
@@ -138,7 +135,7 @@
     
   
 
-<a class="navbar-brand logo" href="#">
+<a class="navbar-brand logo" href="intro.html">
   
   
   
@@ -159,8 +156,8 @@
     <div class="bd-toc-item navbar-nav active">
         
         <ul class="nav bd-sidenav bd-sidenav__home-link">
-            <li class="toctree-l1 current active">
-                <a class="reference internal" href="#">
+            <li class="toctree-l1">
+                <a class="reference internal" href="intro.html">
                     PyAmpTools
                 </a>
             </li>
@@ -188,9 +185,9 @@
 <li class="toctree-l1"><a class="reference internal" href="ift/iftpwa_tips.html">iftpwa - Tips</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Analysis Chain Example</span></p>
-<ul class="nav bd-sidenav">
+<ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="demos/analysis_chain.html">Analysis Chain Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gallery.html">Analysis Chain Gallery</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Analysis Chain Gallery</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">FSROOT Related Tutorials</span></p>
 <ul class="nav bd-sidenav">
@@ -270,7 +267,7 @@
       
       
       
-      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2Fintro.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2Fgallery.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -300,7 +297,7 @@
       
       
       
-      <li><a href="_sources/intro.md" target="_blank"
+      <li><a href="_sources/gallery.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -376,7 +373,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>PyAmpTools</h1>
+    <h1>Analysis Chain Gallery</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -386,23 +383,11 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">PyAmpTools</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-docker-image-developers">Build Docker Image (developers)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apptainer-usage">Apptainer Usage</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#partial-wave-decomposition">Partial Wave Decomposition</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#projection-onto-the-moments-basis">Projection onto the moments basis</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kde-of-resonance-parameters">KDE of Resonance Parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convergence-plots-of-resonance-parameters">Convergence Plots of Resonance Parameters</a></li>
 </ul>
-</li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-information">Additional Information</a><ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jupyter-notebooks-in-vscode">Jupyter notebooks in VSCode</a></li>
-</ul>
-</li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-testing">Unit Testing</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#building-documentation">Building documentation</a><ul class="visible nav section-nav flex-column">
-</ul>
-</li>
-</ul>
-
             </nav>
         </div>
     </div>
@@ -413,116 +398,56 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="pyamptools">
-<h1>PyAmpTools<a class="headerlink" href="#pyamptools" title="Link to this heading">#</a></h1>
-<p>Quantum Chromodynamics in the low energy regime is poorly understood. Gluon rich systems, like hybrid mesons, are predicted by theory but experimental idenficiation of these states have been difficult. The light meson spectrum contains many overlapping states that require partial wave (amplitude) analysis to disentangle. <a class="reference external" href="https://github.com/mashephe/AmpTools">AmpTools</a> is a library written in c++ that facilitates performing unbinned maximum likelihood fits of experimental data to a coherent sum of amplitudes.</p>
-<p>This repository contains Python bindings for AmpTools. Under the hood, it uses <a class="reference external" href="https://root.cern/manual/python/">PyROOT</a> which uses cppyy. These bindings will hopefully simplify the interaction with the AmpTools library while also providing access to the python ecosystem. <a class="reference external" href="https://github.com/remitche66/FSRoot">FSRoot</a> is also included as a submodule and can be integrated into analysis workflows.</p>
-</section>
-<hr class="docutils" />
-<section class="tex2jax_ignore mathjax_ignore" id="usage-design">
-<h1>Usage / Design<a class="headerlink" href="#usage-design" title="Link to this heading">#</a></h1>
-<p>AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in <code class="docutils literal notranslate"><span class="pre">external</span></code> directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_AMPS_DATAIO</span></code>. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code>, a program to produce simulations with AmpTools, is provided in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_GENERATORS</span></code>. This distribution system will unfortunately lag behind the sources from <code class="docutils literal notranslate"><span class="pre">halld_sim</span></code> and <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> repos.</p>
-<p><code class="docutils literal notranslate"><span class="pre">pa</span></code> is an <strong>executable</strong> that dispatches various functions for: maximimum likelihood fitting (<code class="docutils literal notranslate"><span class="pre">fit</span></code>), extracting fit fractions from MLE fit results (<code class="docutils literal notranslate"><span class="pre">fitfrac</span></code>), and Markov chain Monte Carlo (<code class="docutils literal notranslate"><span class="pre">mcmc</span></code>), and simulation generation (<code class="docutils literal notranslate"><span class="pre">gen_amp</span></code>, <code class="docutils literal notranslate"><span class="pre">gen_vec_ps</span></code>). Example usage:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pa</span> <span class="o">-</span><span class="n">h</span> <span class="c1"># for usage</span>
-<span class="n">pa</span> <span class="o">-</span><span class="n">f</span> <span class="c1"># pa is a simple dispatch system, this command shows the file locations of each command</span>
-<span class="n">pa</span> <span class="n">fit</span> <span class="n">my_amptools</span><span class="o">.</span><span class="n">cfg</span> <span class="c1"># to run MLE fit</span>
-<span class="n">pa</span> <span class="n">mcmc</span> <span class="o">-</span><span class="n">h</span> <span class="c1"># for usage of mcmc</span>
-<span class="n">pa</span> <span class="n">fitfrac</span> <span class="n">amptools_results</span><span class="o">.</span><span class="n">fit</span> <span class="c1"># extract fit fractions</span>
-<span class="n">pa</span> <span class="n">gen_amp</span> <span class="n">my_amptools</span><span class="o">.</span><span class="n">cfg</span> <span class="c1"># to generate simulations</span>
-</pre></div>
-</div>
-<p>Additional files in the <code class="docutils literal notranslate"><span class="pre">scripts</span></code> folder are provided that perform <code class="docutils literal notranslate"><span class="pre">amptools</span></code> configuration file generation and plotting of the MLE fit results. These scripts are reaction dependent, therefore should be used as references to build upon. Utility functions are located in the <code class="docutils literal notranslate"><span class="pre">utility</span></code> folder.</p>
-</section>
-<hr class="docutils" />
-<section class="tex2jax_ignore mathjax_ignore" id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
-<p>Please make modifications to <code class="docutils literal notranslate"><span class="pre">DockerInstall.sh</span></code> to match your environment. These installation steps builds on top of a minimal base image/environment. Some important considerations:</p>
-<ul class="simple">
-<li><p>if you already have conda then comment out those lines</p></li>
-<li><p>default is to build with mpi support</p></li>
-<li><p>if you need gpu support or gpu+mpi support then you can still go into <code class="docutils literal notranslate"><span class="pre">external</span></code> folder and run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">mpigpi</span></code> and additional shared libraries will be built</p></li>
-</ul>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>DockerInstall.sh
-</pre></div>
-</div>
-<section id="build-docker-image-developers">
-<h2>Build Docker Image (developers)<a class="headerlink" href="#build-docker-image-developers" title="Link to this heading">#</a></h2>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./DockerBuild.sh<span class="w"> </span>&lt;GH_USERNAME&gt;<span class="w"> </span>&lt;GH_PAT&gt;<span class="w"> </span><span class="c1"># github username and pat needed for now due to private repo access</span>
-</pre></div>
-</div>
-</section>
-<section id="apptainer-usage">
-<h2>Apptainer Usage<a class="headerlink" href="#apptainer-usage" title="Link to this heading">#</a></h2>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># /scratch needed for MPI and fontconfig for matplotlib(not so important)</span>
-<span class="c1"># --writable-tmpfs allows temp modifications to sif contents. Ideally you can git pull and push updates changes to repos</span>
-<span class="c1"># --bind whatever directories you need access to</span>
-apptainer<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>--contain<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--bind<span class="w"> </span>/working/directory<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--bind<span class="w"> </span>/data/directory<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--bind<span class="w"> </span>/scratch<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--bind<span class="w"> </span>~/.cache/fontconfig<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--env<span class="w"> </span><span class="nv">BASH_ENV</span><span class="o">=</span>/dev/null<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>/LOCATION/OF/pyamptools.sif<span class="w"> </span>bash
-<span class="c1"># Location on the jlab farm: /w/halld-scshelf2101/lng/WORK/PyAmpTools/pyamptools.sif</span>
-
-<span class="c1"># INSIDE THE CONTAINER:</span>
-<span class="nb">source</span><span class="w"> </span>/etc/bash.bashrc
-
-pa<span class="w"> </span>-h<span class="w"> </span><span class="c1"># to see usage of pa</span>
-</pre></div>
-</div>
+  <section class="tex2jax_ignore mathjax_ignore" id="analysis-chain-gallery">
+<h1>Analysis Chain Gallery<a class="headerlink" href="#analysis-chain-gallery" title="Link to this heading">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p><code class="docutils literal notranslate"><span class="pre">vscode</span></code> works inside containers with <code class="docutils literal notranslate"><span class="pre">Remote</span> <span class="pre">-</span> <span class="pre">Containers</span></code> extension. Unfortunately, it does not work <code class="docutils literal notranslate"><span class="pre">apptainer</span></code>. I followed <a class="reference external" href="https://github.com/oschulz/container-env">this Github solution using ssh</a> to get it working.</p>
+<p>These plots are just for illustration purposes, optimization was not performed for very long. See <a class="reference internal" href="demos/analysis_chain.html"><span class="doc std std-doc">input/output analysis_chain study</span></a> for information on this example analysis.</p>
+</div>
+<section id="partial-wave-decomposition">
+<h2>Partial Wave Decomposition<a class="headerlink" href="#partial-wave-decomposition" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><img alt="" src="_images/Dp2%2B.png" /></p></th>
+<th class="head"><p><img alt="" src="_images/Sp0%2B.png" /></p></th>
+</tr>
+</thead>
+</table>
 </div>
 </section>
-</section>
-<section class="tex2jax_ignore mathjax_ignore" id="additional-information">
-<h1>Additional Information<a class="headerlink" href="#additional-information" title="Link to this heading">#</a></h1>
-<section id="jupyter-notebooks-in-vscode">
-<h2>Jupyter notebooks in VSCode<a class="headerlink" href="#jupyter-notebooks-in-vscode" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>Enter <code class="docutils literal notranslate"><span class="pre">jupyter-notebook</span> <span class="pre">--no-browser</span> <span class="pre">--port=8888</span></code> into the terminal</p>
-<ul>
-<li><p>Copy localhost URL of the form: <code class="docutils literal notranslate"><span class="pre">http://localhost:8888/tree?token=e9aba1fab24532ceb89e29ba4485d8639ca4f4b41c490b91</span></code></p></li>
-</ul>
-</li>
-<li><p>Open your jupyter-notebook</p>
-<ul>
-<li><p>Select Another Kernel</p></li>
-<li><p>Connect to ‘existing jupyter server’</p></li>
-<li><p>Enter localhost url</p></li>
-<li><p>Name it anything you like</p></li>
-</ul>
-</li>
-</ul>
-</section>
-</section>
-<section class="tex2jax_ignore mathjax_ignore" id="unit-testing">
-<h1>Unit Testing<a class="headerlink" href="#unit-testing" title="Link to this heading">#</a></h1>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pytest<span class="w"> </span>-v<span class="w"> </span><span class="c1"># -s to not hide stdout</span>
-pytest<span class="w"> </span>-k<span class="w"> </span><span class="o">[</span>marked-test<span class="o">]</span><span class="w"> </span><span class="c1"># to run a specific marked test defined in pytest.ini</span>
-</pre></div>
+<section id="projection-onto-the-moments-basis">
+<h2>Projection onto the moments basis<a class="headerlink" href="#projection-onto-the-moments-basis" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><img alt="" src="_images/H0_0_0.png" /></p></th>
+<th class="head"><p><img alt="" src="_images/H0_2_0.png" /></p></th>
+</tr>
+</thead>
+</table>
 </div>
 </section>
-<section class="tex2jax_ignore mathjax_ignore" id="building-documentation">
-<h1>Building documentation<a class="headerlink" href="#building-documentation" title="Link to this heading">#</a></h1>
-<p>Documentation is powered by jupyter-book (a distribution of sphinx). A makefile is prepared to <strong>build</strong> and <strong>clean</strong> the documentation and <strong>push</strong> the changes to github pages. All three steps can be performed with the <strong>rebuild</strong> recipe.</p>
-<p>To rebuild web documentation</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">docs</span>
-<span class="n">make</span> <span class="n">rebuild</span> <span class="c1"># or choose one [clean/build/push/rebuild]</span>
-</pre></div>
+<section id="kde-of-resonance-parameters">
+<h2>KDE of Resonance Parameters<a class="headerlink" href="#kde-of-resonance-parameters" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><img alt="" src="_images/m_a0_980_kde.png" /></p></th>
+<th class="head"><p><img alt="" src="_images/m_a2_1320_kde.png" /></p></th>
+</tr>
+</thead>
+</table>
 </div>
-<div class="toctree-wrapper compound">
+</section>
+<section id="convergence-plots-of-resonance-parameters">
+<h2>Convergence Plots of Resonance Parameters<a class="headerlink" href="#convergence-plots-of-resonance-parameters" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><img alt="" src="_images/m_a0_980_convergence.png" /></p></th>
+<th class="head"><p><img alt="" src="_images/m_a2_1320_convergence.png" /></p></th>
+</tr>
+</thead>
+</table>
 </div>
-<div class="toctree-wrapper compound">
-</div>
-<div class="toctree-wrapper compound">
-</div>
-<div class="toctree-wrapper compound">
-</div>
-<div class="toctree-wrapper compound">
-</div>
+</section>
 </section>
 
     <script type="text/x-thebe-config">
@@ -555,12 +480,21 @@ pytest<span class="w"> </span>-k<span class="w"> </span><span class="o">[</span>
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="demos/analysis_chain.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Analysis Chain Example</p>
+      </div>
+    </a>
     <a class="right-next"
-       href="additional_info.html"
+       href="demos/fsroot_intro.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Potential Build Errors</p>
+        <p class="prev-next-title">FSROOT Introductory Tutorial</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -581,23 +515,11 @@ pytest<span class="w"> </span>-k<span class="w"> </span><span class="o">[</span>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">PyAmpTools</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-docker-image-developers">Build Docker Image (developers)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apptainer-usage">Apptainer Usage</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#partial-wave-decomposition">Partial Wave Decomposition</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#projection-onto-the-moments-basis">Projection onto the moments basis</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kde-of-resonance-parameters">KDE of Resonance Parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convergence-plots-of-resonance-parameters">Convergence Plots of Resonance Parameters</a></li>
 </ul>
-</li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-information">Additional Information</a><ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jupyter-notebooks-in-vscode">Jupyter notebooks in VSCode</a></li>
-</ul>
-</li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-testing">Unit Testing</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#building-documentation">Building documentation</a><ul class="visible nav section-nav flex-column">
-</ul>
-</li>
-</ul>
-
   </nav></div>
 
 </div></div>
