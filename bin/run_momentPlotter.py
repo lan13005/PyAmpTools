@@ -56,7 +56,7 @@ def plot_moment(moment_name, t, masses, _amptools_df, _ift_df, latex_name_dict, 
     
     if save_file:
         print(f"momentPlotter| Saving Figure: {save_file}")
-        fig.savefig(save_file, bbox_inches="tight")
+        fig.savefig(save_file, transparent=True, bbox_inches="tight", pad_inches=0)
 
     plt.close(fig)
     del fig, ax_intens
