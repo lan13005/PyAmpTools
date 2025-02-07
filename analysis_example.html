@@ -6,8 +6,9 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; PyAmpTools</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Analysis Chain Script &#8212; PyAmpTools</title>
   
   
   
@@ -59,9 +60,11 @@
     <script async="async" src="_static/sphinx-thebe.js?v=c100c467"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
-    <link rel="index" title="Index" href="#" />
+    <script>DOCUMENTATION_OPTIONS.pagename = 'analysis_example';</script>
+    <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Analysis Chain Example" href="demos/analysis_chain.html" />
+    <link rel="prev" title="iftpwa - Tips" href="ift/iftpwa_tips.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -112,8 +115,6 @@
     <div class="bd-container__inner bd-page-width">
       
       
-      
-        
       
       <dialog id="pst-primary-sidebar-modal"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
@@ -183,8 +184,8 @@
 <li class="toctree-l1"><a class="reference internal" href="ift/iftpwa_tips.html">iftpwa - Tips</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Analysis Chain Example</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="analysis_example.html">Analysis Chain Script</a></li>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Analysis Chain Script</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demos/analysis_chain.html">Analysis Chain Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery.html">Analysis Chain Gallery</a></li>
 </ul>
@@ -266,7 +267,7 @@
       
       
       
-      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2Fgenindex.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/lan13005/PyAmpTools/issues/new?title=Issue%20on%20page%20%2Fanalysis_example.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -278,6 +279,54 @@
   </span>
 <span class="btn__text-container">Open issue</span>
 </a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/analysis_example.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
 </li>
       
   </ul>
@@ -322,7 +371,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1></h1>
+    <h1>Analysis Chain Script</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -336,211 +385,71 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
+  <section class="tex2jax_ignore mathjax_ignore" id="analysis-chain-script">
+<h1>Analysis Chain Script<a class="headerlink" href="#analysis-chain-script" title="Link to this heading">#</a></h1>
+<p>Once we have a pair of configuration files we are ready to perform our two types of fits and compare the results. <code class="docutils literal notranslate"><span class="pre">pa</span></code> is a simple dispatch system that calls various python scripts which each perform a specific task in this workflow.</p>
+<p>This workflow goes from:</p>
+<ol class="arabic simple">
+<li><p>the raw data</p></li>
+<li><p>splits the data into kinematic bins</p></li>
+<li><p>performs AmpTools fits</p></li>
+<li><p>performs IFT fits</p></li>
+<li><p>draws tons of diagnostic plots</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="w"> </span>-e<span class="w"> </span><span class="c1"># Exit on error</span>
+<span class="nb">set</span><span class="w"> </span>-o<span class="w"> </span>pipefail<span class="w"> </span><span class="c1"># Exit on error in pipeline</span>
 
-<h1 id="index">Index</h1>
+<span class="nv">yaml</span><span class="o">=</span>/LOCATION/TO/PYAMPTOOLS.YML
+<span class="nv">base_directory</span><span class="o">=</span><span class="k">$(</span>grep<span class="w"> </span><span class="s2">&quot;base_directory:&quot;</span><span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{print $2}&#39;</span><span class="k">)</span><span class="w"> </span><span class="c1"># grabs the base directory from the yaml file</span>
 
-<div class="genindex-jumpbox">
- <a href="#B"><strong>B</strong></a>
- | <a href="#C"><strong>C</strong></a>
- | <a href="#D"><strong>D</strong></a>
- | <a href="#E"><strong>E</strong></a>
- | <a href="#F"><strong>F</strong></a>
- | <a href="#G"><strong>G</strong></a>
- | <a href="#L"><strong>L</strong></a>
- | <a href="#M"><strong>M</strong></a>
- | <a href="#P"><strong>P</strong></a>
- | <a href="#R"><strong>R</strong></a>
- | <a href="#S"><strong>S</strong></a>
- | <a href="#T"><strong>T</strong></a>
- | <a href="#U"><strong>U</strong></a>
- 
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;yaml: </span><span class="nv">$yaml</span><span class="s2">&quot;</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;base_directory: </span><span class="nv">$base_directory</span><span class="s2">&quot;</span>
+
+pa<span class="w"> </span>run_cfgGen<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="c1"># Generate an AmpTools configuration file to be distributed </span>
+pa<span class="w"> </span>run_divideData<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="c1"># Divide data into bins and distributes configuration files to each bin</span>
+pa<span class="w"> </span>run_mle<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="c1"># Perform all MLE fits across all bins and user specified randomly initialized fits</span>
+<span class="c1"># pa calc_ps $yaml $ps_file # Create phase space factor file (pass to YAML field IFT_MODEL.phaseSpaceMultiplier) that multiples each partial wave (at the moment it is the barrier factor squared)</span>
+pa<span class="w"> </span>run_processEvents<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="c1"># Creates a data file (a representation of AmpVecs object in AmpTools) that GlueX iftpwa manager can use to reconstruct the likelihood for each bin</span>
+
+<span class="c1"># Ideally we would like to be able to do some prior predictive checks to see what our unoptimized model looks like</span>
+<span class="c1"># Unfortunately we have to `pa run_ift` before `iftPwaPriorPredict` since expanded yaml doesnt exist yet. This should be be fixed in the future.</span>
+<span class="c1"># Example call: iftPwaPriorPredict --iftpwa_config $base_directory/NiftyFits/.nifty_expanded.yaml --plotFolder $base_directory/NiftyFits/prior_predictive</span>
+
+pa<span class="w"> </span>run_ift<span class="w"> </span>-v<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span><span class="c1"># Perform IFTPWA fit. If we wish to perform a hyperparameter search we can add the `--hyperopt` flag</span>
+rm<span class="w"> </span>-rf<span class="w"> </span><span class="nv">$base_directory</span>/NiftyFits/plots<span class="w"> </span><span class="c1"># clean up plots from previous runs</span>
+<span class="c1"># Draw diagnostic plots for the final fit results. Inside the output directory (see PyAmpTools YAML field: nifty.output_directory) is a diagnostics folder which draws the fit results on each global iteration</span>
+iftPwaPlot<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--fitResult<span class="w"> </span><span class="nv">$base_directory</span>/NiftyFits/niftypwa_fit.pkl<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--plotFolder<span class="w"> </span><span class="nv">$base_directory</span>/NiftyFits/plots<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--n_prior_samples<span class="w"> </span><span class="m">1000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--massIndepFit<span class="w"> </span><span class="nv">$base_directory</span>/NiftyFits/.nifty_expanded.yaml
+<span class="c1"># Draws some convergence plots to see global iteration dependence of resonance parameters, distributions, etc</span>
+plotConvergence<span class="w"> </span>--inputFolder<span class="w"> </span><span class="nv">$base_directory</span>/NiftyFits/fit_parameter_history<span class="w"> </span>--plotFolder<span class="w"> </span><span class="nv">$base_directory</span>/NiftyFits/convergence_plots
+pa<span class="w"> </span>run_momentPlotter<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span>-n<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="c1"># make a subdirectory at NiftyFits/plots/moments overlaying projected moments from nifty and amptools fits</span>
+pa<span class="w"> </span>run_resultDump<span class="w"> </span><span class="nv">$yaml</span><span class="w"> </span>-n<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="c1"># dump all results to csv files (if possible, it will calculate the moments also)</span>
+</pre></div>
 </div>
-<h2 id="B">B</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/plotgen.html#pyamptools.utility.plotgen_utils.book_histogram">book_histogram() (in module pyamptools.utility.plotgen_utils)</a>
-</li>
-  </ul></td>
-</tr></table>
+</section>
 
-<h2 id="C">C</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/plotgen.html#pyamptools.utility.plotgen_utils.calculate_chi_squared">calculate_chi_squared() (in module pyamptools.utility.plotgen_utils)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="D">D</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/plotgen.html#pyamptools.utility.plotgen_utils.define_if_not_observed">define_if_not_observed() (in module pyamptools.utility.plotgen_utils)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/mcmc.html#pyamptools.mcmc.mcmcManager.draw_corner">draw_corner() (mcmcManager method)</a>
-</li>
-      <li><a href="api/plotgen.html#pyamptools.utility.plotgen_utils.draw_histograms">draw_histograms() (in module pyamptools.utility.plotgen_utils)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="E">E</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/extract_ff.html#pyamptools.extract_ff.extract_ff">extract_ff() (in module pyamptools.extract_ff)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="F">F</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/loadParameters.html#pyamptools.utility.load_parameters.LoadParameters.flatten_parameters">flatten_parameters() (LoadParameters method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="G">G</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/atiSetup.html#pyamptools.atiSetup.get_linked_objects_to_alias">get_linked_objects_to_alias() (in module pyamptools.atiSetup)</a>
-</li>
-      <li><a href="api/mcmc.html#pyamptools.mcmc.mcmcManager.getAmplitudeMaps">getAmplitudeMaps() (mcmcManager method)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/mcmc.html#pyamptools.mcmc.mcmcManager.getIntensity">getIntensity() (mcmcManager method)</a>
-</li>
-      <li><a href="api/mcmc.html#pyamptools.mcmc.mcmcManager.getIntensity_singleATI">getIntensity_singleATI() (mcmcManager method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="L">L</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/mcmc.html#pyamptools.mcmc.mcmcManager.Likelihood">Likelihood() (mcmcManager method)</a>
-</li>
-      <li><a href="api/loadParameters.html#pyamptools.utility.load_parameters.LoadParameters.load_cfg">load_cfg() (LoadParameters method)</a>
-</li>
-      <li><a href="api/atiSetup.html#pyamptools.atiSetup.loadLibraries">loadLibraries() (in module pyamptools.atiSetup)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/atiSetup.html#pyamptools.atiSetup.loadLibrary">loadLibrary() (in module pyamptools.atiSetup)</a>
-</li>
-      <li><a href="api/loadParameters.html#pyamptools.utility.load_parameters.LoadParameters">LoadParameters (class in pyamptools.utility.load_parameters)</a>
-</li>
-      <li><a href="api/mcmc.html#pyamptools.mcmc.mcmcManager.LogProb">LogProb() (mcmcManager method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="M">M</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/mcmc.html#pyamptools.mcmc.mcmcManager">mcmcManager (class in pyamptools.mcmc)</a>
-</li>
-      <li>
-    module
-
-      <ul>
-        <li><a href="api/atiSetup.html#module-pyamptools.atiSetup">pyamptools.atiSetup</a>
-</li>
-        <li><a href="api/mcmc.html#module-pyamptools.mcmc">pyamptools.mcmc</a>
-</li>
-        <li><a href="api/mle.html#module-pyamptools.mle">pyamptools.mle</a>
-</li>
-        <li><a href="api/plotgen.html#module-pyamptools.utility.plotgen_utils">pyamptools.utility.plotgen_utils</a>
-</li>
-      </ul></li>
-  </ul></td>
-</tr></table>
-
-<h2 id="P">P</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/mcmc.html#pyamptools.mcmc.mcmcManager.perform_mcmc">perform_mcmc() (mcmcManager method)</a>
-</li>
-      <li><a href="api/atiSetup.html#pyamptools.atiSetup.prepare_mpigpu">prepare_mpigpu() (in module pyamptools.atiSetup)</a>
-</li>
-      <li><a href="api/mcmc.html#pyamptools.mcmc.mcmcManager.Prior">Prior() (mcmcManager method)</a>
-</li>
-      <li>
-    pyamptools.atiSetup
-
-      <ul>
-        <li><a href="api/atiSetup.html#module-pyamptools.atiSetup">module</a>
-</li>
-      </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li>
-    pyamptools.mcmc
-
-      <ul>
-        <li><a href="api/mcmc.html#module-pyamptools.mcmc">module</a>
-</li>
-      </ul></li>
-      <li>
-    pyamptools.mle
-
-      <ul>
-        <li><a href="api/mle.html#module-pyamptools.mle">module</a>
-</li>
-      </ul></li>
-      <li>
-    pyamptools.utility.plotgen_utils
-
-      <ul>
-        <li><a href="api/plotgen.html#module-pyamptools.utility.plotgen_utils">module</a>
-</li>
-      </ul></li>
-  </ul></td>
-</tr></table>
-
-<h2 id="R">R</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/atiSetup.html#pyamptools.atiSetup.register_amps_dataio">register_amps_dataio() (in module pyamptools.atiSetup)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/mle.html#pyamptools.mle.runFits">runFits() (in module pyamptools.mle)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="S">S</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/atiSetup.html#pyamptools.atiSetup.set_aliases">set_aliases() (in module pyamptools.atiSetup)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/atiSetup.html#pyamptools.atiSetup.setup">setup() (in module pyamptools.atiSetup)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="T">T</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/plotgen.html#pyamptools.utility.plotgen_utils.turn_on_specifc_waveset">turn_on_specifc_waveset() (in module pyamptools.utility.plotgen_utils)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="U">U</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/loadParameters.html#pyamptools.utility.load_parameters.LoadParameters.unflatten_parameters">unflatten_parameters() (LoadParameters method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./."
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
 
                 </article>
               
@@ -552,6 +461,24 @@
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="ift/iftpwa_tips.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">iftpwa - Tips</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="demos/analysis_chain.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Analysis Chain Example</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               

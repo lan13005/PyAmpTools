@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css?v=be8a1c11" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -183,17 +183,13 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_intro.html">iftpwa - Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_config.html">iftpwa - Default Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_exec.html">iftpwa - Default Execution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_tips.html">iftpwa - Tips</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Analysis Chain Example</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../analysis_example.html">Analysis Chain Script</a></li>
 <li class="toctree-l1"><a class="reference internal" href="analysis_chain.html">Analysis Chain Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../gallery.html">Analysis Chain Gallery</a></li>
-
-
-
-
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">FSROOT Related Tutorials</span></p>
 <ul class="nav bd-sidenav">
@@ -438,7 +434,10 @@ atiSetup| GPU is disabled
 
 atiSetup| Loading library libIUAmpTools.so ............  ON
 atiSetup| Loading library libAmpTools.so ..............  ON
-atiSetup| Loading library libAmpPlotter.so ............  ON
+atiSetup| Loading library libAmpPlotter.so ............
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  ON
 atiSetup| Loading library libAmpsDataIO.so ............  ON
 atiSetup| Loading library libFSRoot.so ................  OFF
 atiSetup| Loading library libAmpsGen.so ...............  OFF
@@ -713,7 +712,7 @@ nwalkers: 32
 burnIn: 0
 nsamples: 200
 params_dict: {}
-moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7f8085c51310&gt;]
+moves_mixture: [&lt;emcee.moves.stretch.StretchMove object at 0x7f3997a93340&gt;]
 sampler_kwargs: {&#39;progress&#39;: False}
  ========================================================================= 
 
@@ -722,10 +721,10 @@ Initializing walkers in an N-ball around the initial estimate
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Calculating intensity with amplitudes dictionary:
-  resAmp1 -&gt; [&#39;etapi::imZ::resAmp1&#39;, &#39;etapi::reZ::resAmp1&#39;]
-  resAmp2 -&gt; [&#39;etapi::reZ::resAmp2&#39;, &#39;etapi::imZ::resAmp2&#39;]
-  resAmp3 -&gt; [&#39;etapi::imZ::resAmp3&#39;, &#39;etapi::reZ::resAmp3&#39;]
-  total -&gt; [&#39;etapi::imZ::resAmp1&#39;, &#39;etapi::reZ::resAmp2&#39;, &#39;etapi::reZ::resAmp1&#39;, &#39;etapi::imZ::resAmp3&#39;, &#39;etapi::reZ::resAmp3&#39;, &#39;etapi::imZ::resAmp2&#39;]
+  resAmp3 -&gt; [&#39;etapi::reZ::resAmp3&#39;, &#39;etapi::imZ::resAmp3&#39;]
+  resAmp1 -&gt; [&#39;etapi::reZ::resAmp1&#39;, &#39;etapi::imZ::resAmp1&#39;]
+  resAmp2 -&gt; [&#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp2&#39;]
+  total -&gt; [&#39;etapi::reZ::resAmp3&#39;, &#39;etapi::reZ::resAmp1&#39;, &#39;etapi::imZ::resAmp2&#39;, &#39;etapi::reZ::resAmp2&#39;, &#39;etapi::imZ::resAmp1&#39;, &#39;etapi::imZ::resAmp3&#39;]
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The chain is shorter than 50 times the integrated autocorrelation time for 5 parameter(s). Use this estimate with caution and run a longer chain!
@@ -753,7 +752,7 @@ Autocorrelation time: 16.447 steps
 MCMC intensity samples saved to mcmc/samples_intensity.feather
   shape: (6400, 4)
 
-Fit time: 4.049928188323975 seconds
+Fit time: 4.273255109786987 seconds
 </pre></div>
 </div>
 </div>
