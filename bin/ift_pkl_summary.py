@@ -7,4 +7,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     pkl_file = args.pkl_file
     
-    os.system(f"iftPwaDx {pkl_file}")
+    os.system(f"iftPwaSummarize {pkl_file}")
