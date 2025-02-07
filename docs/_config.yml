@@ -20,9 +20,10 @@ autosummary_imported_members: True
 # See https://jupyterbook.org/content/execute.html
 execute:
   execute_notebooks: force
-  timeout: 120
+  timeout: 1000
   exclude_patterns:
     - demos/generation.ipynb
+    # - demos/analysis_chain.ipynb
 
 # Define the name of the latex output file for PDF builds
 latex:

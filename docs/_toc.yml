@@ -20,8 +20,12 @@ parts:
     chapters:
       - file: ift/iftpwa_intro
       - file: ift/iftpwa_config
-      - file: ift/iftpwa_exec
       - file: ift/iftpwa_tips
+  - caption: Analysis Chain Example
+    chapters:
+      - file: analysis_example
+      - file: demos/analysis_chain
+      - file: gallery
   - caption: FSROOT Related Tutorials
     chapters:
       - file: demos/fsroot_intro

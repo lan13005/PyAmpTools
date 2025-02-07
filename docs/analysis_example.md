@@ -1,4 +1,4 @@
-# iftpwa - Default Execution
+# Analysis Chain Example 1
 
 Once we have a pair of configuration files we are ready to perform our two types of fits and compare the results. `pa` is a simple dispatch system that calls various python scripts which each perform a specific task in this workflow.
 
