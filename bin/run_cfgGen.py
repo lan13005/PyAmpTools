@@ -113,8 +113,16 @@ def generate_amptools_cfg(
     cfgInfo = ConfigurationInfo(fitName)
 
     constraintMap = {}
-    refTagMap = {1: "Pos", -1: "Neg"}  # Positive / Negative
-    conjugations = {"Re": "+1", "Im": "-1"}  # Real / Imaginary
+    
+    # The intensity formula for the Zlm / vec_ps_refl amplitudes consists of 4 independent coherent sums
+    #    Each sum is designated by the sign in the prefactor (1 +/- P_gamma)
+    #    and the (real/imag) part taken on the Zlm / vec_ps_refl amplitude
+    #    See GlueX Document 4094-v3 for more details
+    #    TIP: Positive reflectivity amplitude consists of two terms: RealPos and ImagNeg
+    refl_sum_numpair_map = {
+         1: (["RealPos", "ImagNeg"], ["+1 +1", "-1 -1"]),
+        -1: (["RealNeg", "ImagPos"], ["+1 -1", "-1 +1"])
+    }
 
     for i in range(len(angles)):
         ####################################
@@ -177,32 +185,30 @@ def generate_amptools_cfg(
         #### DEFINE COHERENT SUMS AND AMPLITUDES ####
         #############################################
 
-        for conj in conjugations.items():
-            conjTag, conjVal = conj
-
-            for quantum_number in quantum_numbers:
-                ref, L, M = quantum_number[:3]
-                J = quantum_number[3] if len(quantum_number) > 3 else None
-                assume_zlm = J is None
-
-                if float(fraction) == 1:  # Some terms disappear if the fraction is 1
-                    if (ref == 1 and conjTag == "Im") or (ref == -1 and conjTag == "Re"):
+        for quantum_number in quantum_numbers:
+            ref, L, M = quantum_number[:3]
+            
+            J = quantum_number[3] if len(quantum_number) > 3 else None
+            assume_zlm = J is None # else assume vec_ps_refl
+            
+            sumNames, numPairs = refl_sum_numpair_map[ref]
+            for sumName, numPair in zip(sumNames, numPairs):
+                
+                if float(fraction) == 1:  # Terms with (1-Pgamma) prefactor disappear if Pgamma=1
+                    if sumName in ["RealNeg", "ImagNeg"]:
                         continue
 
-                refTag = refTagMap[ref]
-
-                sumName = f"{refTag}{conjTag}"
                 cfgInfo.createCoherentSum(reactName, sumName)  # returns CoherentSumInfo*
 
                 ampName = zlm_amp_name(ref, L, M) if assume_zlm else vps_amp_name(ref, J, M, L)
                 ampInfo = cfgInfo.createAmplitude(reactName, sumName, ampName)  # AmplitudeInfo*
 
-                part = "+1" if int(ref) * int(conjVal) > 0 else "-1"
+                num1, num2 = numPair.split()
                 if assume_zlm:
-                    angularFactor = [f"{amptools_zlm_ampName}", f"{L}", f"{M}", conjVal, part, angle, fraction]
+                    angularFactor = [f"{amptools_zlm_ampName}", f"{L}", f"{M}", num1, num2, angle, fraction]
                 else:
                     # Vec_ps_refl 1 -1 0 -1  -1  LOOPPOLANG LOOPPOLVAL omega3pi
-                    angularFactor = [f"{amptools_vps_ampName}", f"{J}", f"{M}", f"{L}", conjVal, part, angle, fraction]
+                    angularFactor = [f"{amptools_vps_ampName}", f"{J}", f"{M}", f"{L}", num1, num2, angle, fraction]
                 if append_to_decay:
                     angularFactor.extend(append_to_decay.split())
                 ampInfo.addFactor(angularFactor)
