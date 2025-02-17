@@ -12,11 +12,13 @@ if __name__ == "__main__":
     argparser.add_argument("-o", "--output_dir", type=str, help="Path to the output directory")
     argparser.add_argument("-n", "--npool", type=int, help="Number of processes to use by multiprocessing.Pool (only for moments calculation)")
     argparser.add_argument("--skip_moments", action="store_true", help="Skip moments calculation")
+    argparser.add_argument("--clean", action="store_true", help="Clean the output directory before running")
     args = argparser.parse_args()
     yaml_file = args.yaml_file
     output_dir = args.output_dir
     npool = args.npool
     skip_moments = args.skip_moments
+    clean = args.clean
     
     console = Console()
     if output_dir is None:
@@ -27,7 +29,7 @@ if __name__ == "__main__":
 
     timer = Timer()
 
-    amptools_df, ift_df, ift_res_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict = loadAllResultsFromYaml(yaml_file, pool_size=npool, skip_moments=skip_moments)
+    amptools_df, ift_df, ift_res_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict = loadAllResultsFromYaml(yaml_file, pool_size=npool, skip_moments=skip_moments, clean=clean)
 
     ift_csv_path = os.path.join(base_directory, 'ift_results.csv')
     ift_res_csv_path = os.path.join(base_directory, 'ift_res_results.csv')

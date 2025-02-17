@@ -121,7 +121,7 @@ def parse_fit_file(filename):
     
     return complex_amps, status_dict
 
-def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False):
+def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean=False):
     
     """
     Loads the AmpTools and IFT results from the provided yaml file. Moments will be calculated if possible with multiprocessing.Pool with pool_size
@@ -130,6 +130,7 @@ def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False):
         yaml (OmegaConf): OmegaConf object (dict-like) for PyAmpTools (not iftpwa)
         pool_size (int): Number of processes to use by multiprocessing.Pool
         skip_moments (bool): If True, only load partial wave amplitudes and do not calculate moments
+        clean (bool): If True, clean the output directory before running
         
     Returns:
         pd.DataFrame: AmpTools binned fit results
@@ -147,12 +148,14 @@ def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False):
     
     # Store a cache of the results to avoid recalculating them, calculating moments is quite time consuming
     cache = f"{yaml['base_directory']}/.moment_cache.pkl"
-    if os.path.exists(cache):
-        console.print(f"[red]loadAllResultsFromYaml| Loading cache from {cache}[/red]\n")
+    if clean and os.path.exists(cache):
+        console.print(f"[red]loadAllResultsFromYaml| Cache found at {cache} but user requested to start clean. Recalculating...[/red]\n")
+        os.remove(cache)
+    elif os.path.exists(cache):
+        console.print(f"[green]loadAllResultsFromYaml| Loading cache from {cache}[/green]\n")
         with open(cache, "rb") as f:
             cache = pkl.load(f)
         return cache
-    console.print(f"[green]loadAllResultsFromYaml| Cache not found at {cache}\n  Calculating moments...[/green]\n")
     
     amptools_df = None
     ift_df = None
@@ -202,7 +205,7 @@ def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False):
     ###########################################
     #### PROCESS THE AMPTOOLS AND IFT RESULTS
     ###########################################
-    console.print("io| Processing AmpTools and IFT results...")
+    console.print("\nio| Processing AmpTools and IFT results...\n")
     latex_name_dict = None
     if not skip_moments:
         latex_name_dict_amp, latex_name_dict_ift = None, None
@@ -339,17 +342,52 @@ def loadIFTResultsFromYaml(yaml):
     # Stage 2: Loop over amp columns and calculate+store the normalized intensity
     cols = list(flat_amps_waves_tprime.keys())
     flat_intens_waves_tprime = {}
-    for tprime in tprimes:
-        for col in cols:
-            if col.endswith('_amp'):
-                wave = col.split('_')[0]
-                tmp = flat_amps_waves_tprime.query('tprime == @tprime')
-                intens = calc_intens([wave], tbin, [tmp[col].values.reshape(nmb_samples, nmb_masses)])
-                if f'{col.strip("_amp")}' not in flat_amps_waves_tprime:
+    amp_cols = [col for col in cols if col.endswith('_amp')]
+    for tbin, tprime in enumerate(tprimes):
+        for col in amp_cols:
+            wave = col.split('_')[0]
+            tmp = flat_amps_waves_tprime.query('tprime == @tprime')
+            intens = calc_intens([wave], tbin, [tmp[col].values.reshape(nmb_samples, nmb_masses)])
+            if f'{col.strip("_amp")}' not in flat_amps_waves_tprime:
                     flat_intens_waves_tprime[f'{col.strip("_amp")}'] = intens.flatten().real
-                else:
-                    flat_intens_waves_tprime[f'{col.strip("_amp")}'] = np.concatenate((flat_amps_waves_tprime[f'{col.strip("_amp")}'], intens.flatten().real))
-
+            else:
+                flat_intens_waves_tprime[f'{col.strip("_amp")}'] = np.concatenate((flat_amps_waves_tprime[f'{col.strip("_amp")}'], intens.flatten().real))
+                    
+    # Stage 3: Calculate intensity for user requested coherent sums defined in yaml["result_dump"]["coherent_sums"]
+    # NOTE: There might be something wrong with calc_intens? Directly summing intensities across GP waves (i.e. Pm1+_Pp0+_Pp1+) gives very similar results as the coherent sum P+
+    #       Even if we sum BW for a given resonance I dont think this should happen since each BW has a different phase
+    if "result_dump" in yaml and "coherent_sums" in yaml["result_dump"]:
+        console.print('\nio| Calculating intensities for user specified coherent sums...\n')
+        coherent_waves = {}
+        coherent_amps = {}
+        sums_dict = yaml["result_dump"]["coherent_sums"]
+        for k, vs in sums_dict.items():
+            vs = vs.split("_")
+            for tbin, tprime in enumerate(tprimes):
+                tmp = flat_amps_waves_tprime.query('tprime == @tprime')
+                # Gather list of amp cols that belong in the user requested coherent sum
+                for amp in amp_cols:
+                    if any([v in amp for v in vs]):
+                        wave, suffix = amp.partition('_')[0], amp.partition('_')[2].rstrip('_amp')
+                        dest_key = f"{k}_{suffix}" if suffix != "" else k
+                        tmp_amp = tmp[amp].values.reshape(nmb_samples, nmb_masses)
+                        if dest_key not in coherent_waves:
+                            coherent_waves[dest_key] = [wave]
+                        else:
+                            coherent_waves[dest_key].append(wave)
+                        if dest_key not in coherent_amps:
+                            coherent_amps[dest_key] = [tmp_amp]
+                        else:
+                            coherent_amps[dest_key].append(tmp_amp)
+        # calculate intensity for the coherent sum
+        for k in coherent_waves.keys():
+            # print(f"{k} {coherent_waves[k]}")
+            intens = calc_intens(coherent_waves[k], tbin, coherent_amps[k])
+            if k not in flat_intens_waves_tprime:
+                flat_intens_waves_tprime[k] = intens.flatten().real
+            else:
+                flat_intens_waves_tprime[k] = np.concatenate((flat_intens_waves_tprime[k], intens.flatten().real))
+            
     flat_intens_waves_tprime = pd.DataFrame(flat_intens_waves_tprime)
 
     ift_pwa_df = pd.concat([flat_amps_waves_tprime, flat_intens_waves_tprime], axis=1)

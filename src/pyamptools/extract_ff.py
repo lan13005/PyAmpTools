@@ -4,9 +4,9 @@ import argparse
 import os
 import re
 import sys
+from pyamptools.utility.general import load_yaml
 
-
-def extract_ff(results, outfileName="", fmt=".5f", test_regex=False, no_phases=False, only=None, regex_merge=None):
+def extract_ff(results, outfileName="", fmt=".5f", test_regex=False, no_phases=False, only=None, regex_merge=None, yaml_file=''):
     """
     Extract fit fractions and phase differences between pairs of waves from a FitResults object.
 
@@ -26,6 +26,7 @@ def extract_ff(results, outfileName="", fmt=".5f", test_regex=False, no_phases=F
                 - '.*(.)$~>\\1': Captures last character and replaces full match
                 - '.*reaction_(000|045|090|135)::(Pos|Neg)(?:Im|Re)::': Removes matched pattern,
                   allowing grouping over polarizations and mirrored sums
+        yaml_file (str, optional): YAML file name. Allows program to load YAML state, i.e. for getting user requested coherent sums
     """
 
     def write_ff(amp, intensity, error, intensity_corr, error_corr, only=None):
@@ -75,7 +76,7 @@ def extract_ff(results, outfileName="", fmt=".5f", test_regex=False, no_phases=F
             intensity_corr, error_corr = results.intensity(useamp, True)
             write_ff(amp, intensity, error, intensity_corr, error_corr, only)
 
-    ######## MERGE AMPLITUDES STRIPPING REGEX MATCHED STRING #########
+    ######## MERGE AMPLITUDES REPLACING REGEX MATCHED STRING WITH WHAT COMES AFTER ~> #########
     if regex_merge is not None:
         for regex in regex_merge:
             pattern, replace = regex.split("~>") if "~>" in regex else (regex, "")
@@ -103,6 +104,25 @@ def extract_ff(results, outfileName="", fmt=".5f", test_regex=False, no_phases=F
                     intensity_corr, error_corr = results.intensity(amps, True)
                     write_ff(merged_amp, intensity, error, intensity_corr, error_corr, only)
             merged.clear()
+    
+    ########## CHECK IF results_dump.coherent_sums is in yaml_file ##########
+    if "result_dump" in yaml_file and "coherent_sums" in yaml_file["result_dump"]:
+        coherent_sums = yaml_file["result_dump"]["coherent_sums"]
+        print("\nMerging Amplitude Groups based on user request in YAML field `result_dump.coherent_sums`")
+        merged = {}
+        for k, vs in coherent_sums.items():
+            vs = vs.split("_")
+            print(f" -> {k} merged {len(vs)} amplitudes:")
+            for amp in uniqueAmps:
+                if any([v in amp for v in vs]):
+                    print(f"     {amp}")
+                    if k not in merged:
+                        merged[k] = [amp]
+                    else:
+                        merged[k].append(amp)
+            intensity, error = results.intensity(merged[k], False)
+            intensity_corr, error_corr = results.intensity(merged[k], True)
+            write_ff(k, intensity, error, intensity_corr, error_corr, only)
 
     ######### WRITE ALL POSSIBLE PHASE DIFFERENCES ##########
     if not no_phases and not test_regex:
@@ -134,6 +154,7 @@ def _cli_extract_ff():
     parser.add_argument("--no_phases", action="store_true", help="Do not dump phase differences")
     parser.add_argument("--only", type=str, default=None, help="Only dump fit fractions for ['acc', 'noacc']")
     parser.add_argument("--regex_merge", type=str, nargs="+", help="Merge amplitudes: Regex pair (pattern, replace) separated by ~>")
+    parser.add_argument("--yaml_file", type=str, default="", help="YAML file name")
     args = parser.parse_args(sys.argv[1:])
 
     ################### LOAD LIBRARIES ##################
@@ -148,6 +169,7 @@ def _cli_extract_ff():
     regex_merge = args.regex_merge
     no_phases = args.no_phases
     only = args.only
+    yaml_file = load_yaml(args.yaml_file)
     assert os.path.isfile(fitFile), "Fit Results file does not exist at specified path"
 
     ############## LOAD FIT RESULTS OBJECT ##############
@@ -157,7 +179,7 @@ def _cli_extract_ff():
         exit()
 
     ############## EXTRACT FIT FRACTIONS ##############
-    extract_ff(results, outfileName, fmt, args.test_regex, no_phases, only, regex_merge)
+    extract_ff(results, outfileName, fmt, args.test_regex, no_phases, only, regex_merge, yaml_file)
 
 
 if __name__ == "__main__":

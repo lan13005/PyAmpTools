@@ -18,7 +18,7 @@ pyamptools_ff_cmd = "pa fitfrac"
 seed_file = "seed_nifty.txt"
 
 class MLE:
-    def __init__(self, yaml_file, dump=''):
+    def __init__(self, yaml_file, dump='', yaml_name=''):
         """
         Args:
             yaml_file (dict): Configuration file
@@ -31,6 +31,7 @@ class MLE:
         self.prepare_for_nifty = bool(yaml_file["amptools"]["prepare_for_nifty"])
         self.devs = None
         self.dump = dump
+        self.yaml_name = yaml_name
         print("<<<<<<<<<<<<<< ConfigLoader <<<<<<<<<<<<<<\n\n")
 
     def set_devs(self, devs):
@@ -68,7 +69,7 @@ class MLE:
         # Extract ff for best iteration
         ###############################
 
-        cmd = f"{pyamptools_ff_cmd} {base_fname}.fit --outputfileName intensities_bin{binNum}.txt {self.ff_args}"
+        cmd = f"{pyamptools_ff_cmd} {base_fname}.fit --outputfileName intensities_bin{binNum}.txt {self.ff_args} --yaml_file {self.yaml_name}"
         if self.dump == 'null':
             cmd += " > /dev/null"
         elif self.dump != '':
@@ -80,7 +81,7 @@ class MLE:
 
         # Extract ff for all iterations
         for i in range(self.n_randomizations):
-            cmd = f"{pyamptools_ff_cmd} {base_fname}_{i}.fit --outputfileName intensities_bin{binNum}_{i}.txt {self.ff_args}"
+            cmd = f"{pyamptools_ff_cmd} {base_fname}_{i}.fit --outputfileName intensities_bin{binNum}_{i}.txt {self.ff_args} --yaml_file {self.yaml_name}"
             if self.dump == 'null':
                 cmd += " > /dev/null"
             elif self.dump != '':
@@ -143,7 +144,7 @@ if __name__ == "__main__":
                 subdirs.append(os.path.join(root, dir))    
         cleanup(subdirs)
 
-    mle = MLE(yaml_file, dump=dump)
+    mle = MLE(yaml_file, dump=dump, yaml_name=yaml_name)
 
     output_directory = mle.output_directory
     n_randomizations = mle.n_randomizations

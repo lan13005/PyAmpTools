@@ -54,8 +54,8 @@ def main():
         "run_processEvents": (f"{PYAMPTOOLS_HOME}/bin/run_processEvents.py", "Process binned datasets to dump AmpTools' ampvecs data structure and normalization integrals into pkl files"),
         "run_mle": (f"{PYAMPTOOLS_HOME}/bin/run_mle.py", "Run MLE fits over kinematic bins using AmpTools"),
         "run_ift": (f"{PYAMPTOOLS_HOME}/bin/run_ift.py", "Run IFT fit over kinematic bins. MLE fits must be run first!"),
-        "run_momentPlotter": (f"{PYAMPTOOLS_HOME}/bin/run_momentPlotter.py", "After running IFT + MLE fits we can attempt to plot all the moments"),
-        "run_resultDump": (f"{PYAMPTOOLS_HOME}/bin/run_resultDump.py", "Dump IFT and AmpTools results to csv files"),
+        "run_momentPlotter": (f"{PYAMPTOOLS_HOME}/bin/run_momentPlotter.py", "After running IFT + MLE fits we can attempt to plot all the (projected) moments"),
+        "run_resultDump": (f"{PYAMPTOOLS_HOME}/bin/run_resultDump.py", "Dump IFT and AmpTools results to csv files + (projected) moments if possible"),
         "dash_ift_cmp": (f"{PYAMPTOOLS_HOME}/bin/dash_ift_cmp.py", "Compare multiple IFT fits (intensity and phase) using dash package"),
     }
 
