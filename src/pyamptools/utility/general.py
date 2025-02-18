@@ -186,6 +186,7 @@ def load_yaml(path_to_yaml, resolve=True):
                 yaml.iftpwa_commit_hash = iftpwa_commit_hash
                 changed = True
         if changed:
+            print(f"Current pyamptools or iftpwa commit differs from hash in the yaml file. Updating...")
             dump_yaml(yaml, path_to_yaml, resolve=False)
         
         yaml = OmegaConf.to_container(yaml, resolve=resolve)
