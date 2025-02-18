@@ -4,6 +4,8 @@ from rich.console import Console
 from pyamptools.utility.general import load_yaml, Timer
 import os
 import argparse
+import pandas as pd
+from rich.table import Table
 
 if __name__ == "__main__":
     
@@ -31,7 +33,7 @@ if __name__ == "__main__":
 
     amptools_df, ift_df, ift_res_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict = loadAllResultsFromYaml(yaml_file, pool_size=npool, skip_moments=skip_moments, clean=clean)
 
-    ift_csv_path = os.path.join(base_directory, 'ift_results.csv')
+    ift_csv_path = os.path.join(base_directory, 'ift_df.csv')
     ift_res_csv_path = os.path.join(base_directory, 'ift_res_results.csv')
     amptools_csv_path = os.path.join(base_directory, 'amptools_results.csv')
     
@@ -41,7 +43,7 @@ if __name__ == "__main__":
     else:
         print_schema += "## [green]Moments were calculated and dumped to csv also...[/green]\n"
     print_schema += (
-        "\n\n\n"
+        "\n********************************************************************\n"
         "[bold]SCHEMA:[/bold]\n"
         "- [cyan]t-bins / mass-bins:[/cyan] Bin centers.\n"
     )
@@ -78,12 +80,14 @@ if __name__ == "__main__":
     )
     
     console.print(print_schema)
+    console.print("\n\n********************************************************************")
     console.print(f" Number of t-bins: {len(tPrimeBins)}: {np.array(tPrimeBins)}")
     console.print(f" Number of mass-bins: {len(masses)}: {np.array(masses)}")
     console.print(f" Number of wave names: {len(wave_names)}: {wave_names}")
     
     console.print("\n")
     
+    console.print("\n********************************************************************")
     if ift_df is not None:
         console.print(f" [red]Writing IFT DataFrame to csv located at: {ift_csv_path}[/red]")
         console.print(f" Shape of IFT results DataFrame {ift_df.shape} with columns: {ift_df.columns}")
@@ -94,12 +98,49 @@ if __name__ == "__main__":
     else:
         console.print(" [red]No IFT results found, skipping...[/red]")
     
+    console.print("\n********************************************************************")
     if amptools_df is not None:
         console.print(f" [red]Writing AmpTools DataFrame to csv located at: {amptools_csv_path}[/red]")
         console.print(f" Shape of AmpTools results DataFrame {amptools_df.shape} with columns: {amptools_df.columns}")
         amptools_df.to_csv(amptools_csv_path, index=False)
     else:
         console.print(" [red]No AmpTools results found, skipping...[/red]")
+        
+    ######################################################################################################################################
+    ## We can additionally populate a table of integrated yields and associated uncertainties (across mass) for every parametric component
+    ######################################################################################################################################
+    if ift_df is not None:
+        console.print("\n\n********************************************************************")
+        console.print(" [bold]Integrated Yields for IFT Parameteric Components -> mean +/- std (rel. unc.)[/bold]")
+        parametric_amps = [col for col in ift_df.columns if '_cf' not in col and len(col.split('_'))>2] # ignore correlated field components (_cf) and coherent sum cols
+        parametric_intensities = [col.rstrip('_amp') for col in parametric_amps]
+        t_bin_centers = ift_df['tprime'].unique()
+            
+        yields = []
+        for it, t_bin_center in enumerate(t_bin_centers):
+            ift_df_t = ift_df.query('tprime == @t_bin_center')
+            yields.append([])
+            for i, parametric_intensity in enumerate(parametric_intensities):
+                # Grouping by sample, sum over mass, then calculate mean / std produces very different results compared to
+                # grouping by mass and summing over samples. This is due to the fact that the samples are entire curves!
+                # In my original test case, the relative uncertainties went from 20% to 4% where first number comes from grouping by sample
+                sampled_integrated_intensities = ift_df_t.groupby('sample')[parametric_intensity].sum()
+                mean = sampled_integrated_intensities.mean()
+                std = sampled_integrated_intensities.std()
+                yields[it].append(f"{mean:0.2f} +/- {std:0.2f} ({std/mean:0.2f})")
+
+        pretty_t_bin_centers = [f"t={t_bin_center:0.3f} GeV^2" for t_bin_center in t_bin_centers]
+        yields = pd.DataFrame(yields, columns=parametric_intensities, index=pretty_t_bin_centers).T
+
+        console = Console()
+        table = Table()
+        table.add_column(f"Parametric Component", justify="left", style="bold green", no_wrap=True)
+        for pretty_t_bin_center in pretty_t_bin_centers:
+            table.add_column(f"{pretty_t_bin_center}", justify="left", style="bold green", no_wrap=True)
+        for i, parametric_intensity in enumerate(parametric_intensities):
+            table.add_row(parametric_intensity, *yields.iloc[i])
+        console.print(table)
+        console.print("\n\n")
         
     elapsed_time = timer.read()[2]
     console.print(f" [bold]Total time taken: {elapsed_time}[/bold]")
