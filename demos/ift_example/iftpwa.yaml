@@ -102,5 +102,3 @@ HYPERPARAMETER_SCANS:
     PARAMETRIC_MODEL.resonances.0.a0_980.preScale|suggest_float: 0.1, 5.1, step=0.5
     PARAMETRIC_MODEL.resonances.2.a2_1700.preScale|suggest_float: 0.1, 1.0, step=0.1
     IFT_MODEL.res2bkg|suggest_float: 0.1, 2.1, step=0.5
-pyamptools_commit_hash: d271f77c3bf37b7bc0253af090a0db6b5ec2d729
-iftpwa_commit_hash: b9ddae196c398692b282de2c9ef6cd4839a394a0
