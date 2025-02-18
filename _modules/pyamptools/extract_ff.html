@@ -33,7 +33,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css?v=be8a1c11" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -180,17 +180,13 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../ift/iftpwa_intro.html">iftpwa - Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../ift/iftpwa_config.html">iftpwa - Default Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../ift/iftpwa_exec.html">iftpwa - Default Execution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../ift/iftpwa_tips.html">iftpwa - Tips</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Analysis Chain Example</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../analysis_example.html">Analysis Chain Script</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demos/analysis_chain.html">Analysis Chain Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../gallery.html">Analysis Chain Gallery</a></li>
-
-
-
-
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">FSROOT Related Tutorials</span></p>
 <ul class="nav bd-sidenav">
@@ -347,11 +343,12 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">sys</span>
-
+<span class="kn">from</span> <span class="nn">pyamptools.utility.general</span> <span class="kn">import</span> <span class="n">load_yaml</span>
+<span class="kn">from</span> <span class="nn">omegaconf.dictconfig</span> <span class="kn">import</span> <span class="n">DictConfig</span>
 
 <div class="viewcode-block" id="extract_ff">
 <a class="viewcode-back" href="../../api/extract_ff.html#pyamptools.extract_ff.extract_ff">[docs]</a>
-<span class="k">def</span> <span class="nf">extract_ff</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">outfileName</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;.5f&quot;</span><span class="p">,</span> <span class="n">test_regex</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">no_phases</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">regex_merge</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">extract_ff</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">outfileName</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;.5f&quot;</span><span class="p">,</span> <span class="n">test_regex</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">no_phases</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">regex_merge</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yaml_file</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Extract fit fractions and phase differences between pairs of waves from a FitResults object.</span>
 
@@ -359,10 +356,10 @@
 <span class="sd">        results (FitResults): FitResults object containing fit results</span>
 <span class="sd">        outfileName (str): Output root file name or dump to stdout if empty string</span>
 <span class="sd">        fmt (str): String format for printing numbers</span>
-<span class="sd">        test_regex (bool, optional): If True, only test and print regex grouping without calculating intensities</span>
-<span class="sd">        no_phases (bool, optional): If True, skip calculating phase differences</span>
-<span class="sd">        only (str, optional): Only dump fit fractions for &quot;acc&quot; or &quot;noacc&quot;. Default dumps both.</span>
-<span class="sd">        regex_merge (List[str], optional): List of regex pattern/replace pairs for merging amplitudes.</span>
+<span class="sd">        test_regex (bool): If True, only test and print regex grouping without calculating intensities</span>
+<span class="sd">        no_phases (bool): If True, skip calculating phase differences</span>
+<span class="sd">        only (str): Only dump fit fractions for &quot;acc&quot; or &quot;noacc&quot;. Default dumps both.</span>
+<span class="sd">        regex_merge (List[str]): List of regex pattern/replace pairs for merging amplitudes.</span>
 <span class="sd">            Pairs are separated by ~&gt;. The substitution happens for all amplitude names.</span>
 <span class="sd">            All amplitudes with same reduced name will be grouped into a list and a combined fit fraction</span>
 <span class="sd">            calculated. See AmpTools&#39; FitResults.intensity method.</span>
@@ -371,6 +368,7 @@
 <span class="sd">                - &#39;.*(.)$~&gt;\\1&#39;: Captures last character and replaces full match</span>
 <span class="sd">                - &#39;.*reaction_(000|045|090|135)::(Pos|Neg)(?:Im|Re)::&#39;: Removes matched pattern,</span>
 <span class="sd">                  allowing grouping over polarizations and mirrored sums</span>
+<span class="sd">        yaml_file (str): YAML file name. Allows program to load YAML state, i.e. for getting user requested coherent sums</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">write_ff</span><span class="p">(</span><span class="n">amp</span><span class="p">,</span> <span class="n">intensity</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">intensity_corr</span><span class="p">,</span> <span class="n">error_corr</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -420,7 +418,7 @@
             <span class="n">intensity_corr</span><span class="p">,</span> <span class="n">error_corr</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">intensity</span><span class="p">(</span><span class="n">useamp</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
             <span class="n">write_ff</span><span class="p">(</span><span class="n">amp</span><span class="p">,</span> <span class="n">intensity</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">intensity_corr</span><span class="p">,</span> <span class="n">error_corr</span><span class="p">,</span> <span class="n">only</span><span class="p">)</span>
 
-    <span class="c1">######## MERGE AMPLITUDES STRIPPING REGEX MATCHED STRING #########</span>
+    <span class="c1">######## MERGE AMPLITUDES REPLACING REGEX MATCHED STRING WITH WHAT COMES AFTER ~&gt; #########</span>
     <span class="k">if</span> <span class="n">regex_merge</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">regex</span> <span class="ow">in</span> <span class="n">regex_merge</span><span class="p">:</span>
             <span class="n">pattern</span><span class="p">,</span> <span class="n">replace</span> <span class="o">=</span> <span class="n">regex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;~&gt;&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="s2">&quot;~&gt;&quot;</span> <span class="ow">in</span> <span class="n">regex</span> <span class="k">else</span> <span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
@@ -448,6 +446,25 @@
                     <span class="n">intensity_corr</span><span class="p">,</span> <span class="n">error_corr</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">intensity</span><span class="p">(</span><span class="n">amps</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
                     <span class="n">write_ff</span><span class="p">(</span><span class="n">merged_amp</span><span class="p">,</span> <span class="n">intensity</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">intensity_corr</span><span class="p">,</span> <span class="n">error_corr</span><span class="p">,</span> <span class="n">only</span><span class="p">)</span>
             <span class="n">merged</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    
+    <span class="c1">########## CHECK IF results_dump.coherent_sums is in yaml_file ##########</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">yaml_file</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">DictConfig</span><span class="p">))</span> <span class="ow">and</span> <span class="s2">&quot;result_dump&quot;</span> <span class="ow">in</span> <span class="n">yaml_file</span> <span class="ow">and</span> <span class="s2">&quot;coherent_sums&quot;</span> <span class="ow">in</span> <span class="n">yaml_file</span><span class="p">[</span><span class="s2">&quot;result_dump&quot;</span><span class="p">]:</span>
+        <span class="n">coherent_sums</span> <span class="o">=</span> <span class="n">yaml_file</span><span class="p">[</span><span class="s2">&quot;result_dump&quot;</span><span class="p">][</span><span class="s2">&quot;coherent_sums&quot;</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Merging Amplitude Groups based on user request in YAML field `result_dump.coherent_sums`&quot;</span><span class="p">)</span>
+        <span class="n">merged</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">vs</span> <span class="ow">in</span> <span class="n">coherent_sums</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">vs</span> <span class="o">=</span> <span class="n">vs</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; -&gt; </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2"> merged </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">vs</span><span class="p">)</span><span class="si">}</span><span class="s2"> amplitudes:&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">amp</span> <span class="ow">in</span> <span class="n">uniqueAmps</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">v</span> <span class="ow">in</span> <span class="n">amp</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vs</span><span class="p">]):</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;     </span><span class="si">{</span><span class="n">amp</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">merged</span><span class="p">:</span>
+                        <span class="n">merged</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">amp</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">merged</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">amp</span><span class="p">)</span>
+            <span class="n">intensity</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">intensity</span><span class="p">(</span><span class="n">merged</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="n">intensity_corr</span><span class="p">,</span> <span class="n">error_corr</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">intensity</span><span class="p">(</span><span class="n">merged</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="n">write_ff</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">intensity</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">intensity_corr</span><span class="p">,</span> <span class="n">error_corr</span><span class="p">,</span> <span class="n">only</span><span class="p">)</span>
 
     <span class="c1">######### WRITE ALL POSSIBLE PHASE DIFFERENCES ##########</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">no_phases</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">test_regex</span><span class="p">:</span>
@@ -480,6 +497,7 @@
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--no_phases&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Do not dump phase differences&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--only&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Only dump fit fractions for [&#39;acc&#39;, &#39;noacc&#39;]&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--regex_merge&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Merge amplitudes: Regex pair (pattern, replace) separated by ~&gt;&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--yaml_file&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;YAML file name&quot;</span><span class="p">)</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
 
     <span class="c1">################### LOAD LIBRARIES ##################</span>
@@ -494,6 +512,9 @@
     <span class="n">regex_merge</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">regex_merge</span>
     <span class="n">no_phases</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">no_phases</span>
     <span class="n">only</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">only</span>
+    <span class="n">yaml_file</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">yaml_file</span>
+    <span class="k">if</span> <span class="n">yaml_file</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">yaml_file</span> <span class="o">=</span> <span class="n">load_yaml</span><span class="p">(</span><span class="n">yaml_file</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fitFile</span><span class="p">),</span> <span class="s2">&quot;Fit Results file does not exist at specified path&quot;</span>
 
     <span class="c1">############## LOAD FIT RESULTS OBJECT ##############</span>
@@ -503,8 +524,7 @@
         <span class="n">exit</span><span class="p">()</span>
 
     <span class="c1">############## EXTRACT FIT FRACTIONS ##############</span>
-    <span class="n">extract_ff</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">outfileName</span><span class="p">,</span> <span class="n">fmt</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">test_regex</span><span class="p">,</span> <span class="n">no_phases</span><span class="p">,</span> <span class="n">only</span><span class="p">,</span> <span class="n">regex_merge</span><span class="p">)</span>
-
+    <span class="n">extract_ff</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">outfileName</span><span class="p">,</span> <span class="n">fmt</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">test_regex</span><span class="p">,</span> <span class="n">no_phases</span><span class="p">,</span> <span class="n">only</span><span class="p">,</span> <span class="n">regex_merge</span><span class="p">,</span> <span class="n">yaml_file</span><span class="p">)</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">_cli_extract_ff</span><span class="p">()</span>

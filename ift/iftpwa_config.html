@@ -529,6 +529,10 @@ A_i(m, t) = \kappa \cdot \rho_i \cdot C_i \cdot \Big[
 <span class="w">    </span><span class="nt">yaml</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/LOCATION/OF/IFTPWA/YAML/FILE/iftpwa.yaml</span><span class="w"> </span><span class="c1"># (string) path to the iftpwa configuration file</span>
 <span class="w">    </span><span class="nt">synchronize</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"> </span><span class="c1"># (bool) Almost always true. Synchronize the iftpwa and PyAmpTools configuration files</span>
 <span class="w">    </span><span class="nt">mpi_processes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">41</span><span class="w"> </span><span class="c1"># (int) number of MPI processes to use for NIFTy. Choice depends on number of cores available and n_mass_bins * n_t_bins</span>
+<span class="nt">result_dump</span><span class="p">:</span><span class="w"> </span><span class="c1"># Additional information to request when dumping results</span>
+<span class="w">    </span><span class="nt">coherent_sums</span><span class="p">:</span><span class="w"> </span><span class="c1"># Calculate the intensity of the following coherent sums where the key is the name, value is underscore separate list of waves in the sum</span>
+<span class="w">        </span><span class="nt">D+</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dm2+_Dm1+_Dp0+_Dp1+_Dp2+</span>
+<span class="w">        </span><span class="nt">D-</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dm2-_Dm1-_Dp0-_Dp1-_Dp2-</span>
 
 <span class="c1">############ [OPTIONAL] ################</span>
 <span class="c1"># NOTE: This section can be in its own YAML file as it does not need any additional information</span>

@@ -422,17 +422,17 @@
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Help on function extract_ff in module pyamptools.extract_ff:
 
-extract_ff(results, outfileName=&#39;&#39;, fmt=&#39;.5f&#39;, test_regex=False, no_phases=False, only=None, regex_merge=None)
+extract_ff(results, outfileName=&#39;&#39;, fmt=&#39;.5f&#39;, test_regex=False, no_phases=False, only=None, regex_merge=None, yaml_file=&#39;&#39;)
     Extract fit fractions and phase differences between pairs of waves from a FitResults object.
     
     Args:
         results (FitResults): FitResults object containing fit results
         outfileName (str): Output root file name or dump to stdout if empty string
         fmt (str): String format for printing numbers
-        test_regex (bool, optional): If True, only test and print regex grouping without calculating intensities
-        no_phases (bool, optional): If True, skip calculating phase differences
-        only (str, optional): Only dump fit fractions for &quot;acc&quot; or &quot;noacc&quot;. Default dumps both.
-        regex_merge (List[str], optional): List of regex pattern/replace pairs for merging amplitudes.
+        test_regex (bool): If True, only test and print regex grouping without calculating intensities
+        no_phases (bool): If True, skip calculating phase differences
+        only (str): Only dump fit fractions for &quot;acc&quot; or &quot;noacc&quot;. Default dumps both.
+        regex_merge (List[str]): List of regex pattern/replace pairs for merging amplitudes.
             Pairs are separated by ~&gt;. The substitution happens for all amplitude names.
             All amplitudes with same reduced name will be grouped into a list and a combined fit fraction
             calculated. See AmpTools&#39; FitResults.intensity method.
@@ -441,6 +441,7 @@ extract_ff(results, outfileName=&#39;&#39;, fmt=&#39;.5f&#39;, test_regex=False,
                 - &#39;.*(.)$~&gt;\1&#39;: Captures last character and replaces full match
                 - &#39;.*reaction_(000|045|090|135)::(Pos|Neg)(?:Im|Re)::&#39;: Removes matched pattern,
                   allowing grouping over polarizations and mirrored sums
+        yaml_file (str): YAML file name. Allows program to load YAML state, i.e. for getting user requested coherent sums
 </pre></div>
 </div>
 </div>
@@ -536,9 +537,8 @@ Merged Amplitude Groups based on regex sub: r&#39;.*::(.*)::.*&#39; -&gt; r&#39;
      etapi::imZ::resAmp1
      etapi::imZ::resAmp2
      etapi::imZ::resAmp3
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>======================================================================================================
+
+======================================================================================================
 Running command: python /w/halld-scshelf2101/lng/WORK/PyAmpTools9/src/pyamptools/extract_ff.py /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/result.fit --outputfileName /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/ff.txt --test_regex --regex_merge .*::(.*)::.*~&gt;\1
 ======================================================================================================
 </pre></div>

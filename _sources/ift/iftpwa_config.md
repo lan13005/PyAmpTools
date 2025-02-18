@@ -126,6 +126,10 @@ nifty: # Configure NIFTy
     yaml: /LOCATION/OF/IFTPWA/YAML/FILE/iftpwa.yaml # (string) path to the iftpwa configuration file
     synchronize: true # (bool) Almost always true. Synchronize the iftpwa and PyAmpTools configuration files
     mpi_processes: 41 # (int) number of MPI processes to use for NIFTy. Choice depends on number of cores available and n_mass_bins * n_t_bins
+result_dump: # Additional information to request when dumping results
+    coherent_sums: # Calculate the intensity of the following coherent sums where the key is the name, value is underscore separate list of waves in the sum
+        D+: Dm2+_Dm1+_Dp0+_Dp1+_Dp2+
+        D-: Dm2-_Dm1-_Dp0-_Dp1-_Dp2-
 
 ############ [OPTIONAL] ################
 # NOTE: This section can be in its own YAML file as it does not need any additional information

@@ -390,11 +390,10 @@
 <p>Once we have a pair of configuration files we are ready to perform our two types of fits and compare the results. <code class="docutils literal notranslate"><span class="pre">pa</span></code> is a simple dispatch system that calls various python scripts which each perform a specific task in this workflow.</p>
 <p>This workflow goes from:</p>
 <ol class="arabic simple">
-<li><p>the raw data</p></li>
-<li><p>splits the data into kinematic bins</p></li>
-<li><p>performs AmpTools fits</p></li>
-<li><p>performs IFT fits</p></li>
-<li><p>draws tons of diagnostic plots</p></li>
+<li><p>splits the raw data into kinematic bins</p></li>
+<li><p>performs AmpTools MLE fits in each kinematic bin</p></li>
+<li><p>performs IFT fit</p></li>
+<li><p>draws tons of diagnostic plots and export fitted amplitudes / intensities / moments / etc into a file</p></li>
 </ol>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="w"> </span>-e<span class="w"> </span><span class="c1"># Exit on error</span>
 <span class="nb">set</span><span class="w"> </span>-o<span class="w"> </span>pipefail<span class="w"> </span><span class="c1"># Exit on error in pipeline</span>
