@@ -112,7 +112,7 @@ if __name__ == "__main__":
     if ift_df is not None:
         console.print("\n\n********************************************************************")
         console.print(" [bold]Integrated Yields for IFT Parameteric Components -> mean +/- std (rel. unc.)[/bold]")
-        parametric_amps = [col for col in ift_df.columns if '_cf' not in col and len(col.split('_'))>2] # ignore correlated field components (_cf) and coherent sum cols
+        parametric_amps = [col for col in ift_df.columns if '_cf' not in col and '_amp' not in col and len(col.split('_'))>2] # ignore correlated field components (_cf) and coherent sum cols
         parametric_intensities = [col.rstrip('_amp') for col in parametric_amps]
         t_bin_centers = ift_df['tprime'].unique()
             
@@ -131,13 +131,17 @@ if __name__ == "__main__":
 
         pretty_t_bin_centers = [f"t={t_bin_center:0.3f} GeV^2" for t_bin_center in t_bin_centers]
         yields = pd.DataFrame(yields, columns=parametric_intensities, index=pretty_t_bin_centers).T
+        
+        # reorder rows so that the largest yields (summing mean values across t-bins) are at the top
+        fyields = yields.map(lambda x: float(x.split(' +/- ')[0]))
+        yields = yields.iloc[np.argsort(fyields.sum(axis=1))[::-1]]
 
         console = Console()
         table = Table()
         table.add_column(f"Parametric Component", justify="left", style="bold green", no_wrap=True)
         for pretty_t_bin_center in pretty_t_bin_centers:
             table.add_column(f"{pretty_t_bin_center}", justify="left", style="bold green", no_wrap=True)
-        for i, parametric_intensity in enumerate(parametric_intensities):
+        for i, parametric_intensity in enumerate(yields.index):
             table.add_row(parametric_intensity, *yields.iloc[i])
         console.print(table)
         console.print("\n\n")
