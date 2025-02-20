@@ -19,9 +19,9 @@ def plot_moment(moment_name, t, masses, _amptools_df, _ift_df, latex_name_dict, 
     
     amptools_df, ift_df = None, None
     if _amptools_df is not None:
-        amptools_df = _amptools_df.query(f'tprime == {t}')
+        amptools_df = _amptools_df[np.isclose(_amptools_df['tprime'], t, rtol=1e-5)]
     if _ift_df is not None:
-        ift_df = _ift_df.query(f'tprime == {t}')
+        ift_df = _ift_df[np.isclose(_ift_df['tprime'], t, rtol=1e-5)]
     
     mass_width = np.round(masses[1] - masses[0], 4)
     
@@ -122,20 +122,13 @@ if __name__ == "__main__":
     ####################################################
     #### Plot the moments
     ####################################################
-    console.print("momentPlotter| Plotting moments...")
-    # synchronization of yaml pair currently only happens automatically when running `run_ift`
-    #   We catch exceptions from OmegaConf for missing values or Python type errors for None type
-    try: 
-        outputFolder = yaml_secondary['GENERAL']['outputFolder']
-        if outputFolder == '???':
-            outputFolder = yaml_primary['nifty']['output_directory']
-    except (MissingMandatoryValue, TypeError):
-        outputFolder = yaml_primary['nifty']['output_directory']
-    outputFolder = os.path.join(outputFolder, "plots/moments")
+    console.print("momentPlotter| Plotting moments...") 
+    outputFolder = os.path.join(yaml_primary['base_directory'], "plots/moments")
     os.makedirs(outputFolder, exist_ok=True)
 
     for t in tprime_centers:
         for moment_name in moment_names:
+            t = np.round(t, 5)
             plot_moment(moment_name, t, masses, amptools_df, ift_df, latex_name_dict, save_file=f"{outputFolder}/{moment_name}_t{t}.pdf")
 
     console.print(f"momentPlotter| Elapsed time {timer.read()[2]}\n\n")
