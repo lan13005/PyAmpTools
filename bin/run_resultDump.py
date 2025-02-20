@@ -22,14 +22,14 @@ if __name__ == "__main__":
     skip_moments = args.skip_moments
     clean = args.clean
     
+    timer = Timer()
+    
     console = Console()
     if output_dir is None:
         yaml_primary = load_yaml(yaml_file)
         base_directory = yaml_primary['base_directory']
         output_dir = base_directory
         console.print(f"\nOutput directory not specified, using YAML file's base directory: {output_dir}\n\n\n")
-
-    timer = Timer()
 
     amptools_df, ift_df, ift_res_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict = loadAllResultsFromYaml(yaml_file, pool_size=npool, skip_moments=skip_moments, clean=clean)
 
@@ -107,19 +107,20 @@ if __name__ == "__main__":
         console.print(" [red]No AmpTools results found, skipping...[/red]")
         
     ######################################################################################################################################
-    ## We can additionally populate a table of integrated yields and associated uncertainties (across mass) for every parametric component
+    ## We can additionally populate a table of integrated yields_for_table and associated uncertainties (across mass) for every parametric component
     ######################################################################################################################################
     if ift_df is not None:
         console.print("\n\n********************************************************************")
-        console.print(" [bold]Integrated Yields for IFT Parameteric Components -> mean +/- std (rel. unc.)[/bold]")
+        console.print(" [bold]Sorted Integrated Yields for IFT Parameteric Components -> mean +/- std (rel. unc.)[/bold]")
         parametric_amps = [col for col in ift_df.columns if '_cf' not in col and '_amp' not in col and len(col.split('_'))>2] # ignore correlated field components (_cf) and coherent sum cols
         parametric_intensities = [col.rstrip('_amp') for col in parametric_amps]
         t_bin_centers = ift_df['tprime'].unique()
             
-        yields = []
+        yields_for_table = [] # dumped to screen
+        yields_for_csv = {'t': [], 'component': [], 'mean': [], 'std': []} # dumped to csv
         for it, t_bin_center in enumerate(t_bin_centers):
-            ift_df_t = ift_df.query('tprime == @t_bin_center')
-            yields.append([])
+            ift_df_t = ift_df[np.isclose(ift_df['tprime'], t_bin_center, rtol=1e-5)]
+            yields_for_table.append([])
             for i, parametric_intensity in enumerate(parametric_intensities):
                 # Grouping by sample, sum over mass, then calculate mean / std produces very different results compared to
                 # grouping by mass and summing over samples. This is due to the fact that the samples are entire curves!
@@ -127,24 +128,35 @@ if __name__ == "__main__":
                 sampled_integrated_intensities = ift_df_t.groupby('sample')[parametric_intensity].sum()
                 mean = sampled_integrated_intensities.mean()
                 std = sampled_integrated_intensities.std()
-                yields[it].append(f"{mean:0.2f} +/- {std:0.2f} ({std/mean:0.2f})")
+                yields_for_table[it].append(f"{mean:0.2f} +/- {std:0.2f} ({std/mean:0.2f})")
+                yields_for_csv['t'].append(t_bin_center)
+                yields_for_csv['component'].append(parametric_intensity)
+                yields_for_csv['mean'].append(mean)
+                yields_for_csv['std'].append(std)
 
         pretty_t_bin_centers = [f"t={t_bin_center:0.3f} GeV^2" for t_bin_center in t_bin_centers]
-        yields = pd.DataFrame(yields, columns=parametric_intensities, index=pretty_t_bin_centers).T
+        yields_for_table = pd.DataFrame(yields_for_table, columns=parametric_intensities, index=pretty_t_bin_centers).T
+        yields_for_csv = pd.DataFrame(yields_for_csv)
         
-        # reorder rows so that the largest yields (summing mean values across t-bins) are at the top
-        fyields = yields.map(lambda x: float(x.split(' +/- ')[0]))
-        yields = yields.iloc[np.argsort(fyields.sum(axis=1))[::-1]]
+        # reorder rows so that the largest yields_for_table (summing mean values across t-bins) are at the top
+        fyields = yields_for_table.map(lambda x: float(x.split(' +/- ')[0]))
+        yields_for_table = yields_for_table.iloc[np.argsort(fyields.sum(axis=1))[::-1]]
 
-        console = Console()
+        console_table = Console(record=True)
         table = Table()
         table.add_column(f"Parametric Component", justify="left", style="bold green", no_wrap=True)
         for pretty_t_bin_center in pretty_t_bin_centers:
             table.add_column(f"{pretty_t_bin_center}", justify="left", style="bold green", no_wrap=True)
-        for i, parametric_intensity in enumerate(yields.index):
-            table.add_row(parametric_intensity, *yields.iloc[i])
-        console.print(table)
-        console.print("\n\n")
+        for i, parametric_intensity in enumerate(yields_for_table.index):
+            table.add_row(parametric_intensity, *yields_for_table.iloc[i])
+        console_table.print(table)
         
+        # Dump table to csv
+        table_dump = os.path.join(base_directory, 'integrated_yields_table.csv')
+        console.print(f" [red]Writing table of Integrated yields_for_table of all Parametric Components to csv file at: {table_dump}[/red]")
+        yields_for_csv.to_csv(table_dump, index=False, float_format='%0.5f')
+
+        console_table.print("\n\n")
+
     elapsed_time = timer.read()[2]
-    console.print(f" [bold]Total time taken: {elapsed_time}[/bold]")
+    console.print(f" [bold]resultDump| Total time taken: {elapsed_time}[/bold]")
