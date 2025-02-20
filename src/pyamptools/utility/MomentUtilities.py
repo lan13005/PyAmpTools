@@ -185,6 +185,9 @@ class MomentManagerTwoPS(MomentManager):
         print(f"MomentManagerTwoPS| Calculating moments assuming a {self.channel} system with max J = {self.max_J}")
 
     def process_and_return_df(self, normalization_scheme=0, pool_size=4, append=True):
+        
+        if len(self.df) == 0:
+            return pd.DataFrame(), {}
 
         with Pool(pool_size) as pool:
             moment_results = pool.starmap(self.calc_moments, [(i, normalization_scheme) for i in range(len(self.df))])
