@@ -121,6 +121,7 @@ def extract_ff(results, outfileName="", fmt=".5f", test_regex=False, no_phases=F
                         merged[k] = [amp]
                     else:
                         merged[k].append(amp)
+        for k in merged.keys():
             intensity, error = results.intensity(merged[k], False)
             intensity_corr, error_corr = results.intensity(merged[k], True)
             write_ff(k, intensity, error, intensity_corr, error_corr, only)
