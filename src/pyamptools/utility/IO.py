@@ -149,7 +149,7 @@ def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean=False):
     # Store a cache of the results to avoid recalculating them, calculating moments is quite time consuming
     cache = f"{yaml['base_directory']}/.moment_cache.pkl"
     if clean and os.path.exists(cache):
-        console.print(f"[red]loadAllResultsFromYaml| Cache found at {cache} but user requested to start clean. Recalculating...[/red]\n")
+        console.print(f"[red]loadAllResultsFromYaml| User requested to start clean, do not use any cached results. Recalculating...[/red]\n")
         os.remove(cache)
     elif os.path.exists(cache):
         console.print(f"[green]loadAllResultsFromYaml| Loading cache from {cache}[/green]\n")
@@ -197,10 +197,21 @@ def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean=False):
     try:
         ift_df, ift_res_df = loadIFTResultsFromYaml(yaml)
     except Exception as e:
-        console.print(f"io| Error loading NIFTY results: {e}")
+        console.print(f"\n[red]io| Error loading NIFTY results: {e}[/red]")
         
+    if isinstance(ift_df, pd.DataFrame) and len(ift_df) == 0:
+        ift_df = None
+    if isinstance(amptools_df, pd.DataFrame) and len(amptools_df) == 0:
+        amptools_df = None
+
+    if amptools_df is None:
+        console.print(f"\n[red]io| AmpTools results were not found in expected location! [/red]")
+    if ift_df is None:
+        console.print(f"\n[red]io| NIFTy results were not found in expected location! [/red]")
+    console.print(f"\n")
+
     if amptools_df is None and ift_df is None:
-        raise ValueError("io| No results from AmpTools binned fits nor IFT can be found! Terminating...")
+        raise ValueError("io| No results found for IFT nor AmpTools binned fits! Terminating as there is nothing to do...")
 
     ###########################################
     #### PROCESS THE AMPTOOLS AND IFT RESULTS
