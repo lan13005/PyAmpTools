@@ -16,10 +16,12 @@ def run_cmd(cmd):
         print(f"Command failed with return code {e.returncode}")
         return e.output
     
+##############################################
+########### MIRRORS MINUIT_TEST.PY ###########
 np.random.seed(42)
 scale = 50
-n_iterations = 1
-n_processes = 2
+n_iterations = 30
+n_processes = 4
 pyamptools_yaml = "/w/halld-scshelf2101/lng/WORK/PyAmpTools9/OTHER_CHANNELS/ETAPI0_AUTOGRAD/pyamptools.yaml"
 iftpwa_yaml = "/w/halld-scshelf2101/lng/WORK/PyAmpTools9/OTHER_CHANNELS/ETAPI0_AUTOGRAD/iftpwa.yaml"
 
@@ -30,14 +32,11 @@ nmbTprimes = pyamptools_yaml["n_t_bins"]
 nPars = 2 * len(waveNames)
 
 seed_list = np.random.randint(0, 1000000, (n_iterations, nmbMasses, nmbTprimes))
+#############################################
+##############################################
 
-def setup_bin_directory(bin_idx, iteration, seed_list, initialization={}):
-
-    mbin = bin_idx % nmbMasses
-    tbin = bin_idx // nmbMasses
-    
-    np.random.seed(seed_list[iteration, mbin, tbin])
-    
+def run_fit(bin_idx, iteration, initialization={}):
+   
     # initializaiton dictionary comes as Dict[str, complex] -> convert to Dict[str, str]
     _initialization = {}
     for k, v in initialization.items():
@@ -100,14 +99,16 @@ def run_fits_in_bin(bin_idx):
     tbin = bin_idx // nmbMasses
 
     for i in range(n_iterations):
-        initial_guess = scale * np.random.randn(nPars, nmbMasses, nmbTprimes)
-        # initial_guess = np.ones_like(initial_guess)
+        
+        np.random.seed(seed_list[i, mbin, tbin])
+        initial_guess = scale * np.random.randn(nPars, nmbMasses, nmbTprimes)        
         initial_guess_dict = {} 
         for iw, wave in enumerate(waveNames):
             initial_guess_dict[wave] = initial_guess[2*iw, mbin, tbin] + 1j * initial_guess[2*iw+1, mbin, tbin]
-        setup_bin_directory(bin_idx, i, seed_list, initial_guess_dict)
+
+        run_fit(bin_idx, i, initial_guess_dict)
 
 if __name__ == "__main__":
     
     with Pool(n_processes) as p:
-        p.map(run_fits_in_bin, [1, 2])  # range(nmbMasses * nmbTprimes))
+        p.map(run_fits_in_bin, range(nmbMasses * nmbTprimes))
