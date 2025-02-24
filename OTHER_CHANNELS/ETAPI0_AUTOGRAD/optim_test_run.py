@@ -13,7 +13,7 @@ def run_command(job_info):
         # f"bash -c 'python optim_test.py --optimizer {optimizer} --bins {' '.join([str(x) for x in bins])}'"
         f"python optim_test.py --optimizer {optimizer} --bins {' '.join([str(x) for x in bins])}"
     )
-    # print(cmd)
+    print(cmd)
     print(f"Starting job {job_idx} for optimizer {optimizer} and bins: {bins}")
     try:
         process = subprocess.run(cmd, shell=True, check=True, capture_output=True, text=True)
@@ -23,8 +23,11 @@ def run_command(job_info):
         return job_idx, optimizer, False, e.stderr
 
 n_bins = 34
-optimizers = ['minuit_numeric', 'minuit_analytic', 'lbfgs']
-max_concurrent = 10
+# Add trust-ncg as an optimizer option
+# optimizers = ['minuit_numeric', 'minuit_analytic', 'lbfgs', 
+# optimizers = ['L-BFGS-B']
+optimizers = ['trust-ncg', 'trust-krylov']
+max_concurrent = 20
 
 # Create job assignments for each optimizer
 job_assignments = {}

@@ -8,12 +8,17 @@ import pickle as pkl
 from iminuit import Minuit
 import argparse
 from scipy.optimize import minimize
+import numpyro
+import numpyro.distributions as dist
+from numpyro.infer import NUTS, MCMC
+import jax
+import jax.numpy as jnp
 
-from iftpwa1.pwa.gluex.gluex_jax_manager import (
-    GluexJaxManager,
+from iftpwa1.pwa.gluex.constants import (
     LIKELIHOOD,
     LIKELIHOOD_AND_GRAD,
     LIKELIHOOD_GRAD_HESSIAN,
+    LIKELIHOOD,
     INTENSITY_AC,
 )
 
@@ -54,19 +59,31 @@ class ObjectiveWithGrad:
         self._last_x = None
         self._last_val = None
         self._last_grad = None
+        self._last_hess = None
     
         self._calc_grads = True
+        self._calc_hess = False
     
     def _compute(self, x):
-        """Compute both value and gradient if needed"""
+        """Compute value, gradient and hessian if needed"""
         if self._last_x is None or not np.array_equal(x, self._last_x):
             self._last_x = np.array(x)
             
             x_full = np.zeros((self.nPars, self.nmbMasses, self.nmbTprimes))
             x_full[:, self.mbin, self.tbin] = x
-            LIKELIHOOD_TAG = LIKELIHOOD_AND_GRAD if self._calc_grads else LIKELIHOOD
-            result = self.pwa_manager.sendAndReceive(x_full, LIKELIHOOD_TAG)[0]
-            if self._calc_grads:
+            
+            if self._calc_hess:
+                tag = LIKELIHOOD_GRAD_HESSIAN
+            elif self._calc_grads:
+                tag = LIKELIHOOD_AND_GRAD
+            else:
+                tag = LIKELIHOOD
+                
+            result = self.pwa_manager.sendAndReceive(x_full, tag)[0]
+
+            if self._calc_hess:
+                self._last_val, self._last_grad, self._last_hess = result
+            elif self._calc_grads:
                 self._last_val, self._last_grad = result
             else:
                 self._last_val = result
@@ -83,6 +100,21 @@ class ObjectiveWithGrad:
             return self._last_grad
         else:
             raise ValueError("Gradient was never calculated!")
+
+    def hessp(self, x, p):
+        """
+        Compute the Hessian-vector product at point x with vector p
+        """
+        self._compute(x)
+        
+        # Ensure Hessian and p have correct dimensions
+        hess = np.asarray(self._last_hess)
+        p = np.asarray(p)
+        
+        if hess.ndim == 0:
+            raise ValueError("Hessian computation failed - received empty array")
+        
+        return np.dot(hess, p) # Use np.dot instead of @ operator for better dimension handling
 
     def __call__(self, x):
         """Return both objective value and gradient for scipy.optimize"""
@@ -123,7 +155,7 @@ def optimize_single_bin_minuit(pwa_manager, initial_params, bin_idx, use_analyti
         obj._calc_grads = True
     else:
         obj._calc_grads = False
-    
+
     if not use_analytic_grad:
         print("Using numeric gradients")
 
@@ -191,18 +223,32 @@ def optimize_single_bin_scipy(pwa_manager, initial_params, bin_idx, bounds=None,
             'ftol': 1e-10,
             'gtol': 1e-8
         }
-    
+
     obj = ObjectiveWithGrad(pwa_manager, bin_idx, nPars, nmbMasses, nmbTprimes)
     
-    result = minimize(
-        obj,
-        x0,
-        method=method,
-        jac=True,
-        bounds=bounds,
-        options=options
-    )
-    
+    if method == 'trust-ncg' or method == 'trust-krylov':
+        obj._calc_hess = True
+        result = minimize(
+            obj.objective,
+            x0,
+            method=method,
+            jac=obj.gradient,
+            hessp=obj.hessp,
+            options=options
+        )
+    elif method == 'L-BFGS-B':
+        obj._calc_hess = False
+        result = minimize(
+            obj,
+            x0,
+            method=method,
+            jac=True,
+            bounds=bounds,
+            options=options
+        )
+    else:
+        raise ValueError(f"Invalid optimizer: {method}")
+        
     return {
         'parameters': result.x,
         'likelihood': result.fun,
@@ -210,6 +256,62 @@ def optimize_single_bin_scipy(pwa_manager, initial_params, bin_idx, bounds=None,
         'message': result.message,
         'errors': None  # Scipy doesn't provide error estimates by default
     }
+
+def create_pwa_numpyro_model(objective_with_grad, prior_scale=1.0):
+    """
+    Create a NumPyro model using the PWA likelihood.
+    
+    Args:
+        objective_with_grad: Instance of ObjectiveWithGrad
+        prior_scale: Scale for the normal prior on parameters
+    """
+    def model():
+        # Define priors for all parameters
+        # Using normal priors centered at 0 for both real and imaginary parts
+        params = numpyro.sample(
+            "params",
+            dist.Normal(
+                loc=jnp.zeros(objective_with_grad.nPars),
+                scale=prior_scale * jnp.ones(objective_with_grad.nPars)
+            )
+        )
+        
+        # The negative log-likelihood from ObjectiveWithGrad
+        # Note: NumPyro maximizes the log probability, so we negate the NLL
+        numpyro.factor("likelihood", -objective_with_grad.objective(params))
+
+def run_mcmc_inference(pwa_manager, bin_idx, n_warmup=1000, n_samples=2000, num_chains=4):
+    """
+    Run MCMC inference using NumPyro for a single bin
+    
+    Args:
+        pwa_manager: GlueXJaxManager instance
+        bin_idx: Index of bin to analyze
+        n_warmup: Number of warmup steps
+        n_samples: Number of samples to collect
+        num_chains: Number of MCMC chains to run
+    """
+    nPars = pwa_manager.nPars
+    nmbMasses = pwa_manager.nmbMasses
+    nmbTprimes = pwa_manager.nmbTprimes
+    
+    # Create objective function for this bin
+    objective = ObjectiveWithGrad(pwa_manager, bin_idx, nPars, nmbMasses, nmbTprimes)
+    
+    # Create model
+    model = create_pwa_numpyro_model(objective)
+    
+    # Setup NUTS sampler with gradient information
+    kernel = NUTS(model, target_accept_prob=0.8)
+    
+    # Run MCMC
+    mcmc = MCMC(kernel, num_warmup=n_warmup, num_samples=n_samples, num_chains=num_chains)
+    mcmc.run(jax.random.PRNGKey(0))
+    
+    # Get summary statistics
+    mcmc.print_summary()
+    
+    return mcmc
 
 def run_fit(bin_idx, i, initial_guess, initial_guess_dict, optimizer='minuit_numeric'):
     """
@@ -222,6 +324,10 @@ def run_fit(bin_idx, i, initial_guess, initial_guess_dict, optimizer='minuit_num
         initial_guess_dict: Dictionary of initial parameters
         optimizer: see argument parser for more information
     """
+    
+    from iftpwa1.pwa.gluex.gluex_jax_manager import (
+        GluexJaxManager,
+    )
     mpi_offset = 1
     
     mbin = bin_idx % nmbMasses
@@ -252,27 +358,29 @@ def run_fit(bin_idx, i, initial_guess, initial_guess_dict, optimizer='minuit_num
                 result = optimize_single_bin_minuit(pwa_manager, initial_guess, bin_idx, use_analytic_grad=True)
             elif method == 'minuit_numeric':
                 result = optimize_single_bin_minuit(pwa_manager, initial_guess, bin_idx, use_analytic_grad=False)
-            elif method == 'lbfgs':
-                result = optimize_single_bin_scipy(pwa_manager, initial_guess, bin_idx, method='L-BFGS-B')
+            elif method == 'L-BFGS-B' or method == 'trust-ncg' or method == 'trust-krylov':
+                result = optimize_single_bin_scipy(pwa_manager, initial_guess, bin_idx, method=method)
+            elif method == 'numpyro':
+                mcmc = run_mcmc_inference(pwa_manager, bin_idx)
+                samples = mcmc.get_samples()
+                best_fit_params = np.zeros((nPars, nmbMasses, nmbTprimes))
+                best_fit_params[:, mbin, tbin] = jnp.mean(samples['params'], axis=0)
+                intensities = {
+                    'total': pwa_manager.sendAndReceive(
+                        best_fit_params,
+                        INTENSITY_AC,
+                        suffix=None
+                    )[0].item()
+                }
+                for wave in pwa_manager.waveNames:
+                    intensities[wave] = pwa_manager.sendAndReceive(
+                        best_fit_params,
+                        INTENSITY_AC,
+                        suffix=[wave]
+                    )[0].item()
+                intensities['likelihood'] = result['likelihood']
+                intensities['initial_likelihood'] = initial_likelihood
             
-            best_fit_params = np.zeros((nPars, nmbMasses, nmbTprimes))
-            best_fit_params[:, mbin, tbin] = result['parameters']
-            intensities = {
-                'total': pwa_manager.sendAndReceive(
-                    best_fit_params,
-                    INTENSITY_AC,
-                    suffix=None
-                )[0].item()
-            }
-            for wave in pwa_manager.waveNames:
-                intensities[wave] = pwa_manager.sendAndReceive(
-                    best_fit_params,
-                    INTENSITY_AC,
-                    suffix=[wave]
-                )[0].item()
-            intensities['likelihood'] = result['likelihood']
-            intensities['initial_likelihood'] = initial_likelihood
-        
             print(f"Intensity for bin {bin_idx}: {intensities}")
             print(f"Optimization results for bin {bin_idx}:")
             print(f"Success: {result['success']}")
@@ -285,13 +393,8 @@ def run_fit(bin_idx, i, initial_guess, initial_guess_dict, optimizer='minuit_num
                     'initial_guess_dict': initial_guess_dict, 
                     'intensities': intensities,
                 }, f)
-        
-        if optimizer == 'minuit_analytic': # analytic gradients provided by jax autodiff
-            fit_and_dump(initial_guess, initial_guess_dict, i, 'minuit_analytic')
-        elif optimizer == 'minuit_numeric': # numeric gradients provided by Minuit
-            fit_and_dump(initial_guess, initial_guess_dict, i, 'minuit_numeric')
-        elif optimizer == 'lbfgs':
-            fit_and_dump(initial_guess, initial_guess_dict, i, 'lbfgs')
+                
+        fit_and_dump(initial_guess, initial_guess_dict, i, optimizer)
         
         pwa_manager.stop()
         
@@ -312,13 +415,49 @@ def run_fits_in_bin(bin_idx, optimizer='minuit'):
         
         run_fit(bin_idx, i, initial_guess, initial_guess_dict, optimizer)
 
-if __name__ == "__main__":
+class OptimizerHelpFormatter(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write(f"Error: {message}\n")
+        self.print_help()
+        sys.exit(2)
 
-    parser = argparse.ArgumentParser()
+    def format_help(self):
+        help_message = super().format_help()
         
-    parser.add_argument("--optimizer", type=str, choices=['minuit_numeric', 'minuit_analytic', 'lbfgs'], default='minuit_numeric',
-                      help="Optimization method to use")
-    parser.add_argument("--bins", type=int, nargs="+")
+        optimizer_help = "\nOptimizer Descriptions:\n"
+        optimizer_help += "\nMinuit-based Methods:\n"
+        optimizer_help += "  * minuit_numeric:\n"
+        optimizer_help += "      Lets Minuit compute numerical gradients\n"
+        optimizer_help += "  * minuit_analytic:\n"
+        optimizer_help += "      Uses analytic gradients from PWA likelihood manager\n"
+        
+        optimizer_help += "\nSciPy-based Methods:\n"
+        optimizer_help += "  * L-BFGS-B:\n"
+        optimizer_help += "      Limited-memory BFGS quasi-Newton method (stores approximate Hessian)\n"
+        optimizer_help += "      + Efficient for large-scale problems\n"
+        optimizer_help += "      - May struggle with highly correlated parameters\n"
+        
+        optimizer_help += "  * trust-ncg:\n"
+        optimizer_help += "      Trust-region Newton-Conjugate Gradient\n"
+        optimizer_help += "      + Adaptively adjusts step size using local quadratic approximation\n"
+        optimizer_help += "      + Efficient for large-scale problems\n"
+        optimizer_help += "      - Can be unstable for ill-conditioned problems\n"
+        
+        optimizer_help += "  * trust-krylov:\n"
+        optimizer_help += "      Trust-region method with Krylov subspace solver\n"
+        optimizer_help += "      + Better handling of indefinite (sparse) Hessians, Kyrlov subspcae accounts for non-Euclidean geometry\n"
+        optimizer_help += "      + More robust for highly correlated parameters\n"
+        
+        return help_message + "\n" + optimizer_help
+
+if __name__ == "__main__":
+    parser = OptimizerHelpFormatter(description="Run optimization fits using various methods.")
+    parser.add_argument("--optimizer", type=str, 
+                       choices=['minuit_numeric', 'minuit_analytic', 'L-BFGS-B', 'trust-ncg', 'trust-krylov', 'numpyro'], 
+                       default='minuit_numeric',
+                       help="Optimization method to use")
+    parser.add_argument("--bins", type=int, nargs="+",
+                       help="List of bin indices to process")
     args = parser.parse_args()
 
     timer = Timer()
