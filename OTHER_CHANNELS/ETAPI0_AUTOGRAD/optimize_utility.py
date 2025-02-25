@@ -1,6 +1,73 @@
 from iminuit import Minuit
 from scipy.optimize import minimize
 
+import jax.numpy as jnp
+
+from iftpwa1.pwa.gluex.constants import (
+    LIKELIHOOD,
+    LIKELIHOOD,
+    GRAD,
+    HESSIAN,
+    INTENSITY_AC,
+)
+
+class Objective:
+
+    """
+    This is our objective function with some expected functions for optimization frameworks 
+        that utilizes GlueXJaxManager to obtain NLL ands its derivatives
+    """
+    
+    def __init__(self, pwa_manager, bin_idx, nPars, nmbMasses, nmbTprimes):
+        self.pwa_manager = pwa_manager
+        self.bin_idx = bin_idx
+        self.nPars = nPars
+        self.nmbMasses = nmbMasses
+        self.nmbTprimes = nmbTprimes
+        self.mbin = bin_idx % nmbMasses
+        self.tbin = bin_idx // nmbMasses
+        
+        # flag user can modify to affect whether __call__ returns gradients also
+        self._deriv_order = 0
+        
+    def insert_into_full_array(self, x):
+        x_full = jnp.zeros((self.nPars, self.nmbMasses, self.nmbTprimes))
+        x_full = x_full.at[:, self.mbin, self.tbin].set(x)
+        return x_full
+
+    def objective(self, x):
+        """Return only the objective value"""
+        x_full = self.insert_into_full_array(x)
+        _nll = self.pwa_manager.sendAndReceive(x_full, LIKELIHOOD)[0]
+        return _nll
+    
+    def gradient(self, x):
+        """Return only the gradient"""
+        x_full = self.insert_into_full_array(x)
+        grad = self.pwa_manager.sendAndReceive(x_full, GRAD)[0]
+        return grad
+
+    def hessp(self, x, p):
+        """Compute the Hessian-vector product at point x with vector p"""
+        x_full = self.insert_into_full_array(x)
+        hess = self.pwa_manager.sendAndReceive(x_full, HESSIAN)[0]
+        return jnp.dot(hess, p)
+
+    def __call__(self, x):
+        """Return both objective value and gradient for scipy.optimize"""
+        nll = self.objective(x)
+        if self._deriv_order == 0:
+            return nll
+        elif self._deriv_order == 1:
+            grad = self.gradient(x)
+            return nll, grad
+        else:
+            raise ValueError(f"Invalid derivative order: {self._deriv_order}")
+        
+    def intensity(self, x, suffix=None):
+        x_full = self.insert_into_full_array(x)
+        return self.pwa_manager.sendAndReceive(x_full, INTENSITY_AC, suffix=suffix)[0].item()
+
 def optimize_single_bin_minuit(objective, initial_params, bin_idx, use_analytic_grad=True):
     """
     Optimize parameters for a single kinematic bin using Minuit.
