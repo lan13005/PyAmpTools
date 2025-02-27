@@ -59,8 +59,9 @@ amptools_vps_ampName = "Vec_ps_refl"
 
 def generate_amptools_cfg(
     quantum_numbers,
-    angles,
-    fractions,
+    polAngles,
+    polMags,
+    polFixedScales,
     datas,
     gens,
     accs,
@@ -72,7 +73,7 @@ def generate_amptools_cfg(
     basereactName,
     particles,
     header=help_header,
-    init_one_val=None,
+    initialization=None,
     datareader="ROOTDataReader",
     add_amp_factor='',
     append_to_cfg='',
@@ -83,8 +84,9 @@ def generate_amptools_cfg(
 
     Args:
         quantum_numbers (list): List of lists of quantum numbers. For Zlm then [Reflectivity, spin, spin-projection]
-        angles (list): List of polarization angles in degrees
-        fractions (list): List of polarization fractions
+        polAngles (list): List of polarization polAngles in degrees
+        polMags (list): List of polarization magnitudes
+        polFixedScales (list): List of polarization fixed scales
         datas (list): List of data files
         gens (list): List of gen files
         accs (list): List of acc files
@@ -100,7 +102,7 @@ def generate_amptools_cfg(
         add_amp_factor (str): Additional factor to add to the amplitude
         append_to_cfg (str): Additional string args to append to the end of the cfg file
         append_to_decay (str): Additional string args to append to the decay factor
-        init_one_val (float, None): If not None, all amplitudes will be set to this value
+        initialization (float, None): If not None, all amplitudes will be set to this value
 
     Returns:
         None, writes a file to cfgFileOutputName
@@ -112,6 +114,10 @@ def generate_amptools_cfg(
 
     cfgInfo = ConfigurationInfo(fitName)
 
+    # Dict[str, List[cppyy.gbl.AmplitudeInfo]] where AmplitudeInfo is an AmpTools object
+    # Example: constraintMap: {'Sp0+': [<cppyy.gbl.AmplitudeInfo object at 0xcebb720>, <cppyy.gbl.AmplitudeInfo object at 0xcf3a1a0>]}
+    #   This means that there are 2 amplitudes for the Sp0+ partial wave
+    #   The first amplitude is the default one, and the second is the one that will be used for the constraint
     constraintMap = {}
     
     # The intensity formula for the Zlm / vec_ps_refl amplitudes consists of 4 independent coherent sums
@@ -124,18 +130,18 @@ def generate_amptools_cfg(
         -1: (["RealNeg", "ImagPos"], ["+1 -1", "-1 +1"])
     }
 
-    for i in range(len(angles)):
+    for i in range(len(polAngles)):
         ####################################
         #### Create ReactionInfo object ####
         ####################################
 
-        angle = angles[i]
-        fraction = fractions[i]
+        polAngle = polAngles[i]
+        polMag = polMags[i]
 
-        reactName = f"{basereactName}_{angle:0>3}"
-        scaleName = f"parScale{angle:0>3}"
+        reactName = f"{basereactName}_{polAngle:0>3}"
+        scaleName = f"parScale{polAngle:0>3}"
         parScale = cfgInfo.createParameter(scaleName, 1.0)
-        if angle == "0" or angle == "00" or angle == "000":
+        if polFixedScales[i]:
             parScale.setFixed(True)
 
         reactionInfo = cfgInfo.createReaction(reactName, particles)  # ReactionInfo*
@@ -194,7 +200,7 @@ def generate_amptools_cfg(
             sumNames, numPairs = refl_sum_numpair_map[ref]
             for sumName, numPair in zip(sumNames, numPairs):
                 
-                if float(fraction) == 1:  # Terms with (1-Pgamma) prefactor disappear if Pgamma=1
+                if float(polMag) == 1:  # Terms with (1-polMag) prefactor disappear if polMag=1
                     if sumName in ["RealNeg", "ImagNeg"]:
                         continue
 
@@ -205,10 +211,10 @@ def generate_amptools_cfg(
 
                 num1, num2 = numPair.split()
                 if assume_zlm:
-                    angularFactor = [f"{amptools_zlm_ampName}", f"{L}", f"{M}", num1, num2, angle, fraction]
+                    angularFactor = [f"{amptools_zlm_ampName}", f"{L}", f"{M}", num1, num2, polAngle, polMag]
                 else:
                     # Vec_ps_refl 1 -1 0 -1  -1  LOOPPOLANG LOOPPOLVAL omega3pi
-                    angularFactor = [f"{amptools_vps_ampName}", f"{J}", f"{M}", f"{L}", num1, num2, angle, fraction]
+                    angularFactor = [f"{amptools_vps_ampName}", f"{J}", f"{M}", f"{L}", num1, num2, polAngle, polMag]
                 if append_to_decay:
                     angularFactor.extend(append_to_decay.split())
                 ampInfo.addFactor(angularFactor)
@@ -225,21 +231,26 @@ def generate_amptools_cfg(
     ### RANDOMLY INITALIZE AMPLITUDES ###
     #####################################
 
-    bAoV = False
-    if init_one_val is not None:
-        init_one_val = float(init_one_val)
+    bAoV = False # boolean all one value
+    if isinstance(initialization, float):
         bAoV = True
-
-    for amp, lines in constraintMap.items():
-        value = init_one_val if bAoV else random.uniform(0.0, 1.0)
+    
+    for amp, lines in constraintMap.items(): # see above for structure of constraintMap
+        value = initialization if bAoV else random.uniform(0.0, 1.0)
         if amp in realAmps:
             lines[0].setReal(True)
         else:
-            value += 1j * (init_one_val if bAoV else random.uniform(0.0, 1.0))
+            value += 1j * (initialization if bAoV else random.uniform(0.0, 1.0))
         if amp in fixedAmps:
             lines[0].setFixed(True)
         for line in lines[1:]:
             lines[0].addConstraint(line)
+            
+        # overwrite value if key exists in initialization dict
+        if isinstance(initialization, dict):
+            if amp in initialization:
+                value = complex(initialization[amp])
+
         lines[0].setValue(value)
 
     #########################
@@ -264,7 +275,7 @@ def generate_amptools_cfg(
     return data
 
 
-def generate_amptools_cfg_from_dict(yaml_file):
+def generate_amptools_cfg_from_dict(yaml_file, output_location):
     #####################################################
     ################ GENERAL SPECIFICATION ##############
     #####################################################
@@ -273,13 +284,13 @@ def generate_amptools_cfg_from_dict(yaml_file):
     perform_config_checks = True
 
     fitName = "PLACEHOLDER_FITNAME"
-    cfgFileOutputName = f'{yaml_file["base_directory"]}/amptools.cfg'
+    cfgFileOutputName = output_location
     basereactName = "reaction"
     data_folder = yaml_file["data_folder"]
     particles = yaml_file["reaction"].split(" ")
     print("Particles in reaction: ", particles)
 
-    cfgFileOutputFolder = os.path.dirname(cfgFileOutputName)
+    cfgFileOutputFolder = os.path.dirname(cfgFileOutputName) if "/" in cfgFileOutputName else "."
     os.system(f"mkdir -p {cfgFileOutputFolder}")
 
     check_map = {}
@@ -331,11 +342,20 @@ def generate_amptools_cfg_from_dict(yaml_file):
 
     used_pols = []
     used_polMags = []
-    pols = yaml_file["polarizations"]
-    for angle, mag in pols.items():
-        used_pols.append(angle)
-        used_polMags.append(f"{mag}")
-        check_map[angle] = [mag >= 0 and mag <= 1, f"Polarization magnitude must be between 0 and 1 instead of {mag}"]
+    used_polFixedScales = []
+    pols = yaml_file["polarizations"] # pols can be a Dict of float values or a Dict of Dicts(storing polarization magnitude and boolean for fixed scale factor)
+    for i, (polAngle, mag) in enumerate(pols.items()):
+        used_pols.append(polAngle)
+        if isinstance(mag, float):
+            used_polMags.append(f"{mag}")
+            used_polFixedScales.append(True if i == 0 else False) # scaling of first polarized data is fixed, all others have freely floating scale factors
+            check_map[polAngle] = [mag >= 0 and mag <= 1, f"Polarization magnitude must be between 0 and 1 instead of {mag}"]
+        elif isinstance(mag, dict):
+            if "pol_mag" not in mag: raise ValueError(f"Missing 'pol_mag' key in polarization dictionary for {polAngle}. Please update YAML file `polarizations` key.")
+            if "fixed_scale" not in mag: raise ValueError(f"Missing 'fixed_scale' key in polarization dictionary for {polAngle}. Please update YAML file `polarizations` key.")
+            used_polMags.append(f"{mag['pol_mag']}")
+            used_polFixedScales.append(bool(mag['fixed_scale']))
+            check_map[polAngle] = [mag['pol_mag'] >= 0 and mag['pol_mag'] <= 1, f"Polarization magnitude must be between 0 and 1 instead of {mag['pol_mag']}"]
 
     #####################################################
     ################# CONSTRUCT DATASETS ################
@@ -410,6 +430,7 @@ def generate_amptools_cfg_from_dict(yaml_file):
             used_quantum_numbers,
             used_pols,
             used_polMags,
+            used_polFixedScales,
             datas,
             gens,
             accs,
@@ -425,7 +446,7 @@ def generate_amptools_cfg_from_dict(yaml_file):
             add_amp_factor=yaml_file.get("add_amp_factor", "").strip(),
             append_to_cfg=yaml_file.get("append_to_cfg", "").strip(),
             append_to_decay=yaml_file.get("append_to_decay", "").strip(),
-            init_one_val=yaml_file["init_one_val"],
+            initialization=yaml_file.get("initialization", None),
         )
 
         generate_success = True
@@ -448,9 +469,10 @@ def generate_amptools_cfg_from_dict(yaml_file):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate an AmpTools configuration file for a Zlm fit")
     parser.add_argument("yaml_name", type=str, default="conf/configuration.yaml", help="Path a configuration yaml file")
+    parser.add_argument("-o", "--output_location", type=str, default="", help="Path to the output configuration file")
     args = parser.parse_args()
     yaml_name = args.yaml_name
-
+    output_location = args.output_location
     cwd = os.getcwd()
 
     print("\n---------------------")
@@ -459,11 +481,13 @@ if __name__ == "__main__":
     print("---------------------\n")
 
     yaml_file = load_yaml(yaml_name)
+    
+    output_location = f"{yaml_file['base_directory']}/amptools.cfg" if output_location == "" else output_location
 
-    result, generate_success = generate_amptools_cfg_from_dict(yaml_file)
+    result, generate_success = generate_amptools_cfg_from_dict(yaml_file, output_location)
 
     if generate_success:
-        with open(f"{yaml_file['base_directory']}/amptools.cfg", "w") as f:
+        with open(output_location, "w") as f:
             f.write(result)
         print("\nConfiguration file successfully generated")
     else:
