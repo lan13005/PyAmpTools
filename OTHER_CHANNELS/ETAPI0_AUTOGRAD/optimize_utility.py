@@ -130,12 +130,31 @@ def optimize_single_bin_scipy(objective, initial_params, bin_idx, bounds=None, m
     x0 = initial_params
     
     if options is None:
-        options = {
-            'maxiter': 2000,
-            'ftol': 1e-10,
-            'gtol': 1e-8
+        if method == "L-BFGS-B":
+            options = {
+                'maxiter': 2000,       # Maximum number of iterations
+                'maxfun': 20000,       # Maximum number of function evaluations
+                'ftol': 1e-10,         # Function value tolerance
+                'gtol': 1e-10,          # Gradient norm tolerance
+                'maxcor': 10           # Number of stored corrections
+            }
+        elif method == "trust-ncg":
+            options = {
+                'initial_trust_radius': 1.0,  # Starting trust-region radius
+                'max_trust_radius': 1000.0,   # Maximum trust-region radius
+                'eta': 0.15,                  # Acceptance stringency for proposed steps
+                'gtol': 1e-8,                 # Gradient norm tolerance
+            'maxiter': 2000               # Maximum number of iterations
         }
-    
+        elif method == "trust-krylov":
+            options = {
+                'inexact': False,  # Solve subproblems with high accuracy
+                'gtol': 1e-8,      # Gradient norm tolerance
+                'maxiter': 2000    # Maximum number of iterations
+            }
+        else:
+            raise ValueError(f"Invalid method: {method}")
+        
     if method == 'trust-ncg' or method == 'trust-krylov':
         objective._deriv_order = 0 # objective.__call__ is not used so no need to set deriv_order
         result = minimize(

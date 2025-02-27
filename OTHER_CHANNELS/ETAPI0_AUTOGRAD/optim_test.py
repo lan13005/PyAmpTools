@@ -5,9 +5,6 @@ import pickle as pkl
 from iminuit import Minuit
 import argparse
 from scipy.optimize import minimize
-import numpyro
-import numpyro.distributions as dist
-from numpyro.infer import NUTS, MCMC
 import jax
 import jax.numpy as jnp
 
@@ -19,58 +16,6 @@ Minuit.errordef = Minuit.LIKELIHOOD
 comm0 = None
 rank = 0 
 mpi_offset = 1
-
-def create_pwa_numpyro_model(objective, prior_scale=1.0):
-    """
-    Create a NumPyro model using the PWA likelihood.
-    
-    Args:
-        objective: Instance of Objective
-        prior_scale: Scale for the normal prior on parameters
-    """
-    def model():
-        # Define priors for all parameters
-        params = numpyro.sample(
-            "params",
-            dist.Normal(
-                loc=jnp.zeros(objective.nPars),
-                scale=prior_scale * jnp.ones(objective.nPars)
-            )
-        )
-        
-        nll = objective.objective(params)
-        numpyro.factor("likelihood", -nll)
-    
-    return model
-
-def run_mcmc_inference(objective, n_warmup=1000, n_samples=2000, num_chains=4, collect_warmup=True):
-    """
-    Run MCMC inference using NumPyro for a single bin
-    
-    Args:
-        pwa_manager: GlueXJaxManager instance
-        bin_idx: Index of bin to analyze
-        n_warmup: Number of warmup steps
-        n_samples: Number of samples to collect
-        num_chains: Number of MCMC chains to run
-    """
-    
-    model = create_pwa_numpyro_model(objective, prior_scale=100)
-    
-    # Create random key for NUTS
-    rng_key = jax.random.PRNGKey(0)
-    rng_key, rng_key_inference = jax.random.split(rng_key)
-    
-    # Setup NUTS sampler
-    kernel = NUTS(model) 
-    
-    # Run MCMC
-    mcmc = MCMC(kernel, num_warmup=n_warmup, num_samples=n_samples, num_chains=num_chains, collect_warmup=collect_warmup)
-    mcmc.run(rng_key_inference)
-    
-    mcmc.print_summary()
-    
-    return mcmc
 
 def run_fit(
     pyamptools_yaml, 
@@ -97,9 +42,7 @@ def run_fit(
     from iftpwa1.pwa.gluex.gluex_jax_manager import (
         GluexJaxManager,
     )
-    
-    mbin = bin_idx % nmbMasses
-    tbin = bin_idx // nmbMasses
+
     pwa_manager = GluexJaxManager(comm0=comm0, mpi_offset=mpi_offset,
                                 yaml_file=pyamptools_yaml,
                                 resolved_secondary=iftpwa_yaml, prior_simulation=False, sum_returned_nlls=False)
@@ -135,33 +78,6 @@ def run_fit(
             final_result_dict[wave] = obj.intensity(optim_result['parameters'], suffix=[wave])
         final_result_dict['likelihood'] = optim_result['likelihood']
         final_result_dict['initial_likelihood'] = initial_likelihood
-    
-    # TODO: This can be simplified since we can just assume MLE fits returns the best fit parameters of size (1, nPars)
-    #       and MCMC returns the full set of samples of size (n_samples, nPars)
-    #       Rename likelihood and initial_likelihood to energy and initial_energy
-    else:
-        if method == 'numpyro':
-            mcmc = run_mcmc_inference(pwa_manager, bin_idx, num_chains=args.nprocesses)
-            samples = mcmc.get_samples()
-            best_fit_params = np.zeros((nPars, nmbMasses, nmbTprimes))
-            best_fit_params[:, mbin, tbin] = jnp.mean(samples['params'], axis=0)
-            final_result_dict['total'] = pwa_manager.sendAndReceive(
-                best_fit_params,
-                INTENSITY_AC,
-                suffix=None
-            )[0].item()
-            for wave in pwa_manager.waveNames:
-                final_result_dict[wave] = pwa_manager.sendAndReceive(
-                    best_fit_params,
-                    INTENSITY_AC,
-                    suffix=[wave]
-                )[0].item()
-            
-            final_result_dict['likelihood'] = None
-            final_result_dict['initial_likelihood'] = None
-            optim_result = {'success': 'mcmc drew requested samples', 'likelihood': 'mcmc does not return a likelihood', 'message': 'no message'}
-        else:
-            raise ValueError(f"Invalid Markov Chain Monte Carlo method: {method}")
 
     print(f"Intensity for bin {bin_idx}: {final_result_dict}")
     print(f"Optimization results for bin {bin_idx}:")
@@ -219,15 +135,12 @@ if __name__ == "__main__":
     parser.add_argument("yaml_file", type=str,
                        help="Path to PyAmpTools YAML configuration file")    
     parser.add_argument("--method", type=str, 
-                       choices=['minuit-numeric', 'minuit-analytic', 'L-BFGS-B', 'trust-ncg', 'trust-krylov', 'numpyro'], 
+                       choices=['minuit-numeric', 'minuit-analytic', 'L-BFGS-B', 'trust-ncg', 'trust-krylov'], 
                        default='L-BFGS-B',
                        help="Optimization method to use")
     parser.add_argument("--bins", type=int, nargs="+",
                        help="List of bin indices to process")
-
-    #### MCMC ARGS ####
-    parser.add_argument("--nprocesses", type=int, default=4,
-                       help="Number of processes to use for numpyro MCMC, equals num_chains")
+    parser.add_argument("--setting", type=int, default=0)
     
     #### HELPFUL ARGS ####
     parser.add_argument("--print_wave_names", action="store_true",
@@ -236,7 +149,6 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    numpyro.set_host_device_count(int(args.nprocesses))
     np.random.seed(42)
     scale = 50
     n_iterations = 20
@@ -245,41 +157,51 @@ if __name__ == "__main__":
     iftpwa_yaml = pyamptools_yaml["nifty"]["yaml"]
     iftpwa_yaml = load_yaml(iftpwa_yaml)
     
-    settings = [
-        {"lambdas": 1e2, "en_alpha": 1.0},
-        {"lambdas": 1e1, "en_alpha": 1.0},
-        {"lambdas": 1e0, "en_alpha": 1.0},
-        {"lambdas": 1e-1, "en_alpha": 1.0},
-        {"lambdas": 1e-2, "en_alpha": 1.0},
-        {"lambdas": 1e2, "en_alpha": 0.0},
-        {"lambdas": 1e1, "en_alpha": 0.0},
-        {"lambdas": 1e0, "en_alpha": 0.0},
-        {"lambdas": 1e-1, "en_alpha": 0.0},
-        {"lambdas": 1e-2, "en_alpha": 0.0},
-        {"lambdas": 1e2, "en_alpha": 0.5},
-        {"lambdas": 1e1, "en_alpha": 0.5},
-        {"lambdas": 1e0, "en_alpha": 0.5},
-        {"lambdas": 1e-1, "en_alpha": 0.5},
-        {"lambdas": 1e-2, "en_alpha": 0.5},
-        {"lambdas": {"Dm2-": 1e2, "Dm1-": 1e2, "Dp0-": 1e2, "Dp1-": 1e2, "Dp2-": 1e2, "Dm2+": 1e2, "Dm1+": 1e2, "Dp0+": 1e2, "Dp1+": 1e2, "Dp2+": 1e2}, "en_alpha": 1.0},
-        {"lambdas": {"Dm2-": 1e1, "Dm1-": 1e1, "Dp0-": 1e1, "Dp1-": 1e1, "Dp2-": 1e1, "Dm2+": 1e1, "Dm1+": 1e1, "Dp0+": 1e1, "Dp1+": 1e1, "Dp2+": 1e1}, "en_alpha": 1.0},
-        {"lambdas": {"Dm2-": 1e0, "Dm1-": 1e0, "Dp0-": 1e0, "Dp1-": 1e0, "Dp2-": 1e0, "Dm2+": 1e0, "Dm1+": 1e0, "Dp0+": 1e0, "Dp1+": 1e0, "Dp2+": 1e0}, "en_alpha": 1.0},
-        {"lambdas": {"Dm2-": 1e-1, "Dm1-": 1e-1, "Dp0-": 1e-1, "Dp1-": 1e-1, "Dp2-": 1e-1, "Dm2+": 1e-1, "Dm1+": 1e-1, "Dp0+": 1e-1, "Dp1+": 1e-1, "Dp2+": 1e-1}, "en_alpha": 1.0},
-        {"lambdas": {"Dm2-": 1e-2, "Dm1-": 1e-2, "Dp0-": 1e-2, "Dp1-": 1e-2, "Dp2-": 1e-2, "Dm2+": 1e-2, "Dm1+": 1e-2, "Dp0+": 1e-2, "Dp1+": 1e-2, "Dp2+": 1e-2}, "en_alpha": 1.0},
-        {"lambdas": {"Dm2-": 1e2, "Dm1-": 1e2, "Dp0-": 1e2, "Dp1-": 1e2, "Dp2-": 1e2, "Dm2+": 1e2, "Dm1+": 1e2, "Dp0+": 1e2, "Dp1+": 1e2, "Dp2+": 1e2}, "en_alpha": 0.0},
-        {"lambdas": {"Dm2-": 1e1, "Dm1-": 1e1, "Dp0-": 1e1, "Dp1-": 1e1, "Dp2-": 1e1, "Dm2+": 1e1, "Dm1+": 1e1, "Dp0+": 1e1, "Dp1+": 1e1, "Dp2+": 1e1}, "en_alpha": 0.0},
-        {"lambdas": {"Dm2-": 1e0, "Dm1-": 1e0, "Dp0-": 1e0, "Dp1-": 1e0, "Dp2-": 1e0, "Dm2+": 1e0, "Dm1+": 1e0, "Dp0+": 1e0, "Dp1+": 1e0, "Dp2+": 1e0}, "en_alpha": 0.0},
-        {"lambdas": {"Dm2-": 1e-1, "Dm1-": 1e-1, "Dp0-": 1e-1, "Dp1-": 1e-1, "Dp2-": 1e-1, "Dm2+": 1e-1, "Dm1+": 1e-1, "Dp0+": 1e-1, "Dp1+": 1e-1, "Dp2+": 1e-1}, "en_alpha": 0.0},
-        {"lambdas": {"Dm2-": 1e-2, "Dm1-": 1e-2, "Dp0-": 1e-2, "Dp1-": 1e-2, "Dp2-": 1e-2, "Dm2+": 1e-2, "Dm1+": 1e-2, "Dp0+": 1e-2, "Dp1+": 1e-2, "Dp2+": 1e-2}, "en_alpha": 0.0},
-        {"lambdas": {"Dm2-": 1e2, "Dm1-": 1e2, "Dp0-": 1e2, "Dp1-": 1e2, "Dp2-": 1e2, "Dm2+": 1e2, "Dm1+": 1e2, "Dp0+": 1e2, "Dp1+": 1e2, "Dp2+": 1e2}, "en_alpha": 0.5},
-        {"lambdas": {"Dm2-": 1e1, "Dm1-": 1e1, "Dp0-": 1e1, "Dp1-": 1e1, "Dp2-": 1e1, "Dm2+": 1e1, "Dm1+": 1e1, "Dp0+": 1e1, "Dp1+": 1e1, "Dp2+": 1e1}, "en_alpha": 0.5},
-        {"lambdas": {"Dm2-": 1e0, "Dm1-": 1e0, "Dp0-": 1e0, "Dp1-": 1e0, "Dp2-": 1e0, "Dm2+": 1e0, "Dm1+": 1e0, "Dp0+": 1e0, "Dp1+": 1e0, "Dp2+": 1e0}, "en_alpha": 0.5},
-        {"lambdas": {"Dm2-": 1e-1, "Dm1-": 1e-1, "Dp0-": 1e-1, "Dp1-": 1e-1, "Dp2-": 1e-1, "Dm2+": 1e-1, "Dm1+": 1e-1, "Dp0+": 1e-1, "Dp1+": 1e-1, "Dp2+": 1e-1}, "en_alpha": 0.5},
-        {"lambdas": {"Dm2-": 1e-2, "Dm1-": 1e-2, "Dp0-": 1e-2, "Dp1-": 1e-2, "Dp2-": 1e-2, "Dm2+": 1e-2, "Dm1+": 1e-2, "Dp0+": 1e-2, "Dp1+": 1e-2, "Dp2+": 1e-2}, "en_alpha": 0.5},
-    ]
+     # Lasso
+     # - need lambda of 10 for lasso to do anything
+     
+     # Ridge
+     # - lambda=10 on D-waves is too high
+     # - lambda=1 on D-waves minimally alters D-waves but pushes up S-wave
+
+    # Elastic Net
+    # - alpha=0.5 seems to lean too heavily towards one side (ridge?) results look similar
     
-    for k, v in settings[args.setting].items():
-        pyamptools_yaml["regularization"][k] = v
+    # settings = [
+    #     {"lambdas": 1e2, "en_alpha": 1.0},
+    #     {"lambdas": 1e1, "en_alpha": 1.0},
+    #     {"lambdas": 1e0, "en_alpha": 1.0},
+    #     {"lambdas": 1e-1, "en_alpha": 1.0},
+    #     {"lambdas": 1e-2, "en_alpha": 1.0},
+    #     {"lambdas": 1e2, "en_alpha": 0.0},
+    #     {"lambdas": 1e1, "en_alpha": 0.0},
+    #     {"lambdas": 1e0, "en_alpha": 0.0},
+    #     {"lambdas": 1e-1, "en_alpha": 0.0},
+    #     {"lambdas": 1e-2, "en_alpha": 0.0},
+    #     {"lambdas": 1e2, "en_alpha": 0.5},
+    #     {"lambdas": 1e1, "en_alpha": 0.5},
+    #     {"lambdas": 1e0, "en_alpha": 0.5},
+    #     {"lambdas": 1e-1, "en_alpha": 0.5},
+    #     {"lambdas": 1e-2, "en_alpha": 0.5},
+    #     {"lambdas": {"Dm2-": 1e2, "Dm1-": 1e2, "Dp0-": 1e2, "Dp1-": 1e2, "Dp2-": 1e2, "Dm2+": 1e2, "Dm1+": 1e2, "Dp0+": 1e2, "Dp1+": 1e2, "Dp2+": 1e2}, "en_alpha": 1.0},
+    #     {"lambdas": {"Dm2-": 1e1, "Dm1-": 1e1, "Dp0-": 1e1, "Dp1-": 1e1, "Dp2-": 1e1, "Dm2+": 1e1, "Dm1+": 1e1, "Dp0+": 1e1, "Dp1+": 1e1, "Dp2+": 1e1}, "en_alpha": 1.0},
+    #     {"lambdas": {"Dm2-": 1e0, "Dm1-": 1e0, "Dp0-": 1e0, "Dp1-": 1e0, "Dp2-": 1e0, "Dm2+": 1e0, "Dm1+": 1e0, "Dp0+": 1e0, "Dp1+": 1e0, "Dp2+": 1e0}, "en_alpha": 1.0},
+    #     {"lambdas": {"Dm2-": 1e-1, "Dm1-": 1e-1, "Dp0-": 1e-1, "Dp1-": 1e-1, "Dp2-": 1e-1, "Dm2+": 1e-1, "Dm1+": 1e-1, "Dp0+": 1e-1, "Dp1+": 1e-1, "Dp2+": 1e-1}, "en_alpha": 1.0},
+    #     {"lambdas": {"Dm2-": 1e-2, "Dm1-": 1e-2, "Dp0-": 1e-2, "Dp1-": 1e-2, "Dp2-": 1e-2, "Dm2+": 1e-2, "Dm1+": 1e-2, "Dp0+": 1e-2, "Dp1+": 1e-2, "Dp2+": 1e-2}, "en_alpha": 1.0},
+    #     {"lambdas": {"Dm2-": 1e2, "Dm1-": 1e2, "Dp0-": 1e2, "Dp1-": 1e2, "Dp2-": 1e2, "Dm2+": 1e2, "Dm1+": 1e2, "Dp0+": 1e2, "Dp1+": 1e2, "Dp2+": 1e2}, "en_alpha": 0.0},
+    #     {"lambdas": {"Dm2-": 1e1, "Dm1-": 1e1, "Dp0-": 1e1, "Dp1-": 1e1, "Dp2-": 1e1, "Dm2+": 1e1, "Dm1+": 1e1, "Dp0+": 1e1, "Dp1+": 1e1, "Dp2+": 1e1}, "en_alpha": 0.0},
+    #     {"lambdas": {"Dm2-": 1e0, "Dm1-": 1e0, "Dp0-": 1e0, "Dp1-": 1e0, "Dp2-": 1e0, "Dm2+": 1e0, "Dm1+": 1e0, "Dp0+": 1e0, "Dp1+": 1e0, "Dp2+": 1e0}, "en_alpha": 0.0},
+    #     {"lambdas": {"Dm2-": 1e-1, "Dm1-": 1e-1, "Dp0-": 1e-1, "Dp1-": 1e-1, "Dp2-": 1e-1, "Dm2+": 1e-1, "Dm1+": 1e-1, "Dp0+": 1e-1, "Dp1+": 1e-1, "Dp2+": 1e-1}, "en_alpha": 0.0},
+    #     {"lambdas": {"Dm2-": 1e-2, "Dm1-": 1e-2, "Dp0-": 1e-2, "Dp1-": 1e-2, "Dp2-": 1e-2, "Dm2+": 1e-2, "Dm1+": 1e-2, "Dp0+": 1e-2, "Dp1+": 1e-2, "Dp2+": 1e-2}, "en_alpha": 0.0},
+    #     {"lambdas": {"Dm2-": 1e2, "Dm1-": 1e2, "Dp0-": 1e2, "Dp1-": 1e2, "Dp2-": 1e2, "Dm2+": 1e2, "Dm1+": 1e2, "Dp0+": 1e2, "Dp1+": 1e2, "Dp2+": 1e2}, "en_alpha": 0.5},
+    #     {"lambdas": {"Dm2-": 1e1, "Dm1-": 1e1, "Dp0-": 1e1, "Dp1-": 1e1, "Dp2-": 1e1, "Dm2+": 1e1, "Dm1+": 1e1, "Dp0+": 1e1, "Dp1+": 1e1, "Dp2+": 1e1}, "en_alpha": 0.5},
+    #     {"lambdas": {"Dm2-": 1e0, "Dm1-": 1e0, "Dp0-": 1e0, "Dp1-": 1e0, "Dp2-": 1e0, "Dm2+": 1e0, "Dm1+": 1e0, "Dp0+": 1e0, "Dp1+": 1e0, "Dp2+": 1e0}, "en_alpha": 0.5},
+    #     {"lambdas": {"Dm2-": 1e-1, "Dm1-": 1e-1, "Dp0-": 1e-1, "Dp1-": 1e-1, "Dp2-": 1e-1, "Dm2+": 1e-1, "Dm1+": 1e-1, "Dp0+": 1e-1, "Dp1+": 1e-1, "Dp2+": 1e-1}, "en_alpha": 0.5},
+    #     {"lambdas": {"Dm2-": 1e-2, "Dm1-": 1e-2, "Dp0-": 1e-2, "Dp1-": 1e-2, "Dp2-": 1e-2, "Dm2+": 1e-2, "Dm1+": 1e-2, "Dp0+": 1e-2, "Dp1+": 1e-2, "Dp2+": 1e-2}, "en_alpha": 0.5},
+    # ]
+    
+    # for k, v in settings[args.setting].items():
+    #     pyamptools_yaml["regularization"][k] = v
     
     if not iftpwa_yaml:
         raise ValueError("iftpwa YAML file is required")
