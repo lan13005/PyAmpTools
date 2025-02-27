@@ -31,7 +31,8 @@ if __name__ == "__main__":
         output_dir = base_directory
         console.print(f"\nOutput directory not specified, using YAML file's base directory: {output_dir}\n\n\n")
 
-    amptools_df, ift_df, ift_res_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict = loadAllResultsFromYaml(yaml_file, pool_size=npool, skip_moments=skip_moments, clean=clean)
+    # apply_mle_queries = False since we assume user always wants all MLE fit results (where mle_query_1 and mle_query_2 are not applied, see YAML file)
+    amptools_df, ift_df, ift_res_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict = loadAllResultsFromYaml(yaml_file, pool_size=npool, skip_moments=skip_moments, clean=clean, apply_mle_queries=False)
 
     ift_csv_path = os.path.join(base_directory, 'ift_df.csv')
     ift_res_csv_path = os.path.join(base_directory, 'ift_res_results.csv')
