@@ -32,6 +32,11 @@ dependencies = [
   "bidict",
   "nptyping",
   "spherical",
+  "iminuit",
+  # MCMC packages
+  "pymc",
+  "numpyro",
+  "arviz",
 ]
 name = "pyamptools"
 requires-python = ">=3.9"
