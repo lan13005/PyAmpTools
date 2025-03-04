@@ -22,6 +22,8 @@ from numpyro.infer import NUTS, MCMC
 from rich.console import Console
 import os
 
+from pyamptools.utility.general import identify_channel, converter
+
 from optimize_utility import Objective
 
 Minuit.errordef = Minuit.LIKELIHOOD
@@ -29,15 +31,21 @@ comm0 = None
 rank = 0 
 mpi_offset = 1
 
+# Things to consider:
+# - COMPASS - lbfgs works well for binned fits but reverted to minuit for mass dependent fits since lbfgs was not able to find good minima
+
 # Log magnitudes produces a bias in the total intensity
 # - I guess this is log-normal magnitudes on each amplitude is biased upward and therefore the total intensity is biased upward
 # - Linear spaced magnitudes are numerically unstable, I guess due to interference cancelling out contributions
 use_log_magnitudes = False
 use_phase_param = 'tan' # 'tan' = tan half angle form AND 'vonmises' = Von Mises with circular reparametrization
 
+# init_maxiter does not appear to matter much
+# - one test running lbfgs with [2, 5, 10, 20] iterations where ~30 is enough for deep convergence. Results basically were the same
+
 console = Console()
 
-def run_mcmc_inference(objective, prior_scale=100.0, n_warmup=1000, n_samples=10, n_chains=4, resume_state=None, save_path=None, ref_idx=None, cop="cartesian", init_steps=100, init_lr=0.01, init_decay=0.99, init_momentum=0.9, init_grad_tol=1e-4, wave_prior_scales=None):
+def run_mcmc_inference(objective, prior_scale=100.0, n_warmup=1000, n_samples=10, n_chains=4, resume_state=None, save_path=None, ref_indices=None, cop="cartesian", init_method="L-BFGS-B", init_maxiter=100, init_gtol=1e-4, init_ftol=1e-6, wave_prior_scales=None):
     """ Run MCMC inference """
     rng_key = jax.random.PRNGKey(0)
     
@@ -57,8 +65,8 @@ def run_mcmc_inference(objective, prior_scale=100.0, n_warmup=1000, n_samples=10
         for wave_name, scale in wave_prior_scales.items():
             if wave_name in waveNames:
                 wave_idx = waveNames.index(wave_name)
-                param_prior_scales = param_prior_scales.at[2*wave_idx].set(scale)     # Real part
-                param_prior_scales.at[2*wave_idx+1].set(scale)                        # Imaginary part
+                param_prior_scales = param_prior_scales.at[2*wave_idx  ].set(scale)   # Real part
+                param_prior_scales = param_prior_scales.at[2*wave_idx+1].set(scale)   # Imaginary part
                 console.print(f"  {wave_name}: {scale}", style="bold")
             else:
                 console.print(f"  Warning: Wave '{wave_name}' not found in wave list, ignoring custom prior scale", style="yellow")
@@ -70,58 +78,59 @@ def run_mcmc_inference(objective, prior_scale=100.0, n_warmup=1000, n_samples=10
     ###################
     ### INITIALIZATION
     ###################
-    # Draw random sample and run gradient descent steps to move it to better starting location
-    def init_chain(key, i, n_grad_steps=init_steps, lr=init_lr, decay=init_decay, momentum=init_momentum, grad_tol=init_grad_tol):
-        console.print(f"Initializing chain {i} (randomly + short gradient descent) ...", style="bold")
+    # Draw random sample and run optimization to move it to better starting location
+    def init_chain(key, i, method=init_method, maxiter=init_maxiter, gtol=init_gtol, ftol=init_ftol):
+        console.print(f"Initializing chain {i} (randomly + {method} optimization) ...", style="bold")
         # Use parameter-specific prior scales for initialization
         init_param = jax.random.uniform(key, shape=(objective.nPars,), minval=-100.0, maxval=100.0) # NOTE: Find better initialization of min/max range
-        ref_mag = jnp.abs(init_param[2*ref_idx] + 1j * init_param[2*ref_idx+1])
         
-        # Fix reference wave if specified
-        if ref_idx is not None:
-            init_param = init_param.at[2*ref_idx].set(ref_mag)
+        # Fix reference by rotating to be real
+        for ref_idx in ref_indices:
+            ref_mag = jnp.abs(init_param[2*ref_idx] + 1j * init_param[2*ref_idx+1])
+            init_param = init_param.at[2*ref_idx  ].set(ref_mag)
             init_param = init_param.at[2*ref_idx+1].set(0.0)
         
-        params = init_param
-        start_nll = objective_fn(params)
+        start_nll = objective_fn(init_param)
         
-        # Initialize momentum velocity
-        velocity = jnp.zeros_like(params)
+        # Define the objective function and its gradient for scipy.optimize
+        def scipy_obj(x):
+            return objective_fn(x).item()  # Convert to native Python type
+            
+        def scipy_grad(x):
+            return np.array(gradient_fn(x))  # Convert to numpy array
         
-        # Gradient descent with momentum and reference wave fixed
-        last_grad_mag = 0.0
-        for step in range(n_grad_steps):
-            # Current learning rate with decay
-            step_lr = lr * (decay ** step)
-            
-            grad = gradient_fn(params)
-            
-            # Early stopping if gradient is small enough
-            grad_mag = jnp.sqrt(jnp.sum(grad**2))
-            if grad_mag < last_grad_mag:
-                console.print(f"  Chain {i}: Early stopping at step {step}/{n_grad_steps} (gradient norm < {last_grad_mag})")
-                break
-            last_grad_mag = grad_mag
-                
-            if ref_idx is not None:
-                grad = grad.at[2*ref_idx+1].set(0.0) # zero ref wave phase / imag part gradient
-                
-            # Update with momentum
-            velocity = momentum * velocity - step_lr * grad
-            params = params + velocity
-            
-            # Fix reference wave constraint
-            if ref_idx is not None:
-                params = params.at[2*ref_idx+1].set(0.0)
+        # Handle reference wave constraints using parameter bounds
+        bounds = [(None, None)] * objective.nPars
+        if ref_indices:
+            for ref_idx in ref_indices:
+                bounds[2*ref_idx+1] = (0.0, 0.0) # Fix imaginary part of reference wave to 0
         
+        # Run optimization
+        result = minimize(
+            scipy_obj,
+            np.array(init_param),  # Convert to numpy array for scipy
+            method=method,
+            jac=scipy_grad,
+            bounds=bounds,
+            options={
+                'maxiter': maxiter,
+                'gtol': gtol,
+                'ftol': ftol,
+                'disp': False
+            }
+        )
+        
+        params = jnp.array(result.x)  # Convert back to JAX array
         end_nll = objective_fn(params)
+        
+        # Check if optimization improved the likelihood
         if end_nll > start_nll:
             console.print(f"  Warning: Initialization resulted in worse NLL for chain {i}!", style="bold red")
             console.print(f"  Start: {start_nll:.4f}, End: {end_nll:.4f}", style="red")
             # Fall back to original point if optimization made things worse
             params = init_param
         else:
-            console.print(f"  Chain {i}: NLL improved from {start_nll:.4e} to {end_nll:.4e} [Delta={end_nll-start_nll:.4e}, last |grad|={last_grad_mag:.4e}]")
+            console.print(f"  Chain {i}: NLL improved from {start_nll:.4e} to {end_nll:.4e} [Delta={end_nll-start_nll:.1f}, Iterations={result.nit}]") 
             
         return params
     
@@ -133,14 +142,15 @@ def run_mcmc_inference(objective, prior_scale=100.0, n_warmup=1000, n_samples=10
         initial_params.append(init_chain(chain_keys[i], i))
     initial_params = jnp.array(initial_params)
     
-    if cop == "cartesian":
-        if ref_idx is None:
-            init_params = {'params': initial_params}  # Shape: (n_chains, nPars = 2 * len(waveNames))
-        else:            
-            mask = jnp.ones(2*len(waveNames), dtype=bool).at[2*ref_idx+1].set(False)
-            init_params = {'params': initial_params[:, mask]}  # Shape: (n_chains, nPars-1)
+    if cop == "cartesian":           
+        # Create mask to exclude imaginary parts of reference waves
+        mask = jnp.ones(objective.nPars, dtype=bool)
+        for ref_idx in ref_indices:
+            mask = mask.at[2*ref_idx+1].set(False)
+        init_params = {'params': initial_params[:, mask]}  # Shape: (n_chains, nPars - len(ref_indices))
     elif cop == "polar":
-        _initial_params = jnp.zeros((n_chains, 2 * len(waveNames)))
+        # NOTE: The initial parameters should by now have strictly applied the reference wave constraints
+        _initial_params = jnp.zeros((n_chains, objective.nPars))
         _camp = initial_params[:, ::2] + 1j * initial_params[:, 1::2] # (c)omplex (amp)litude
         
         # Convert magnitudes to log-space for initialization
@@ -167,22 +177,20 @@ def run_mcmc_inference(objective, prior_scale=100.0, n_warmup=1000, n_samples=10
         # Set magnitudes and store original phases for display
         _initial_params = _initial_params.at[:,  ::2].set(_magnitudes)
         _initial_params = _initial_params.at[:, 1::2].set(_phases)  # Still store phases for display
-        
-        if ref_idx is None:
-            init_params = {
-                'magnitudes': _initial_params[:, ::2],  # Shape: (n_chains, len(waveNames))
-                'phase_params': _phase_params           # Shape: (n_chains, len(waveNames))
-            }
-        else:
-            mask = jnp.ones(len(waveNames), dtype=bool).at[ref_idx].set(False)
-            init_params = {
-                'magnitudes': _initial_params[:, ::2],  # Shape: (n_chains, len(waveNames))
-                'phase_params': _phase_params[:, mask]  # Shape: (n_chains, len(waveNames)-1)
-            }
+
+        # Create mask to exclude phases of reference waves
+        mask = jnp.ones(len(waveNames), dtype=bool)
+        for ref_idx in ref_indices:
+            mask = mask.at[ref_idx].set(False)
+        init_params = {
+            'magnitudes': _initial_params[:, ::2],  # Shape: (n_chains, len(waveNames))
+            'phase_params': _phase_params[:, mask]  # Shape: (n_chains, len(waveNames) - len(ref_indices))
+        }
     else:
         raise ValueError(f"Invalid coordinate system: {cop}")
 
     console.print("\n\n=== INITIAL CHAIN PARAMETERS ===", style="bold")
+    console.print(f"Shape of initial parameters: {init_params['params'].shape} ~ (nChains, nFreePars)", style="bold")
     for k, v in init_params.items():
         console.print(f"{k}: {v}", style="bold")
     
@@ -233,83 +241,57 @@ def run_mcmc_inference(objective, prior_scale=100.0, n_warmup=1000, n_samples=10
         """Do not include batch dimension in the sampling"""
         
         if cop == "cartesian":
-            if ref_idx is None:
-                # Use parameter-specific prior scales
-                params = numpyro.sample(
-                    "params",
-                    dist.Normal(loc=jnp.zeros((objective.nPars)), scale=param_prior_scales)
-                )
-            else:
-                free_indices = jnp.array([i for i in range(objective.nPars) if i != 2*ref_idx+1])
-                # Use parameter-specific prior scales for free parameters
-                free_param_prior_scales = param_prior_scales[free_indices]
-                free_params = numpyro.sample(
-                    "params",
-                    dist.Normal(loc=jnp.zeros((objective.nPars - 1)), scale=free_param_prior_scales) # fixed imag part of ref wave
-                )                
-                params = jnp.zeros(objective.nPars)
-                params = params.at[free_indices].set(free_params)
+
+            # Identify free parameters - exclude imaginary parts of reference waves
+            free_indices = jnp.array([i for i in range(objective.nPars) if not any(i == 2*ref_idx+1 for ref_idx in ref_indices)])
+            free_param_prior_scales = param_prior_scales[free_indices]
+            free_params = numpyro.sample(
+                "params",
+                dist.Normal(loc=jnp.zeros((objective.nPars - len(ref_indices))), scale=free_param_prior_scales)
+            )                
+            params = jnp.zeros(objective.nPars)
+            params = params.at[free_indices].set(free_params)
                 
         elif cop == "polar":
-            if ref_idx is None:
-                magnitudes = numpyro.sample(
-                    "magnitudes",
-                    dist.Normal(loc=jnp.zeros(len(waveNames)), scale=jnp.log(prior_scale)) if use_log_magnitudes else
-                    dist.HalfNormal(scale=prior_scale * jnp.ones(len(waveNames)))
-                )
-                magnitudes = jnp.exp(magnitudes) if use_log_magnitudes else magnitudes
-                
-                if use_phase_param == 'tan':
-                    # Sample unbounded parameter u from normal distribution
-                    phase_params = numpyro.sample(
-                        "phase_params",
-                        dist.Normal(loc=jnp.zeros(len(waveNames)), scale=jnp.ones(len(waveNames)))
-                    )
-                    # Convert back to phases: θ = 2*arctan(u)
-                    phases = 2 * jnp.arctan(phase_params)
-                elif use_phase_param == 'vonmises':
-                    # concentration=0 makes it a uniform distribution over [-π, π]
-                    phases = numpyro.sample(
-                        'phase_params',
-                        dist.VonMises(loc=jnp.zeros(len(waveNames)), concentration=jnp.zeros(len(waveNames)))
-                    )
 
-            else:
-                magnitudes = numpyro.sample(
-                    "magnitudes",
-                    dist.Normal(loc=jnp.zeros(len(waveNames)), scale=jnp.log(prior_scale)) if use_log_magnitudes else
-                    dist.HalfNormal(scale=prior_scale * jnp.ones(len(waveNames)))
+            magnitudes = numpyro.sample(
+                "magnitudes",
+                dist.Normal(loc=jnp.zeros(len(waveNames)), scale=jnp.log(prior_scale)) if use_log_magnitudes else
+                dist.HalfNormal(scale=prior_scale * jnp.ones(len(waveNames)))
+            )
+            magnitudes = jnp.exp(magnitudes) if use_log_magnitudes else magnitudes
+            
+            # Identify free phase parameters - exclude reference waves
+            free_phase_indices = jnp.array([i for i in range(len(waveNames)) if i not in ref_indices])
+            
+            if use_phase_param == 'tan':
+                # Sample unbounded parameters for non-reference waves
+                phase_params_free = numpyro.sample(
+                    "phase_params",
+                    dist.Normal(loc=jnp.zeros(len(waveNames) - len(ref_indices)), 
+                                scale=jnp.ones(len(waveNames) - len(ref_indices)))
                 )
-                magnitudes = jnp.exp(magnitudes) if use_log_magnitudes else magnitudes
-                
-                free_phase_indices = jnp.array([i for i in range(len(waveNames)) if i != ref_idx])
-                
-                if use_phase_param == 'tan':
-                    # Sample unbounded parameters for non-reference waves
-                    phase_params_free = numpyro.sample(
-                        "phase_params",
-                        dist.Normal(loc=jnp.zeros(len(waveNames)-1), scale=jnp.ones(len(waveNames)-1))
-                    )
-                    # Convert back to phases
-                    free_phases = 2 * jnp.arctan(phase_params_free)
-                elif use_phase_param == 'vonmises':
-                    # concentration=0 makes it a uniform distribution over [-π, π]
-                    free_phases = numpyro.sample(
-                        'phase_params',
-                        dist.VonMises(loc=jnp.zeros(len(waveNames)-1), concentration=jnp.zeros(len(waveNames)-1))
-                    )
-                
-                phases = jnp.zeros(len(waveNames))        
-                phases = phases.at[free_phase_indices].set(free_phases)
-                
-                real_parts = magnitudes * jnp.cos(phases)
-                imag_parts = magnitudes * jnp.sin(phases)
-                
-                # Move into cartesian coordinates for objective function
-                params = jnp.zeros(objective.nPars)
-                for i in range(len(waveNames)):
-                    params = params.at[2*i].set(real_parts[i])
-                    params = params.at[2*i+1].set(imag_parts[i])
+                # Convert back to phases
+                free_phases = 2 * jnp.arctan(phase_params_free)
+            elif use_phase_param == 'vonmises':
+                # concentration=0 makes it a uniform distribution over [-π, π]
+                free_phases = numpyro.sample(
+                    'phase_params',
+                    dist.VonMises(loc=jnp.zeros(len(waveNames) - len(ref_indices)), 
+                                    concentration=jnp.zeros(len(waveNames) - len(ref_indices)))
+                )
+            
+            phases = jnp.zeros(len(waveNames))        
+            phases = phases.at[free_phase_indices].set(free_phases)
+            
+            real_parts = magnitudes * jnp.cos(phases)
+            imag_parts = magnitudes * jnp.sin(phases)
+            
+            # Move into cartesian coordinates for objective function
+            params = jnp.zeros(objective.nPars)
+            for i in range(len(waveNames)):
+                params = params.at[2*i].set(real_parts[i])
+                params = params.at[2*i+1].set(imag_parts[i])
 
         else:
             raise ValueError(f"Invalid coordinate system: {cop}")
@@ -402,6 +384,12 @@ def run_mcmc_inference(objective, prior_scale=100.0, n_warmup=1000, n_samples=10
     console.print("  - n_eff << total samples: High autocorrelation, may need longer chains")
     console.print("  - Rule of thumb: n_eff > 100 per parameter for reliable inference")
     
+    console.print("\n\nParameters:", style="bold")
+    for i, wave in enumerate(waveNames):
+        console.print(f"params[{2*i}] corresponds to Re[{wave}]", style="bold")
+        if i not in ref_indices:
+            console.print(f"params[{2*i+1}] corresponds to Im[{wave}]", style="bold")
+    
     # Print standard NumPyro summary
     mcmc.print_summary()
     
@@ -427,13 +415,12 @@ def run_fit(
     n_warmup=1000,
     resume_path=None,
     save_path=None,
-    reference_wave=None,
+    reference_waves=None,
     cop="cartesian",
-    init_steps=100,
-    init_lr=0.01,
-    init_decay=0.99,
-    init_momentum=0.9,
-    init_grad_tol=1e-4,
+    init_method="L-BFGS-B",
+    init_maxiter=100,
+    init_gtol=1e-4,
+    init_ftol=1e-6,
     wave_prior_scales=None,
     ):
     """
@@ -443,7 +430,8 @@ def run_fit(
         bin_idx: Index of bin to optimize
         resume_path: Path to saved MCMC state to resume from
         save_path: Path to save MCMC state for future resuming
-        reference_wave: Wave to use as reference (fixed to amplitude 1+0j)
+        reference_waves: List of waves to use as references (fixes amplitude imag part or phase to be 0),
+                        typically one per reflectivity sector
         wave_prior_scales: Dictionary mapping wave names to prior scales (only for cartesian coordinates)
     """
     
@@ -459,14 +447,45 @@ def run_fit(
         
     obj = Objective(pwa_manager, bin_idx, nPars, nmbMasses, nmbTprimes)
     
-    # Identify reference wave index if provided
-    ref_idx = None
-    if reference_wave is not None:
-        if reference_wave in waveNames:
-            ref_idx = waveNames.index(reference_wave)
-            console.print(f"Using '{reference_wave}' as reference wave (par index {ref_idx})", style="bold green")
-        else:
-            console.print(f"Warning: Reference wave '{reference_wave}' not found in wave list. No reference will be used.", style="bold yellow")
+    # Process reference waves here once
+    ref_indices = []
+    channel = None
+    refl_sectors = {}
+    
+    if reference_waves:
+        if isinstance(reference_waves, str):
+            reference_waves = [reference_waves]
+        
+        # Get reaction channel for all waves 
+        channel = identify_channel(waveNames)
+        console.print(f"Identified reaction channel: {channel}", style="bold")
+        
+        # Get reflectivity sectors and their waves
+        for i, wave in enumerate(waveNames):
+            # Extract reflectivity from wave using converter dictionary
+            refl = converter[wave][0]  # First element is reflectivity (e)
+            if refl not in refl_sectors:
+                refl_sectors[refl] = []
+            refl_sectors[refl].append((i, wave))
+        
+        # Process each reference wave
+        for ref_wave in reference_waves:
+            if ref_wave in waveNames:
+                ref_idx = waveNames.index(ref_wave)
+                ref_indices.append(ref_idx)
+                refl = converter[ref_wave][0]
+                console.print(f"Using '{ref_wave}' as reference wave for reflectivity sector {refl} (wave index {ref_idx})", style="bold green")
+            else:
+                console.print(f"Error: Reference wave '{ref_wave}' not found in wave list!", style="bold red")
+                sys.exit(1)
+        
+        # Check if we have at least one reference wave per reflectivity sector
+        for refl, waves in refl_sectors.items():
+            wave_indices = [idx for idx, _ in waves]
+            if not any(idx in ref_indices for idx in wave_indices):
+                console.print(f"Error: No reference wave specified for reflectivity sector = {refl}!", style="bold red")
+                sys.exit(1)
+    
     console.print(f"Using coordinate system: {cop}", style="bold green")
     
     # If resume_path is specified, load the saved state
@@ -482,9 +501,13 @@ def run_fit(
     console.print("\n**************************************************************", style="bold")
     mcmc = run_mcmc_inference(obj, prior_scale=prior_scale, n_samples=n_samples, n_chains=n_chains, 
                              n_warmup=n_warmup, resume_state=resume_state, 
-                             save_path=save_path, ref_idx=ref_idx, cop=cop,
-                             init_steps=init_steps, init_lr=init_lr, init_decay=init_decay,
-                             init_momentum=init_momentum, init_grad_tol=init_grad_tol,
+                             save_path=save_path, 
+                             ref_indices=ref_indices, # is in waveName index space
+                             cop=cop,
+                             init_method=init_method,
+                             init_maxiter=init_maxiter,
+                             init_gtol=init_gtol,
+                             init_ftol=init_ftol,
                              wave_prior_scales=wave_prior_scales)
     samples = mcmc.get_samples() # ~ (n_samples, nPars)
     
@@ -492,7 +515,7 @@ def run_fit(
     
     if cop == "cartesian":
         n_samples = len(samples['params'])
-        free_indices = jnp.array([i for i in range(obj.nPars) if i != 2*ref_idx+1])
+        free_indices = jnp.array([i for i in range(obj.nPars) if not any(i == 2*ref_idx+1 for ref_idx in ref_indices)])
         params = jnp.zeros((n_samples, obj.nPars))
         params = params.at[:, free_indices].set(samples['params'])
     elif cop == "polar":
@@ -502,30 +525,17 @@ def run_fit(
         # Apply log-to-linear conversion ONCE here if needed
         magnitudes = jnp.exp(magnitudes) if use_log_magnitudes else magnitudes
         
+        # Create full phases array with ref_idx phase set to 0
+        phase_params = samples['phase_params']
+        non_ref_indices = [i for i in range(len(waveNames)) if i not in ref_indices]
+        phases = jnp.zeros((n_samples, len(waveNames)))
+        
         if use_phase_param == 'tan':
             # Convert phase_params back to phases for tangent half-angle
-            phase_params = samples['phase_params']
-            
-            if ref_idx is None:
-                phases = 2 * jnp.arctan(phase_params)
-            else:
-                # Create full phases array with ref_idx phase set to 0
-                full_phases = jnp.zeros((n_samples, len(waveNames)))
-                non_ref_indices = [i for i in range(len(waveNames)) if i != ref_idx]
-                full_phases = full_phases.at[:, non_ref_indices].set(2 * jnp.arctan(phase_params))
-                phases = full_phases
+            phases = phases.at[:, non_ref_indices].set(2 * jnp.arctan(phase_params))
         elif use_phase_param == 'vonmises':
             # For von Mises, the phases are directly sampled
-            phase_params = samples['phase_params']
-            
-            if ref_idx is None:
-                phases = phase_params
-            else:
-                # Create full phases array with ref_idx phase set to 0
-                full_phases = jnp.zeros((n_samples, len(waveNames)))
-                non_ref_indices = [i for i in range(len(waveNames)) if i != ref_idx]
-                full_phases = full_phases.at[:, non_ref_indices].set(phase_params)
-                phases = full_phases
+            phases = phases.at[:, non_ref_indices].set(phase_params)
         
         # Convert to Cartesian coordinates
         params = jnp.zeros((n_samples, obj.nPars))
@@ -629,8 +639,6 @@ if __name__ == "__main__":
                        help="Number of samples to draw per chain")
     parser.add_argument("-nw", "--nwarmup", type=int, default=1000,
                        help="Number of warmup samples to draw")
-    parser.add_argument("-ref", "--reference_wave", type=str, default=None,
-                       help="Wave to use as reference (fixed to amplitude 1+0j)")
     
     #### SAVE/RESUME ARGS ####
     parser.add_argument("-r", "--resume", type=str, default=None,
@@ -645,17 +653,15 @@ if __name__ == "__main__":
                        help="Random seed")
     
     #### INITIALIZATION ARGS ####
-    # momentum=0 and decay=1 will result in simple gradient descent
-    parser.add_argument("--init_steps", type=int, default=100,
-                       help="Number of gradient steps for initialization")
-    parser.add_argument("--init_lr", type=float, default=0.01,
-                       help="Initial learning rate for initialization")
-    parser.add_argument("--init_decay", type=float, default=0.99,
-                       help="Learning rate decay factor for initialization")
-    parser.add_argument("--init_momentum", type=float, default=0.9,
-                       help="Momentum coefficient for initialization")
-    parser.add_argument("--init_grad_tol", type=float, default=1e-4,
-                       help="Gradient norm tolerance for early stopping")
+    parser.add_argument("--init_method", type=str, default="L-BFGS-B",
+                       choices=['L-BFGS-B', 'trust-ncg', 'trust-krylov'],
+                       help="SciPy optimization method for initialization")
+    parser.add_argument("--init_maxiter", type=int, default=100,
+                       help="Maximum number of iterations for initialization optimizer. Standard fits typically converge within 100-200 iterations")
+    parser.add_argument("--init_gtol", type=float, default=1e-4,
+                       help="Gradient tolerance for initialization optimizer. Values of 1e-4 to 1e-5 are typical for standard fits; smaller values may be needed for high precision.")
+    parser.add_argument("--init_ftol", type=float, default=1e-6,
+                       help="Function value tolerance for initialization optimizer. Values of 1e-6 to 1e-8 are common for standard fits; smaller values ensure more precise convergence.")
     
     args = parser.parse_args()
 
@@ -694,6 +700,8 @@ if __name__ == "__main__":
     #     "Sp0+": 150,
     #     "Dp2+": 150,
     # }
+    
+    reference_waves = pyamptools_yaml["phase_reference"].split("_")
 
     timer = Timer()
     final_result_dicts = []
@@ -708,13 +716,12 @@ if __name__ == "__main__":
             n_warmup=args.nwarmup,
             resume_path=args.resume,
             save_path=args.save,
-            reference_wave=args.reference_wave,
+            reference_waves=reference_waves,
             cop=args.coordinate_system,
-            init_steps=args.init_steps,
-            init_lr=args.init_lr,
-            init_decay=args.init_decay,
-            init_momentum=args.init_momentum,
-            init_grad_tol=args.init_grad_tol,
+            init_method=args.init_method,
+            init_maxiter=args.init_maxiter,
+            init_gtol=args.init_gtol,
+            init_ftol=args.init_ftol,
             wave_prior_scales=wave_prior_scales,
         )
         final_result_dicts.append(final_result_dict)
