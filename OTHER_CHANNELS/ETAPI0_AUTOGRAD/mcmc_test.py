@@ -32,7 +32,8 @@ rank = 0
 mpi_offset = 1
 
 # Things to consider:
-# - COMPASS - lbfgs works well for binned fits but reverted to minuit for mass dependent fits since lbfgs was not able to find good minima
+# - COMPASS (~Boris) - lbfgs works well for binned fits but reverted to minuit for mass dependent fits since lbfgs was not able to find good minima
+# - (Jiawei) Regularization - L1/L2 should be performed on the magnitude of the amplitude not the intensities (which would be L2/L4)
 
 # Log magnitudes produces a bias in the total intensity
 # - I guess this is log-normal magnitudes on each amplitude is biased upward and therefore the total intensity is biased upward
@@ -45,13 +46,60 @@ use_phase_param = 'tan' # 'tan' = tan half angle form AND 'vonmises' = Von Mises
 
 console = Console()
 
+import logging
+import functools
+from jax.debug import print as debug_callback
+
+class JaxLogger:
+
+    """ 
+    JAX jit safe integration with logging module
+    This function does not work with f-strings because formatting is delayed
+
+    See jax.debug.print for more information. Printing is implemented through a callback
+    https://jax.readthedocs.io/en/latest/_autosummary/jax.debug.print.html#jax-debug-print
+    """
+
+    def __init__(self, logger):
+        self.logger = logger
+        pass
+
+    def _format_print_callback(self, fmt: str, level, *args, **kwargs):
+        getattr(self.logger, level)(fmt.format(*args, **kwargs))
+
+    def _jax_logger(self, fmt: str, level: str, *args, ordered: bool = False, **kwargs) -> None:
+        debug_callback(functools.partial(self._format_print_callback, fmt, level.lower()), *args, **kwargs, ordered=ordered)
+
+    def info(self, fmt: str, *args, **kwargs) -> None:
+        self._jax_logger(fmt, "info", *args, **kwargs)
+
+    def warning(self, fmt: str, *args, **kwargs) -> None:
+        self._jax_logger(fmt, "warning", *args, **kwargs)
+
+    def debug(self, fmt: str, *args, **kwargs) -> None:
+        self._jax_logger(fmt, "debug", *args, **kwargs)
+
+    def error(self, fmt: str, *args, **kwargs) -> None:
+        self._jax_logger(fmt, "error", *args, **kwargs)
+
+    def critical(self, fmt: str, *args, **kwargs) -> None:
+        self._jax_logger(fmt, "critical", *args, **kwargs)
+        
+level = logging.INFO # ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+logger = logging.getLogger(__name__)
+logger.setLevel(level)
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter('%(asctime)s| %(message)s', datefmt='%H:%M:%S'))
+logger.addHandler(handler)
+jax_logger = JaxLogger(logger)
+
 def run_mcmc_inference(objective, prior_scale=100.0, n_warmup=1000, n_samples=10, n_chains=4, resume_state=None, save_path=None, ref_indices=None, cop="cartesian", init_method="L-BFGS-B", init_maxiter=100, init_gtol=1e-4, init_ftol=1e-6, wave_prior_scales=None):
     """ Run MCMC inference """
     rng_key = jax.random.PRNGKey(0)
     
     from jax import jit, vmap
     objective_fn = jit(objective.objective)
-    gradient_fn = jit(objective.gradient)
+    gradient_fn  = jit(objective.gradient)
     
     # Process wave-specific prior scales if provided
     # NOTE: for cartesian only ATM
@@ -141,20 +189,48 @@ def run_mcmc_inference(objective, prior_scale=100.0, n_warmup=1000, n_samples=10
     for i in range(n_chains):
         initial_params.append(init_chain(chain_keys[i], i))
     initial_params = jnp.array(initial_params)
-    
+        
     if cop == "cartesian":           
         # Create mask to exclude imaginary parts of reference waves
         mask = jnp.ones(objective.nPars, dtype=bool)
         for ref_idx in ref_indices:
             mask = mask.at[2*ref_idx+1].set(False)
-        init_params = {'params': initial_params[:, mask]}  # Shape: (n_chains, nPars - len(ref_indices))
+            
+        # # Basic initialization for 'params'
+        # init_params = {'params': initial_params[:, mask]}  # Shape: (n_chains, nPars - len(ref_indices))
+        
+        # Non-centered parameterization of Horseshoe prior (better when posterior is dominated by prior term / likelihood not constraining)
+        # The scale (of Cauchy) determines the location within which 50% of the distribution is contained
+        # - Start with 10% of prior scale for global shrinkage (for each chain)
+        # - Start with 50% of prior scale for local shrinkage  (for each parameter in the chain)
+        global_scale_init = jnp.ones((n_chains, 1                                 )) * prior_scale * 0.01
+        local_scale_init  = jnp.ones((n_chains, objective.nPars - len(ref_indices))) * prior_scale * 0.05
+        
+        param_magnitudes = jnp.abs(initial_params[:, mask])
+        
+        # Set raw_params to standard normal values, scaled to match optimized parameters
+        # This ensures we start with parameters that reproduce approximately the same values 
+        # as the optimized parameters, but with a proper hierarchical structure
+        raw_params_init = jnp.clip(
+            jnp.sign(initial_params[:, mask]) * 
+            param_magnitudes / (global_scale_init * local_scale_init), 
+            -3.0, 3.0
+        )
+
+        init_params = {
+            'raw_params': raw_params_init,
+            'global_scale': global_scale_init,
+            'local_scale': local_scale_init,
+            'params': raw_params_init * global_scale_init * local_scale_init,
+        }
+        
     elif cop == "polar":
         # NOTE: The initial parameters should by now have strictly applied the reference wave constraints
         _initial_params = jnp.zeros((n_chains, objective.nPars))
         _camp = initial_params[:, ::2] + 1j * initial_params[:, 1::2] # (c)omplex (amp)litude
         
         # Convert magnitudes to log-space for initialization
-        _magnitudes = jnp.maximum(jnp.abs(_camp), 1e-5)    # Ensure positive values (for log)
+        _magnitudes = jnp.maximum(jnp.abs(_camp), 1e-5) # Ensure positive values (for log)
         if use_log_magnitudes:
             _magnitudes = jnp.log(_magnitudes)
         
@@ -189,11 +265,11 @@ def run_mcmc_inference(objective, prior_scale=100.0, n_warmup=1000, n_samples=10
     else:
         raise ValueError(f"Invalid coordinate system: {cop}")
 
-    console.print("\n\n=== INITIAL CHAIN PARAMETERS ===", style="bold")
-    console.print(f"Shape of initial parameters: {init_params['params'].shape} ~ (nChains, nFreePars)", style="bold")
+    console.print("\n\n=== INITIAL CHAIN PARAMETER VALUES ===", style="bold")
     for k, v in init_params.items():
-        console.print(f"{k}: {v}", style="bold")
-    
+        console.print(f"{k}: {v.shape} ~ (nChains, params)", style="bold")
+        console.print(f"{v}\n", style="bold")
+
     ###################
     ### DISPLAY INITIAL INTENSITIES
     ###################
@@ -245,13 +321,43 @@ def run_mcmc_inference(objective, prior_scale=100.0, n_warmup=1000, n_samples=10
             # Identify free parameters - exclude imaginary parts of reference waves
             free_indices = jnp.array([i for i in range(objective.nPars) if not any(i == 2*ref_idx+1 for ref_idx in ref_indices)])
             free_param_prior_scales = param_prior_scales[free_indices]
-            free_params = numpyro.sample(
-                "params",
-                dist.Normal(loc=jnp.zeros((objective.nPars - len(ref_indices))), scale=free_param_prior_scales)
-            )                
+
+            ##### 
+            # # Gaussian prior (L2 regularization)
+            # free_params = numpyro.sample(
+            #     "params",
+            #     dist.Normal(loc=jnp.zeros((objective.nPars - len(ref_indices))), scale=free_param_prior_scales)
+            # )
+
+            # # Laplace prior (L1 regularization)
+            # free_params = numpyro.sample(
+            #     "params",
+            #     dist.Laplace(loc=jnp.zeros((objective.nPars - len(ref_indices))), scale=free_param_prior_scales)
+            # )
+            
+            # Non-centered Horseshoe prior (stronger sparsity than L1) with separate global and local shrinkage
+            # Global shrinkage - controls overall sparsity
+            global_scale = numpyro.sample(
+                "global_scale",
+                dist.HalfCauchy(scale=prior_scale * 0.01)  # Use 10% of prior_scale as global shrinkage base
+            )
+            # Local shrinkage - allows certain parameters to escape global shrinkage
+            local_scale = numpyro.sample(
+                "local_scale",
+                dist.HalfCauchy(scale=jnp.ones(objective.nPars - len(ref_indices)) * prior_scale * 0.05)
+            )
+            raw_params = numpyro.sample(
+                "raw_params",
+                dist.Normal(jnp.zeros(objective.nPars - len(ref_indices)), jnp.ones(objective.nPars - len(ref_indices)))
+            )
+
+            # Apply scaling to get the actual parameters
+            free_params = raw_params * local_scale * global_scale
+            
+            # Set parameters as before
             params = jnp.zeros(objective.nPars)
             params = params.at[free_indices].set(free_params)
-                
+
         elif cop == "polar":
 
             magnitudes = numpyro.sample(
@@ -314,9 +420,9 @@ def run_mcmc_inference(objective, prior_scale=100.0, n_warmup=1000, n_samples=10
     
     nuts_kernel = NUTS(
         model,
-        target_accept_prob=0.8,       # Increase from 0.9 to encourage even smaller steps
-        max_tree_depth=10,            # Allow deeper search but with more careful step size
-        step_size=0.01 if cop == "polar" else 0.1,  # Much smaller step size for polar
+        target_accept_prob=0.85,       # Increase from 0.9 to encourage even smaller steps
+        max_tree_depth=12,            # Allow deeper search but with more careful step size
+        step_size=0.05 if cop == "polar" else 0.1,  # Much smaller step size for polar
         adapt_step_size=True,
         dense_mass=True,               # Keep this for handling correlations
         adapt_mass_matrix=True         # Explicitly enable mass matrix adaptation
@@ -346,10 +452,10 @@ def run_mcmc_inference(objective, prior_scale=100.0, n_warmup=1000, n_samples=10
         except Exception as e:
             console.print(f"Error loading MCMC state: {e}", style="bold red")
             console.print("Falling back to fresh start", style="yellow")
-            mcmc.run(rng_key, init_params=init_params)
+            mcmc.run(rng_key) # , init_params=init_params)
     else:
         # Normal run with warmup
-        mcmc.run(rng_key, init_params=init_params)
+        mcmc.run(rng_key) # , init_params=init_params)
     
     # Save state if requested
     if save_path is not None:
@@ -385,10 +491,13 @@ def run_mcmc_inference(objective, prior_scale=100.0, n_warmup=1000, n_samples=10
     console.print("  - Rule of thumb: n_eff > 100 per parameter for reliable inference")
     
     console.print("\n\nParameters:", style="bold")
-    for i, wave in enumerate(waveNames):
-        console.print(f"params[{2*i}] corresponds to Re[{wave}]", style="bold")
-        if i not in ref_indices:
-            console.print(f"params[{2*i+1}] corresponds to Im[{wave}]", style="bold")
+    par_idx = 0
+    for wave_idx, wave in enumerate(waveNames):
+        console.print(f"params[{par_idx}] corresponds to Re[{wave}]", style="bold")
+        par_idx += 1
+        if wave_idx not in ref_indices:
+            console.print(f"params[{par_idx}] corresponds to Im[{wave}]", style="bold")
+            par_idx += 1
     
     # Print standard NumPyro summary
     mcmc.print_summary()
@@ -514,10 +623,28 @@ def run_fit(
     final_result_dict = {}
     
     if cop == "cartesian":
-        n_samples = len(samples['params'])
+    
+        # n_samples = len(samples['params'])
+        
+        # Fix: Properly reconstruct the actual parameters from the Horseshoe components
+        raw_params = samples['raw_params']
+        global_scale = samples['global_scale']
+        local_scale = samples['local_scale']
+        
+        # Compute the actual parameters from the raw values and scales
+        n_samples = len(raw_params)
         free_indices = jnp.array([i for i in range(obj.nPars) if not any(i == 2*ref_idx+1 for ref_idx in ref_indices)])
         params = jnp.zeros((n_samples, obj.nPars))
-        params = params.at[:, free_indices].set(samples['params'])
+        # params = params.at[:, free_indices].set(samples['params'])
+        
+        # Compute actual parameters: raw_params * local_scale * global_scale
+        # Handle broadcasting for proper multiplication
+        actual_params = raw_params * local_scale
+        if global_scale.ndim == 2:  # If global_scale is (n_samples, 1)
+            actual_params = actual_params * global_scale
+        else:  # If global_scale is (n_samples,)
+            actual_params = actual_params * global_scale[:, None]
+        params = params.at[:, free_indices].set(actual_params)
     elif cop == "polar":
         n_samples = len(samples['magnitudes'])
         magnitudes = samples['magnitudes']  # Shape: (n_samples, n_waves)
