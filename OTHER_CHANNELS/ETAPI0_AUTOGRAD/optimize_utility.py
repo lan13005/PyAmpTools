@@ -2,6 +2,7 @@ from iminuit import Minuit
 from scipy.optimize import minimize
 
 import jax.numpy as jnp
+import numpy as np
 
 from iftpwa1.pwa.gluex.constants import (
     LIKELIHOOD,
@@ -10,6 +11,7 @@ from iftpwa1.pwa.gluex.constants import (
     HESSIAN,
     INTENSITY_AC,
 )
+from pyamptools.utility.general import identify_channel, converter
 
 class Objective:
 
@@ -18,7 +20,7 @@ class Objective:
         that utilizes GlueXJaxManager to obtain NLL ands its derivatives
     """
     
-    def __init__(self, pwa_manager, bin_idx, nPars, nmbMasses, nmbTprimes):
+    def __init__(self, pwa_manager, bin_idx, nPars, nmbMasses, nmbTprimes, reference_waves=None):
         self.pwa_manager = pwa_manager
         self.bin_idx = bin_idx
         self.nPars = nPars
@@ -30,6 +32,24 @@ class Objective:
         # flag user can modify to affect whether __call__ returns gradients also
         self._deriv_order = 0
         
+        # Reference wave handling
+        self.reference_waves = reference_waves
+        self.ref_indices = None
+        self.refl_sectors = None
+        if reference_waves:
+            self._process_reference_waves()
+        
+    def apply_reference_wave_constraints(self, x):
+        """Apply reference wave constraints by setting imaginary parts to zero"""
+        if self.ref_indices:
+            if isinstance(x, jnp.ndarray):
+                for ref_idx in self.ref_indices:
+                    x = x.at[2*ref_idx+1].set(0.0)
+            else:
+                for ref_idx in self.ref_indices:
+                    x[2*ref_idx+1] = 0.0
+        return x
+        
     def insert_into_full_array(self, x):
         x_full = jnp.zeros((self.nPars, self.nmbMasses, self.nmbTprimes))
         x_full = x_full.at[:, self.mbin, self.tbin].set(x)
@@ -37,24 +57,44 @@ class Objective:
 
     def objective(self, x):
         """Return only the objective value"""
+        if self.ref_indices:
+            x = self.apply_reference_wave_constraints(x)
         x_full = self.insert_into_full_array(x)
         _nll = self.pwa_manager.sendAndReceive(x_full, LIKELIHOOD)[0]
         return _nll
     
     def gradient(self, x):
         """Return only the gradient"""
+        if self.ref_indices:
+            x = self.apply_reference_wave_constraints(x)
         x_full = self.insert_into_full_array(x)
         grad = self.pwa_manager.sendAndReceive(x_full, GRAD)[0]
+        
+        # Zero out gradient for fixed parameters (imaginary parts of reference waves)
+        if self.ref_indices:
+            for ref_idx in self.ref_indices:
+                grad = grad.at[2*ref_idx+1].set(0.0)
+                
         return grad
 
     def hessp(self, x, p):
         """Compute the Hessian-vector product at point x with vector p"""
+        if self.ref_indices:
+            x = self.apply_reference_wave_constraints(x)
         x_full = self.insert_into_full_array(x)
         hess = self.pwa_manager.sendAndReceive(x_full, HESSIAN)[0]
+        
+        # Zero out p components for fixed parameters
+        if self.ref_indices:
+            for ref_idx in self.ref_indices:
+                p = p.at[2*ref_idx+1].set(0.0)
+                
         return jnp.dot(hess, p)
 
     def __call__(self, x):
         """Return both objective value and gradient for scipy.optimize"""
+        if self.ref_indices:
+            x = self.apply_reference_wave_constraints(x)
         nll = self.objective(x)
         if self._deriv_order == 0:
             return nll
@@ -65,8 +105,44 @@ class Objective:
             raise ValueError(f"Invalid derivative order: {self._deriv_order}")
         
     def intensity(self, x, suffix=None):
+        if self.ref_indices:
+            x = self.apply_reference_wave_constraints(x)
         x_full = self.insert_into_full_array(x)
-        return self.pwa_manager.sendAndReceive(x_full, INTENSITY_AC, suffix=suffix)[0].item()
+        return self.pwa_manager.sendAndReceive(x_full, INTENSITY_AC, suffix=suffix)[0].item().real
+    
+    def _process_reference_waves(self):
+        """Process reference waves to determine their indices and reflectivity sectors"""
+        ref_indices = []
+        refl_sectors = {}
+        
+        if self.reference_waves:
+            if isinstance(self.reference_waves, str):
+                self.reference_waves = [self.reference_waves]
+            
+            # Get reflectivity sectors and their waves
+            for i, wave in enumerate(self.pwa_manager.waveNames):
+                # Extract reflectivity from wave name
+                refl = converter[wave][0]  # First element is reflectivity (e)
+                if refl not in refl_sectors:
+                    refl_sectors[refl] = []
+                refl_sectors[refl].append((i, wave))
+            
+            # Process each reference wave
+            for ref_wave in self.reference_waves:
+                if ref_wave in self.pwa_manager.waveNames:
+                    ref_idx = self.pwa_manager.waveNames.index(ref_wave)
+                    ref_indices.append(ref_idx)
+                else:
+                    raise ValueError(f"Reference wave '{ref_wave}' not found in wave list!")
+            
+            # Check if we have at least one reference wave per reflectivity sector
+            for refl, waves in refl_sectors.items():
+                wave_indices = [idx for idx, _ in waves]
+                if not any(idx in ref_indices for idx in wave_indices):
+                    raise ValueError(f"No reference wave specified for reflectivity sector = {refl}!")
+        
+        self.ref_indices = ref_indices
+        self.refl_sectors = refl_sectors
 
 def optimize_single_bin_minuit(objective, initial_params, bin_idx, use_analytic_grad=True):
     """
@@ -75,7 +151,7 @@ def optimize_single_bin_minuit(objective, initial_params, bin_idx, use_analytic_
     Args:
         objective: Objective instance that calculates likelihood and gradients
         initial_params: Initial parameters for optimization with shape (nPars)
-        bin_idx: Index of bin to optimize
+        bin_idx: Index of bin being optimized
         use_analytic_grad: If True, use analytic gradients from sendAndReceive
         
     Returns:
@@ -83,7 +159,9 @@ def optimize_single_bin_minuit(objective, initial_params, bin_idx, use_analytic_
     """
     
     # Extract initial parameters for this bin
-    x0 = initial_params
+    x0 = initial_params.copy()
+    if objective.ref_indices:
+        x0 = objective.apply_reference_wave_constraints(x0)
 
     # Initialize parameter names for Minuit
     param_names = [f'x{i}' for i in range(len(x0))]
@@ -95,6 +173,11 @@ def optimize_single_bin_minuit(objective, initial_params, bin_idx, use_analytic_
         grad=objective.gradient if use_analytic_grad else False,
         name=param_names,
     )
+    
+    # Set up fixed parameters for reference waves
+    if objective.ref_indices:
+        for ref_idx in objective.ref_indices:
+            m.fixed[param_names[2*ref_idx+1]] = True    
 
     # Configure Minuit
     # AmpTools uses 0.001 * tol * UP (default 0.1) - diff is probably due to age of software?
@@ -111,23 +194,35 @@ def optimize_single_bin_minuit(objective, initial_params, bin_idx, use_analytic_
         'errors': m.errors
     }
     
-def optimize_single_bin_scipy(objective, initial_params, bin_idx, bounds=None, method='L-BFGS-B', options=None):
+def optimize_single_bin_scipy(objective, initial_params, bin_idx, method='L-BFGS-B', bounds=None, options=None):
     """
     Optimize parameters for a single kinematic bin using scipy.optimize methods.
     
     Args:
-        pwa_manager: GlueXJaxManager instance that calculates likelihood and gradients
+        objective: Objective instance that calculates likelihood and gradients
         initial_params: Initial parameters for optimization with shape (nPars)
-        bin_idx: Index of bin to optimize
-        bounds: Parameter bounds for constrained optimization (optional)
+        bin_idx: Index of bin being optimized
         method: Optimization method to use (default: 'L-BFGS-B')
+        bounds: Parameter bounds for constrained optimization (optional)
         options: Dictionary of options for the method
         
     Returns:
         dict: Dictionary containing optimization results
     """
     
-    x0 = initial_params
+    x0 = initial_params.copy()
+    if objective.ref_indices:
+        x0 = objective.apply_reference_wave_constraints(x0)
+    
+    # Handle reference wave constraints using parameter bounds
+    if objective.ref_indices:
+        if bounds is None:
+            bounds = [(None, None)] * len(x0)
+        else:
+            bounds = list(bounds)  # Make sure bounds is a list we can modify
+            
+        for ref_idx in objective.ref_indices:
+            bounds[2*ref_idx+1] = (0.0, 0.0)  # Fix imaginary part of reference wave to 0
     
     if options is None:
         if method == "L-BFGS-B":
@@ -135,7 +230,7 @@ def optimize_single_bin_scipy(objective, initial_params, bin_idx, bounds=None, m
                 'maxiter': 2000,       # Maximum number of iterations
                 'maxfun': 20000,       # Maximum number of function evaluations
                 'ftol': 1e-10,         # Function value tolerance
-                'gtol': 1e-10,          # Gradient norm tolerance
+                'gtol': 1e-10,         # Gradient norm tolerance
                 'maxcor': 10           # Number of stored corrections
             }
         elif method == "trust-ncg":
@@ -144,8 +239,8 @@ def optimize_single_bin_scipy(objective, initial_params, bin_idx, bounds=None, m
                 'max_trust_radius': 1000.0,   # Maximum trust-region radius
                 'eta': 0.15,                  # Acceptance stringency for proposed steps
                 'gtol': 1e-8,                 # Gradient norm tolerance
-            'maxiter': 2000               # Maximum number of iterations
-        }
+                'maxiter': 2000               # Maximum number of iterations
+            }
         elif method == "trust-krylov":
             options = {
                 'inexact': False,  # Solve subproblems with high accuracy
@@ -163,6 +258,7 @@ def optimize_single_bin_scipy(objective, initial_params, bin_idx, bounds=None, m
             method=method,
             jac=objective.gradient,
             hessp=objective.hessp,
+            bounds=bounds,
             options=options
         )
     elif method == 'L-BFGS-B':

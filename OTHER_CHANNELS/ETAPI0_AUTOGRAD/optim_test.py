@@ -17,6 +17,10 @@ comm0 = None
 rank = 0 
 mpi_offset = 1
 
+
+# TODO:
+# - NLOPT - another set of optimizers to consider. Could have better global optimization algorithms
+
 def run_fit(
     pyamptools_yaml, 
     iftpwa_yaml,
@@ -51,7 +55,8 @@ def run_fit(
     
     is_mle_method = method in ['minuit-numeric', 'minuit-analytic', 'L-BFGS-B', 'trust-ncg', 'trust-krylov']
     
-    obj = Objective(pwa_manager, bin_idx, nPars, nmbMasses, nmbTprimes)
+    reference_waves = pyamptools_yaml["phase_reference"].split("_")
+    obj = Objective(pwa_manager, bin_idx, nPars, nmbMasses, nmbTprimes, reference_waves=reference_waves)
     
     initial_likelihood = obj.objective(initial_guess).item()
     print("\n**************************************************************")
@@ -72,10 +77,11 @@ def run_fit(
             optim_result = optimize_single_bin_scipy(obj, initial_guess, bin_idx, method=method)
         else:
             raise ValueError(f"Invalid Maximum Likelihood Based method: {method}")
-
-        final_result_dict['total'] = obj.intensity(optim_result['parameters'])
+        
+        final_params = np.array(optim_result['parameters'])
+        final_result_dict['total'] = obj.intensity(final_params)
         for wave in pwa_manager.waveNames:
-            final_result_dict[wave] = obj.intensity(optim_result['parameters'], suffix=[wave])
+            final_result_dict[wave] = obj.intensity(final_params, suffix=[wave])
         final_result_dict['likelihood'] = optim_result['likelihood']
         final_result_dict['initial_likelihood'] = initial_likelihood
 
@@ -87,8 +93,8 @@ def run_fit(
     print("**************************************************************\n")
     
     final_par_values = {}
-    for wave in pwa_manager.waveNames:
-        final_par_values[wave] = optim_result['parameters'][2*iw] + 1j * optim_result['parameters'][2*iw+1]
+    for iw, wave in enumerate(pwa_manager.waveNames):
+        final_par_values[wave] = complex(final_params[2*iw], final_params[2*iw+1]) # type convert away from np.complex to python complex
     
     final_result_dict['initial_guess_dict'] = initial_guess_dict
     final_result_dict['final_par_values'] = final_par_values
@@ -150,8 +156,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     np.random.seed(42)
-    scale = 50
-    n_iterations = 20
+    scale = 50 # scale of uniform random initial guess
+    n_iterations = 20 # 20 # number of randomized initial parameter fits to perform
     
     pyamptools_yaml = load_yaml(args.yaml_file)
     iftpwa_yaml = pyamptools_yaml["nifty"]["yaml"]
@@ -212,6 +218,7 @@ if __name__ == "__main__":
     nmbMasses = pyamptools_yaml["n_mass_bins"]
     nmbTprimes = pyamptools_yaml["n_t_bins"]
     nPars = 2 * len(waveNames)
+    reference_waves = pyamptools_yaml["phase_reference"].split("_")
     
     if args.print_wave_names:
         print(f"Wave names: {waveNames}")
@@ -230,7 +237,11 @@ if __name__ == "__main__":
             initial_guess = scale * np.random.randn(nPars)
             initial_guess_dict = {} 
             for iw, wave in enumerate(waveNames):
-                initial_guess_dict[wave] = initial_guess[2*iw] + 1j * initial_guess[2*iw+1]
+                initial_guess_dict[wave] = initial_guess[2*iw]
+                if wave in reference_waves:
+                    initial_guess_dict[wave] += 1j * 0
+                else:
+                    initial_guess_dict[wave] += 1j * initial_guess[2*iw+1]
             final_result_dict = run_fit(
                 pyamptools_yaml, 
                 iftpwa_yaml, 
