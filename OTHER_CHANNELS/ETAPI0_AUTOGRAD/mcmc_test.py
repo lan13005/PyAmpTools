@@ -141,47 +141,77 @@ class MCMCManager:
             """Do not include batch dimension in the sampling"""
             
             if self.cop == "cartesian":
+                # Use pre-calculated indices instead of recreating them
+                free_complex_indices = self.free_complex_indices
+                free_real_indices = self.free_real_indices
+                
+                # Get prior scales for each group
+                real_prior_scales = self.param_prior_scales[free_real_indices]
+                complex_prior_scales = self.param_prior_scales[free_complex_indices]
 
-                # Identify free parameters - exclude imaginary parts of reference waves
-                free_indices = jnp.array([i for i in range(self.nPars) if not any(i == 2*ref_idx+1 for ref_idx in self.ref_indices)])
-                free_param_prior_scales = self.param_prior_scales[free_indices]
-
-                ##### 
-                # # Gaussian prior (L2 regularization)
+                # Sample parameters using appropriate distributions
                 if self.prior_dist == "gaussian":
-                    free_params = numpyro.sample(
-                        "params",
-                        dist.Normal(loc=jnp.zeros((self.nPars - len(self.ref_indices))), scale=free_param_prior_scales)
+                    # HalfNormal for real parts of reference waves
+                    free_params_real = numpyro.sample(
+                        "real_params",
+                        dist.HalfNormal(scale=real_prior_scales)
+                    )
+                    # Normal for all other parameters
+                    free_params_complex = numpyro.sample(
+                        "complex_params",
+                        dist.Normal(loc=jnp.zeros_like(complex_prior_scales), scale=complex_prior_scales)
                     )
 
-                # # Laplace prior (L1 regularization)
-                if self.prior_dist == "laplace":
-                    free_params = numpyro.sample(
-                        "params",
-                        dist.Laplace(loc=jnp.zeros((self.nPars - len(self.ref_indices))), scale=free_param_prior_scales)
+                # Laplace prior (L1 regularization)
+                elif self.prior_dist == "laplace":
+                    # Exponential for real parts of reference waves (equivalent to positive half of Laplace)
+                    free_params_real = numpyro.sample(
+                        "real_params",
+                        dist.Exponential(rate=1.0/real_prior_scales)
+                    )
+                    # Laplace for all other parameters
+                    free_params_complex = numpyro.sample(
+                        "complex_params",
+                        dist.Laplace(loc=jnp.zeros_like(complex_prior_scales), scale=complex_prior_scales)
                     )
                 
+                # NOTE: Horseshoe prior takes forever to sample, minimal testing done for this scenario
                 # Non-centered Horseshoe prior (stronger sparsity than L1) with separate global and local shrinkage
                 # Global shrinkage - controls overall sparsity
-                if self.prior_dist == "horseshoe":
+                elif self.prior_dist == "horseshoe":
+                    # Global shrinkage - controls overall sparsity
                     global_scale = numpyro.sample(
                         "global_scale",
                         dist.HalfCauchy(scale=self.prior_scale * 0.5)  # Use 10% of prior_scale as global shrinkage base
                     )
                     # Local shrinkage - allows certain parameters to escape global shrinkage
+                    #   Handle real parameters (reference waves)
+                    local_scale_real = numpyro.sample(
+                        "local_scale_real",
+                        dist.HalfCauchy(scale=jnp.ones(len(real_prior_scales)))
+                    )
+                    raw_params_real = numpyro.sample(
+                        "raw_params_real",
+                        dist.HalfNormal(jnp.ones(len(real_prior_scales)))
+                    )
+                    #    Handle (flattened) complex parameters for non-reference waves
                     local_scale = numpyro.sample(
                         "local_scale",
-                        dist.HalfCauchy(scale=jnp.ones(self.nPars - len(self.ref_indices)))
+                        dist.HalfCauchy(scale=jnp.ones(len(complex_prior_scales)))
                     )
                     raw_params = numpyro.sample(
                         "raw_params",
-                        dist.Normal(jnp.zeros(self.nPars - len(self.ref_indices)), jnp.ones(self.nPars - len(self.ref_indices)))
+                        dist.Normal(jnp.zeros(len(complex_prior_scales)), jnp.ones(len(complex_prior_scales)))
                     )
-                    free_params = raw_params * local_scale * global_scale
-                
-                # Set parameters as before
+
+                    # Assemble the complete parameter vector
+                    free_params_real = raw_params_real * local_scale_real * global_scale
+                    free_params_complex = raw_params * local_scale * global_scale
+                    
+                # Set the final parameters
                 params = jnp.zeros(self.nPars)
-                params = params.at[free_indices].set(free_params)
+                params = params.at[free_real_indices].set(free_params_real)
+                params = params.at[free_complex_indices].set(free_params_complex)
 
             elif self.cop == "polar":
 
@@ -352,15 +382,81 @@ class MCMCManager:
         console.print("  - n_eff ≈ total samples: Parameter explores well, low autocorrelation")
         console.print("  - n_eff << total samples: High autocorrelation, may need longer chains")
         console.print("  - Rule of thumb: n_eff > 100 per parameter for reliable inference")
+
+        console.print("\nParameter mapping for NumPyro summary:", style="bold")
         
-        console.print("\n\nParameters:", style="bold")
-        par_idx = 0
-        for wave_idx, wave in enumerate(self.waveNames):
-            console.print(f"params[{par_idx}] corresponds to Re[{wave}]", style="bold")
-            par_idx += 1
-            if wave_idx not in self.ref_indices:
-                console.print(f"params[{par_idx}] corresponds to Im[{wave}]", style="bold")
-                par_idx += 1
+        if self.cop == "cartesian":
+            if self.prior_dist != "horseshoe": # {Gaussian, Laplace}
+                # For complex_params (non-reference waves)
+                free_complex_indices = []
+                complex_idx_map = {}  # Map from complex_params idx to wave and component
+                idx = 0
+                for wave_idx, wave in enumerate(self.waveNames):
+                    if wave_idx not in self.ref_indices:
+                        complex_idx_map[idx] = (wave, "Re")
+                        free_complex_indices.append(2*wave_idx)
+                        idx += 1
+                        complex_idx_map[idx] = (wave, "Im")
+                        free_complex_indices.append(2*wave_idx+1)
+                        idx += 1
+                
+                # For real_params (reference waves real part)
+                free_real_indices = []
+                real_idx_map = {}  # Map from real_params idx to wave
+                idx = 0
+                for wave_idx, wave in enumerate(self.waveNames):
+                    if wave_idx in self.ref_indices:
+                        real_idx_map[idx] = (wave, "Re")
+                        free_real_indices.append(2*wave_idx)
+                        idx += 1
+                
+                # Print mappings
+                for idx, (wave, component) in complex_idx_map.items():
+                    console.print(f"complex_params[{idx}] corresponds to {component}[{wave}]", style="bold")
+                
+                for idx, (wave, component) in real_idx_map.items():
+                    console.print(f"real_params[{idx}] corresponds to {component}[{wave}]", style="bold")
+            
+            else:  # Horseshoe prior
+                free_complex_indices = []
+                complex_idx_map = {}
+                idx = 0
+                for wave_idx, wave in enumerate(self.waveNames):
+                    if wave_idx not in self.ref_indices:
+                        complex_idx_map[idx] = (wave, "Re")
+                        free_complex_indices.append(2*wave_idx)
+                        idx += 1
+                        complex_idx_map[idx] = (wave, "Im")
+                        free_complex_indices.append(2*wave_idx+1)
+                        idx += 1
+                
+                free_real_indices = []
+                real_idx_map = {}
+                idx = 0
+                for wave_idx, wave in enumerate(self.waveNames):
+                    if wave_idx in self.ref_indices:
+                        real_idx_map[idx] = (wave, "Re")
+                        free_real_indices.append(2*wave_idx)
+                        idx += 1
+                
+                # Print mappings
+                for idx, (wave, component) in complex_idx_map.items():
+                    console.print(f"raw_params[{idx}] corresponds to {component}[{wave}]", style="bold")
+                
+                for idx, (wave, component) in real_idx_map.items():
+                    console.print(f"raw_params_real[{idx}] corresponds to {component}[{wave}]", style="bold")
+        
+        elif self.cop == "polar":
+            # For magnitudes (all waves)
+            console.print("\nParameter mapping for NumPyro summary:", style="bold")
+            for idx, wave in enumerate(self.waveNames):
+                console.print(f"magnitudes[{idx}] corresponds to magnitude of [{wave}]", style="bold")
+            
+            # For phase_params (non-reference waves)
+            free_phase_indices = [i for i in range(len(self.waveNames)) if i not in self.ref_indices]
+            for i, wave_idx in enumerate(free_phase_indices):
+                wave = self.waveNames[wave_idx]
+                console.print(f"phase_params[{i}] corresponds to phase of [{wave}]", style="bold")
         
         # Print standard NumPyro summary
         self.mcmc.print_summary()
@@ -384,18 +480,31 @@ class MCMCManager:
 
         if self.cop == "cartesian":
             
-            free_indices = jnp.array([i for i in range(self.nPars) if not any(i == 2*ref_idx+1 for ref_idx in self.ref_indices)])
             n_samples = len(next(iter(samples.values())))
             params = jnp.zeros((n_samples, self.nPars))
-        
+
+            free_complex_indices = self.free_complex_indices
+            free_real_indices = self.free_real_indices
+
             if self.prior_dist != "horseshoe": # {Gaussian, Laplace}
-                params = params.at[:, free_indices].set(samples['params'])
-            else:
-                raw_params   = samples['raw_params'] # ~ (n_samples, n_free_params)
-                global_scale = samples['global_scale']
-                local_scale  = samples['local_scale']            
-                actual_params = raw_params * local_scale * global_scale[:, None] # broadcast global_scale across samples
-                params = params.at[:, free_indices].set(actual_params)
+                complex_params = samples['complex_params']
+                real_params = samples['real_params']                                
+                for i, idx in enumerate(free_real_indices):
+                    params = params.at[:, idx].set(real_params[:, i])                
+                for i, idx in enumerate(free_complex_indices):
+                    params = params.at[:, idx].set(complex_params[:, i])
+            else: # Horseshoe prior handling
+                raw_params_real = samples['raw_params_real']
+                raw_params = samples['raw_params']
+                local_scale_real = samples['local_scale_real']                
+                local_scale = samples['local_scale']
+                global_scale = samples['global_scale']                
+                actual_params_real = raw_params_real * local_scale_real * global_scale[:, None]
+                actual_params_complex = raw_params * local_scale * global_scale[:, None]                
+                for i, idx in enumerate(free_real_indices):
+                    params = params.at[:, idx].set(actual_params_real[:, i])
+                for i, idx in enumerate(free_complex_indices):
+                    params = params.at[:, idx].set(actual_params_complex[:, i])
 
         elif self.cop == "polar":
             n_samples = len(samples['magnitudes'])
@@ -522,6 +631,20 @@ class MCMCManager:
         self.channel = channel
         self.refl_sectors = refl_sectors
         
+        # Determine free_complex_indices and free_real_indices once
+        self.free_complex_indices = []
+        self.free_real_indices = []
+        for i in range(len(self.waveNames)):
+            # Reference waves have real part as free parameter, imaginary fixed to 0
+            # Non-reference waves have both real and imaginary parts as free parameters
+            if i in self.ref_indices: 
+                self.free_real_indices.append(2*i)
+            else:
+                self.free_complex_indices.append(2*i)
+                self.free_complex_indices.append(2*i+1)
+        self.free_complex_indices = jnp.array(self.free_complex_indices)
+        self.free_real_indices = jnp.array(self.free_real_indices)
+        
     def _get_initial_params(self):
         pass
         # ###################
@@ -632,8 +755,6 @@ class MCMCManager:
             
         #     # Convert magnitudes to log-space for initialization
         #     _magnitudes = jnp.maximum(jnp.abs(_camp), 1e-5) # Ensure positive values (for log)
-        #     if use_log_magnitudes:
-        #         _magnitudes = jnp.log(_magnitudes)
             
         #     # Get phases from complex amplitudes
         #     _phases = jnp.angle(_camp)
@@ -730,9 +851,9 @@ if __name__ == "__main__":
                        help="Coordinate system to use for the complex amplitudes")
 
     #### MCMC ARGS ####
-    parser.add_argument("-ps", "--prior_scale", type=float, default=100.0,
+    parser.add_argument("-ps", "--prior_scale", type=float, default=1000.0,
                        help="Prior scale for the magnitude of the complex amplitudes")
-    parser.add_argument("-pd", "--prior_dist", type=str, choices=['laplace', 'normal', 'horseshoe'], default='laplace', 
+    parser.add_argument("-pd", "--prior_dist", type=str, choices=['laplace', 'gaussian', 'horseshoe'], default='gaussian', 
                        help="Prior distribution for the complex amplitudes")
     parser.add_argument("-nc", "--nchains", type=int, default=20,
                        help="Number of chains to use for numpyro MCMC (each chain runs on paralell process)")
