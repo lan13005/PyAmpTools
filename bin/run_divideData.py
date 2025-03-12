@@ -8,6 +8,16 @@ from omegaconf import OmegaConf
 from pyamptools.split_mass import split_mass_t
 from pyamptools.utility.general import Timer, dump_yaml, load_yaml
 
+# Setup pyamptools environment here
+#   cannot setup inside split_mass.py nor general.py
+#   PyROOT maintains global state which will lead to conflicts
+from pyamptools import atiSetup
+import ROOT
+atiSetup.setup(globals(), use_fsroot=True)
+ROOT.ROOT.EnableImplicitMT()
+from pyamptools.utility.rdf_macros import loadMacros
+loadMacros()
+
 ############################################################################
 # This makes calls to pyamptools' split_mass function to divide the data
 # sources into separate mass bins and copies over the amptools configuration
@@ -18,7 +28,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Divide data into mass bins")
     parser.add_argument("yaml_name", type=str, default="conf/configuration.yaml", help="Path a configuration yaml file")
     parser.add_argument("-e", "--use_edges", action="store_true", help="Use mass_edges and t_edges from the yaml file. Else recompute")
-    parser.add_argument("-ns", "--split_pool_size", type=int, default=1, help="Number of parallel processes to split the data")
     parser.add_argument("-nh", "--hadd_pool_size", type=int, default=5, help="Number of parallel processes to merge the data")
     parser.add_argument("--nosplit", action="store_true", help="Skip the split_mass step")
     parser.add_argument("--nomerge", action="store_true", help="Skip the merge_bins step")
@@ -26,7 +35,6 @@ if __name__ == "__main__":
     yaml_name = args.yaml_name
     use_edges = args.use_edges
 
-    split_pool_size = args.split_pool_size
     hadd_pool_size = args.hadd_pool_size
 
     cwd = os.getcwd()
@@ -141,7 +149,6 @@ if __name__ == "__main__":
                         mass_edges, t_edges, nBar, nBar_err = split_mass_t(fname, oname, 
                                                     min_mass, max_mass, n_mass_bins, 
                                                     min_t, max_t, n_t_bins,
-                                                    split_pool_size=split_pool_size,
                                                     treeName="kin", mass_edges=mass_edges, t_edges=t_edges)
                         _pol = "shared" if sharemc else pol
                         nBars[f"{ftype}_{_pol}"] = nBar
@@ -155,7 +162,6 @@ if __name__ == "__main__":
                     mass_edges, t_edges, nBar, nBar_err = split_mass_t(f"{data_folder}/bkgnd{pol}.root", f"bkgnd{pol}", 
                                                         min_mass, max_mass, n_mass_bins, 
                                                         min_t, max_t, n_t_bins,
-                                                        split_pool_size=split_pool_size,
                                                         treeName="kin", mass_edges=mass_edges, t_edges=t_edges)
                     nBars[f"bkgnd_{pol}"] = nBar
                     nBar_errs[f"bkgnd_{pol}"] = nBar_err

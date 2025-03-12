@@ -99,6 +99,99 @@ prettyLabels = KeyReturningDict(prettyLabels)
 # ===================================================================================================
 # ===================================================================================================
 
+def append_kinematics(
+    infile, 
+    outputBase, 
+    treeName="kin",
+    dump_augmented_tree=True,
+    console=None,
+    ):
+    
+    """
+    Append kinematics to the input ROOT file, optionally perform binning into (mass, t) bins.
+    NOTE: THIS ONLY WORKS FOR ZLM AMPLITUDES!
+    
+    ######################################################################### 
+    # THESE MUST BE CALLED BEFORE RUNNING THIS FUNCTION. CANNOT IMPORT INSIDE
+    #   BECAUSE PYROOT MAINTAINS GLOBAL STATE WHICH WILL LEAD TO CONFLICTS
+    #########################################################################
+    atiSetup.setup(globals(), use_fsroot=True)
+    ROOT.ROOT.EnableImplicitMT()
+    from pyamptools.utility.rdf_macros import loadMacros
+    loadMacros()
+    #########################################################################
+    
+    Args:
+        infile (str): Input ROOT file
+        outputBase (str): Base name for output ROOT files
+        treeName (str): Name of the TTree in the input ROOT file
+        dump_augmented_tree (bool): Whether to save the augmented tree with all events
+    
+    Returns:
+        df: ROOT.RDataFrame with kinematics appended
+    """
+    
+    # Import here to ensure a clean ROOT environment for each call
+    import ROOT
+    
+    # # Setup environment
+    # atiSetup.setup(globals(), use_fsroot=True)
+    # ROOT.ROOT.EnableImplicitMT()
+    # from pyamptools.utility.rdf_macros import loadMacros
+    # loadMacros()
+
+    # Define kinematic quantities to calculate using FSROOT macros
+    # For etapi0: X1 = eta, X2 = pi0, RECOIL = recoil proton
+    KINEMATIC_QUANTITIES = {
+        "MX": "MASS(X1,X2)",
+        "MX1": "MASS(X1)",
+        "MX2": "MASS(X2)",
+        "cosGJ": "GJCOSTHETA(X1,X2,RECOIL)",
+        "cosHel": "HELCOSTHETA(X1,X2,RECOIL)",
+        "phiHel": "HELPHI(X1,X2,RECOIL,GLUEXBEAM)",
+        "t": "T(GLUEXTARGET,RECOIL)"
+    }
+
+    if console is None:
+        from rich.console import Console
+        console = Console()
+
+    console.print(f"Processing {infile}", style="bold blue")
+    
+    # Open input file and get the tree
+    df = ROOT.RDataFrame(treeName, infile)
+    
+    # Get column names to check if we need to redefine
+    columns = df.GetColumnNames()
+    console.print(f"Available columns: {list(columns)}", style="bold blue")
+    output_dir = os.path.dirname(outputBase)
+    output_dir = "." if output_dir == "" else output_dir
+    console.print(f"Dumping the following files relative to: {output_dir}", style="bold blue")
+    
+    # Define particle four-vectors
+    particles = ["RECOIL", "X2", "X1"] # Particle order in AmpTools output tree
+    df = df.Define("GLUEXTARGET", "std::vector<float> p{0.0, 0.0, 0.0, 0.938272}; return p;")
+    df = df.Define("GLUEXBEAM",   "std::vector<float> p{{Px_Beam, Py_Beam, Pz_Beam, E_Beam}}; return p;")
+
+    # Assuming AmpTools formatted tree
+    for i, particle in enumerate(particles):
+        cmd = f"std::vector<float> p{{ Px_FinalState[{i}], Py_FinalState[{i}], Pz_FinalState[{i}], E_FinalState[{i}] }}; return p;"
+        df = df.Define(f"{particle}", cmd)
+    
+    # Define kinematic quantities
+    for name, function in KINEMATIC_QUANTITIES.items():
+        df = df.Define(name, function)
+
+    # Save the full dataframe - use different tree name to avoid conflicts
+    if os.path.exists(f"{outputBase}.root") and dump_augmented_tree:
+        console.print(f"File {os.path.basename(outputBase)}.root already exists, will not overwrite with augmented ROOT file", style="bold yellow")
+    else:
+        if dump_augmented_tree:
+            df.Snapshot(treeName, f"{outputBase}.root")
+            console.print(f"Created augmented tree with all events at {os.path.basename(outputBase)}.root", style="bold green")
+            
+    return df
+
 class Styler:
     def __init__(self):
         pass

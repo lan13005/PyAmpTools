@@ -56,7 +56,7 @@ if __name__ == "__main__":
     verbose = args.verbose
 
     output_directory = yaml_file["amptools"]["output_directory"]
-    search_fmt = f"{output_directory}/bin_[]/*.cfg"
+    search_fmt = f"{output_directory}/bin_[]/bin_*.cfg"
     cfgfiles = glob_sort_captured(search_fmt)
 
     if len(cfgfiles) == 0:
