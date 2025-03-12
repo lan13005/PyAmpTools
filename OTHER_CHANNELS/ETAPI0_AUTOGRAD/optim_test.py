@@ -11,6 +11,8 @@ import os
 
 from optimize_utility import Objective
 
+from rich.console import Console
+
 from iftpwa1.pwa.gluex.constants import INTENSITY_AC
 
 Minuit.errordef = Minuit.LIKELIHOOD
@@ -18,6 +20,7 @@ comm0 = None
 rank = 0 
 mpi_offset = 1
 
+console = Console()
 
 # TODO:
 # - NLOPT - another set of optimizers to consider. Could have better global optimization algorithms
@@ -26,6 +29,7 @@ def run_fit(
     pyamptools_yaml, 
     iftpwa_yaml,
     bin_idx, 
+    iteration_idx,
     initial_guess, 
     initial_guess_dict,
     method="L-BFGS-B",
@@ -35,7 +39,7 @@ def run_fit(
     
     Args:
         bin_idx: Index of bin to optimize
-        i: Iteration number
+        iteration_idx: Iteration number
         initial_guess: Initial parameters
         initial_guess_dict: Dictionary of initial parameters
         method: see argument parser for more information
@@ -60,9 +64,10 @@ def run_fit(
     obj = Objective(pwa_manager, bin_idx, nPars, nmbMasses, nmbTprimes, reference_waves=reference_waves)
     
     initial_likelihood = obj.objective(initial_guess).item()
-    print("\n**************************************************************")
-    print(f"Initial likelihood: {initial_likelihood}")
-    print(f"Using method: {method}")
+    console.print("\n**************************************************************", style="bold")
+    console.print(f"Bin {bin_idx} | Iteration {iteration_idx}", style="bold")
+    console.print(f"Initial likelihood: {initial_likelihood}", style="bold")
+    console.print(f"Using method: {method}", style="bold")
     
     final_result_dict = {}
     optim_result = {}
@@ -86,13 +91,37 @@ def run_fit(
         final_result_dict['likelihood'] = optim_result['likelihood']
         final_result_dict['initial_likelihood'] = initial_likelihood
 
-    print(f"Intensity for bin {bin_idx}: {final_result_dict}")
-    print(f"Final parameters for bin {bin_idx}: {final_params}")
-    print(f"Optimization results for bin {bin_idx}:")
-    print(f"Success: {optim_result['success']}")
-    print(f"Final likelihood: {optim_result['likelihood']}")
-    print(f"Message: {optim_result['message']}")
-    print("**************************************************************\n")
+    for iw, wave in enumerate(pwa_manager.waveNames):
+        real_part = final_params[2*iw]
+        imag_part = final_params[2*iw+1]
+        real_errs = {}
+        imag_errs = {}
+        for key in optim_result['covariance'].keys():
+            real_err = optim_result['covariance'][key]
+            imag_err = optim_result['covariance'][key]
+            if real_err is not None:
+                real_errs[key] = np.sqrt(real_err[2*iw, 2*iw])
+            if imag_err is not None:
+                imag_errs[key] = np.sqrt(imag_err[2*iw+1, 2*iw+1])
+        methods = list(real_errs.keys())
+        real_part_errs = [f"{real_errs[m]:<10.5f}" for m in methods]
+        imag_part_errs = [f"{imag_errs[m]:<10.5f}" for m in methods]
+        bounds = {}
+        bounds['rlb'] = optim_result['bounds'][2*iw][0]     # real part lower bound
+        bounds['rub'] = optim_result['bounds'][2*iw][1]     # real part upper bound
+        bounds['ilb'] = optim_result['bounds'][2*iw+1][0]   # imag part lower bound
+        bounds['iub'] = optim_result['bounds'][2*iw+1][1]   # imag part upper bound
+        for key in bounds.keys():
+            if bounds[key] is None: bounds[key] = "None"
+        console.print(f"{wave:<10}  Intensity: value = {final_result_dict[wave]:<10.5f}", style="bold")
+        console.print(f"            Real part: value = {real_part:<10.5f} | Errors ({', '.join(methods)}) = ({', '.join(real_part_errs)}) | Bounds: \[{bounds['rlb']:<10}, {bounds['rub']:<10}]) ", style="bold")
+        console.print(f"            Imag part: value = {imag_part:<10.5f} | Errors ({', '.join(methods)}) = ({', '.join(imag_part_errs)}) | Bounds: \[{bounds['ilb']:<10}, {bounds['iub']:<10}]) ", style="bold")
+
+    console.print(f"Optimization results:", style="bold")
+    console.print(f"Success: {optim_result['success']}", style="bold")
+    console.print(f"Final likelihood: {optim_result['likelihood']}", style="bold")
+    console.print(f"Message: {optim_result['message']}", style="bold")
+    console.print("**************************************************************\n", style="bold")
     
     final_par_values = {}
     for iw, wave in enumerate(pwa_manager.waveNames):
@@ -223,7 +252,7 @@ if __name__ == "__main__":
     reference_waves = pyamptools_yaml["phase_reference"].split("_")
     
     if args.print_wave_names:
-        print(f"Wave names: {waveNames}")
+        console.print(f"Wave names: {waveNames}", style="bold")
         sys.exit(0)
 
     seed_list = np.random.randint(0, 1000000, n_iterations)
@@ -234,8 +263,8 @@ if __name__ == "__main__":
 
     final_result_dicts = []
     for bin_idx in args.bins:
-        for i in range(n_iterations):
-            np.random.seed(seed_list[i])
+        for iteration_idx in range(n_iterations):
+            np.random.seed(seed_list[iteration_idx])
             initial_guess = scale * np.random.randn(nPars)
             initial_guess_dict = {} 
             for iw, wave in enumerate(waveNames):
@@ -250,6 +279,7 @@ if __name__ == "__main__":
                 pyamptools_yaml, 
                 iftpwa_yaml, 
                 bin_idx, 
+                iteration_idx,
                 initial_guess, 
                 initial_guess_dict,
                 method=args.method,
@@ -262,6 +292,6 @@ if __name__ == "__main__":
     with open(f"COMPARISONS/{args.method}_bin{sbins}_setting{args.setting}.pkl", "wb") as f:
         pkl.dump(final_result_dicts, f)
 
-    print(f"Total time elapsed: {timer.read()[2]}")
+    console.print(f"Total time elapsed: {timer.read()[2]}", style="bold")
 
     sys.exit(0)

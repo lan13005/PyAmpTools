@@ -1,5 +1,6 @@
 from iminuit import Minuit
 from scipy.optimize import minimize
+import scipy.linalg as linalg
 
 import jax.numpy as jnp
 import numpy as np
@@ -43,8 +44,6 @@ class Objective:
         """Check reference wave constraints and raise error if violated"""
         if self.ref_indices:
             for ref_idx in self.ref_indices:
-                if x[2*ref_idx] < 0:
-                    raise ValueError(f"Reference wave {self.pwa_manager.waveNames[ref_idx]} has negative real part: {x[2*ref_idx]}")
                 if x[2*ref_idx+1] != 0:
                     raise ValueError(f"Reference wave {self.pwa_manager.waveNames[ref_idx]} has non-zero imaginary part: {x[2*ref_idx+1]}")
         
@@ -73,18 +72,31 @@ class Objective:
                 
         return grad
 
-    def hessp(self, x, p):
-        """Compute the Hessian-vector product at point x with vector p"""
+    def hessian(self, x):
+        """Return the Hessian matrix at point x"""
         self.check_reference_wave_constraints(x)
         x_full = self.insert_into_full_array(x)
         hess = self.pwa_manager.sendAndReceive(x_full, HESSIAN)[0]
+        
+        # Handle reference waves by zeroing out corresponding rows/columns
+        # Think: is this correct? Can we just zero it? If it was indeed fixed then all 2nd order partials should equal 0?
+        if self.ref_indices:
+            for ref_idx in self.ref_indices:
+                hess = hess.at[2*ref_idx+1, :].set(0.0)
+                hess = hess.at[:, 2*ref_idx+1].set(0.0)
+                hess = hess.at[2*ref_idx+1, 2*ref_idx+1].set(1.0) # Set diagonal element to 1 to avoid singularity
+        
+        return hess
+
+    def hessp(self, x, p):
+        """Compute the Hessian-vector product at point x with vector p"""
+        hess = self.hessian(x)
         
         if self.ref_indices:
             for ref_idx in self.ref_indices:
                 if isinstance(p, jnp.ndarray): p = p.at[2*ref_idx+1].set(0.0)
                 else: p[2*ref_idx+1] = 0.0
-                hess = hess.at[2*ref_idx+1, :].set(0.0)
-                hess = hess.at[:, 2*ref_idx+1].set(0.0)
+                
         return jnp.dot(hess, p)
 
     def __call__(self, x):
@@ -138,6 +150,64 @@ class Objective:
         self.ref_indices = ref_indices
         self.refl_sectors = refl_sectors
 
+def regularize_hessian_for_covariance(hessian_matrix, min_eigenvalue=1e-6, tikhonov_delta=1e-4, ref_indices=None):
+    """
+    Compute regularized covariance matrices from a Hessian using two approaches.
+    
+    Args:
+        hessian_matrix: The Hessian matrix to invert
+        min_eigenvalue: Minimum eigenvalue for eigenvalue clipping method
+        tikhonov_delta: Delta parameter for Tikhonov regularization to avoid singularity
+    
+    Returns:
+        tuple: (cov_clipping, cov_tikhonov, eigenvalues, diagnostics)
+    """
+    # Convert to numpy if it's a JAX array
+    if hasattr(hessian_matrix, 'copy_to_host'):
+        hessian_matrix = np.array(hessian_matrix)
+    
+    try:
+        # Calculate eigenvalues and eigenvectors
+        eigenvalues, eigenvectors = np.linalg.eigh(hessian_matrix)
+        
+        # Method 1: Eigenvalue clipping
+        clipped_eigenvalues = np.maximum(eigenvalues, min_eigenvalue)
+        precision_clipped = eigenvectors @ np.diag(clipped_eigenvalues) @ eigenvectors.T
+        cov_clipping = np.linalg.inv(precision_clipped)
+        
+        # Method 2: Tikhonov regularization
+        # Add a small positive value to the diagonal
+        smallest_eigenval = np.min(eigenvalues)
+        adjustment = max(0, -smallest_eigenval) + tikhonov_delta
+        precision_tikhonov = hessian_matrix + np.eye(hessian_matrix.shape[0]) * adjustment
+        cov_tikhonov = np.linalg.inv(precision_tikhonov)
+        
+        # Zero out fixed parameter (co)variances
+        if ref_indices:
+            for ref_idx in ref_indices:
+                cov_tikhonov[2*ref_idx+1, :] = 0.0
+                cov_tikhonov[:, 2*ref_idx+1] = 0.0
+                cov_tikhonov[2*ref_idx+1, 2*ref_idx+1] = 0.0
+                cov_clipping[2*ref_idx+1, :] = 0.0
+                cov_clipping[:, 2*ref_idx+1] = 0.0
+                cov_clipping[2*ref_idx+1, 2*ref_idx+1] = 0.0
+        
+        # Diagnostics
+        diagnostics = {
+            'smallest_eigenvalue': float(np.min(eigenvalues)),
+            'largest_eigenvalue': float(np.max(eigenvalues)),
+            'condition_number': float(np.max(np.abs(eigenvalues)) / np.min(np.abs(clipped_eigenvalues))),
+            'negative_eigenvalues': int(np.sum(eigenvalues < 0)),
+            'small_eigenvalues': int(np.sum((eigenvalues > 0) & (eigenvalues < min_eigenvalue))),
+            'tikhonov_adjustment': float(adjustment)
+        }
+        
+        return cov_clipping, cov_tikhonov, eigenvalues, diagnostics
+        
+    except np.linalg.LinAlgError as e:
+        print(f"Error calculating covariance matrix: {e}")
+        return None, None, None, {'error': str(e)}
+
 def optimize_single_bin_minuit(objective, initial_params, bin_idx, use_analytic_grad=True):
     """
     Optimize parameters for a single kinematic bin using Minuit.
@@ -169,12 +239,11 @@ def optimize_single_bin_minuit(objective, initial_params, bin_idx, use_analytic_
     
     # Set up fixed parameters for reference waves
     if objective.ref_indices:
-        for ref_idx in objective.ref_indices:
-            m.fixed[param_names[2*ref_idx+1]] = True        # fix imaginary part to zero
-            m.limits[param_names[2*ref_idx]] = (0, None)    # restrict real part to be positive
-            
-    print(f"m.fixed: {m.fixed}")
-    print(f"m.limits: {m.limits}")
+        bounds = [(None, None)] * len(x0) # unused, just to dump into results dictionary
+        if objective.ref_indices:
+            for ref_idx in objective.ref_indices:
+                bounds[2*ref_idx+1] = (0, 0)
+                m.fixed[param_names[2*ref_idx+1]] = True # fix imaginary part to zero
 
     # Configure Minuit
     # AmpTools uses 0.001 * tol * UP (default 0.1) - diff is probably due to age of software?
@@ -183,15 +252,29 @@ def optimize_single_bin_minuit(objective, initial_params, bin_idx, use_analytic_
     m.strategy = 1  # More accurate minimization
     m.migrad()  # Run minimization
     
+    # Get covariance from Minuit
+    minuit_covariance = m.covariance if m.valid else None
+    
+    # Calculate covariance from objective's Hessian for comparison
+    hessian_matrix = objective.hessian(m.values)
+    cov_clipping, cov_tikhonov, eigenvalues, hessian_diagnostics = regularize_hessian_for_covariance(hessian_matrix, ref_indices=objective.ref_indices)
+    
     return {
         'parameters': m.values,
         'likelihood': m.fval,
         'success': m.valid,
         'message': 'Valid minimum found' if m.valid else 'Minimization failed',
-        'errors': m.errors
+        'covariance': {
+            'optimizer': minuit_covariance,
+            'clipping': cov_clipping,
+            'tikhonov': cov_tikhonov
+        },
+        'eigenvalues': eigenvalues.tolist() if eigenvalues is not None else None,
+        'hessian_diagnostics': hessian_diagnostics,
+        'bounds': bounds
     }
     
-def optimize_single_bin_scipy(objective, initial_params, bin_idx, method='L-BFGS-B', bounds=None, options=None):
+def optimize_single_bin_scipy(objective, initial_params, bin_idx, method='L-BFGS-B', options=None):
     """
     Optimize parameters for a single kinematic bin using scipy.optimize methods.
     
@@ -200,7 +283,6 @@ def optimize_single_bin_scipy(objective, initial_params, bin_idx, method='L-BFGS
         initial_params: Initial parameters for optimization with shape (nPars)
         bin_idx: Index of bin being optimized
         method: Optimization method to use (default: 'L-BFGS-B')
-        bounds: Parameter bounds for constrained optimization (optional)
         options: Dictionary of options for the method
         
     Returns:
@@ -210,16 +292,11 @@ def optimize_single_bin_scipy(objective, initial_params, bin_idx, method='L-BFGS
     x0 = initial_params.copy()
     objective.check_reference_wave_constraints(x0)
     
-    # Handle reference wave constraints using parameter bounds
+    # Set up fixed parameters for reference waves
     if objective.ref_indices:
-        if bounds is None: # unconstrained bounds if none provided
-            bounds = [(None, None)] * len(x0)
-        else:
-            bounds = list(bounds)  # Make sure bounds is a list we can modify
-            
+        bounds = [(None, None)] * len(x0) # unused, just to dump into results dictionary
         for ref_idx in objective.ref_indices:
             bounds[2*ref_idx+1] = (0.0, 0.0)  # Fix imaginary part of reference wave to 0
-            bounds[2*ref_idx] = (0.0, None)   # Restrict real part to be positive
     
     if options is None:
         if method == "L-BFGS-B":
@@ -271,10 +348,26 @@ def optimize_single_bin_scipy(objective, initial_params, bin_idx, method='L-BFGS
     else:
         raise ValueError(f"Invalid method: {method}")
         
+    # Always calculate Hessian and covariance at the solution
+    hessian_matrix = objective.hessian(result.x)
+    cov_clipping, cov_tikhonov, eigenvalues, hessian_diagnostics = regularize_hessian_for_covariance(hessian_matrix, ref_indices=objective.ref_indices)
+    
+    # For comparison, try to get scipy's approximated inverse Hessian if available and if minimization was successful
+    scipy_covariance = None
+    if hasattr(result, 'hess_inv') and result.success:
+        scipy_covariance = result.hess_inv
+        
     return {
         'parameters': result.x,
         'likelihood': result.fun,
         'success': result.success,
         'message': result.message,
-        'errors': None  # Scipy doesn't provide error estimates by default
+        'covariance': {
+            'optimizer': scipy_covariance,
+            'clipping': cov_clipping,
+            'tikhonov': cov_tikhonov
+        },
+        'eigenvalues': eigenvalues.tolist() if eigenvalues is not None else None,
+        'hessian_diagnostics': hessian_diagnostics,
+        'bounds': bounds
     }

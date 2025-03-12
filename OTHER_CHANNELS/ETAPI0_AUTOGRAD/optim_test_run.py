@@ -22,11 +22,11 @@ def run_command(job_info):
         print(f"Error in job {job_idx} with optimizer {optimizer}: {e}", file=sys.stderr)
         return job_idx, optimizer, False, e.stderr
 
-n_bins = 17 # 34
+n_bins = 1 # 34
 # optimizers = ['minuit-numeric', 'L-BFGS-B', 'trust-ncg', 'trust-krylov']
 # NOTE: currently trust region methods break parameter bounds which raises an error
 optimizers = ['minuit-analytic']
-max_concurrent = min(20, n_bins)
+max_concurrent = min(1, n_bins)
 settings = range(1) # range(30)
 
 # Create job assignments for each optimizer
