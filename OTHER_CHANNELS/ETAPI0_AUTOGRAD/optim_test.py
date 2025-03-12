@@ -7,6 +7,7 @@ import argparse
 from scipy.optimize import minimize
 import jax
 import jax.numpy as jnp
+import os
 
 from optimize_utility import Objective
 
@@ -86,6 +87,7 @@ def run_fit(
         final_result_dict['initial_likelihood'] = initial_likelihood
 
     print(f"Intensity for bin {bin_idx}: {final_result_dict}")
+    print(f"Final parameters for bin {bin_idx}: {final_params}")
     print(f"Optimization results for bin {bin_idx}:")
     print(f"Success: {optim_result['success']}")
     print(f"Final likelihood: {optim_result['likelihood']}")
@@ -237,11 +239,13 @@ if __name__ == "__main__":
             initial_guess = scale * np.random.randn(nPars)
             initial_guess_dict = {} 
             for iw, wave in enumerate(waveNames):
-                initial_guess_dict[wave] = initial_guess[2*iw]
                 if wave in reference_waves:
-                    initial_guess_dict[wave] += 1j * 0
+                    # Rotate away the imaginary part of the reference wave as to not bias initialization small for reference waves
+                    initial_guess[2*iw] = np.abs(initial_guess[2*iw] + 1j * initial_guess[2*iw+1])
+                    initial_guess[2*iw+1] = 0
+                    initial_guess_dict[wave] = complex(initial_guess[2*iw], 0)
                 else:
-                    initial_guess_dict[wave] += 1j * initial_guess[2*iw+1]
+                    initial_guess_dict[wave] = complex(initial_guess[2*iw], initial_guess[2*iw+1])
             final_result_dict = run_fit(
                 pyamptools_yaml, 
                 iftpwa_yaml, 
@@ -253,6 +257,8 @@ if __name__ == "__main__":
             final_result_dicts.append(final_result_dict)
     
     sbins = "_".join([str(b) for b in args.bins]) if isinstance(args.bins, list) else args.bins
+    if not os.path.exists("COMPARISONS"):
+        os.makedirs("COMPARISONS")
     with open(f"COMPARISONS/{args.method}_bin{sbins}_setting{args.setting}.pkl", "wb") as f:
         pkl.dump(final_result_dicts, f)
 

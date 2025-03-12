@@ -39,16 +39,14 @@ class Objective:
         if reference_waves:
             self._process_reference_waves()
         
-    def apply_reference_wave_constraints(self, x):
-        """Apply reference wave constraints by setting imaginary parts to zero"""
+    def check_reference_wave_constraints(self, x):
+        """Check reference wave constraints and raise error if violated"""
         if self.ref_indices:
-            if isinstance(x, jnp.ndarray):
-                for ref_idx in self.ref_indices:
-                    x = x.at[2*ref_idx+1].set(0.0)
-            else:
-                for ref_idx in self.ref_indices:
-                    x[2*ref_idx+1] = 0.0
-        return x
+            for ref_idx in self.ref_indices:
+                if x[2*ref_idx] < 0:
+                    raise ValueError(f"Reference wave {self.pwa_manager.waveNames[ref_idx]} has negative real part: {x[2*ref_idx]}")
+                if x[2*ref_idx+1] != 0:
+                    raise ValueError(f"Reference wave {self.pwa_manager.waveNames[ref_idx]} has non-zero imaginary part: {x[2*ref_idx+1]}")
         
     def insert_into_full_array(self, x):
         x_full = jnp.zeros((self.nPars, self.nmbMasses, self.nmbTprimes))
@@ -57,16 +55,14 @@ class Objective:
 
     def objective(self, x):
         """Return only the objective value"""
-        if self.ref_indices:
-            x = self.apply_reference_wave_constraints(x)
+        self.check_reference_wave_constraints(x)
         x_full = self.insert_into_full_array(x)
         _nll = self.pwa_manager.sendAndReceive(x_full, LIKELIHOOD)[0]
         return _nll
     
     def gradient(self, x):
         """Return only the gradient"""
-        if self.ref_indices:
-            x = self.apply_reference_wave_constraints(x)
+        self.check_reference_wave_constraints(x)
         x_full = self.insert_into_full_array(x)
         grad = self.pwa_manager.sendAndReceive(x_full, GRAD)[0]
         
@@ -79,22 +75,21 @@ class Objective:
 
     def hessp(self, x, p):
         """Compute the Hessian-vector product at point x with vector p"""
-        if self.ref_indices:
-            x = self.apply_reference_wave_constraints(x)
+        self.check_reference_wave_constraints(x)
         x_full = self.insert_into_full_array(x)
         hess = self.pwa_manager.sendAndReceive(x_full, HESSIAN)[0]
         
-        # Zero out p components for fixed parameters
         if self.ref_indices:
             for ref_idx in self.ref_indices:
-                p = p.at[2*ref_idx+1].set(0.0)
-                
+                if isinstance(p, jnp.ndarray): p = p.at[2*ref_idx+1].set(0.0)
+                else: p[2*ref_idx+1] = 0.0
+                hess = hess.at[2*ref_idx+1, :].set(0.0)
+                hess = hess.at[:, 2*ref_idx+1].set(0.0)
         return jnp.dot(hess, p)
 
     def __call__(self, x):
         """Return both objective value and gradient for scipy.optimize"""
-        if self.ref_indices:
-            x = self.apply_reference_wave_constraints(x)
+        self.check_reference_wave_constraints(x)
         nll = self.objective(x)
         if self._deriv_order == 0:
             return nll
@@ -105,8 +100,7 @@ class Objective:
             raise ValueError(f"Invalid derivative order: {self._deriv_order}")
         
     def intensity(self, x, suffix=None):
-        if self.ref_indices:
-            x = self.apply_reference_wave_constraints(x)
+        self.check_reference_wave_constraints(x)
         x_full = self.insert_into_full_array(x)
         return self.pwa_manager.sendAndReceive(x_full, INTENSITY_AC, suffix=suffix)[0].item().real
     
@@ -160,8 +154,7 @@ def optimize_single_bin_minuit(objective, initial_params, bin_idx, use_analytic_
     
     # Extract initial parameters for this bin
     x0 = initial_params.copy()
-    if objective.ref_indices:
-        x0 = objective.apply_reference_wave_constraints(x0)
+    objective.check_reference_wave_constraints(x0)
 
     # Initialize parameter names for Minuit
     param_names = [f'x{i}' for i in range(len(x0))]
@@ -177,7 +170,11 @@ def optimize_single_bin_minuit(objective, initial_params, bin_idx, use_analytic_
     # Set up fixed parameters for reference waves
     if objective.ref_indices:
         for ref_idx in objective.ref_indices:
-            m.fixed[param_names[2*ref_idx+1]] = True    
+            m.fixed[param_names[2*ref_idx+1]] = True        # fix imaginary part to zero
+            m.limits[param_names[2*ref_idx]] = (0, None)    # restrict real part to be positive
+            
+    print(f"m.fixed: {m.fixed}")
+    print(f"m.limits: {m.limits}")
 
     # Configure Minuit
     # AmpTools uses 0.001 * tol * UP (default 0.1) - diff is probably due to age of software?
@@ -211,18 +208,18 @@ def optimize_single_bin_scipy(objective, initial_params, bin_idx, method='L-BFGS
     """
     
     x0 = initial_params.copy()
-    if objective.ref_indices:
-        x0 = objective.apply_reference_wave_constraints(x0)
+    objective.check_reference_wave_constraints(x0)
     
     # Handle reference wave constraints using parameter bounds
     if objective.ref_indices:
-        if bounds is None:
+        if bounds is None: # unconstrained bounds if none provided
             bounds = [(None, None)] * len(x0)
         else:
             bounds = list(bounds)  # Make sure bounds is a list we can modify
             
         for ref_idx in objective.ref_indices:
             bounds[2*ref_idx+1] = (0.0, 0.0)  # Fix imaginary part of reference wave to 0
+            bounds[2*ref_idx] = (0.0, None)   # Restrict real part to be positive
     
     if options is None:
         if method == "L-BFGS-B":
