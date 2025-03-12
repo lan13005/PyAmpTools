@@ -265,6 +265,9 @@ def load_yaml(path_to_yaml, resolve=True):
         resolve (bool): Whether to resolve (variable interpolation) the yaml file
     """
     
+    # TODO: Overwriting the original yaml file can be dangerous. Especially if multiple processes does it at the same time
+    #       Can lead to race condition which could end up with empty yaml file. Fix me sometime
+    
     try:
         yaml = OmegaConf.load(path_to_yaml)
 

@@ -129,6 +129,7 @@ def run_fit(
     
     final_result_dict['initial_guess_dict'] = initial_guess_dict
     final_result_dict['final_par_values'] = final_par_values
+    final_result_dict['covariances'] = optim_result['covariance']
 
     return final_result_dict
 
