@@ -52,7 +52,7 @@ class MCMCManager:
     def __init__(self, pyamptools_yaml, iftpwa_yaml, bin_idx, prior_scale=100.0, prior_dist='laplace', n_chains=20, n_samples=2000, n_warmup=1000, 
                  resume_path=None, save_path=None, cop="cartesian", init_method="L-BFGS-B", init_maxiter=100, init_gtol=1e-4, 
                  init_ftol=1e-6, wave_prior_scales=None, target_accept_prob=0.85, max_tree_depth=12, 
-                 step_size=0.1, adapt_step_size=True, dense_mass=True, adapt_mass_matrix=True):
+                 step_size=0.1, adapt_step_size=True, dense_mass=True, adapt_mass_matrix=True, enforce_positive_reference=False):
         # GENERAL PARAMETERS
         self.pyamptools_yaml = pyamptools_yaml
         self.iftpwa_yaml = iftpwa_yaml
@@ -60,6 +60,7 @@ class MCMCManager:
         self.resume_path = resume_path
         self.save_path = save_path
         self.cop = cop
+        self.enforce_positive_reference = enforce_positive_reference
         console.print(f"Using coordinate system: {cop}", style="bold green")
         
         # EXTRACTED PARAMETERS FROM YAML
@@ -112,6 +113,7 @@ class MCMCManager:
         if self.prior_dist not in ['gaussian', 'laplace', 'horseshoe']:
             raise ValueError(f"Invalid prior distribution: {self.prior_dist}")
         console.print(f"Using '{self.prior_dist}' prior distribution", style="bold green")
+        console.print(f"Prior distribution of Re[reference_waves]: {'strictly positive' if self.enforce_positive_reference else 'allow negative'}", style="bold green")
         
         ################################################
         # Process wave-specific prior scales if provided
@@ -151,11 +153,18 @@ class MCMCManager:
 
                 # Sample parameters using appropriate distributions
                 if self.prior_dist == "gaussian":
-                    # HalfNormal for real parts of reference waves
-                    free_params_real = numpyro.sample(
-                        "real_params",
-                        dist.HalfNormal(scale=real_prior_scales)
-                    )
+                    if not self.enforce_positive_reference:
+                        # Normal for all parameters including reference wave real parts
+                        free_params_real = numpyro.sample(
+                            "real_params",
+                            dist.Normal(loc=jnp.zeros_like(real_prior_scales), scale=real_prior_scales)
+                        )
+                    else:
+                        # HalfNormal for real parts of reference waves
+                        free_params_real = numpyro.sample(
+                            "real_params",
+                            dist.HalfNormal(scale=real_prior_scales)
+                        )
                     # Normal for all other parameters
                     free_params_complex = numpyro.sample(
                         "complex_params",
@@ -164,11 +173,18 @@ class MCMCManager:
 
                 # Laplace prior (L1 regularization)
                 elif self.prior_dist == "laplace":
-                    # Exponential for real parts of reference waves (equivalent to positive half of Laplace)
-                    free_params_real = numpyro.sample(
-                        "real_params",
-                        dist.Exponential(rate=1.0/real_prior_scales)
-                    )
+                    if not self.enforce_positive_reference:
+                        # Laplace for all parameters including reference wave real parts
+                        free_params_real = numpyro.sample(
+                            "real_params",
+                            dist.Laplace(loc=jnp.zeros_like(real_prior_scales), scale=real_prior_scales)
+                        )
+                    else:
+                        # Exponential for real parts of reference waves (equivalent to positive half of Laplace)
+                        free_params_real = numpyro.sample(
+                            "real_params",
+                            dist.Exponential(rate=1.0/real_prior_scales)
+                        )
                     # Laplace for all other parameters
                     free_params_complex = numpyro.sample(
                         "complex_params",
@@ -190,10 +206,16 @@ class MCMCManager:
                         "local_scale_real",
                         dist.HalfCauchy(scale=jnp.ones(len(real_prior_scales)))
                     )
-                    raw_params_real = numpyro.sample(
-                        "raw_params_real",
-                        dist.HalfNormal(jnp.ones(len(real_prior_scales)))
-                    )
+                    if not self.enforce_positive_reference:
+                        raw_params_real = numpyro.sample(
+                            "raw_params_real",
+                            dist.Normal(jnp.zeros(len(real_prior_scales)), jnp.ones(len(real_prior_scales)))
+                        )
+                    else:
+                        raw_params_real = numpyro.sample(
+                            "raw_params_real",
+                            dist.HalfNormal(jnp.ones(len(real_prior_scales)))
+                        )
                     #    Handle (flattened) complex parameters for non-reference waves
                     local_scale = numpyro.sample(
                         "local_scale",
@@ -900,6 +922,9 @@ if __name__ == "__main__":
     parser.add_argument("--init_ftol", type=float, default=1e-6,
                        help="Function value tolerance for initialization optimizer. Values of 1e-6 to 1e-8 are common for standard fits; smaller values ensure more precise convergence.")
     
+    parser.add_argument("--enforce_positive_reference", action="store_true",
+                       help="Force the real part of reference waves to be strictly positive (default: allow negative values)")
+    
     args = parser.parse_args()
 
     if args.save is None and os.path.exists(args.save):
@@ -939,7 +964,8 @@ if __name__ == "__main__":
         step_size=args.step_size,
         adapt_step_size=args.adapt_step_size,
         dense_mass=args.dense_mass,
-        adapt_mass_matrix=args.adapt_mass_matrix
+        adapt_mass_matrix=args.adapt_mass_matrix,
+        enforce_positive_reference=args.enforce_positive_reference
     )
     
     console.print(f"\n\n***************************************************", style="bold")
