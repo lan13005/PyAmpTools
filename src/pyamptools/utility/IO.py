@@ -188,7 +188,7 @@ def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean=False):
         #   across all randomizations and kinematic bins
         amptools_df, (_, _, _) = loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=False)
     except Exception as e:
-        print(f"io| Error loading AmpTools results: {e}")
+        console.print(f"[red]io| Error loading AmpTools results: {e}[/red]")
 
     ###############################
     #### LOAD NIFTY RESULTS
@@ -279,7 +279,20 @@ def loadIFTResultsFromYaml(yaml):
     with open(nifty_pkl, "rb") as f:
         resultData = pkl.load(f)
         
-    _result = reload_fields_and_components(resultData=resultData)
+    sums_dict = None
+    if "result_dump" in yaml and "coherent_sums" in yaml["result_dump"]:
+        sums_dict = yaml["result_dump"]["coherent_sums"]            
+        
+    return loadIFTResultsFromPkl(resultData, sums_dict)
+        
+def loadIFTResultsFromPkl(resultData, sums_dict=None):
+        
+    try:
+        _result = reload_fields_and_components(resultData=resultData)
+    except Exception as e:
+        console.print(f"[red]io| Error loading IFT results from pkl: '{e}'[/red]")
+        console.print(f"[red]io|   NOTE: This could be an error related to import order. If it is, try importing this function at the top of your script.[/red]")
+        raise e
 
     # signal_field_sample_values, amp_field, _res_amps_waves_tprime, _bkg_amps_waves_tprime, kinematic_mutliplier = _result
     signal_field_sample_values, amp_field, res_amps_waves_tprime, bkg_amps_waves_tprime, kinematic_mutliplier, \
@@ -355,23 +368,25 @@ def loadIFTResultsFromYaml(yaml):
     flat_intens_waves_tprime = {}
     amp_cols = [col for col in cols if col.endswith('_amp')]
     for tbin, tprime in enumerate(tprimes):
+        tmp = flat_amps_waves_tprime.query('tprime == @tprime')
         for col in amp_cols:
             wave = col.split('_')[0]
-            tmp = flat_amps_waves_tprime.query('tprime == @tprime')
             intens = calc_intens([wave], tbin, [tmp[col].values.reshape(nmb_samples, nmb_masses)])
             if f'{col.strip("_amp")}' not in flat_amps_waves_tprime:
                     flat_intens_waves_tprime[f'{col.strip("_amp")}'] = intens.flatten().real
             else:
                 flat_intens_waves_tprime[f'{col.strip("_amp")}'] = np.concatenate((flat_amps_waves_tprime[f'{col.strip("_amp")}'], intens.flatten().real))
+        all_values = [tmp[f"{wave_name}_amp"].values.reshape(nmb_samples, nmb_masses) for wave_name in wave_names]
+        _intens = calc_intens(wave_names, tbin, all_values)
+        flat_intens_waves_tprime['fitted_intensity'] = _intens.flatten().real
                     
     # Stage 3: Calculate intensity for user requested coherent sums defined in yaml["result_dump"]["coherent_sums"]
     # NOTE: There might be something wrong with calc_intens? Directly summing intensities across GP waves (i.e. Pm1+_Pp0+_Pp1+) gives very similar results as the coherent sum P+
     #       Even if we sum BW for a given resonance I dont think this should happen since each BW has a different phase
-    if "result_dump" in yaml and "coherent_sums" in yaml["result_dump"]:
-        console.print('\nio| Calculating intensities for user specified coherent sums...\n')
+    if isinstance(sums_dict, dict):
         coherent_waves = {}
         coherent_amps = {}
-        sums_dict = yaml["result_dump"]["coherent_sums"]
+        console.print('\nio| Calculating intensities for user specified coherent sums...\n')
         for k, vs in sums_dict.items():
             vs = vs.split("_")
             for tbin, tprime in enumerate(tprimes):
