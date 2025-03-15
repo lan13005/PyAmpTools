@@ -71,6 +71,12 @@ def set_nested_value_inplace(nested_dict, keys, value, verbose=True):
 
 if __name__ == "__main__":
 
+    # intercept the help flag to show iftPwaFit help message
+    import sys    
+    if '-h' in sys.argv or '--help' in sys.argv:
+        os.system("iftPwaFit --help")
+        exit(0)
+
     parser = argparse.ArgumentParser(description="Perform IFT fit over all cfg files")
     parser.add_argument("yaml_name", type=str, default="conf/configuration.yaml", help="Path a configuration yaml file")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
