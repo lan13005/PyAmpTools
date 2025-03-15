@@ -43,7 +43,11 @@ def get_nentries(file_name, delete_if_empty=False, integrate_branch=None, filter
             if integrate_branch != "None":
                 check_branch_exists(t, integrate_branch)
                 branch_array = t[integrate_branch].array()
-                integrated_entries = np.sum(branch_array)
+                if hasattr(branch_array, 'to_numpy'):
+                    # np.sum gives incorrect results on awkward arrays (tried with Weights branch = 1, integral was exactly 2^24 larger)
+                    integrated_entries = np.sum(branch_array.to_numpy())
+                else:
+                    integrated_entries = np.sum(branch_array)
 
     if nentries == 0 and delete_if_empty:
         print("Found empty file, deleting...")
@@ -57,7 +61,7 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--integrate_branch", default='None', help="Provide the integral over this branch") # Useful to determine yield (i.e. summing over Weight branch)
     parser.add_argument("-s", "--selections", nargs="+", default=[], help="Provide the selections to apply to the branches. Default is to select / prepend with ! for cuts. Example: branchName1 min1 max1 !branchName2 min2 max2")
     parser.add_argument("--clean", action="store_true", help="Delete file if empty")
-    parser.add_argument("--verbose", action="store_true", help="Print verbose output")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Print verbose output")
 
     args = parser.parse_args()
     file_locations = args.file_locations
@@ -111,10 +115,10 @@ if __name__ == "__main__":
         if args.verbose:
             output += f"{os.path.basename(file):<20}: Total Entries: {entries}"
             if integrate_branch != "None":
-                output += f" | Integrated Entries (branch: {integrate_branch}): {integrated_entries:0.2f}"
+                output += f" | Integrated Entries (branch: {integrate_branch}): {integrated_entries:0.2f} | Ratio: {integrated_entries/entries:0.3f}"
             output += "\n"
             console.print(output)
         else:
-            console.print(f"file, entries, integral")
+            console.print(f"file, entries, integral, integral/entries")
             for file, entries, integrated_entries in zip(files, list_entries, list_integrated_entries):
-                console.print(f"{file}, {entries}, {integrated_entries}")
+                console.print(f"{file}, {entries}, {integrated_entries}, {integrated_entries/entries:0.3f}")
