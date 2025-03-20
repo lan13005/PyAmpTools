@@ -61,6 +61,7 @@ def run_fit(
     is_mle_method = method in ['minuit-numeric', 'minuit-analytic', 'L-BFGS-B', 'trust-ncg', 'trust-krylov']
     
     reference_waves = pyamptools_yaml["phase_reference"].split("_")
+    acceptance_correct = pyamptools_yaml["acceptance_correct"]
     obj = Objective(pwa_manager, bin_idx, nPars, nmbMasses, nmbTprimes, reference_waves=reference_waves)
     
     initial_likelihood = obj.objective(initial_guess).item()
@@ -84,13 +85,23 @@ def run_fit(
         else:
             raise ValueError(f"Invalid Maximum Likelihood Based method: {method}")
         
+        # NOTE: Here we force the usage of Tikhonov regularized covariance matrix to obtain the intensity and intensity errors
+        #       Minuit does not always return a covariance matrix (i.e. if it fails). Tikhonov regularization adds a small value
+        #       to the diagonal of the Hessian to ensure it is positive definite before inversion
+        
         final_params = np.array(optim_result['parameters'])
-        final_result_dict['total'] = obj.intensity(final_params)
+        intensity, intensity_error = obj.intensity_and_error(final_params, optim_result['covariance']['tikhonov'], pwa_manager.waveNames, acceptance_correct=acceptance_correct)
+        final_result_dict['total_intensity'] = intensity
+        final_result_dict['total_intensity_error'] = intensity_error
         for wave in pwa_manager.waveNames:
-            final_result_dict[wave] = obj.intensity(final_params, suffix=[wave])
+            intensity, intensity_error = obj.intensity_and_error(final_params, optim_result['covariance']['tikhonov'], [wave], acceptance_correct=acceptance_correct)
+            final_result_dict[wave] = intensity
+            final_result_dict[f"{wave}_error"] = intensity_error
         final_result_dict['likelihood'] = optim_result['likelihood']
         final_result_dict['initial_likelihood'] = initial_likelihood
 
+
+    console.print(f"\nTotal Intensity: value = {final_result_dict['total_intensity']:<10.5f} +- {final_result_dict['total_intensity_error']:<10.5f}", style="bold")
     for iw, wave in enumerate(pwa_manager.waveNames):
         real_part = final_params[2*iw]
         imag_part = final_params[2*iw+1]
@@ -113,13 +124,15 @@ def run_fit(
         bounds['iub'] = optim_result['bounds'][2*iw+1][1]   # imag part upper bound
         for key in bounds.keys():
             if bounds[key] is None: bounds[key] = "None"
-        console.print(f"{wave:<10}  Intensity: value = {final_result_dict[wave]:<10.5f}", style="bold")
+        console.print(f"{wave:<10}  Intensity: value = {final_result_dict[wave]:<10.5f} +- {final_result_dict[f'{wave}_error']:<10.5f}", style="bold")
         console.print(f"            Real part: value = {real_part:<10.5f} | Errors ({', '.join(methods)}) = ({', '.join(real_part_errs)}) | Bounds: \[{bounds['rlb']:<10}, {bounds['rub']:<10}]) ", style="bold")
         console.print(f"            Imag part: value = {imag_part:<10.5f} | Errors ({', '.join(methods)}) = ({', '.join(imag_part_errs)}) | Bounds: \[{bounds['ilb']:<10}, {bounds['iub']:<10}]) ", style="bold")
 
     console.print(f"Optimization results:", style="bold")
     console.print(f"Success: {optim_result['success']}", style="bold")
     console.print(f"Final likelihood: {optim_result['likelihood']}", style="bold")
+    console.print(f"Percent negative eigenvalues: {optim_result['hessian_diagnostics']['fraction_negative_eigenvalues']:0.3f}", style="bold")
+    console.print(f"Percent small eigenvalues: {optim_result['hessian_diagnostics']['fraction_small_eigenvalues']:0.3f}", style="bold")
     console.print(f"Message: {optim_result['message']}", style="bold")
     console.print("**************************************************************\n", style="bold")
     
