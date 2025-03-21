@@ -16,51 +16,14 @@ console = Console()
 # TODO:
 # - NLOPT - another set of optimizers to consider. Could have better global optimization algorithms
 
-# Lasso
-# - need lambda of 10 for lasso to do anything
-
-# Ridge
-# - lambda=10 on D-waves is too high
-# - lambda=1 on D-waves minimally alters D-waves but pushes up S-wave
-
-# Elastic Net
-# - alpha=0.5 seems to lean too heavily towards one side (ridge?) results look similar
-
-# settings = [
-#     {"lambdas": 1e2, "en_alpha": 1.0},
-#     {"lambdas": 1e1, "en_alpha": 1.0},
-#     {"lambdas": 1e0, "en_alpha": 1.0},
-#     {"lambdas": 1e-1, "en_alpha": 1.0},
-#     {"lambdas": 1e-2, "en_alpha": 1.0},
-#     {"lambdas": 1e2, "en_alpha": 0.0},
-#     {"lambdas": 1e1, "en_alpha": 0.0},
-#     {"lambdas": 1e0, "en_alpha": 0.0},
-#     {"lambdas": 1e-1, "en_alpha": 0.0},
-#     {"lambdas": 1e-2, "en_alpha": 0.0},
-#     {"lambdas": 1e2, "en_alpha": 0.5},
-#     {"lambdas": 1e1, "en_alpha": 0.5},
-#     {"lambdas": 1e0, "en_alpha": 0.5},
-#     {"lambdas": 1e-1, "en_alpha": 0.5},
-#     {"lambdas": 1e-2, "en_alpha": 0.5},
-#     {"lambdas": {"Dm2-": 1e2, "Dm1-": 1e2, "Dp0-": 1e2, "Dp1-": 1e2, "Dp2-": 1e2, "Dm2+": 1e2, "Dm1+": 1e2, "Dp0+": 1e2, "Dp1+": 1e2, "Dp2+": 1e2}, "en_alpha": 1.0},
-#     {"lambdas": {"Dm2-": 1e1, "Dm1-": 1e1, "Dp0-": 1e1, "Dp1-": 1e1, "Dp2-": 1e1, "Dm2+": 1e1, "Dm1+": 1e1, "Dp0+": 1e1, "Dp1+": 1e1, "Dp2+": 1e1}, "en_alpha": 1.0},
-#     {"lambdas": {"Dm2-": 1e0, "Dm1-": 1e0, "Dp0-": 1e0, "Dp1-": 1e0, "Dp2-": 1e0, "Dm2+": 1e0, "Dm1+": 1e0, "Dp0+": 1e0, "Dp1+": 1e0, "Dp2+": 1e0}, "en_alpha": 1.0},
-#     {"lambdas": {"Dm2-": 1e-1, "Dm1-": 1e-1, "Dp0-": 1e-1, "Dp1-": 1e-1, "Dp2-": 1e-1, "Dm2+": 1e-1, "Dm1+": 1e-1, "Dp0+": 1e-1, "Dp1+": 1e-1, "Dp2+": 1e-1}, "en_alpha": 1.0},
-#     {"lambdas": {"Dm2-": 1e-2, "Dm1-": 1e-2, "Dp0-": 1e-2, "Dp1-": 1e-2, "Dp2-": 1e-2, "Dm2+": 1e-2, "Dm1+": 1e-2, "Dp0+": 1e-2, "Dp1+": 1e-2, "Dp2+": 1e-2}, "en_alpha": 1.0},
-#     {"lambdas": {"Dm2-": 1e2, "Dm1-": 1e2, "Dp0-": 1e2, "Dp1-": 1e2, "Dp2-": 1e2, "Dm2+": 1e2, "Dm1+": 1e2, "Dp0+": 1e2, "Dp1+": 1e2, "Dp2+": 1e2}, "en_alpha": 0.0},
-#     {"lambdas": {"Dm2-": 1e1, "Dm1-": 1e1, "Dp0-": 1e1, "Dp1-": 1e1, "Dp2-": 1e1, "Dm2+": 1e1, "Dm1+": 1e1, "Dp0+": 1e1, "Dp1+": 1e1, "Dp2+": 1e1}, "en_alpha": 0.0},
-#     {"lambdas": {"Dm2-": 1e0, "Dm1-": 1e0, "Dp0-": 1e0, "Dp1-": 1e0, "Dp2-": 1e0, "Dm2+": 1e0, "Dm1+": 1e0, "Dp0+": 1e0, "Dp1+": 1e0, "Dp2+": 1e0}, "en_alpha": 0.0},
-#     {"lambdas": {"Dm2-": 1e-1, "Dm1-": 1e-1, "Dp0-": 1e-1, "Dp1-": 1e-1, "Dp2-": 1e-1, "Dm2+": 1e-1, "Dm1+": 1e-1, "Dp0+": 1e-1, "Dp1+": 1e-1, "Dp2+": 1e-1}, "en_alpha": 0.0},
-#     {"lambdas": {"Dm2-": 1e-2, "Dm1-": 1e-2, "Dp0-": 1e-2, "Dp1-": 1e-2, "Dp2-": 1e-2, "Dm2+": 1e-2, "Dm1+": 1e-2, "Dp0+": 1e-2, "Dp1+": 1e-2, "Dp2+": 1e-2}, "en_alpha": 0.0},
-#     {"lambdas": {"Dm2-": 1e2, "Dm1-": 1e2, "Dp0-": 1e2, "Dp1-": 1e2, "Dp2-": 1e2, "Dm2+": 1e2, "Dm1+": 1e2, "Dp0+": 1e2, "Dp1+": 1e2, "Dp2+": 1e2}, "en_alpha": 0.5},
-#     {"lambdas": {"Dm2-": 1e1, "Dm1-": 1e1, "Dp0-": 1e1, "Dp1-": 1e1, "Dp2-": 1e1, "Dm2+": 1e1, "Dm1+": 1e1, "Dp0+": 1e1, "Dp1+": 1e1, "Dp2+": 1e1}, "en_alpha": 0.5},
-#     {"lambdas": {"Dm2-": 1e0, "Dm1-": 1e0, "Dp0-": 1e0, "Dp1-": 1e0, "Dp2-": 1e0, "Dm2+": 1e0, "Dm1+": 1e0, "Dp0+": 1e0, "Dp1+": 1e0, "Dp2+": 1e0}, "en_alpha": 0.5},
-#     {"lambdas": {"Dm2-": 1e-1, "Dm1-": 1e-1, "Dp0-": 1e-1, "Dp1-": 1e-1, "Dp2-": 1e-1, "Dm2+": 1e-1, "Dm1+": 1e-1, "Dp0+": 1e-1, "Dp1+": 1e-1, "Dp2+": 1e-1}, "en_alpha": 0.5},
-#     {"lambdas": {"Dm2-": 1e-2, "Dm1-": 1e-2, "Dp0-": 1e-2, "Dp1-": 1e-2, "Dp2-": 1e-2, "Dm2+": 1e-2, "Dm1+": 1e-2, "Dp0+": 1e-2, "Dp1+": 1e-2, "Dp2+": 1e-2}, "en_alpha": 0.5},
-# ]
-
-# for k, v in settings[args.setting].items():
-#     pyamptools_yaml["regularization"][k] = v
+# NOTE:
+# - Regularization is currently handled by the pwa manager class which will reference the key in the yaml file
+#       regularization:
+#           apply_regularization: false
+#           method: none
+#           lambdas: 0.0
+#           en_alpha: 0.0
+# - lambdas can be a dictionary of reg. strengths, i.e. {"Sp0+": 1e2, "Dm1-": 1e1, "Dp0-": 1e0}
 
 def run_single_bin_fits(
     job_info
@@ -251,7 +214,7 @@ if __name__ == "__main__":
     
     ##### OPTIMIZATION METHOD ARGS #####
     # NOTE: L-BFGS-B is found to be very fast but Minuit appears to be more robust so set as default
-    #       Boris - COMPASS uses L-BFGS-B for their binned fits. Minuit for their mass dependent fits due to L-BFGS-B performing worse
+    #       Boris Grube - COMPASS uses LBFGS for their binned fits but minuit for their mass dependent fits due to L-BFGS-B performing worse
     parser.add_argument("--method", type=str, 
                        choices=['minuit-numeric', 'minuit-analytic', 'L-BFGS-B', 'trust-ncg', 'trust-krylov'], 
                        default='minuit-analytic',
