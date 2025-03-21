@@ -273,8 +273,8 @@ def calculate_intensity_and_error(amp, cov_amp, ampMatrix, ampMatrixTermOrder, w
             raise ValueError(f"Wave {wave} not found in all_waves_list (which should be maintained by the PWA manager)")
     if cov_amp.shape[0] != len(amp) or cov_amp.shape[1] != len(amp):
         raise ValueError(f"Covariance matrix does not match length of 'amp' array: {len(amp)} != {cov_amp.shape}")
-    if ampMatrix.shape[0] != 2 * len(all_waves_list) or ampMatrix.shape[1] != 2 * len(all_waves_list):
-        raise ValueError(f"Normalization integral matrix does not match length of 'all_waves_list': {2 * len(all_waves_list)} != {ampMatrix.shape}")
+    if ampMatrix.shape[0] % len(all_waves_list) != 0 or ampMatrix.shape[1] % len(all_waves_list) != 0:
+        raise ValueError(f"Normalization integral matrix does not have square shape that is a multiple of the number of waves: {ampMatrix.shape}")
     if len(all_waves_list) != len(amp) // 2:
         raise ValueError(f"'all_waves_list' should have the 2x length of 'amp' array: {len(all_waves_list)} != {len(amp) // 2}")
     if len(sectors_per_amp) != 1:
@@ -342,66 +342,6 @@ def calculate_intensity_and_error(amp, cov_amp, ampMatrix, ampMatrixTermOrder, w
     error = np.sqrt(variance)
     
     return intensity, error
-
-def calculate_relative_phase_and_error(amp, cov_amp, wave1, wave2, all_waves_list):
-    """
-    Calculate the relative phases between two amplitudes and its error.
-    
-    Parameters:
-    - amp: flattened array of real and imaginary parts of amplitudes, shape (n_waves * 2,)
-    - cov_amp: covariance matrix for the amplitude parameters, shape (n_waves * 2, n_waves * 2)
-    - wave1: name of the first wave, i.e. Dp2+
-    - wave2: name of the second wave, i.e. Sp0+
-    - all_waves_list: list of all wave names, length n_waves. This must be in the order of the flattened 'amp' array
-    
-    Returns:
-    - phase_diff: relative phases in radians
-    - error: error on the relative phases
-    """
-
-    if wave1 not in all_waves_list:
-        raise ValueError(f"Wave {wave1} not found in all_waves_list (which should be maintained by the PWA manager)")
-    if wave2 not in all_waves_list:
-        raise ValueError(f"Wave {wave2} not found in all_waves_list (which should be maintained by the PWA manager)")
-    if cov_amp.shape[0] != len(amp) or cov_amp.shape[1] != len(amp):
-        raise ValueError(f"Covariance matrix does not match length of 'amp' array: {len(amp)} != {cov_amp.shape}")
-    if len(all_waves_list) != len(amp) // 2:
-        raise ValueError(f"'all_waves_list' should have the 2x length of 'amp' array: {len(all_waves_list)} != {2 * len(amp)}")
-    
-    # Get indices of the waves
-    idx1 = all_waves_list.index(wave1)
-    idx2 = all_waves_list.index(wave2)
-    
-    # Get real and imaginary parts of the amplitudes
-    a1_re = amp[2 * idx1]
-    a1_im = amp[2 * idx1 + 1]
-    a2_re = amp[2 * idx2]
-    a2_im = amp[2 * idx2 + 1]
-    a1_complex = amp[2 * idx1] + 1j * amp[2 * idx1 + 1]
-    a2_complex = amp[2 * idx2] + 1j * amp[2 * idx2 + 1]
-    a2_angle = np.angle(a2_complex)
-    a1_complex *= np.exp(-1j * a2_angle)    
-    phase_diff = np.angle(a1_complex)
-    
-    # Calculate derivatives of relative phases with respect to parameters
-    p_deriv = np.zeros(4)
-    p_deriv[0] = -a1_im / np.abs(a1_complex)**2  # d(phase)/d(a1_re)
-    p_deriv[1] =  a1_re / np.abs(a1_complex)**2  # d(phase)/d(a1_im)
-    p_deriv[2] =  a2_im / np.abs(a2_complex)**2  # d(phase)/d(a2_re)
-    p_deriv[3] = -a2_re / np.abs(a2_complex)**2  # d(phase)/d(a2_im)
-    
-    # Get indices in the covariance matrix
-    idx = [2 * idx1, 2 * idx1 + 1, 2 * idx2, 2 * idx2 + 1]
-    
-    # Calculate variance
-    variance = 0.0
-    for i in range(4):
-        for j in range(4):
-            variance += p_deriv[i] * p_deriv[j] * cov_amp[idx[i], idx[j]]
-    
-    error = np.sqrt(variance)
-    
-    return phase_diff, error
 
 def optimize_single_bin_minuit(objective, initial_params, bin_idx, use_analytic_grad=True):
     """
