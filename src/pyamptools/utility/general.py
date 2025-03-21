@@ -283,9 +283,6 @@ def load_yaml(path_to_yaml, resolve=True):
         resolve (bool): Whether to resolve (variable interpolation) the yaml file
     """
     
-    # TODO: Overwriting the original yaml file can be dangerous. Especially if multiple processes does it at the same time
-    #       Can lead to race condition which could end up with empty yaml file. Fix me sometime
-    
     try:
         yaml = OmegaConf.load(path_to_yaml)
 
@@ -301,7 +298,23 @@ def load_yaml(path_to_yaml, resolve=True):
                 changed = True
         if changed:
             print(f"Current pyamptools or iftpwa commit differs from hash in the yaml file. Updating...")
-            dump_yaml(yaml, path_to_yaml, resolve=False)
+            import filelock
+            import os
+            import time
+            import random
+            time.sleep(random.uniform(0.1, 0.5)) # random delay to reduce fighting
+            try:
+                lock_path = f"{path_to_yaml}.lock"
+                with filelock.FileLock(lock_path, timeout=30):
+                    current_yaml = OmegaConf.load(path_to_yaml) # re-read to ensure we are not overwriting changes
+                    current_yaml.pyamptools_commit_hash = pyamptools_commit_hash
+                    current_yaml.iftpwa_commit_hash = iftpwa_commit_hash
+                    dump_yaml(current_yaml, path_to_yaml, resolve=False)
+                    print(f"Successfully updated YAML file with new commit hashes")
+            except filelock.Timeout:
+                print(f"Could not acquire lock for {path_to_yaml} after 30 seconds. Continuing without updating.")
+            except Exception as e:
+                print(f"Error while trying to update YAML file: {e}. Continuing without updating.")
         
         yaml = OmegaConf.to_container(yaml, resolve=resolve)
         if "default_yaml" in yaml:
@@ -442,6 +455,7 @@ def get_gpu_status():
 
 
 def calculate_subplot_grid_size(length_of_list):
+    """Calculates rows and columns aiming to be as square as possible"""
     sqrt_length = math.sqrt(length_of_list)
     rows = math.floor(sqrt_length)
     columns = rows
