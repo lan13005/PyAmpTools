@@ -101,10 +101,10 @@ prettyLabels = KeyReturningDict(prettyLabels)
 
 def append_kinematics(
     infile, 
-    outputBase, 
+    output_location, 
     treeName="kin",
-    dump_augmented_tree=True,
     console=None,
+    beam_angle=None,
     ):
     
     """
@@ -122,13 +122,15 @@ def append_kinematics(
     #########################################################################
     
     Args:
-        infile (str): Input ROOT file
-        outputBase (str): Base name for output ROOT files
+        infile (List[str], str): Input ROOT file(s) that can be put into a TChain
+        output_location (str): output file path
         treeName (str): Name of the TTree in the input ROOT file
-        dump_augmented_tree (bool): Whether to save the augmented tree with all events
+        console (rich.console.Console): Console object for printing
+        beam_angle (float, str): Beam angle in degrees or branch name in the tree the beam angles (deg) are stored in
     
     Returns:
         df: ROOT.RDataFrame with kinematics appended
+        output_location: str, location of the output ROOT file
     """
     
     # Import here to ensure a clean ROOT environment for each call
@@ -142,21 +144,38 @@ def append_kinematics(
 
     # Define kinematic quantities to calculate using FSROOT macros
     # For etapi0: X1 = eta, X2 = pi0, RECOIL = recoil proton
+    # NOTE: append (m) to lower chance of name conflicts
     KINEMATIC_QUANTITIES = {
-        "MX": "MASS(X1,X2)",
-        "MX1": "MASS(X1)",
-        "MX2": "MASS(X2)",
-        "cosGJ": "GJCOSTHETA(X1,X2,RECOIL)",
-        "cosHel": "HELCOSTHETA(X1,X2,RECOIL)",
-        "phiHel": "HELPHI(X1,X2,RECOIL,GLUEXBEAM)",
-        "t": "T(GLUEXTARGET,RECOIL)"
+        "mMassX": "MASS(X1,X2)",
+        "mMassX1": "MASS(X1)",
+        "mMassX2": "MASS(X2)",
+        "mCosHel": "HELCOSTHETA(X1,X2,RECOIL)",
+        "mPhiHel": "HELPHI(X1,X2,RECOIL,GLUEXBEAM)",
+        "mt": "T(GLUEXTARGET,RECOIL)"
     }
+    if beam_angle is not None:
+        KINEMATIC_QUANTITIES["mPhi"] = f"BIGPHI({beam_angle},X1,X2,RECOIL,GLUEXBEAM)"
+    else:
+        console.print("beam_angle not set, will not calculate Phi (angle between production plane and beam polarization)", style="bold yellow")
 
     if console is None:
         from rich.console import Console
         console = Console()
+        
+    if output_location is not None and os.path.exists(f"{output_location}"):
+        console.print(f"File {output_location} already exists, will not overwrite", style="bold yellow")
+        return None, KINEMATIC_QUANTITIES
 
     console.print(f"Processing {infile}", style="bold blue")
+    
+    if isinstance(infile, str):
+        infile = [infile]
+    if not isinstance(infile, list):
+        raise ValueError(f"infile must be a list of strings or a single string, got {type(infile)}")
+
+    chain = ROOT.TChain(treeName)
+    for f in infile:
+        chain.Add(f)
     
     # Open input file and get the tree
     df = ROOT.RDataFrame(treeName, infile)
@@ -164,9 +183,6 @@ def append_kinematics(
     # Get column names to check if we need to redefine
     columns = df.GetColumnNames()
     console.print(f"Available columns: {list(columns)}", style="bold blue")
-    output_dir = os.path.dirname(outputBase)
-    output_dir = "." if output_dir == "" else output_dir
-    console.print(f"Dumping the following files relative to: {output_dir}", style="bold blue")
     
     # Define particle four-vectors
     particles = ["RECOIL", "X2", "X1"] # Particle order in AmpTools output tree
@@ -182,15 +198,17 @@ def append_kinematics(
     for name, function in KINEMATIC_QUANTITIES.items():
         df = df.Define(name, function)
 
-    # Save the full dataframe - use different tree name to avoid conflicts
-    if os.path.exists(f"{outputBase}.root") and dump_augmented_tree:
-        console.print(f"File {os.path.basename(outputBase)}.root already exists, will not overwrite with augmented ROOT file", style="bold yellow")
-    else:
-        if dump_augmented_tree:
-            df.Snapshot(treeName, f"{outputBase}.root")
-            console.print(f"Created augmented tree with all events at {os.path.basename(outputBase)}.root", style="bold green")
+    # Do not save the particle four-vectors
+    original_columns = list(columns)
+    kinematic_columns = list(KINEMATIC_QUANTITIES.keys())
+    columns_to_keep = original_columns + kinematic_columns
+    
+    # Save only the selected columns - use different tree name to avoid conflicts
+    if output_location is not None:
+        df.Snapshot(treeName, f"{output_location}", columns_to_keep)
+        console.print(f"Created augmented tree with all events at {output_location}", style="bold green")
             
-    return df
+    return df, KINEMATIC_QUANTITIES
 
 class Styler:
     def __init__(self):
