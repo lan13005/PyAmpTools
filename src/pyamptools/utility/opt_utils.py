@@ -1,6 +1,5 @@
 from iminuit import Minuit
 from scipy.optimize import minimize
-import scipy.linalg as linalg
 
 import jax.numpy as jnp
 import numpy as np
@@ -9,7 +8,6 @@ from iftpwa1.pwa.gluex.constants import (
     LIKELIHOOD,
     GRAD,
     HESSIAN,
-    INTENSITY_AC,
     NORMINT,
     AMPINT
 )

@@ -32,7 +32,7 @@ def run_single_bin_fits(
     Run a set of randomly initialized fits in a single bin
     
     Args: job_info contains the following:
-        pwa_manager: GlueXJaxManager instance
+        pwa_manager: GluexJaxManager instance
         bin_idx: Bin index to fit
         bin_seed: Random seed for this bin for reproducibility
         n_iterations: Number of random initializations to perform
@@ -205,7 +205,7 @@ if __name__ == "__main__":
     parser = OptimizerHelpFormatter(description="Run optimization fits using various methods.")
     parser.add_argument("yaml_file", type=str,
                        help="Path to PyAmpTools YAML configuration file")
-    parser.add_argument("--bins", type=int, nargs="+",
+    parser.add_argument("-b", "--bins", type=int, nargs="+",
                        help="List of kinematic bin indicies to process, if none provided then will run across all bins defined the YAML file")
     parser.add_argument("--output_folder", type=str, default=None,
                         help="Folder to save output results to. If not provided then will dump to 'MLE' subdirectory in YAML.base_directory")
@@ -269,7 +269,9 @@ if __name__ == "__main__":
         output_folder = os.path.join(os.path.dirname(pyamptools_yaml["base_directory"]), "MLE")
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
-            
+        else:
+            raise ValueError(f"Output folder {output_folder} already exists! Please provide a different path or remove the folder.")
+
     ##### LOAD PWA MANAGER #####
     from iftpwa1.pwa.gluex.gluex_jax_manager import (
         GluexJaxManager,

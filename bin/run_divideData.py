@@ -211,7 +211,7 @@ if __name__ == "__main__":
                                 signal_err = (nBar_err_ftype['data'] + nBar_err_ftype['bkgnd'])**0.5
                             else:
                                 signal = nBar_ftype['data']
-                                signal_err = nBar_err_ftype['data']
+                                signal_err = nBar_err_ftype['data']**0.5
                             f.write(f"nBar signal: {signal} +/- {signal_err}\n")
                             eff = nBar_ftype['accmc'] / nBar_ftype['genmc']
                             eff_err = eff * ((nBar_err_ftype['accmc']**0.5 / nBar_ftype['accmc'])**2 + (nBar_err_ftype['genmc']**0.5 / nBar_ftype['genmc'])**2)**0.5
