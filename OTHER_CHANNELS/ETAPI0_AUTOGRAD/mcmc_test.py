@@ -1,64 +1,51 @@
-# Configure JAX threading before setting device count
-# Optimize for maximum parallel chains with controlled threading
 import os
-# os.environ["XLA_FLAGS"] = "--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1"
-# os.environ["XLA_FLAGS"] += " --xla_force_host_platform_device_count=40"
-# os.environ["JAX_ENABLE_X64"] = "True"  # Enable double precision for numerical stability
-# os.environ["JAX_PLATFORMS"] = "cpu"  # Explicitly use CPU
+import numpyro
+import numpyro.distributions as dist
 import jax
-# jax.config.update('jax_default_matmul_precision', 'float32')  # Tradeoff precision for speed
 import jax.numpy as jnp
 from jax import jit, vmap
-
 from pyamptools.utility.general import load_yaml, Timer
 import numpy as np
 import sys
 import pickle as pkl
-from iminuit import Minuit
 import argparse
-from scipy.optimize import minimize
-import numpyro
-import numpyro.distributions as dist
 from numpyro.infer import NUTS, MCMC
 from rich.console import Console
 import os
-
 from pyamptools.utility.general import identify_channel, converter
+from pyamptools.utility.opt_utils import Objective
+from multiprocessing import Pool
 
-from optimize_utility import Objective
+# Configure JAX for multi-threading on CPU
+# os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=6"
+# jax.config.update('jax_enable_x64', True)
+# numpyro.set_platform("cpu")  # Ensure CPU usage
+# numpyro.set_host_device_count(6)  # Use 6 CPU cores
+# print(f"JAX is using {jax.local_device_count()} local devices")
+# print(f"Configured JAX for 6 CPU devices")
 
-Minuit.errordef = Minuit.LIKELIHOOD
-comm0 = None
-rank = 0 
-mpi_offset = 1
-
-# Things to consider:
-# - COMPASS (~Boris) - lbfgs works well for binned fits but reverted to minuit for mass dependent fits since lbfgs was not able to find good minima
-# - (Jiawei) Regularization - L1/L2 should be performed on the magnitude of the amplitude not the intensities (which would be L2/L4)
-
-# Log magnitudes produces a bias in the total intensity
-# - I guess this is log-normal magnitudes on each amplitude is biased upward and therefore the total intensity is biased upward
-# - Linear spaced magnitudes are numerically unstable, I guess due to interference cancelling out contributions
+# Initial attempt at using polar coordinates (performance is terrible in general, leave here for future)
+#   Log magnitudes produces a bias in the total intensity
+#   - I guess this is log-normal magnitudes on each amplitude is biased upward and therefore the total intensity is biased upward
+#   - Linear spaced magnitudes are numerically unstable
+#   Polar coordinates parametrizations
+#   - tried tangent half angle form and von mises distribution
 use_log_magnitudes = False
 use_phase_param = 'tan' # 'tan' = tan half angle form AND 'vonmises' = Von Mises with circular reparametrization
-
-# init_maxiter does not appear to matter much
-# - one test running lbfgs with [2, 5, 10, 20] iterations where ~30 is enough for deep convergence. Results basically were the same
 
 console = Console()
 
 class MCMCManager:
     
     def __init__(self, pyamptools_yaml, iftpwa_yaml, bin_idx, prior_scale=100.0, prior_dist='laplace', n_chains=20, n_samples=2000, n_warmup=1000, 
-                 resume_path=None, save_path=None, cop="cartesian", init_method="L-BFGS-B", init_maxiter=100, init_gtol=1e-4, 
-                 init_ftol=1e-6, wave_prior_scales=None, target_accept_prob=0.85, max_tree_depth=12, 
+                 resume_path=None, output_folder=None, cop="cartesian", wave_prior_scales=None, target_accept_prob=0.85, max_tree_depth=12, 
                  step_size=0.1, adapt_step_size=True, dense_mass=True, adapt_mass_matrix=True, enforce_positive_reference=False):
         # GENERAL PARAMETERS
         self.pyamptools_yaml = pyamptools_yaml
         self.iftpwa_yaml = iftpwa_yaml
         self.bin_idx = bin_idx
         self.resume_path = resume_path
-        self.save_path = save_path
+        self.output_folder = output_folder
         self.cop = cop
         self.enforce_positive_reference = enforce_positive_reference
         console.print(f"Using coordinate system: {cop}", style="bold green")
@@ -74,13 +61,6 @@ class MCMCManager:
         self.ref_indices = None
         self.channel = None
         self.refl_sectors = None
-        
-        # INITIALIZATION PARAMETERS
-        self.init_method = init_method
-        self.init_maxiter = init_maxiter
-        self.init_gtol = init_gtol
-        self.init_ftol = init_ftol
-        self.init_params = None
         
         # PRIOR PARAMETERS
         self.prior_scale = prior_scale
@@ -113,7 +93,7 @@ class MCMCManager:
         if self.prior_dist not in ['gaussian', 'laplace', 'horseshoe']:
             raise ValueError(f"Invalid prior distribution: {self.prior_dist}")
         console.print(f"Using '{self.prior_dist}' prior distribution", style="bold green")
-        console.print(f"Prior distribution of Re[reference_waves]: {'strictly positive' if self.enforce_positive_reference else 'allow negative'}", style="bold green")
+        console.print(f"Prior distribution of Re\[reference_waves]: {'strictly positive' if self.enforce_positive_reference else 'allow negative'}", style="bold green")
         
         ################################################
         # Process wave-specific prior scales if provided
@@ -147,25 +127,24 @@ class MCMCManager:
                 free_complex_indices = self.free_complex_indices
                 free_real_indices = self.free_real_indices
                 
-                # Get prior scales for each group
+                # Get prior scales
                 real_prior_scales = self.param_prior_scales[free_real_indices]
                 complex_prior_scales = self.param_prior_scales[free_complex_indices]
 
-                # Sample parameters using appropriate distributions
+                # Gaussian prior (L2 regularization)
                 if self.prior_dist == "gaussian":
+                    # Allow reference waves to be strictly positive or allow negative values
                     if not self.enforce_positive_reference:
-                        # Normal for all parameters including reference wave real parts
                         free_params_real = numpyro.sample(
                             "real_params",
                             dist.Normal(loc=jnp.zeros_like(real_prior_scales), scale=real_prior_scales)
                         )
                     else:
-                        # HalfNormal for real parts of reference waves
                         free_params_real = numpyro.sample(
                             "real_params",
                             dist.HalfNormal(scale=real_prior_scales)
                         )
-                    # Normal for all other parameters
+                    # Non-reference waves allows all reals for both parts
                     free_params_complex = numpyro.sample(
                         "complex_params",
                         dist.Normal(loc=jnp.zeros_like(complex_prior_scales), scale=complex_prior_scales)
@@ -174,18 +153,15 @@ class MCMCManager:
                 # Laplace prior (L1 regularization)
                 elif self.prior_dist == "laplace":
                     if not self.enforce_positive_reference:
-                        # Laplace for all parameters including reference wave real parts
                         free_params_real = numpyro.sample(
                             "real_params",
                             dist.Laplace(loc=jnp.zeros_like(real_prior_scales), scale=real_prior_scales)
                         )
-                    else:
-                        # Exponential for real parts of reference waves (equivalent to positive half of Laplace)
+                    else: # Exponential for real parts (equivalent to positive half of Laplace)
                         free_params_real = numpyro.sample(
                             "real_params",
                             dist.Exponential(rate=1.0/real_prior_scales)
                         )
-                    # Laplace for all other parameters
                     free_params_complex = numpyro.sample(
                         "complex_params",
                         dist.Laplace(loc=jnp.zeros_like(complex_prior_scales), scale=complex_prior_scales)
@@ -284,7 +260,6 @@ class MCMCManager:
             else:
                 raise ValueError(f"Invalid coordinate system: {self.cop}")
 
-
             ##### Return objective value
             # Handle both batched and non-batched cases (multi-chain or not)
             if params.ndim > 1:
@@ -293,11 +268,9 @@ class MCMCManager:
             else:
                 nll = self.objective_fn(params)
             
+            ##### Can manually add regularization BUT this will not be properly Bayesian!
+            # - Free parameters must have a distribution!
             regularization = 0.0
-            # if cop == "polar": # Add regularization to prevent very large intensity (due to numerical instability)
-            #     console.print("Polar coordinate warning: adding small regularization to stabilize intensity", style="bold yellow")
-            #     free_magnitudes = jnp.array([i for i in range(objective.nPars) if i % 2 == 0])
-            #     regularization = 0.001 * jnp.sum(params[free_magnitudes]**2)
             nll = nll + regularization
             
             numpyro.factor("likelihood", -nll)
@@ -309,7 +282,7 @@ class MCMCManager:
         if self.model is None:
             raise ValueError("Model not created. Call create_model() first.")
         
-        rng_key = jax.random.PRNGKey(0)
+        rng_key = jax.random.PRNGKey(args.seed)
 
         ###########################################
         ### CONFIGURE MCMC SAMPLER
@@ -318,11 +291,11 @@ class MCMCManager:
         nuts_kernel = NUTS(
             self.model,
             target_accept_prob=self.target_accept_prob,     # Increase from 0.9 to encourage even smaller steps
-            max_tree_depth=self.max_tree_depth,             # Allow deeper search but with more careful step size
+            max_tree_depth=self.max_tree_depth,             # Allow deeper tree search, exponential in depth
             step_size=self.step_size,
             adapt_step_size=self.adapt_step_size,          
-            dense_mass=self.dense_mass,                     # Keep this for handling correlations
-            adapt_mass_matrix=self.adapt_mass_matrix        # Explicitly enable mass matrix adaptation
+            dense_mass=self.dense_mass,                     # Keep this for handling correlations (if True, slows down sampling but more accurate)
+            adapt_mass_matrix=self.adapt_mass_matrix        # Explicitly enable mass matrix adaptation (if True, slows down sampling but more accurate)
         )
         
         mcmc = MCMC(
@@ -343,24 +316,23 @@ class MCMCManager:
         if self.resume_state is not None:
             console.print(f"Resuming from saved state", style="bold green")
             try:
-                # Set post_warmup_state to the saved state - this will skip warmup
                 mcmc.post_warmup_state = self.resume_state
                 mcmc.run(self.resume_state.rng_key)
             except Exception as e:
                 console.print(f"Error loading MCMC state: {e}", style="bold red")
                 console.print("Falling back to fresh start", style="yellow")
-                mcmc.run(rng_key_mcmc) # , init_params=init_params)
+                mcmc.run(rng_key_mcmc)
         else:
-            mcmc.run(rng_key_mcmc) # , init_params=init_params)
+            mcmc.run(rng_key_mcmc)
         
         ############################
         ### SAVE STATE IF REQUESTED
         ############################
-        if self.save_path is not None:
-            console.print(f"Saving MCMC state to: {self.save_path}", style="bold green")
-            os.makedirs(os.path.dirname(self.save_path), exist_ok=True)
+        if self.output_folder is not None:
+            console.print(f"Saving MCMC state to: {self.output_folder}", style="bold green")
+            os.makedirs(os.path.dirname(self.output_folder), exist_ok=True)
             try:
-                with open(self.save_path, 'wb') as f:
+                with open(self.output_folder, 'wb') as f:
                     pkl.dump(mcmc.last_state, f)
             except Exception as e:
                 console.print(f"Error saving MCMC state: {e}", style="bold red")
@@ -391,6 +363,7 @@ class MCMCManager:
         divergence = self.mcmc.get_extra_fields()["diverging"]
         
         console.print("\n\n\n=== MCMC CONVERGENCE DIAGNOSTICS ===", style="bold")
+        console.print("NOTE: The following statistics are desired but the actual amplitude results can be useful already!", style="bold yellow")
         
         console.print("\nR-hat Reference:", style="bold")
         console.print("R-hat (Gelman-Rubin statistic) measures chain convergence by comparing within-chain and between-chain variance:", style="italic")
@@ -435,7 +408,6 @@ class MCMCManager:
                 # Print mappings
                 for idx, (wave, component) in complex_idx_map.items():
                     console.print(f"complex_params[{idx}] corresponds to {component}[{wave}]", style="bold")
-                
                 for idx, (wave, component) in real_idx_map.items():
                     console.print(f"real_params[{idx}] corresponds to {component}[{wave}]", style="bold")
             
@@ -595,7 +567,7 @@ class MCMCManager:
     def _setup_objective(self):
         from iftpwa1.pwa.gluex.gluex_jax_manager import GluexJaxManager
 
-        self.pwa_manager = GluexJaxManager(comm0=comm0, mpi_offset=mpi_offset,
+        self.pwa_manager = GluexJaxManager(comm0=None, mpi_offset=1,
                                     yaml_file=pyamptools_yaml,
                                     resolved_secondary=iftpwa_yaml, prior_simulation=False, sum_returned_nlls=False)
         self.pwa_manager.prepare_nll()
@@ -668,190 +640,10 @@ class MCMCManager:
         self.free_real_indices = jnp.array(self.free_real_indices)
         
     def _get_initial_params(self):
+        # NOTE: See commit for test code: 2f14970
+        #       TEST CODE: uses lbfgs to perform short optimization to move initial parameters to better starting location
+        #                  MCMC appears to perform well without this step so it was removed but you can reference it later
         pass
-        # ###################
-        # ### INITIALIZATION
-        # ###################
-        # # Draw random sample and run optimization to move it to better starting location
-        # def init_chain(key, i, method=init_method, maxiter=init_maxiter, gtol=init_gtol, ftol=init_ftol):
-        #     console.print(f"Initializing chain {i} (randomly + {method} optimization) ...", style="bold")
-        #     # Use parameter-specific prior scales for initialization
-        #     init_param = jax.random.uniform(key, shape=(objective.nPars,), minval=-100.0, maxval=100.0) # NOTE: Find better initialization of min/max range
-            
-        #     # Fix reference by rotating to be real
-        #     for ref_idx in ref_indices:
-        #         ref_mag = jnp.abs(init_param[2*ref_idx] + 1j * init_param[2*ref_idx+1])
-        #         init_param = init_param.at[2*ref_idx  ].set(ref_mag)
-        #         init_param = init_param.at[2*ref_idx+1].set(0.0)
-            
-        #     start_nll = objective_fn(init_param)
-            
-        #     # Define the objective function and its gradient for scipy.optimize
-        #     def scipy_obj(x):
-        #         return objective_fn(x).item()  # Convert to native Python type
-                
-        #     def scipy_grad(x):
-        #         return np.array(gradient_fn(x))  # Convert to numpy array
-            
-        #     # Handle reference wave constraints using parameter bounds
-        #     bounds = [(None, None)] * objective.nPars
-        #     if ref_indices:
-        #         for ref_idx in ref_indices:
-        #             bounds[2*ref_idx+1] = (0.0, 0.0) # Fix imaginary part of reference wave to 0
-            
-        #     # Run optimization
-        #     result = minimize(
-        #         scipy_obj,
-        #         np.array(init_param),  # Convert to numpy array for scipy
-        #         method=method,
-        #         jac=scipy_grad,
-        #         bounds=bounds,
-        #         options={
-        #             'maxiter': maxiter,
-        #             'gtol': gtol,
-        #             'ftol': ftol,
-        #             'disp': False
-        #         }
-        #     )
-            
-        #     params = jnp.array(result.x)  # Convert back to JAX array
-        #     end_nll = objective_fn(params)
-            
-        #     # Check if optimization improved the likelihood
-        #     if end_nll > start_nll:
-        #         console.print(f"  Warning: Initialization resulted in worse NLL for chain {i}!", style="bold red")
-        #         console.print(f"  Start: {start_nll:.4f}, End: {end_nll:.4f}", style="red")
-        #         # Fall back to original point if optimization made things worse
-        #         params = init_param
-        #     else:
-        #         console.print(f"  Chain {i}: NLL improved from {start_nll:.4e} to {end_nll:.4e} [Delta={end_nll-start_nll:.1f}, Iterations={result.nit}]") 
-                
-        #     return params
-        
-        # keys = jax.random.split(rng_key, n_chains + 1)
-        # rng_key = keys[0]
-        # chain_keys = keys[1:]
-        # initial_params = [] # Shape: (n_chains, nPars)
-        # for i in range(n_chains):
-        #     initial_params.append(init_chain(chain_keys[i], i))
-        # initial_params = jnp.array(initial_params)
-            
-        # if cop == "cartesian":           
-        #     # Create mask to exclude imaginary parts of reference waves
-        #     mask = jnp.ones(objective.nPars, dtype=bool)
-        #     for ref_idx in ref_indices:
-        #         mask = mask.at[2*ref_idx+1].set(False)
-                
-        #     # # Basic initialization for 'params'
-        #     # init_params = {'params': initial_params[:, mask]}  # Shape: (n_chains, nPars - len(ref_indices))
-            
-        #     # Non-centered parameterization of Horseshoe prior (better when posterior is dominated by prior term / likelihood not constraining)
-        #     # The scale (of Cauchy) determines the location within which 50% of the distribution is contained
-        #     # - Start with 10% of prior scale for global shrinkage (for each chain)
-        #     # - Start with 50% of prior scale for local shrinkage  (for each parameter in the chain)
-        #     global_scale_init = jnp.ones((n_chains, 1                                 )) * prior_scale * 0.01
-        #     local_scale_init  = jnp.ones((n_chains, objective.nPars - len(ref_indices))) * prior_scale * 0.05
-            
-        #     param_magnitudes = jnp.abs(initial_params[:, mask])
-            
-        #     # Set raw_params to standard normal values, scaled to match optimized parameters
-        #     # This ensures we start with parameters that reproduce approximately the same values 
-        #     # as the optimized parameters, but with a proper hierarchical structure
-        #     raw_params_init = jnp.clip(
-        #         jnp.sign(initial_params[:, mask]) * 
-        #         param_magnitudes / (global_scale_init * local_scale_init), 
-        #         -3.0, 3.0
-        #     )
-
-        #     init_params = {
-        #         'raw_params': raw_params_init,
-        #         'global_scale': global_scale_init,
-        #         'local_scale': local_scale_init,
-        #         'params': raw_params_init * global_scale_init * local_scale_init,
-        #     }
-            
-        # elif cop == "polar":
-        #     # NOTE: The initial parameters should by now have strictly applied the reference wave constraints
-        #     _initial_params = jnp.zeros((n_chains, objective.nPars))
-        #     _camp = initial_params[:, ::2] + 1j * initial_params[:, 1::2] # (c)omplex (amp)litude
-            
-        #     # Convert magnitudes to log-space for initialization
-        #     _magnitudes = jnp.maximum(jnp.abs(_camp), 1e-5) # Ensure positive values (for log)
-            
-        #     # Get phases from complex amplitudes
-        #     _phases = jnp.angle(_camp)
-            
-        #     if use_phase_param == 'tan':
-        #         # Convert phases to tangent half-angle parameter: u = tan(phase/2)
-        #         # Add small epsilon to avoid exact π which would give infinity
-        #         _phases_safe = jnp.where(jnp.abs(_phases) > jnp.pi - 1e-5, 
-        #                                 _phases * (1 - 1e-5), 
-        #                                 _phases)
-        #         _phase_params = jnp.tan(_phases_safe / 2)
-        #     elif use_phase_param == 'vonmises':
-        #         # For von Mises, we just use the angles directly for initialization
-        #         _phase_params = _phases
-        #     else:
-        #         raise ValueError(f"Invalid phase parameterization: {use_phase_param}")
-            
-        #     # Set magnitudes and store original phases for display
-        #     _initial_params = _initial_params.at[:,  ::2].set(_magnitudes)
-        #     _initial_params = _initial_params.at[:, 1::2].set(_phases)  # Still store phases for display
-
-        #     # Create mask to exclude phases of reference waves
-        #     mask = jnp.ones(len(waveNames), dtype=bool)
-        #     for ref_idx in ref_indices:
-        #         mask = mask.at[ref_idx].set(False)
-        #     init_params = {
-        #         'magnitudes': _initial_params[:, ::2],  # Shape: (n_chains, len(waveNames))
-        #         'phase_params': _phase_params[:, mask]  # Shape: (n_chains, len(waveNames) - len(ref_indices))
-        #     }
-        # else:
-        #     raise ValueError(f"Invalid coordinate system: {cop}")
-
-        # console.print("\n\n=== INITIAL CHAIN PARAMETER VALUES ===", style="bold")
-        # for k, v in init_params.items():
-        #     console.print(f"{k}: {v.shape} ~ (nChains, params)", style="bold")
-        #     console.print(f"{v}\n", style="bold")
-
-        # ###################
-        # ### DISPLAY INITIAL INTENSITIES
-        # ###################
-        # console.print("\n=== INITIAL CHAIN INTENSITIES ===", style="bold")
-        # from rich.table import Table
-        
-        # # Calculate intensities for each wave
-        # table = Table(title="Initial Chain Intensities")
-        # table.add_column("Chain", justify="right", style="cyan")
-        # table.add_column("Total", justify="right", style="green")
-        # table.add_column("NLL", justify="right", style="red")
-        
-        # # Add columns for each wave
-        # for wave in waveNames:
-        #     table.add_column(wave, justify="right")
-        
-        # # Calculate and add intensities for each chain
-        # for i in range(n_chains):
-        #     params = initial_params[i]
-        #     total_intensity = objective.intensity(params)
-        #     nll = objective_fn(params)
-            
-        #     # Get individual wave intensities
-        #     wave_intensities = []
-        #     for wave in waveNames:
-        #         wave_intensity = objective.intensity(params, suffix=[wave])
-        #         wave_intensities.append(f"{wave_intensity:.1f}")
-            
-        #     # Add row to table
-        #     table.add_row(
-        #         f"{i}", 
-        #         f"{total_intensity:.1f}", 
-        #         f"{nll:.1f}",
-        #         *wave_intensities
-        #     )
-        
-        # console.print(table)
-        # console.print("")
 
 class OptimizerHelpFormatter(argparse.ArgumentParser):
     def error(self, message):
@@ -864,24 +656,26 @@ class OptimizerHelpFormatter(argparse.ArgumentParser):
         return help_message
 
 if __name__ == "__main__":
-    parser = OptimizerHelpFormatter(description="Run optimization fits using various methods.")
+    parser = OptimizerHelpFormatter(description="Run MCMC fits using numpyro.")
     parser.add_argument("yaml_file", type=str,
                        help="Path to PyAmpTools YAML configuration file")    
     parser.add_argument("-b", "--bins", type=int, nargs="+",
                        help="List of bin indices to process")
-    parser.add_argument("-cop", "--coordinate_system", type=str, choices=["cartesian", "polar"], default="cartesian",
-                       help="Coordinate system to use for the complex amplitudes")
+    parser.add_argument("--output_folder", type=str, default=None,
+                        help="Folder to save output results to. If not provided then will dump to 'MCMC' subdirectory in YAML.base_directory")
+    parser.add_argument("--nprocesses", type=int, default=10,
+                        help="Number of processes to distribute work under. Each fit in a bin utilizes around 5 complete cores (if nchains >= 5). Number of bins in paralell is then nprocesses / 5")
 
     #### MCMC ARGS ####
     parser.add_argument("-ps", "--prior_scale", type=float, default=1000.0,
-                       help="Prior scale for the magnitude of the complex amplitudes")
+                       help="Prior scale for the magnitude of the complex amplitudes, default is very large to be as non-informative as possible")
     parser.add_argument("-pd", "--prior_dist", type=str, choices=['laplace', 'gaussian', 'horseshoe'], default='gaussian', 
                        help="Prior distribution for the complex amplitudes")
-    parser.add_argument("-nc", "--nchains", type=int, default=20,
+    parser.add_argument("-nc", "--nchains", type=int, default=6,
                        help="Number of chains to use for numpyro MCMC (each chain runs on paralell process)")
-    parser.add_argument("-ns", "--nsamples", type=int, default=2000,
+    parser.add_argument("-ns", "--nsamples", type=int, default=1000,
                        help="Number of samples to draw per chain")
-    parser.add_argument("-nw", "--nwarmup", type=int, default=1000,
+    parser.add_argument("-nw", "--nwarmup", type=int, default=500,
                        help="Number of warmup samples to draw")
     
     #### MCMC SAMPLER ARGS ####
@@ -902,40 +696,19 @@ if __name__ == "__main__":
     #### SAVE/RESUME ARGS ####
     parser.add_argument("-r", "--resume", type=str, default=None,
                        help="Path to saved MCMC state to resume from, warmup will be skipped")
-    parser.add_argument("-s", "--save", type=str, default="mcmc_state.pkl",
-                       help="Path to save MCMC state for future resuming")
     
     #### HELPFUL ARGS ####
     parser.add_argument("--print_wave_names", action="store_true",
                        help="Print wave names")
     parser.add_argument("--seed", type=int, default=42,
                        help="Random seed")
-    
-    #### INITIALIZATION ARGS ####
-    parser.add_argument("--init_method", type=str, default="L-BFGS-B",
-                       choices=['L-BFGS-B', 'trust-ncg', 'trust-krylov'],
-                       help="SciPy optimization method for initialization")
-    parser.add_argument("--init_maxiter", type=int, default=100,
-                       help="Maximum number of iterations for initialization optimizer. Standard fits typically converge within 100-200 iterations")
-    parser.add_argument("--init_gtol", type=float, default=1e-4,
-                       help="Gradient tolerance for initialization optimizer. Values of 1e-4 to 1e-5 are typical for standard fits; smaller values may be needed for high precision.")
-    parser.add_argument("--init_ftol", type=float, default=1e-6,
-                       help="Function value tolerance for initialization optimizer. Values of 1e-6 to 1e-8 are common for standard fits; smaller values ensure more precise convergence.")
-    
+    parser.add_argument("-cop", "--coordinate_system", type=str, choices=["cartesian", "polar"], default="cartesian",
+                       help="Coordinate system to use for the complex amplitudes. polar is not really supported.")
     parser.add_argument("--enforce_positive_reference", action="store_true",
                        help="Force the real part of reference waves to be strictly positive (default: allow negative values)")
     
     args = parser.parse_args()
 
-    if args.save is None and os.path.exists(args.save):
-        raise ValueError(f"Save path {args.save} already exists! Please provide a different path or remove the file.")
-
-    # Then set the host device count
-    numpyro.set_host_device_count(int(args.nchains))
-    console.print(f"JAX is using {jax.local_device_count()} local devices", style="bold")
-    
-    np.random.seed(args.seed)
-    
     pyamptools_yaml = load_yaml(args.yaml_file)
     iftpwa_yaml = pyamptools_yaml["nifty"]["yaml"]
     iftpwa_yaml = load_yaml(iftpwa_yaml)
@@ -945,19 +718,28 @@ if __name__ == "__main__":
     if not pyamptools_yaml:
         raise ValueError("PyAmpTools YAML file is required")
     
+    # TODO: Properly implement wave_prior_scales somewhere. Since its a dict we might have to put it into YAML file?
     wave_prior_scales = None
     # wave_prior_scales = {
     #     "Sp0+": 150,
     #     "Dp2+": 150,
     # }
+
+    # TODO: remove dirname later in here and opt_mle and fix subdir
+    output_folder = args.output_folder
+    if output_folder is None:
+        output_folder = os.path.join(os.path.dirname(pyamptools_yaml["base_directory"]), "TEST_MCMC")
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    else:
+        raise ValueError(f"Output folder {args.output_folder} already exists! Please provide a different path or remove the folder.")
     
     # Initialize MCMC Manager, preparing for the first requested bin
     mcmc_manager = MCMCManager(
         pyamptools_yaml, iftpwa_yaml, args.bins[0], 
         prior_scale=args.prior_scale, prior_dist=args.prior_dist,
         n_chains=args.nchains, n_samples=args.nsamples, n_warmup=args.nwarmup, 
-        resume_path=args.resume, save_path=args.save, cop=args.coordinate_system, 
-        init_method=args.init_method, init_maxiter=args.init_maxiter, init_gtol=args.init_gtol, init_ftol=args.init_ftol, 
+        resume_path=args.resume, output_folder=args.output_folder, cop=args.coordinate_system, 
         wave_prior_scales=wave_prior_scales,
         target_accept_prob=args.target_accept,
         max_tree_depth=args.max_tree_depth,
@@ -983,6 +765,7 @@ if __name__ == "__main__":
     if args.bins is None:
         raise ValueError("list of bin indices is required")
     
+    #### RUN MCMC ####
     timer = Timer()
     final_result_dicts = [mcmc_manager.run_mcmc()]
     if len(args.bins) > 1:
@@ -991,10 +774,7 @@ if __name__ == "__main__":
             final_result_dict = mcmc_manager.run_mcmc()
             final_result_dicts.append(final_result_dict)
     
-    _save_dir = os.path.dirname(args.save) + ("" if os.path.dirname(args.save) == "" else "/")
-    _save_fname = os.path.basename(args.save)
-    _save_fname = os.path.splitext(_save_fname)[0] # drop extension
-    with open(f"{_save_dir}{_save_fname}_samples.pkl", "wb") as f:
+    with open(f"{output_folder}/mcmc_bin{bin_idx}_samples.pkl", "wb") as f:
         pkl.dump(final_result_dicts, f)
 
     console.print(f"Total time elapsed: {timer.read()[2]}", style="bold")
