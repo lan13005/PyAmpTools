@@ -3,9 +3,70 @@ os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=8"
 
 import jax
 import jax.numpy as jnp
+import jax.lax as lax
 import numpy as np
 from orbax import checkpoint as orbax_checkpoint
 import matplotlib.pyplot as plt
+
+loss_type_map = {"bce": 0, "mse": 1, "mlc": 2, "sqrt": 3}
+loss_type_map_reverse = {v: k for k, v in loss_type_map.items()}
+
+def likelihood_ratio_loss(model_outputs, labels, loss_type_code=0, weights=None):
+    """
+    Unified loss function for likelihood ratio estimation
+    This function roughly follows the parameterization in:
+        - Learning Likelihood Ratios with Neural Network Classifiers
+        - https://arxiv.org/pdf/2305.10500v2
+
+    Args:
+        model_outputs: Raw model outputs (before activation).
+        labels: Ground truth labels (0 for p(x|θ1), 1 for p(x|θ0)).
+        loss_type_code: integer code for the loss type
+        weights: Optional sample weights (default is uniform).
+    
+    Returns:
+        Scalar loss value.
+    """
+    model_outputs = jnp.squeeze(model_outputs)
+    labels = jnp.squeeze(labels)
+
+    # We later clip the loss type labels so if out of bounds then it will revert to the limiting cases
+    preds = lax.cond(
+        loss_type_code < 2,
+        lambda _: jnp.clip(jax.nn.sigmoid(model_outputs), 1e-7, 1 - 1e-7),  # Maps to (0,1)
+        lambda _: jnp.clip(jnp.exp(model_outputs), 1e-7, 1e7),  # Maps to (0,∞) with clipping to prevent explosions
+        operand=None
+    )
+    
+    # These definitions are from Table 1 in https://arxiv.org/pdf/2305.10500v2
+    #   Compute loss terms A(f) and B(f) in a jax safe way
+    def loss_0(_): # BCE where A(f) = log(f) and B(f) = log(1 - f)
+        return jnp.log(preds), jnp.log(1 - preds)
+
+    def loss_1(_): # MSE where A(f) = -(1 - f)^2 and B(f) = f^2
+        return -(1 - preds) ** 2, -(preds ** 2)
+
+    def loss_2(_): # MLC where A(f) = log(f) and B(f) = 1 - f
+        return jnp.log(preds), 1 - preds
+
+    def loss_3(_): # SQRT where A(f) = -1/sqrt(f) and B(f) = -sqrt(f)
+        return -1 / jnp.sqrt(preds), -jnp.sqrt(preds)
+
+    pos_loss, neg_loss = lax.switch(
+        jnp.clip(loss_type_code, 0, 3),  # Ensure loss_type_code is in valid range
+        [loss_0, loss_1, loss_2, loss_3],
+        operand=None
+    )
+
+    # Assign loss based on labels
+    loss = -1 * (labels * pos_loss + (1 - labels) * neg_loss)
+
+    # Apply sample weights if provided
+    if weights is None:
+        return jnp.mean(loss)
+    else:
+        weights = jnp.squeeze(weights)
+        return jnp.mean(weights * loss)
 
 # Define gradient regularization loss
 def gradient_regularization_loss(model, params, x, rngs=None):
@@ -27,46 +88,93 @@ def gradient_regularization_loss(model, params, x, rngs=None):
     # Compute gradients of model output with respect to inputs
     batch_gradients = jax.vmap(jax.grad(lambda x_i: jnp.sum(model_fn(x_i))), in_axes=0)(x)
     
-    # Compute L2 norm of gradients
+    # Compute L2 norm of gradients with clipping to prevent extreme values
+    batch_gradients = jnp.clip(batch_gradients, -1e3, 1e3)
     gradient_norms = jnp.sum(batch_gradients**2, axis=1)
     
     # Return mean of gradient norms as the regularization loss
     return jnp.mean(gradient_norms)
 
+# Define adaptive gradient regularization loss
+def adaptive_gradient_regularization_loss(model, params, x, transition_sensitivity=0.5, rngs=None):
+    """
+    Compute adaptive gradient regularization loss with reduced penalty in high-gradient regions.
+    
+    Args:
+        model: The neural network model
+        params: Model parameters
+        x: Input data
+        transition_sensitivity: Controls how quickly regularization decreases in high-gradient regions
+        rngs: Random number generators for stochastic operations
+    
+    Returns:
+        Adaptive regularization loss
+    """
+    def model_fn(x_sample):
+        return model.apply(params, x_sample, training=False, rngs=rngs)
+    
+    # Compute gradients of model output with respect to inputs
+    batch_gradients = jax.vmap(jax.grad(lambda x_i: jnp.sum(model_fn(x_i))), in_axes=0)(x)
+    
+    # Compute L2 norm of gradients with clipping
+    batch_gradients = jnp.clip(batch_gradients, -1e3, 1e3)
+    gradient_norms = jnp.sum(batch_gradients**2, axis=1)
+    
+    # Apply adaptive weighting that reduces penalty for high gradients
+    suppression_factor = jnp.exp(-transition_sensitivity * jnp.sqrt(gradient_norms))
+    
+    # Return weighted mean of gradient norms
+    return jnp.mean(suppression_factor * gradient_norms)
 
-# Define loss function (binary cross-entropy)
-def binary_cross_entropy(logits, labels, weights=None):
-    logits = jnp.squeeze(logits)
-    labels = jnp.squeeze(labels)
-    if weights is not None:
-        return -jnp.mean(weights * (labels * jax.nn.log_sigmoid(logits) + 
-                         (1 - labels) * jax.nn.log_sigmoid(-logits)))
-    else:
-        return -jnp.mean(labels * jax.nn.log_sigmoid(logits) + 
-                            (1 - labels) * jax.nn.log_sigmoid(-logits))
-        
-# # Signed loss function, separates positive and negative contributions (performs worse)
-# def binary_cross_entropy(logits, labels, weights):
-#     logits = jnp.squeeze(logits)
-#     labels = jnp.squeeze(labels)
-
-#     log_prob_pos = jax.nn.log_sigmoid(logits)   # log(p)
-#     log_prob_neg = jax.nn.log_sigmoid(-logits)  # log(1 - p)
-
-#     pos_loss = weights * labels * log_prob_pos
-#     neg_loss = weights * (1 - labels) * log_prob_neg
-
-#     # Ensure numerical stability by separating positive/negative contributions
-#     loss = -jnp.mean(jnp.where(weights >= 0, pos_loss + neg_loss, -pos_loss - neg_loss))
-
-#     return loss
-
+# Combined loss function with adaptive gradient regularization
+def combined_loss_adaptive(model_outputs, labels, model, params, x, reg_strength=0.01, 
+                          transition_sensitivity=0.5, weights=None, rngs=None,
+                          loss_type_code=0):
+    """
+    Compute combined loss with selected loss function and adaptive gradient regularization.
+    
+    Args:
+        model_outputs: Model output
+        labels: Ground truth labels
+        model: The neural network model
+        params: Model parameters
+        x: Input data
+        reg_strength: Regularization strength hyperparameter
+        transition_sensitivity: Controls how quickly regularization decreases in high-gradient regions
+        weights: Optional sample weights
+        rngs: Random number generators for stochastic operations
+        loss_type_code: integer code for the loss type
+    
+    Returns:
+        Combined loss value with adaptive gradient regularization
+    """
+    main_loss = likelihood_ratio_loss(model_outputs, labels, loss_type_code=loss_type_code, weights=weights)
+    
+    grad_reg_loss = lax.cond(
+        reg_strength > 0,
+        lambda _: adaptive_gradient_regularization_loss(
+            model, params, x, transition_sensitivity, rngs
+        ),
+        lambda _: jnp.array(0.0, dtype=jnp.float32),
+        operand=None
+    )
+    
+    return main_loss + reg_strength * grad_reg_loss, (main_loss, grad_reg_loss)
 
 # Checkpointing utilities
 def save_checkpoint(state, step, checkpoint_dir=None):
     """Save the model checkpoint at a particular step"""
-    # We're saving only the first device's parameters since they're synchronized
-    single_device_state = jax.tree_util.tree_map(lambda x: x[0], state)
+    # Saving only the first device's parameters since they are synchronized
+    def get_first_device(x):
+        if hasattr(x, '__getitem__') and not isinstance(x, (str, bytes)):
+            try:
+                return x[0]  # arrays / lists
+            except (IndexError, TypeError):
+                return x  # scalar
+        else:
+            return x # scalar
+    
+    single_device_state = jax.tree_util.tree_map(get_first_device, state)
     
     checkpointer = orbax_checkpoint.PyTreeCheckpointer()
     options = orbax_checkpoint.CheckpointManagerOptions(
@@ -103,7 +211,7 @@ def load_checkpoint(checkpoint_dir, step=None):
     checkpointer = orbax_checkpoint.PyTreeCheckpointer()
     checkpoint_manager = orbax_checkpoint.CheckpointManager(
         directory=checkpoint_dir, 
-        checkpointers=checkpointer  # Remove the dict wrapper
+        checkpointers=checkpointer
     )
     
     if step is None:
@@ -112,52 +220,62 @@ def load_checkpoint(checkpoint_dir, step=None):
             raise ValueError("No checkpoints found in the specified directory")
     
     # Load the checkpoint with the newer API
-    restored_state = checkpoint_manager.restore(step)  # Remove the items parameter
+    restored_state = checkpoint_manager.restore(step)
     
     print(f"Loaded checkpoint from step {step}")
     
     return restored_state
 
 # Load and use a saved model
-def load_and_use_model(model, state, X_data, checkpoint_dir, step=None):
-    """Load a model from checkpoint and use it for inference"""
+def load_and_use_model(model, state, X_data, checkpoint_dir, step=None, loss_type_code=0):
+    """
+    Load a model from checkpoint and use it for inference
+    
+    Args:
+        model: The neural network model
+        state: Current model state
+        X_data: Input data for inference
+        checkpoint_dir: Directory containing checkpoints
+        step: Specific checkpoint step to load (None for latest)
+        loss_type_code: integer code for the loss type
+        
+    Returns:
+        For "bce"/"mse": Probabilities in range (0,1)
+        For "mlc"/"sqrt": Direct likelihood ratios in range (0,∞)
+    """
     try:
         # Load the checkpoint
         restored_state = load_checkpoint(checkpoint_dir, step)
-        
         if restored_state is None:
             raise ValueError("Failed to load checkpoint - restored state is None")
-            
-        # Extract just the params from the restored state
-        # Remove the extra params layer
-        model_params = restored_state['params']['params']
-            
-        # Use the model for inference with the correct params structure
-        print("Begin applying model onto the data...")
-        logits = model.apply({'params': model_params}, X_data, training=False)
-        probabilities = jax.nn.sigmoid(logits)
-        
-        return probabilities
-        
+        model_params = restored_state['params']['params'] # extract params
     except Exception as e:
-        print(f"Error using model from checkpoint: {e}")
+        print(f"Error loading model from checkpoint: {e}")
         print("Falling back to current model parameters")
-        # Fall back to using the current model state
-        single_device_params = jax.tree_util.tree_map(lambda x: x[0], state.params)['params']  # Remove extra params layer
-        logits = model.apply({'params': single_device_params}, X_data, training=False)
-        probabilities = jax.nn.sigmoid(logits)
-        return probabilities
+        model_params = jax.tree_util.tree_map(lambda x: x[0], state.params)['params']
+        
+    model_outputs = model.apply({'params': model_params}, X_data, training=False)
+    
+    preds = lax.cond(
+        loss_type_code < 2,
+        lambda _: jnp.clip(jax.nn.sigmoid(model_outputs), 1e-7, 1 - 1e-7),  # Maps to (0,1)
+        lambda _: jnp.exp(model_outputs),                                   # Maps to (0,∞),
+        operand=None
+    )
+    return preds
 
 # Calculate and plot 1D efficiency for each variable
-def plot_efficiency_by_variable(X_data, probabilities, feature_names=None, nbins=50, figsize=(15, 15), 
+def plot_efficiency_by_variable(X_data, model_output, feature_names=None, nbins=50, figsize=(15, 15), 
                                 weight_rescaling=1.0, efficiency_dict=None, checkpoint_dir=None, suffix=None,
-                                metric_type="standard"):
+                                loss_type_code=0, metric_type=None, plot_generated=False, plot_predicted=False):
     """
-    Plot efficiency as a function of each variable by integrating over other dimensions.
+    Plot efficiency as a function of each variable
     
     Args:
         X_data: Input feature data with shape (n_samples, n_features)
-        probabilities: Model predictions with shape (n_samples,)
+        model_output: Model predictions:
+                     - For "bce"/"mse": Probabilities in range (0,1)
+                     - For "mlc"/"sqrt": Direct likelihood ratios in range (0,∞)
         feature_names: List of feature names (optional)
         nbins: Number of bins for each variable
         figsize: Figure size for the plots
@@ -165,32 +283,46 @@ def plot_efficiency_by_variable(X_data, probabilities, feature_names=None, nbins
         efficiency_dict: Dictionary containing reference efficiencies for comparison (optional)
         checkpoint_dir: Directory to save the plots (optional)
         suffix: Suffix to add to the plot filename (optional)
-        metric_type: standard  difference between calculated and reference efficiencies or relative
+        loss_type_code: integer code for the loss type
+        metric_type: Metric to plot. If None, uses "standard". 
+                     Supported types: "standard", "relative"
+        plot_generated: Whether to create additional plots for the generated efficiency
+        plot_predicted: Whether to create additional plots for the predicted efficiency
+        
     Returns:
         list: Relative MAE for each feature (relative to the generated nominal efficiency)
     """
     
-    if metric_type not in ["standard", "relative"]:
-        raise ValueError(f"Invalid metric_type: {metric_type}, must be 'standard' or 'relative'")
+    # Validate metric types
+    valid_metric_types = ["standard", "relative"]
+    metric_type_labels = {
+        "standard": "absolute difference",
+        "relative": "absolute relative difference"
+    }
+    if metric_type not in valid_metric_types:
+        raise ValueError(f"Invalid metric_type: {metric_type}, must be one of {valid_metric_types}")
     
     n_features = X_data.shape[1]
     
     # Check input shapes
-    if probabilities.shape[0] != X_data.shape[0]:
-        raise ValueError("probabilities and X_data must have the same number of samples")
+    if model_output.shape[0] != X_data.shape[0]:
+        raise ValueError("model_output and X_data must have the same number of samples")
     if feature_names is None:
         raise ValueError("No feature names provided, using default names")
     
-    # Create square matrix of subplots
-    fig, axes = plt.subplots(n_features, n_features, figsize=figsize)
+    # Ensure model_output is flattened to 1D
+    model_output = np.asarray(model_output).flatten()
     
-    # Clip probabilities to avoid division by zero
-    eps = 1e-6
-    probabilities = np.clip(probabilities, eps, 1 - eps)
-
-    # Compute density ratio (this is our efficiency function!)
-    density_ratios = probabilities / (1 - probabilities) * weight_rescaling
-
+    # Compute density ratio based on loss type
+    density_ratios = lax.cond(
+        loss_type_code < 2,
+        lambda _: np.clip(model_output, 1e-6, 1 - 1e-6) / (1 - np.clip(model_output, 1e-6, 1 - 1e-6)),
+        lambda _: model_output,
+        operand=None
+    )
+    density_ratios = density_ratios * weight_rescaling
+    density_ratios = np.asarray(density_ratios).flatten()
+    
     # Metric to plot on off-diagonal (correlation plots)
     metrics = [] # list of average metrics for each feature, 1 dimensional
     
@@ -239,78 +371,15 @@ def plot_efficiency_by_variable(X_data, probabilities, feature_names=None, nbins
         feature_efficiencies.append(efficiencies)
         feature_errors.append(errors)
     
-    # Plot 1D efficiencies (diagonal)
-    for i in range(n_features):
-        print(f"Plotting 1D efficiency for feature {feature_names[i]}")
-        
-        efficiencies = feature_efficiencies[i]
-        errors = feature_errors[i]
-        bin_centers = bin_centers_list[i]
-        
-        # Plot efficiency vs. variable on diagonal
-        ax = axes[i, i]
-        
-        # Scale efficiencies if efficiency_dict is provided
-        metric = 0
-        if efficiency_dict is not None:
-            gen_eff = efficiency_dict[feature_names[i]][0]
-            gen_bin_centers = efficiency_dict[feature_names[i]][1]
-            
-            # Scale the calculated efficiencies to match the maximum of the reference
-            max_eff = np.max(efficiencies) if np.any(efficiencies) else 1.0
-            max_gen = np.max(gen_eff) if np.any(gen_eff) else 1.0
-            scale = max_gen / max_eff if max_eff > 0 else 1.0
-            efficiencies = efficiencies * scale
-            
-            # Plot reference efficiency)
-            ax.plot(gen_bin_centers, gen_eff, 'k--', label='Reference', zorder=10)
-            
-            # Calculate metric_type
-            if len(gen_bin_centers) != len(bin_centers) or not np.allclose(gen_bin_centers, bin_centers): # interpolate if binning is different
-                from scipy.interpolate import interp1d
-                interp_func = interp1d(gen_bin_centers, gen_eff, bounds_error=False, fill_value="extrapolate")
-                gen_eff_interp = interp_func(bin_centers)
-                valid_bins = ~np.isnan(efficiencies) & ~np.isnan(gen_eff_interp) & (gen_eff_interp > 0)
-                if np.sum(valid_bins) > 0:
-                    # Use absolute difference for both metrics
-                    metric = np.mean(np.abs(efficiencies[valid_bins] - gen_eff_interp[valid_bins]))
-                    if metric_type == "relative":
-                        # For relative, divide the absolute differences by reference values
-                        metric = np.mean(np.abs(efficiencies[valid_bins] - gen_eff_interp[valid_bins]) / gen_eff_interp[valid_bins])
-            else: # binning is the same
-                valid_bins = ~np.isnan(efficiencies) & ~np.isnan(gen_eff) & (gen_eff > 0)
-                if np.sum(valid_bins) > 0:
-                    # Use absolute difference for both metrics
-                    metric = np.mean(np.abs(efficiencies[valid_bins] - gen_eff[valid_bins]))
-                    if metric_type == "relative":
-                        # For relative, divide the absolute differences by reference values
-                        metric = np.mean(np.abs(efficiencies[valid_bins] - gen_eff[valid_bins]) / gen_eff[valid_bins])
-            metrics.append(metric)
-            
-            # Set y-axis limit based on max of both efficiencies
-            max_y = max(np.max(gen_eff) * 1.2, np.max(efficiencies) * 1.2) if np.any(gen_eff) and np.any(efficiencies) else 1.0
-        else:
-            max_y = np.max(efficiencies) * 1.2 if np.any(efficiencies) else 1.0
-        
-        # Plot calculated efficiency
-        ax.errorbar(bin_centers, efficiencies, yerr=errors, fmt='o-', capsize=3, label='Calculated')
-        
-        ax.set_xlabel(feature_names[i])
-        ax.set_ylabel('Efficiency')
-        ax.set_title(f'{feature_names[i]} (MAE: {metric:.3f})')
-        ax.set_ylim(0, max_y)
-        ax.grid(True, alpha=0.3)
-        ax.legend(loc='best', fontsize='small')
+    # Pre-compute 2D histograms for all feature pairs
+    calc_hist_dict = {}
+    ref_hist_dict = {}
     
-    # Plot 2D efficiency ratios (upper triangle)
     if efficiency_dict is not None:
-        from matplotlib.colors import TwoSlopeNorm
-        
         for i in range(n_features):
             for j in range(i+1, n_features):
-                print(f"Plotting 2D efficiency ratio for features {feature_names[i]} vs {feature_names[j]}")
-                
-                ax = axes[i, j]
+                key = (i, j)
+                print(f"Pre-computing 2D histograms for features {feature_names[i]} vs {feature_names[j]}")
                 
                 x_bins = bins_list[j]
                 y_bins = bins_list[i]
@@ -337,6 +406,8 @@ def plot_efficiency_by_variable(X_data, probabilities, feature_names=None, nbins
                 # Average by counts
                 with np.errstate(divide='ignore', invalid='ignore'):
                     calc_hist = np.where(counts > 0, calc_hist / counts, 0)
+                
+                calc_hist_dict[key] = calc_hist
                 
                 # Get 2D reference efficiency directly from efficiency_dict
                 key_2d = f"{feature_names[i]}_{feature_names[j]}"
@@ -375,115 +446,191 @@ def plot_efficiency_by_variable(X_data, probabilities, feature_names=None, nbins
                         ref_hist = ref_hist_interp
                 else:
                     raise ValueError(f"Error: 2D reference efficiency not available for {key_2d}. Using product of 1D efficiencies.")
-
                 
-                # Calculate signed metric, unlike in the 1D plot which was used to measure a average deviance
-                #    Here we care about the sign to highlight over or under estimation in these heatmaps
-                if metric_type == "standard":
-                    metric_hist = calc_hist - ref_hist
-                elif metric_type == "relative":
-                    with np.errstate(divide='ignore', invalid='ignore'):
-                        metric_hist = np.where((ref_hist > 0) & (calc_hist > 0), calc_hist / ref_hist, np.nan)
-                
-                # Plot 2D histogram with coolwarm colormap as we are interested in deviance around a reference
-                # 1. Relative has a center of 1 since a ratio of 1 is perfect agreement, clip at 10x factor between estimated and reference
-                # 2. Standard has a center of 0 since a difference of 0 is perfect agreement, clip at 0.1 absolute deviation
-                threshold = 10 if metric_type == "relative" else 1
-                vcenter  = 1.0 if metric_type == "relative" else 0.0
-                vmin = np.abs(np.nanmin(metric_hist))
-                vmax = np.abs(np.nanmax(metric_hist))
-                extrema = max(vmin, vmax)
-                extrema = np.clip(extrema, 0, threshold) # extrema should already by positive
-                
-                norm = TwoSlopeNorm(vmin=-1*extrema, vcenter=vcenter, vmax=extrema)
-                im = ax.pcolormesh(x_bins, y_bins, metric_hist, cmap='coolwarm', norm=norm)
-                
-                ax.set_xlabel(feature_names[j])
-                ax.set_ylabel(feature_names[i])
-                metric_type_str = "rel." if metric_type == "relative" else "delta"
-                ax.set_title(f'{metric_type_str} eff.')
-                
-                # Add colorbar
-                plt.colorbar(im, ax=ax)
+                ref_hist_dict[key] = ref_hist
     
-    # Remove lower triangle plots
-    for i in range(n_features):
-        for j in range(i):
-            fig.delaxes(axes[i, j])
+    # Loop through each metric type and create separate plots
+    metric_types = [metric_type]
+    if plot_generated: metric_types.append("generated")
+    if plot_predicted: metric_types.append("predicted")
+    for current_metric_type in metric_types:
+        print(f"Creating plots for metric type: {current_metric_type}")
+        
+        # Create square matrix of subplots
+        fig, axes = plt.subplots(n_features, n_features, figsize=figsize)
+        
+        # Plot 1D efficiencies (diagonal)
+        for i in range(n_features):
+            print(f"Plotting 1D efficiency for feature {feature_names[i]}")
+            
+            efficiencies = feature_efficiencies[i]
+            errors = feature_errors[i]
+            bin_centers = bin_centers_list[i]
+            
+            # Plot efficiency vs. variable on diagonal
+            ax = axes[i, i]
+            
+            # Scale efficiencies if efficiency_dict is provided
+            metric = 0
+            if efficiency_dict is not None:
+                gen_eff = efficiency_dict[feature_names[i]][0]
+                gen_bin_centers = efficiency_dict[feature_names[i]][1]
+                
+                # Scale the calculated efficiencies to match the maximum of the reference
+                max_eff = np.max(efficiencies) if np.any(efficiencies) else 1.0
+                max_gen = np.max(gen_eff) if np.any(gen_eff) else 1.0
+                scale = max_gen / max_eff if max_eff > 0 else 1.0
+                efficiencies = efficiencies * scale
+                
+                # Plot reference efficiency)
+                ax.plot(gen_bin_centers, gen_eff, 'k--', label='Reference', zorder=10)
+                
+                # Calculate metric_type
+                if len(gen_bin_centers) != len(bin_centers) or not np.allclose(gen_bin_centers, bin_centers): # interpolate if binning is different
+                    from scipy.interpolate import interp1d
+                    interp_func = interp1d(gen_bin_centers, gen_eff, bounds_error=False, fill_value="extrapolate")
+                    gen_eff_interp = interp_func(bin_centers)
+                    valid_bins = ~np.isnan(efficiencies) & ~np.isnan(gen_eff_interp) & (gen_eff_interp > 0)
+                    if np.sum(valid_bins) > 0:
+                        # Use absolute difference for both metrics
+                        metric = np.mean(np.abs(efficiencies[valid_bins] - gen_eff_interp[valid_bins]))
+                        if current_metric_type == "relative":
+                            # For relative, divide the absolute differences by reference values
+                            metric = np.mean(np.abs(efficiencies[valid_bins] - gen_eff_interp[valid_bins]) / gen_eff_interp[valid_bins])
+                else: # binning is the same
+                    valid_bins = ~np.isnan(efficiencies) & ~np.isnan(gen_eff) & (gen_eff > 0)
+                    if np.sum(valid_bins) > 0:
+                        # Use absolute difference for both metrics
+                        metric = np.mean(np.abs(efficiencies[valid_bins] - gen_eff[valid_bins]))
+                        if current_metric_type == "relative":
+                            # For relative, divide the absolute differences by reference values
+                            metric = np.mean(np.abs(efficiencies[valid_bins] - gen_eff[valid_bins]) / gen_eff[valid_bins])
+                
+                if current_metric_type in ["standard", "relative"]:
+                    metrics.append(metric)
+                
+                # Set y-axis limit based on max of both efficiencies
+                max_y = max(np.max(gen_eff) * 1.2, np.max(efficiencies) * 1.2) if np.any(gen_eff) and np.any(efficiencies) else 1.0
+            else:
+                max_y = np.max(efficiencies) * 1.2 if np.any(efficiencies) else 1.0
+            
+            # Plot calculated efficiency
+            ax.errorbar(bin_centers, efficiencies, yerr=errors, fmt='o-', capsize=3, label='Calculated')
+            
+            ax.set_xlabel(feature_names[i])
+            ax.set_ylabel('Efficiency')
+            ax.set_title(f'{feature_names[i]} (MAE: {metric:.3f})')
+            ax.set_ylim(0, max_y)
+            ax.grid(True, alpha=0.3)
+            ax.legend(loc='best', fontsize='small')
+        
+        # Plot 2D efficiency maps (upper triangle)
+        if efficiency_dict is not None:
+            from matplotlib.colors import TwoSlopeNorm
+            
+            # Find global max for generated and predicted plots
+            if any(mt in ["generated", "predicted"] for mt in metric_types):
+                global_max = 0
+                for key in calc_hist_dict:
+                    global_max = max(global_max, np.nanmax(calc_hist_dict[key]), np.nanmax(ref_hist_dict[key]))
+            
+            for i in range(n_features):
+                for j in range(i+1, n_features):
+                    print(f"Plotting 2D efficiency for features {feature_names[i]} vs {feature_names[j]}")
+                    
+                    ax = axes[i, j]
+                    key = (i, j)
+                    
+                    # Get pre-computed histograms
+                    calc_hist = calc_hist_dict[key]
+                    ref_hist = ref_hist_dict[key]
+                    
+                    x_bins = bins_list[j]
+                    y_bins = bins_list[i]
+                    
+                    # Determine what to plot based on metric type
+                    if current_metric_type == "standard":
+                        # Standard difference
+                        metric_hist = calc_hist - ref_hist
+                        cmap = 'coolwarm'
+                        threshold = 1
+                        vcenter = 0.0
+                        vmin = np.abs(np.nanmin(metric_hist))
+                        vmax = np.abs(np.nanmax(metric_hist))
+                        extrema = max(vmin, vmax)
+                        extrema = np.clip(extrema, 0, threshold)
+                        norm = TwoSlopeNorm(vmin=-1*extrema, vcenter=vcenter, vmax=extrema)
+                        title = 'delta eff.'
+                        
+                    elif current_metric_type == "relative":
+                        # Relative ratio
+                        with np.errstate(divide='ignore', invalid='ignore'):
+                            metric_hist = np.where((ref_hist > 0) & (calc_hist > 0), calc_hist / ref_hist, np.nan)
+                        cmap = 'coolwarm'
+                        threshold = 10
+                        vcenter = 1.0
+                        vmin = np.abs(np.nanmin(metric_hist))
+                        vmax = np.abs(np.nanmax(metric_hist))
+                        extrema = max(vmin, vmax)
+                        extrema = np.clip(extrema, 0, threshold)
+                        norm = TwoSlopeNorm(vmin=-1*extrema, vcenter=vcenter, vmax=extrema)
+                        title = 'rel. eff.'
+                        
+                    elif current_metric_type == "generated":
+                        # Generated (reference) histogram
+                        metric_hist = ref_hist
+                        cmap = 'plasma'
+                        vmax = global_max
+                        vmin = 0
+                        norm = None
+                        title = 'gen. eff.'
+                        
+                    elif current_metric_type == "predicted":
+                        # Predicted (calculated) histogram
+                        metric_hist = calc_hist
+                        cmap = 'plasma'
+                        vmax = global_max
+                        vmin = 0
+                        norm = None
+                        title = 'pred. eff.'
+                    
+                    # Plot the appropriate histogram
+                    if norm is not None:
+                        im = ax.pcolormesh(x_bins, y_bins, metric_hist, cmap=cmap, norm=norm)
+                    else:
+                        im = ax.pcolormesh(x_bins, y_bins, metric_hist, cmap=cmap, vmin=vmin, vmax=vmax)
+                    
+                    ax.set_xlabel(feature_names[j])
+                    ax.set_ylabel(feature_names[i])
+                    ax.set_title(title)
+                    
+                    # Add colorbar
+                    plt.colorbar(im, ax=ax)
+        
+        # Remove lower triangle plots
+        for i in range(n_features):
+            for j in range(i):
+                fig.delaxes(axes[i, j])
+        
+        plt.tight_layout()
+        if suffix is not None and isinstance(suffix, str) and suffix[0] != "_":
+            suffix_str = "_" + suffix
+        else:
+            suffix_str = "" if suffix is None else suffix
+            
+        # Add metric type to filename
+        metric_suffix = f"_{current_metric_type}{suffix_str}"
+        
+        if checkpoint_dir is not None:
+            plt.savefig(f'{checkpoint_dir}/efficiency_plots{metric_suffix}.png', dpi=300)
+            print(f"Efficiency plots saved to 'efficiency_plots{metric_suffix}.png'")
+        plt.close()
     
-    plt.tight_layout()
-    if suffix is not None and isinstance(suffix, str) and suffix[0] != "_":
-        suffix = "_" + suffix
-    if checkpoint_dir is not None:
-        plt.savefig(f'{checkpoint_dir}/efficiency_plots{suffix}.png', dpi=300)
-    plt.close()
-    
-    print(f"Efficiency plots saved to 'efficiency_plots{suffix}.png'")
-    
-    # Calculate average (of averages) across features
-    avg_metric = np.mean(metrics) if metrics else 0
-    metric_type_str = "absolute relative difference" if metric_type == "relative" else "absolute difference"
-    print(f"Average '{metric_type_str}' across all features: {avg_metric:.6f}")
-    print(f"Feature-wise '{metric_type_str}' metrics: {[f'{name}: {metric:.6f}' for name, metric in zip(feature_names, metrics)]}")
+    # Calculate average (of averages) across features - only for standard/relative metrics
+    if metrics:
+        avg_metric = np.mean(metrics) if metrics else 0
+        metric_type_str = metric_type_labels[metric_type]
+        print(f"Average '{metric_type_str}' across all features: {avg_metric:.6f}")
+        print(f"Feature-wise '{metric_type_str}' metrics: {[f'{name}: {metric:.6f}' for name, metric in zip(feature_names, metrics)]}")
     
     return metrics
-
-# Define adaptive gradient regularization loss
-def adaptive_gradient_regularization_loss(model, params, x, transition_sensitivity=0.5, rngs=None):
-    """
-    Compute adaptive gradient regularization loss that reduces penalty in regions with legitimate sharp transitions.
-    
-    Args:
-        model: The neural network model
-        params: Model parameters
-        x: Input data
-        transition_sensitivity: Controls how quickly regularization decreases in high-gradient regions
-        rngs: Random number generators for stochastic operations
-    
-    Returns:
-        Adaptive regularization loss that penalizes large gradients less in transition regions
-    """
-    def model_fn(x_sample):
-        return model.apply(params, x_sample, training=False, rngs=rngs)
-    
-    # Compute gradients of model output with respect to inputs
-    batch_gradients = jax.vmap(jax.grad(lambda x_i: jnp.sum(model_fn(x_i))), in_axes=0)(x)
-    
-    # Compute gradient magnitudes (L2 norm for each sample)
-    gradient_norms = jnp.sum(batch_gradients**2, axis=1)
-    
-    # Compute transition-sensitive weights: reduce regularization in high-gradient regions
-    # Higher transition_sensitivity means sharper distinction between regions
-    suppression_factor = jnp.exp(-transition_sensitivity * jnp.sqrt(gradient_norms))
-    
-    # Apply adaptive regularization: multiply gradient norms by suppression factor
-    adaptive_loss = jnp.mean(suppression_factor * gradient_norms)
-    
-    return adaptive_loss
-
-# Combined loss function with adaptive gradient regularization
-def combined_loss_adaptive(logits, labels, model, params, x, reg_strength=0.01, 
-                          transition_sensitivity=0.5, weights=None, rngs=None):
-    """
-    Compute combined loss with BCE and adaptive gradient regularization.
-    
-    Args:
-        logits: Model output logits
-        labels: Ground truth labels
-        model: The neural network model
-        params: Model parameters
-        x: Input data
-        reg_strength: Regularization strength hyperparameter
-        transition_sensitivity: Controls how quickly regularization decreases in high-gradient regions
-        weights: Optional sample weights
-        rngs: Random number generators for stochastic operations
-    
-    Returns:
-        Combined loss value with adaptive gradient regularization
-    """
-    bce_loss = binary_cross_entropy(logits, labels, weights)
-    grad_reg_loss = adaptive_gradient_regularization_loss(
-        model, params, x, transition_sensitivity, rngs
-    )
-    
-    return bce_loss + reg_strength * grad_reg_loss, (bce_loss, grad_reg_loss)
