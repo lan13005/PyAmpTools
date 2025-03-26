@@ -120,7 +120,13 @@ class Objective:
     #     x_full = self.insert_into_full_array(x)
     #     return self.pwa_manager.sendAndReceive(x_full, INTENSITY_AC, suffix=suffix)[0].item().real
     
-    def intensity_and_error(self, x, x_cov, wave_list, acceptance_correct=False):
+    def intensity_and_error(self, x, x_cov=None, wave_list=None, acceptance_correct=False):
+        """
+        x_cov is the covariance matrix of the parameters. If None, errors will not be calculated
+        wave_list is the list of waves to calculate the intensity for. If not provided, will use all waves
+        """
+        if wave_list is None: # use full waveset if not provided
+            wave_list = self.pwa_manager.waveNames
          # intMatrix has shape (2 * nmbAmps, 2 * nmbAmps) where 2 is due to the doubling of sectors from "PosRe, NegIm, PosIm, NegRe"
          # intMatrixTerms has shape (2 * nmbAmps) of strings
         intMatrix, intMatrixTerms = self.ampInt() if acceptance_correct else self.normInt()
@@ -129,8 +135,14 @@ class Objective:
         for ireaction in range(intMatrix.shape[0]):
             intensity, intensity_error = calculate_intensity_and_error(x, x_cov, intMatrix[ireaction], intMatrixTerms, wave_list, self.pwa_manager.waveNames)
             intensities.append(intensity)
-            intensity_errors.append(intensity_error**2)
-        return np.sum(intensities), np.sqrt(np.sum(intensity_errors))
+            if intensity_error is not None:
+                intensity_errors.append(intensity_error**2)
+        intensities = np.sum(intensities)
+        if len(intensity_errors) > 0:
+            intensity_errors = np.sqrt(np.sum(intensity_errors))
+        else:
+            intensity_errors = None
+        return intensities, intensity_errors
     
     def normInt(self):
         x_full = self.insert_into_full_array() # if nothing passed, returns array of zeros (we are just getting the matrix, no calculations)
@@ -174,7 +186,7 @@ class Objective:
         self.ref_indices = ref_indices
         self.refl_sectors = refl_sectors
 
-def regularize_hessian_for_covariance(hessian_matrix, tikhonov_delta=1e-4, ref_indices=None):
+def regularize_hessian_return_covariance(hessian_matrix, tikhonov_delta=1e-4, ref_indices=None):
     """
     Compute regularized covariance matrices from a Hessian using two approaches.
     
@@ -243,7 +255,7 @@ def calculate_intensity_and_error(amp, cov_amp, ampMatrix, ampMatrixTermOrder, w
     
     Parameters:
     - amp: flattened array of real and imaginary parts of amplitudes, shape (n_waves * 2,)
-    - cov_amp: covariance matrix for the amplitude parameters, shape (n_waves * 2, n_waves * 2)
+    - cov_amp: covariance matrix for the amplitude parameters, shape (n_waves * 2, n_waves * 2). If none, errors will not be calculated
     - ampMatrix: normalization integral matrix, shape (2 * n_waves, 2 * n_waves). This 2 is due to the doubling of sectors from "PosRe, NegIm, PosIm, NegRe" not the complex parts!
     - ampMatrixTermOrder: list of keys for ampMatrix, length = 2 * n_waves
     - wave_list: list of wave names to calculate intensity for, length of list <= n_waves
@@ -266,10 +278,13 @@ def calculate_intensity_and_error(amp, cov_amp, ampMatrix, ampMatrixTermOrder, w
     sectors_per_amp = list(set([len(intMatrix_pairs_dict[_]) for _ in intMatrix_pairs_dict]))
     
     #### Tons of shape checks ####
+    
+    propagate_error = cov_amp is not None
+    
     for wave in wave_list:
         if wave not in all_waves_list:
             raise ValueError(f"Wave {wave} not found in all_waves_list (which should be maintained by the PWA manager)")
-    if cov_amp.shape[0] != len(amp) or cov_amp.shape[1] != len(amp):
+    if propagate_error and (cov_amp.shape[0] != len(amp) or cov_amp.shape[1] != len(amp)):
         raise ValueError(f"Covariance matrix does not match length of 'amp' array: {len(amp)} != {cov_amp.shape}")
     if ampMatrix.shape[0] % len(all_waves_list) != 0 or ampMatrix.shape[1] % len(all_waves_list) != 0:
         raise ValueError(f"Normalization integral matrix does not have square shape that is a multiple of the number of waves: {ampMatrix.shape}")
@@ -326,18 +341,20 @@ def calculate_intensity_and_error(amp, cov_amp, ampMatrix, ampMatrixTermOrder, w
                     intensity += intensity_contrib
                     
                     # Derivatives with respect to real and imaginary parts
-                    deriv[i_re] += 2 * scale_i * scale_j * (b_re * np.real(amp_int) + b_im * np.imag(amp_int))
-                    deriv[i_im] += 2 * scale_i * scale_j * (b_im * np.real(amp_int) - b_re * np.imag(amp_int))
+                    if propagate_error:
+                        deriv[i_re] += 2 * scale_i * scale_j * (b_re * np.real(amp_int) + b_im * np.imag(amp_int))
+                        deriv[i_im] += 2 * scale_i * scale_j * (b_im * np.real(amp_int) - b_re * np.imag(amp_int))
                     
                     # NOTE: If scale factors were variable parameters, we would add derivatives with respect to them here
     
     # Calculate variance using the derivatives and covariance matrix
-    variance = 0.0
-    for i in range(len(deriv)):
-        for j in range(len(deriv)):
-            variance += deriv[i] * deriv[j] * cov_amp[i, j]
-    
-    error = np.sqrt(variance)
+    error = None
+    if propagate_error:
+        variance = 0.0
+        for i in range(len(deriv)):
+            for j in range(len(deriv)):
+                variance += deriv[i] * deriv[j] * cov_amp[i, j]
+        error = np.sqrt(variance)
     
     return intensity, error
 
@@ -390,7 +407,7 @@ def optimize_single_bin_minuit(objective, initial_params, bin_idx, use_analytic_
     
     # Calculate covariance from objective's Hessian for comparison
     hessian_matrix = objective.hessian(m.values)
-    covariance, eigenvalues, hessian_diagnostics = regularize_hessian_for_covariance(hessian_matrix, ref_indices=objective.ref_indices)
+    covariance, eigenvalues, hessian_diagnostics = regularize_hessian_return_covariance(hessian_matrix, ref_indices=objective.ref_indices)
     
     return {
         'parameters': m.values,
@@ -482,7 +499,7 @@ def optimize_single_bin_scipy(objective, initial_params, bin_idx, method='L-BFGS
         
     # Always calculate Hessian and covariance at the solution
     hessian_matrix = objective.hessian(result.x)
-    covariance, eigenvalues, hessian_diagnostics = regularize_hessian_for_covariance(hessian_matrix, ref_indices=objective.ref_indices)
+    covariance, eigenvalues, hessian_diagnostics = regularize_hessian_return_covariance(hessian_matrix, ref_indices=objective.ref_indices)
     
     # For comparison, try to get scipy's approximated inverse Hessian if available, always dump it if possible
     scipy_covariance = None
