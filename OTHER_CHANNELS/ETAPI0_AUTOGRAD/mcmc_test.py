@@ -1,7 +1,8 @@
 import os
+os.environ["JAX_PLATFORMS"] = "cpu"
+import jax
 import numpyro
 import numpyro.distributions as dist
-import jax
 import jax.numpy as jnp
 from jax import jit, vmap
 from pyamptools.utility.general import load_yaml, Timer
@@ -14,17 +15,17 @@ from rich.console import Console
 import os
 from pyamptools.utility.general import identify_channel, converter
 from pyamptools.utility.opt_utils import Objective
-from multiprocessing import Pool
 
 # Configure JAX for multi-threading on CPU
 # os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=6"
 # jax.config.update('jax_enable_x64', True)
 # numpyro.set_platform("cpu")  # Ensure CPU usage
-# numpyro.set_host_device_count(6)  # Use 6 CPU cores
+# numpyro.set_host_device_count(1)  # Use 6 CPU cores
 # print(f"JAX is using {jax.local_device_count()} local devices")
-# print(f"Configured JAX for 6 CPU devices")
 
-# Initial attempt at using polar coordinates (performance is terrible in general, leave here for future)
+########################################################
+# NOTE: Initial attempt at using polar coordinates (performance is terrible in general, leave here for future reference)
+#       Polar coordinates is not supported
 #   Log magnitudes produces a bias in the total intensity
 #   - I guess this is log-normal magnitudes on each amplitude is biased upward and therefore the total intensity is biased upward
 #   - Linear spaced magnitudes are numerically unstable
@@ -32,6 +33,7 @@ from multiprocessing import Pool
 #   - tried tangent half angle form and von mises distribution
 use_log_magnitudes = False
 use_phase_param = 'tan' # 'tan' = tan half angle form AND 'vonmises' = Von Mises with circular reparametrization
+########################################################
 
 console = Console()
 
@@ -40,6 +42,7 @@ class MCMCManager:
     def __init__(self, pyamptools_yaml, iftpwa_yaml, bin_idx, prior_scale=100.0, prior_dist='laplace', n_chains=20, n_samples=2000, n_warmup=1000, 
                  resume_path=None, output_folder=None, cop="cartesian", wave_prior_scales=None, target_accept_prob=0.85, max_tree_depth=12, 
                  step_size=0.1, adapt_step_size=True, dense_mass=True, adapt_mass_matrix=True, enforce_positive_reference=False):
+
         # GENERAL PARAMETERS
         self.pyamptools_yaml = pyamptools_yaml
         self.iftpwa_yaml = iftpwa_yaml
@@ -91,7 +94,8 @@ class MCMCManager:
         
         console.print(f"\n\n***************************************************", style="bold")
         if self.prior_dist not in ['gaussian', 'laplace', 'horseshoe']:
-            raise ValueError(f"Invalid prior distribution: {self.prior_dist}")
+            console.print("Invalid prior distribution: {self.prior_dist}", style="bold red")
+            sys.exit(1)
         console.print(f"Using '{self.prior_dist}' prior distribution", style="bold green")
         console.print(f"Prior distribution of Re\[reference_waves]: {'strictly positive' if self.enforce_positive_reference else 'allow negative'}", style="bold green")
         
@@ -258,7 +262,8 @@ class MCMCManager:
                     params = params.at[2*i+1].set(imag_parts[i])
 
             else:
-                raise ValueError(f"Invalid coordinate system: {self.cop}")
+                console.print(f"Invalid coordinate system: {self.cop}", style="bold red")
+                sys.exit(1)
 
             ##### Return objective value
             # Handle both batched and non-batched cases (multi-chain or not)
@@ -280,7 +285,8 @@ class MCMCManager:
     def run_mcmc(self):
         
         if self.model is None:
-            raise ValueError("Model not created. Call create_model() first.")
+            console.print("Model not created. Call create_model() first.", style="bold red")
+            sys.exit(1)
         
         rng_key = jax.random.PRNGKey(args.seed)
 
@@ -303,7 +309,7 @@ class MCMCManager:
             num_warmup=self.n_warmup if self.resume_state is None else 0,  # Skip warmup if resuming
             num_samples=self.n_samples,
             num_chains=self.n_chains,
-            chain_method='parallel',
+            chain_method='sequential',
             progress_bar=True
         )
         
@@ -312,7 +318,7 @@ class MCMCManager:
         ###########################################
         rng_key, rng_key_mcmc = jax.random.split(rng_key)
         
-        # Load saved state if requested
+        mcmc_start_time = timer.read(return_str=False)[1]
         if self.resume_state is not None:
             console.print(f"Resuming from saved state", style="bold green")
             try:
@@ -324,7 +330,14 @@ class MCMCManager:
                 mcmc.run(rng_key_mcmc)
         else:
             mcmc.run(rng_key_mcmc)
-        
+        mcmc.get_extra_fields() # NOTE: mcmc.run() does not wait so this acts as a barrier so we can compute some diagnostics
+        mcmc_end_time = timer.read(return_str=False)[1]
+        mcmc_run_time = mcmc_end_time - mcmc_start_time
+        mcmc_nsamples = self.n_chains * (self.n_samples + self.n_warmup)
+        mcmc_it_per_second = mcmc_nsamples / mcmc_run_time
+        self.mcmc_run_time = mcmc_run_time
+        self.mcmc_it_per_second = mcmc_it_per_second
+
         ############################
         ### SAVE STATE IF REQUESTED
         ############################
@@ -343,7 +356,8 @@ class MCMCManager:
     
     def set_bin(self, bin_idx):
         if self.pwa_manager is None:
-            raise ValueError("PWA manager not initialized. Call _setup_objective() first.")
+            console.print("PWA manager not initialized. Call _setup_objective() first.", style="bold red")
+            sys.exit(1)
         self.pwa_manager.set_bins(np.array([bin_idx]))
         self.obj = Objective(self.pwa_manager, bin_idx, self.nPars, self.nmbMasses, self.nmbTprimes)
         self.objective_fn = jit(self.obj.objective)
@@ -352,7 +366,8 @@ class MCMCManager:
     def _postprocess_samples(self):
         
         if self.mcmc is None:
-            raise ValueError("MCMC not run. Call run_mcmc() first.")
+            console.print("MCMC not run. Call run_mcmc() first.", style="bold red")
+            sys.exit(1)
         
         ####################
         ### MCMC DIAGNOSTICS
@@ -529,7 +544,7 @@ class MCMCManager:
                 console.print(f"Warning: NaN detected in parameters for sample {isample}", style="bold red")
                 total_intensity = jnp.nan
             else:
-                total_intensity = self.obj.intensity(params[isample])
+                total_intensity, total_error = 0, 0 # self.obj.intensity_and_error(params[isample], acceptance_correct=False)
                 # Check if intensity calculation resulted in NaN
                 if jnp.isnan(total_intensity):
                     console.print(f"Warning: NaN intensity calculated for sample {isample}", style="bold red")
@@ -543,7 +558,7 @@ class MCMCManager:
                 if jnp.any(jnp.isnan(params[isample])):
                     wave_intensity = jnp.nan
                 else:
-                    wave_intensity = self.obj.intensity(params[isample], suffix=[wave])
+                    wave_intensity, wave_error = 0, 0 # self.obj.intensity_and_error(params[isample], wave_list=[wave], acceptance_correct=False)
                     if jnp.isnan(wave_intensity):
                         console.print(f"Warning: NaN intensity calculated for wave {wave}, sample {isample}", style="bold red")
                         
@@ -663,16 +678,15 @@ if __name__ == "__main__":
                        help="List of bin indices to process")
     parser.add_argument("--output_folder", type=str, default=None,
                         help="Folder to save output results to. If not provided then will dump to 'MCMC' subdirectory in YAML.base_directory")
-    parser.add_argument("--nprocesses", type=int, default=10,
-                        help="Number of processes to distribute work under. Each fit in a bin utilizes around 5 complete cores (if nchains >= 5). Number of bins in paralell is then nprocesses / 5")
 
     #### MCMC ARGS ####
     parser.add_argument("-ps", "--prior_scale", type=float, default=1000.0,
                        help="Prior scale for the magnitude of the complex amplitudes, default is very large to be as non-informative as possible")
-    parser.add_argument("-pd", "--prior_dist", type=str, choices=['laplace', 'gaussian', 'horseshoe'], default='gaussian', 
+    # NOTE: Block usage of horseshoe prior using 'choice' argument, bad performance and limited testing
+    parser.add_argument("-pd", "--prior_dist", type=str, choices=['laplace', 'gaussian'], default='gaussian', 
                        help="Prior distribution for the complex amplitudes")
     parser.add_argument("-nc", "--nchains", type=int, default=6,
-                       help="Number of chains to use for numpyro MCMC (each chain runs on paralell process)")
+                       help="Number of chains to use for numpyro MCMC")
     parser.add_argument("-ns", "--nsamples", type=int, default=1000,
                        help="Number of samples to draw per chain")
     parser.add_argument("-nw", "--nwarmup", type=int, default=500,
@@ -714,9 +728,11 @@ if __name__ == "__main__":
     iftpwa_yaml = load_yaml(iftpwa_yaml)
     
     if not iftpwa_yaml:
-        raise ValueError("iftpwa YAML file is required")
+        console.print("iftpwa YAML file is required", style="bold red")
+        sys.exit(1)
     if not pyamptools_yaml:
-        raise ValueError("PyAmpTools YAML file is required")
+        console.print("PyAmpTools YAML file is required", style="bold red")
+        sys.exit(1)
     
     # TODO: Properly implement wave_prior_scales somewhere. Since its a dict we might have to put it into YAML file?
     wave_prior_scales = None
@@ -732,7 +748,8 @@ if __name__ == "__main__":
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     else:
-        raise ValueError(f"Output folder {args.output_folder} already exists! Please provide a different path or remove the folder.")
+        console.print(f"Output folder {output_folder} already exists! Please provide a different path or remove the folder.", style="bold red")
+        sys.exit(1)
     
     # Initialize MCMC Manager, preparing for the first requested bin
     mcmc_manager = MCMCManager(
@@ -763,7 +780,8 @@ if __name__ == "__main__":
         sys.exit(0)
 
     if args.bins is None:
-        raise ValueError("list of bin indices is required")
+        console.print("list of bin indices is required", style="bold red")
+        sys.exit(1)
     
     #### RUN MCMC ####
     timer = Timer()
@@ -774,9 +792,12 @@ if __name__ == "__main__":
             final_result_dict = mcmc_manager.run_mcmc()
             final_result_dicts.append(final_result_dict)
     
-    with open(f"{output_folder}/mcmc_bin{bin_idx}_samples.pkl", "wb") as f:
+    with open(f"{output_folder}/mcmc_samples.pkl", "wb") as f:
         pkl.dump(final_result_dicts, f)
 
-    console.print(f"Total time elapsed: {timer.read()[2]}", style="bold")
+    console.print(f"Total time elapsed: {timer.read(return_str=False)[2]:0.2f} seconds", style="bold")
+    console.print(f"    MCMC run time: {mcmc_manager.mcmc_run_time:0.2f} seconds", style="bold")
+    console.print(f"    MCMC (nsamples, nwarmup) = ({mcmc_manager.n_samples}, {mcmc_manager.n_warmup})", style="bold")
+    console.print(f"    MCMC samples per second: {mcmc_manager.mcmc_it_per_second:0.1f}", style="bold")
 
     sys.exit(0)
