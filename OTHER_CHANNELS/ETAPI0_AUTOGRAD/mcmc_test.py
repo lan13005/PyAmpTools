@@ -15,6 +15,17 @@ from rich.console import Console
 import os
 from pyamptools.utility.general import identify_channel, converter
 from pyamptools.utility.opt_utils import Objective
+import tempfile
+import time
+import logging
+import shutil
+from numpyro.diagnostics import summary, hpdi
+import pandas as pd
+from collections import OrderedDict
+
+# Set multiprocessing start method to 'spawn' to avoid deadlocks with JAX
+import multiprocessing as mp
+mp.set_start_method('spawn', force=True)
 
 # Configure JAX for multi-threading on CPU
 # os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=6"
@@ -37,11 +48,81 @@ use_phase_param = 'tan' # 'tan' = tan half angle form AND 'vonmises' = Von Mises
 
 console = Console()
 
+# Define a worker function that will run a single MCMC chain
+def worker_function(pyamptools_yaml, iftpwa_yaml, bin_idx, prior_scale, prior_dist, n_samples, n_warmup, 
+                   chain_idx, seed, output_file, cop, wave_prior_scales, target_accept_prob, max_tree_depth, 
+                   step_size, adapt_step_size, dense_mass, adapt_mass_matrix, enforce_positive_reference):
+    """Worker function to run a single MCMC chain"""
+
+    worker_console = Console()
+    worker_console.print(f"Worker {chain_idx} starting for bin {bin_idx} (PID: {os.getpid()})", style="bold blue")
+    
+    # Set up manager object for this bin_idx
+    worker_mcmc = MCMCManager(
+        pyamptools_yaml, iftpwa_yaml, bin_idx,
+        prior_scale=prior_scale, prior_dist=prior_dist,
+        n_chains=1, n_samples=n_samples, n_warmup=n_warmup,
+        resume_path=None, output_folder=None, cop=cop,
+        wave_prior_scales=wave_prior_scales,
+        target_accept_prob=target_accept_prob,
+        max_tree_depth=max_tree_depth,
+        step_size=step_size,
+        adapt_step_size=adapt_step_size,
+        dense_mass=dense_mass,
+        adapt_mass_matrix=adapt_mass_matrix,
+        enforce_positive_reference=enforce_positive_reference,
+        verbose=False
+    )
+    
+    worker_console.print(f"Worker {chain_idx}: Starting MCMC sampling for bin {bin_idx}...", style="bold green")
+    rng_key = jax.random.PRNGKey(seed + chain_idx)
+    
+    nuts_kernel = NUTS(
+        worker_mcmc.model,
+        target_accept_prob=worker_mcmc.target_accept_prob,
+        max_tree_depth=worker_mcmc.max_tree_depth,
+        step_size=worker_mcmc.step_size,
+        adapt_step_size=worker_mcmc.adapt_step_size,
+        dense_mass=worker_mcmc.dense_mass,
+        adapt_mass_matrix=worker_mcmc.adapt_mass_matrix
+    )
+    # Configure for a single chain
+    mcmc = MCMC(
+        nuts_kernel,
+        num_warmup=worker_mcmc.n_warmup,
+        num_samples=worker_mcmc.n_samples,
+        num_chains=1,
+        progress_bar=True
+    )
+    start_time = time.time()
+    mcmc.run(rng_key)
+    end_time = time.time()
+    
+    # Get samples and extra fields
+    samples = mcmc.get_samples()
+    extra_fields = mcmc.get_extra_fields() # i.e. divergences
+    
+    # Save results to file
+    results = {
+        "bin_idx": bin_idx,
+        "chain_idx": chain_idx,
+        "samples": samples,
+        "extra_fields": extra_fields,
+    }
+    
+    # Dumped result will live in a temp directory that is automatically cleaned
+    with open(output_file, "wb") as f:
+        pkl.dump(results, f)
+    
+    worker_console.print(f"Worker {chain_idx}: Results saved to {output_file}", style="bold green")
+    
+    return 0
+
 class MCMCManager:
     
     def __init__(self, pyamptools_yaml, iftpwa_yaml, bin_idx, prior_scale=100.0, prior_dist='laplace', n_chains=20, n_samples=2000, n_warmup=1000, 
                  resume_path=None, output_folder=None, cop="cartesian", wave_prior_scales=None, target_accept_prob=0.85, max_tree_depth=12, 
-                 step_size=0.1, adapt_step_size=True, dense_mass=True, adapt_mass_matrix=True, enforce_positive_reference=False):
+                 step_size=0.1, adapt_step_size=True, dense_mass=True, adapt_mass_matrix=True, enforce_positive_reference=False, verbose=True):
 
         # GENERAL PARAMETERS
         self.pyamptools_yaml = pyamptools_yaml
@@ -51,7 +132,7 @@ class MCMCManager:
         self.output_folder = output_folder
         self.cop = cop
         self.enforce_positive_reference = enforce_positive_reference
-        console.print(f"Using coordinate system: {cop}", style="bold green")
+        self.verbose = verbose
         
         # EXTRACTED PARAMETERS FROM YAML
         self.waveNames = self.pyamptools_yaml["waveset"].split("_")
@@ -74,7 +155,7 @@ class MCMCManager:
         self.n_chains = n_chains
         self.n_samples = n_samples
         self.n_warmup = n_warmup
-        self.mcmc = None # will be set by self.run_mcmc()
+        self.mcmc = None # will be set by executing self.run_mcmc() or self.run_mcmc_parallel()
         
         # MCMC SAMPLER PARAMETERS
         self.target_accept_prob = target_accept_prob
@@ -84,43 +165,55 @@ class MCMCManager:
         self.dense_mass = dense_mass
         self.adapt_mass_matrix = adapt_mass_matrix
 
-        # SETUP
-        self._process_reference_waves()     # determines reference waves and their associated indicies
-        self._setup_objective()             # sets up objective function to optimize
-        self.model = self.create_model()    # create MCMC prior model
-        ### Should be ready to run MCMC now
-
-    def create_model(self):
-        
-        console.print(f"\n\n***************************************************", style="bold")
+        #################################################
+        # Check prior distribution and enforce positive reference
+        #################################################
+        if self.verbose:
+            console.print(f"\n\n***************************************************", style="bold")
+            console.print(f"Using coordinate system: {cop}", style="bold green")
         if self.prior_dist not in ['gaussian', 'laplace', 'horseshoe']:
             console.print("Invalid prior distribution: {self.prior_dist}", style="bold red")
             sys.exit(1)
-        console.print(f"Using '{self.prior_dist}' prior distribution", style="bold green")
-        console.print(f"Prior distribution of Re\[reference_waves]: {'strictly positive' if self.enforce_positive_reference else 'allow negative'}", style="bold green")
+        
+        if self.verbose:
+            console.print(f"Using '{self.prior_dist}' prior distribution", style="bold green")
+            console.print(f"Prior distribution of Re\[reference_waves]: {'strictly positive values' if self.enforce_positive_reference else 'allow negative values'}", style="bold green")
         
         ################################################
         # Process wave-specific prior scales if provided
         # NOTE: works in cartesian coordinates only ATM
         #################################################
-        console.print(f"Default prior scale: {self.prior_scale}", style="bold")
+        if self.verbose:
+            console.print(f"Default prior scale: {self.prior_scale}", style="bold green")
         if self.wave_prior_scales is not None and self.cop == "cartesian":
-            console.print(f"Using wave-specific prior scales:", style="bold")
-            param_prior_scales = jnp.ones(self.nPars) * self.prior_scale
+            if self.verbose:
+                console.print(f"Using wave-specific prior scales:", style="bold")
+                param_prior_scales = jnp.ones(self.nPars) * self.prior_scale
             for wave_name, scale in self.wave_prior_scales.items():
                 if wave_name in self.waveNames:
                     wave_idx = self.waveNames.index(wave_name)
                     param_prior_scales = param_prior_scales.at[2*wave_idx  ].set(scale)   # Real part
                     param_prior_scales = param_prior_scales.at[2*wave_idx+1].set(scale)   # Imaginary part
-                    console.print(f"  {wave_name}: {scale}", style="bold")
+                    if self.verbose:
+                        console.print(f"  {wave_name}: {scale}", style="bold")
                 else:
-                    console.print(f"  Warning: Wave '{wave_name}' not found in wave list, ignoring custom prior scale", style="yellow")
+                    if self.verbose:
+                        console.print(f"  Warning: Wave '{wave_name}' not found in wave list, ignoring custom prior scale", style="yellow")
         else:
             # Use uniform prior scale for all parameters
             param_prior_scales = jnp.ones(self.nPars) * self.prior_scale
             
         self.param_prior_scales = param_prior_scales
-        console.print(f"***************************************************\n\n", style="bold")
+        self._process_reference_waves()  # determines reference waves and their associated indicies
+        if self.verbose:
+            console.print(f"***************************************************\n\n", style="bold")
+
+        # SETUP
+        self._setup_objective()             # sets up objective function to optimize
+        self.model = self.create_model()    # create MCMC prior model
+        ### Should be ready to run MCMC now
+
+    def create_model(self):
         
         def model():
             
@@ -281,78 +374,183 @@ class MCMCManager:
             numpyro.factor("likelihood", -nll)
             
         return model
+    
+    def run_mcmc_parallel(self, bins=None, nprocesses=None):
+        """Run MCMC in parallel using multiple processes"""
 
-    def run_mcmc(self):
-        
         if self.model is None:
             console.print("Model not created. Call create_model() first.", style="bold red")
             sys.exit(1)
         
-        rng_key = jax.random.PRNGKey(args.seed)
-
-        ###########################################
-        ### CONFIGURE MCMC SAMPLER
-        ###########################################
+        # If bins is None, use all bins
+        if bins is None:
+            bins = np.arange(self.nmbMasses * self.nmbTprimes)
         
-        nuts_kernel = NUTS(
-            self.model,
-            target_accept_prob=self.target_accept_prob,     # Increase from 0.9 to encourage even smaller steps
-            max_tree_depth=self.max_tree_depth,             # Allow deeper tree search, exponential in depth
-            step_size=self.step_size,
-            adapt_step_size=self.adapt_step_size,          
-            dense_mass=self.dense_mass,                     # Keep this for handling correlations (if True, slows down sampling but more accurate)
-            adapt_mass_matrix=self.adapt_mass_matrix        # Explicitly enable mass matrix adaptation (if True, slows down sampling but more accurate)
-        )
-        
-        mcmc = MCMC(
-            nuts_kernel,
-            num_warmup=self.n_warmup if self.resume_state is None else 0,  # Skip warmup if resuming
-            num_samples=self.n_samples,
-            num_chains=self.n_chains,
-            chain_method='sequential',
-            progress_bar=True
-        )
-        
-        ###########################################
-        ### RUN MCMC
-        ###########################################
-        rng_key, rng_key_mcmc = jax.random.split(rng_key)
-        
-        mcmc_start_time = timer.read(return_str=False)[1]
-        if self.resume_state is not None:
-            console.print(f"Resuming from saved state", style="bold green")
-            try:
-                mcmc.post_warmup_state = self.resume_state
-                mcmc.run(self.resume_state.rng_key)
-            except Exception as e:
-                console.print(f"Error loading MCMC state: {e}", style="bold red")
-                console.print("Falling back to fresh start", style="yellow")
-                mcmc.run(rng_key_mcmc)
+        # Determine number of processes to use
+        if nprocesses is None:
+            nprocesses = min(mp.cpu_count(), len(bins) * self.n_chains)
         else:
-            mcmc.run(rng_key_mcmc)
-        mcmc.get_extra_fields() # NOTE: mcmc.run() does not wait so this acts as a barrier so we can compute some diagnostics
-        mcmc_end_time = timer.read(return_str=False)[1]
-        mcmc_run_time = mcmc_end_time - mcmc_start_time
-        mcmc_nsamples = self.n_chains * (self.n_samples + self.n_warmup)
-        mcmc_it_per_second = mcmc_nsamples / mcmc_run_time
-        self.mcmc_run_time = mcmc_run_time
-        self.mcmc_it_per_second = mcmc_it_per_second
-
-        ############################
-        ### SAVE STATE IF REQUESTED
-        ############################
-        if self.output_folder is not None:
-            console.print(f"Saving MCMC state to: {self.output_folder}", style="bold green")
-            os.makedirs(os.path.dirname(self.output_folder), exist_ok=True)
+            nprocesses = min(nprocesses, len(bins) * self.n_chains)
+        
+        temp_dir = tempfile.mkdtemp()
+        if self.verbose:
+            console.print(f"Running MCMC with {nprocesses} parallel processes", style="bold")
+            console.print(f"Processing {len(bins)} bins with {self.n_chains} chains each", style="bold")
+            console.print(f"Created temporary directory for results: {temp_dir}", style="bold")
+        
+        # Create tasks for all bins and chains
+        tasks = []
+        output_files = []
+        for bin_idx in bins:
+            for chain_idx in range(self.n_chains):
+                output_file = os.path.join(temp_dir, f"bin_{bin_idx}_chain_{chain_idx}.pkl")
+                output_files.append(output_file)
+                task = (
+                    self.pyamptools_yaml, self.iftpwa_yaml, bin_idx,
+                    self.prior_scale, self.prior_dist, self.n_samples, self.n_warmup,
+                    chain_idx, args.seed, output_file, self.cop, self.wave_prior_scales,
+                    self.target_accept_prob, self.max_tree_depth, self.step_size,
+                    self.adapt_step_size, self.dense_mass, self.adapt_mass_matrix,
+                    self.enforce_positive_reference
+                )
+                tasks.append(task)
+        
+        if self.verbose:
+            console.print(f"Starting worker processes...", style="bold")
+        
+        # Use context manager and exceptions to ensure proper cleanup of resources
+        with mp.get_context('spawn').Pool(processes=nprocesses) as pool:
             try:
-                with open(self.output_folder, 'wb') as f:
-                    pkl.dump(mcmc.last_state, f)
+                pool.starmap(worker_function, tasks)
+                # ensure all processes are done before proceeding
+                pool.close()
+                pool.join()
             except Exception as e:
-                console.print(f"Error saving MCMC state: {e}", style="bold red")
+                console.print(f"Error in worker processes: {e}", style="bold red")
+                pool.terminate()
+                pool.join()
+                shutil.rmtree(temp_dir)
+                raise
+        
+        if self.verbose:
+            console.print("All worker processes have completed", style="bold green")
+        
+        final_result_dicts = []
+        for bin_idx in bins:
+            bin_output_files = [f for f in output_files if f"bin_{bin_idx}_" in f]
+            
+            chain_results = []
+            chain_ids = []
+            for output_file in bin_output_files:
+                with open(output_file, "rb") as f:
+                    results = pkl.load(f)
+                    chain_results.append(results)
+                    # Extract chain ID from filename and create array of chain IDs for each sample in this chain
+                    #   needed to calculate MCMC diagnostics
+                    chain_id = int(os.path.basename(output_file).split("_chain_")[1].split(".")[0])
+                    chain_ids.extend([chain_id] * len(next(iter(results["samples"].values()))))            
+            chain_ids = np.array(chain_ids)
+            
+            # Combine samples from all chains for this bin
+            combined_samples = {}
+            for key in chain_results[0]["samples"].keys():
+                combined_samples[key] = jnp.concatenate([r["samples"][key] for r in chain_results])
+            
+            # Combine extra fields from all chains
+            combined_extra_fields = {}
+            for key in chain_results[0]["extra_fields"].keys():
+                if isinstance(chain_results[0]["extra_fields"][key], (jnp.ndarray, np.ndarray)):
+                    combined_extra_fields[key] = jnp.concatenate([r["extra_fields"][key] for r in chain_results])
+            
+            # Set the bin_idx again to ensure postprocessing step loads the proper normalization integrals
+            self.set_bin(bin_idx)
+            self.mcmc = TempMCMC(combined_samples, combined_extra_fields, chain_ids)
+            self.mcmc.print_summary()  # Print diagnostics for this bin
+            bin_result_dict = self._postprocess_samples()
+            final_result_dicts.append(bin_result_dict)
+            
+            if self.verbose:
+                console.print(f"Completed processing for bin {bin_idx}", style="bold green")
+        
+        # Clean up temporary directory
+        try:
+            shutil.rmtree(temp_dir)
+        except Exception as e:
+            console.print(f"Warning: Could not clean up temporary directory {temp_dir}: {e}", style="yellow")
+        
+        return final_result_dicts
 
-        self.mcmc = mcmc
-        final_result_dict = self._postprocess_samples()
-        return final_result_dict
+    # def run_mcmc(self):
+        
+    #     if self.model is None:
+    #         console.print("Model not created. Call create_model() first.", style="bold red")
+    #         sys.exit(1)
+        
+    #     rng_key = jax.random.PRNGKey(args.seed)
+
+    #     ###########################################
+    #     ### CONFIGURE MCMC SAMPLER
+    #     ###########################################
+        
+    #     nuts_kernel = NUTS(
+    #         self.model,
+    #         target_accept_prob=self.target_accept_prob,     # Increase from 0.9 to encourage even smaller steps
+    #         max_tree_depth=self.max_tree_depth,             # Allow deeper tree search, exponential in depth
+    #         step_size=self.step_size,
+    #         adapt_step_size=self.adapt_step_size,          
+    #         dense_mass=self.dense_mass,                     # Keep this for handling correlations (if True, slows down sampling but more accurate)
+    #         adapt_mass_matrix=self.adapt_mass_matrix        # Explicitly enable mass matrix adaptation (if True, slows down sampling but more accurate)
+    #     )
+        
+    #     mcmc = MCMC(
+    #         nuts_kernel,
+    #         num_warmup=self.n_warmup if self.resume_state is None else 0,  # Skip warmup if resuming
+    #         num_samples=self.n_samples,
+    #         num_chains=self.n_chains,
+    #         chain_method='sequential',
+    #         progress_bar=True
+    #     )
+        
+    #     ###########################################
+    #     ### RUN MCMC
+    #     ###########################################
+    #     rng_key, rng_key_mcmc = jax.random.split(rng_key)
+        
+    #     mcmc_start_time = timer.read(return_str=False)[1]
+    #     if self.resume_state is not None:
+    #         console.print(f"Resuming from saved state", style="bold green")
+    #         try:
+    #             mcmc.post_warmup_state = self.resume_state
+    #             mcmc.run(self.resume_state.rng_key)
+    #         except Exception as e:
+    #             console.print(f"Error loading MCMC state: {e}", style="bold red")
+    #             console.print("Falling back to fresh start", style="yellow")
+    #             mcmc.run(rng_key_mcmc)
+    #     else:
+    #         mcmc.run(rng_key_mcmc)
+    #     mcmc.get_extra_fields() # NOTE: mcmc.run() does not wait so this acts as a barrier so we can compute some diagnostics
+    #     mcmc_end_time = timer.read(return_str=False)[1]
+    #     mcmc_run_time = mcmc_end_time - mcmc_start_time
+    #     mcmc_nsamples = self.n_chains * (self.n_samples + self.n_warmup)
+    #     mcmc_it_per_second = mcmc_nsamples / mcmc_run_time
+    #     self.mcmc_run_time = mcmc_run_time
+    #     self.mcmc_it_per_second = mcmc_it_per_second
+
+    #     ############################
+    #     ### SAVE STATE IF REQUESTED
+    #     ############################
+    #     if self.output_folder is not None:
+    #         console.print(f"Saving MCMC state to: {self.output_folder}", style="bold green")
+    #         os.makedirs(os.path.dirname(self.output_folder), exist_ok=True)
+    #         try:
+    #             with open(self.output_folder, 'wb') as f:
+    #                 pkl.dump(mcmc.last_state, f)
+    #         except Exception as e:
+    #             console.print(f"Error saving MCMC state: {e}", style="bold red")
+
+    #     self.mcmc = mcmc
+    #     final_result_dict = self._postprocess_samples()
+    #     return final_result_dict
     
     def set_bin(self, bin_idx):
         if self.pwa_manager is None:
@@ -366,7 +564,7 @@ class MCMCManager:
     def _postprocess_samples(self):
         
         if self.mcmc is None:
-            console.print("MCMC not run. Call run_mcmc() first.", style="bold red")
+            console.print("MCMC not run. Call run_mcmc() or run_mcmc_parallel() first.", style="bold red")
             sys.exit(1)
         
         ####################
@@ -376,24 +574,6 @@ class MCMCManager:
         # Leave this call here. mcmc.run() call does not wait for results to finish so the following print statements
         #   will be flushed before fit is complete. Use this as a barrier
         divergence = self.mcmc.get_extra_fields()["diverging"]
-        
-        console.print("\n\n\n=== MCMC CONVERGENCE DIAGNOSTICS ===", style="bold")
-        console.print("NOTE: The following statistics are desired but the actual amplitude results can be useful already!", style="bold yellow")
-        
-        console.print("\nR-hat Reference:", style="bold")
-        console.print("R-hat (Gelman-Rubin statistic) measures chain convergence by comparing within-chain and between-chain variance:", style="italic")
-        console.print("  - Values close to 1.0 indicate good convergence (chains explore similar regions)")
-        console.print("  - Values > 1.01 suggest potential convergence issues (chains may be exploring different regions)") 
-        console.print("  - Values > 1.05 indicate poor convergence (chains have not mixed well)")
-        
-        console.print("\nEffective Sample Size (n_eff) Reference:", style="bold")
-        console.print("n_eff estimates the number of effective independent samples after accounting for autocorrelation:", style="italic")
-        console.print("  - Values should be compared to total number of MCMC samples (n_chains * n_samples)")
-        console.print("  - n_eff ≈ total samples: Parameter explores well, low autocorrelation")
-        console.print("  - n_eff << total samples: High autocorrelation, may need longer chains")
-        console.print("  - Rule of thumb: n_eff > 100 per parameter for reliable inference")
-
-        console.print("\nParameter mapping for NumPyro summary:", style="bold")
         
         if self.cop == "cartesian":
             if self.prior_dist != "horseshoe": # {Gaussian, Laplace}
@@ -583,8 +763,8 @@ class MCMCManager:
         from iftpwa1.pwa.gluex.gluex_jax_manager import GluexJaxManager
 
         self.pwa_manager = GluexJaxManager(comm0=None, mpi_offset=1,
-                                    yaml_file=pyamptools_yaml,
-                                    resolved_secondary=iftpwa_yaml, prior_simulation=False, sum_returned_nlls=False)
+                                    yaml_file=self.pyamptools_yaml,
+                                    resolved_secondary=self.iftpwa_yaml, prior_simulation=False, sum_returned_nlls=False, logging_level=logging.WARNING)
         self.pwa_manager.prepare_nll()
         self.set_bin(self.bin_idx)
 
@@ -597,7 +777,6 @@ class MCMCManager:
                     console.print(f"Loaded saved state from {self.resume_path}", style="bold green")
             except Exception as e:
                 console.print(f"Error loading state from {self.resume_path}: {e}", style="bold red")
-        console.print("\n**************************************************************", style="bold")
 
     def _process_reference_waves(self):
         ref_indices = []
@@ -609,7 +788,8 @@ class MCMCManager:
             
             # Get reaction channel for all waves 
             channel = identify_channel(self.waveNames)
-            console.print(f"Identified reaction channel: {channel}", style="bold")
+            if self.verbose:
+                console.print(f"Identified reaction channel: {channel}", style="bold green")
             
             # Get reflectivity sectors and their waves
             for i, wave in enumerate(self.waveNames):
@@ -625,7 +805,8 @@ class MCMCManager:
                     ref_idx = self.waveNames.index(ref_wave)
                     ref_indices.append(ref_idx)
                     refl = converter[ref_wave][0]
-                    console.print(f"Using '{ref_wave}' as reference wave for reflectivity sector {refl} (wave index {ref_idx})", style="bold green")
+                    if self.verbose:
+                        console.print(f"Using '{ref_wave}' as reference wave for reflectivity sector {refl} (wave index {ref_idx})", style="bold green")
                 else:
                     console.print(f"Error: Reference wave '{ref_wave}' not found in wave list!", style="bold red")
                     sys.exit(1)
@@ -659,6 +840,25 @@ class MCMCManager:
         #       TEST CODE: uses lbfgs to perform short optimization to move initial parameters to better starting location
         #                  MCMC appears to perform well without this step so it was removed but you can reference it later
         pass
+    
+    # def _print_diagnostics_help(self):
+    #     console.print("\n\n\n=== MCMC CONVERGENCE DIAGNOSTICS ===", style="bold")
+    #     console.print("NOTE: The following statistics are desired but the actual amplitude results can be useful already!", style="bold yellow")
+        
+    #     console.print("\nR-hat Reference:", style="bold")
+    #     console.print("R-hat (Gelman-Rubin statistic) measures chain convergence by comparing within-chain and between-chain variance:", style="italic")
+    #     console.print("  - Values close to 1.0 indicate good convergence (chains explore similar regions)")
+    #     console.print("  - Values > 1.01 suggest potential convergence issues (chains may be exploring different regions)") 
+    #     console.print("  - Values > 1.05 indicate poor convergence (chains have not mixed well)")
+        
+    #     console.print("\nEffective Sample Size (n_eff) Reference:", style="bold")
+    #     console.print("n_eff estimates the number of effective independent samples after accounting for autocorrelation:", style="italic")
+    #     console.print("  - Values should be compared to total number of MCMC samples (n_chains * n_samples)")
+    #     console.print("  - n_eff ≈ total samples: Parameter explores well, low autocorrelation")
+    #     console.print("  - n_eff << total samples: High autocorrelation, may need longer chains")
+    #     console.print("  - Rule of thumb: n_eff > 100 per parameter for reliable inference")
+
+    #     console.print("\nParameter mapping for NumPyro summary:", style="bold")
 
 class OptimizerHelpFormatter(argparse.ArgumentParser):
     def error(self, message):
@@ -670,6 +870,113 @@ class OptimizerHelpFormatter(argparse.ArgumentParser):
         help_message = super().format_help()
         return help_message
 
+# Add this function to calculate MCMC diagnostics
+def calculate_mcmc_diagnostics(samples_dict, chain_ids):
+    """
+    Calculate R-hat and effective sample size for MCMC samples
+    
+    Args:
+        samples_dict: Dictionary of parameter samples
+        chain_ids: Array indicating which chain each sample belongs to
+    
+    Returns:
+        DataFrame with summary statistics including R-hat and n_eff
+    """
+    # Reshape samples into format expected by numpyro.diagnostics
+    #   need (num_chains, samples_per_chain, ...) format
+    chain_dict = {}
+    unique_chains = np.unique(chain_ids)
+    
+    for param_name, param_samples in samples_dict.items():
+        chain_arrays = []
+        
+        for chain_idx in unique_chains:
+            chain_mask = chain_ids == chain_idx
+            chain_samples = param_samples[chain_mask]
+            chain_arrays.append(chain_samples)
+            
+        # Stack along chain dimension
+        chain_dict[param_name] = np.stack(chain_arrays)
+    
+    summary_dict = summary(chain_dict, prob=0.9)
+    
+    return summary_dict
+
+# Update the TempMCMC class in run_mcmc_parallel method
+class TempMCMC:
+    """
+    Temporary MCMC object that holds the combined samples and extra fields used in postprocessing step.
+        Only needs to implement some specific methods that postprocessing step expects.
+    """
+    def __init__(self, samples, extra_fields, chain_ids):
+        self.samples = samples
+        self.extra_fields = extra_fields
+        self.chain_ids = chain_ids
+        self._summary = None
+    
+    def get_samples(self):
+        return self.samples
+    
+    def get_extra_fields(self):
+        return self.extra_fields
+    
+    def print_summary(self):
+        if self._summary is None:
+            self._summary = calculate_mcmc_diagnostics(self.samples, self.chain_ids)
+        
+        console.print(f"\nMCMC Summary Statistics:", style="bold")
+        console.print(f"{'Parameter':<20} {'Mean':>10} {'StdDev':>10} {'Median':>10} {'R-hat':>10} {'n_eff':>10} {'5%':>10} {'95%':>10}")
+        console.print(f"{'-'*20} {'-'*10} {'-'*10} {'-'*10} {'-'*10} {'-'*10} {'-'*10} {'-'*10}")
+        nparameters = len(self._summary)
+        
+        for param_name, stats in self._summary.items():
+            # stats is dict-like (see numpyro.diagnostics.summary)
+            if isinstance(stats, dict) or isinstance(stats, OrderedDict):
+                mean = stats['mean']
+                median = stats['median']
+                std = stats['std']
+                r_hat = stats['r_hat']
+                n_eff = stats['n_eff']
+                hpdi_5 = stats['5.0%']
+                hpdi_95 = stats['95.0%']
+                
+                if hasattr(mean, 'shape') and len(mean.shape) > 0: # Vector parameter
+                    for i in range(mean.shape[0]):
+                        param_label = f"{param_name}[{i}]"
+                        r_hat_style = "green" if r_hat[i] < 1.01 else ("yellow" if r_hat[i] < 1.05 else "red")
+                        n_eff_style = "green" if n_eff[i] > 100 else ("yellow" if n_eff[i] > 50 else "red")
+                        
+                        console.print(
+                            f"{param_label:<20} {mean[i]:>10.4f} {std[i]:>10.4f} {median[i]:>10.4f} "
+                            f"[{r_hat_style}]{r_hat[i]:>10.4f}[/{r_hat_style}] "
+                            f"[{n_eff_style}]{n_eff[i]:>10.0f}[/{n_eff_style}] "
+                            f"{hpdi_5[i]:>10.4f} {hpdi_95[i]:>10.4f}"
+                        )
+                else: # Scalar parameter
+                    r_hat_style = "green" if r_hat < 1.01 else ("yellow" if r_hat < 1.05 else "red")
+                    n_eff_style = "green" if n_eff > 100 * nparameters else ("yellow" if n_eff > 50 * nparameters else "red")
+                    
+                    console.print(
+                        f"{param_name:<20} {mean:>10.4f} {std:>10.4f} {median:>10.4f} "
+                        f"[{r_hat_style}]{r_hat:>10.4f}[/{r_hat_style}] "
+                        f"[{n_eff_style}]{n_eff:>10.0f}[/{n_eff_style}] "
+                        f"{hpdi_5:>10.4f} {hpdi_95:>10.4f}"
+                    )
+            else:
+                console.print(f"Error: Unknown stats type, unable to print summary statistics: {type(stats)}", style="bold red")
+        
+        # Print interpretation guide
+        console.print("\Statistics Interpretation:", style="bold")
+        console.print("R-hat (Gelman-Rubin statistic): Measures chain convergence (between vs within-chain variance)")
+        console.print("  [green]< 1.01[/green]: Good convergence")
+        console.print("  [yellow]1.01-1.05[/yellow]: Potential convergence issues")
+        console.print("  [red]> 1.05[/red]: Poor convergence, chains have not mixed well")
+        
+        console.print("\nn_eff: Effective sample size after accounting for autocorrelation")
+        console.print("  n_eff ≈ total samples: Parameter explores well, low autocorrelation")
+        console.print("  n_eff << total samples: High autocorrelation, may need longer chains")
+        console.print("  Rule of thumb: n_eff > 100 per parameter for reliable inference")
+
 if __name__ == "__main__":
     parser = OptimizerHelpFormatter(description="Run MCMC fits using numpyro.")
     parser.add_argument("yaml_file", type=str,
@@ -678,6 +985,8 @@ if __name__ == "__main__":
                        help="List of bin indices to process")
     parser.add_argument("--output_folder", type=str, default=None,
                         help="Folder to save output results to. If not provided then will dump to 'MCMC' subdirectory in YAML.base_directory")
+    parser.add_argument("-np", "--nprocesses", type=int, default=None,
+                       help="Maximum number of parallel processes to use. Default is min(CPU count, bins*chains)")
 
     #### MCMC ARGS ####
     parser.add_argument("-ps", "--prior_scale", type=float, default=1000.0,
@@ -751,9 +1060,9 @@ if __name__ == "__main__":
         console.print(f"Output folder {output_folder} already exists! Please provide a different path or remove the folder.", style="bold red")
         sys.exit(1)
     
-    # Initialize MCMC Manager, preparing for the first requested bin
+    # Initialize MCMC Manager
     mcmc_manager = MCMCManager(
-        pyamptools_yaml, iftpwa_yaml, args.bins[0], 
+        pyamptools_yaml, iftpwa_yaml, 0, 
         prior_scale=args.prior_scale, prior_dist=args.prior_dist,
         n_chains=args.nchains, n_samples=args.nsamples, n_warmup=args.nwarmup, 
         resume_path=args.resume, output_folder=args.output_folder, cop=args.coordinate_system, 
@@ -778,26 +1087,23 @@ if __name__ == "__main__":
     if args.print_wave_names:
         console.print(f"Wave names: {mcmc_manager.waveNames}", style="bold")
         sys.exit(0)
-
-    if args.bins is None:
-        console.print("list of bin indices is required", style="bold red")
-        sys.exit(1)
     
     #### RUN MCMC ####
     timer = Timer()
-    final_result_dicts = [mcmc_manager.run_mcmc()]
-    if len(args.bins) > 1:
-        for bin_idx in args.bins[1:]:
-            mcmc_manager.set_bin(bin_idx)
-            final_result_dict = mcmc_manager.run_mcmc()
-            final_result_dicts.append(final_result_dict)
+    
+    # Run MCMC in parallel
+    start_time = timer.read(return_str=False)[1]
+    final_result_dicts = mcmc_manager.run_mcmc_parallel(bins=args.bins, nprocesses=args.nprocesses)
+    end_time = timer.read(return_str=False)[1]
+    mcmc_run_time = end_time - start_time
+    mcmc_it_per_second = (args.nsamples + args.nwarmup) * args.nchains * len(args.bins) / mcmc_run_time
     
     with open(f"{output_folder}/mcmc_samples.pkl", "wb") as f:
         pkl.dump(final_result_dicts, f)
 
     console.print(f"Total time elapsed: {timer.read(return_str=False)[2]:0.2f} seconds", style="bold")
-    console.print(f"    MCMC run time: {mcmc_manager.mcmc_run_time:0.2f} seconds", style="bold")
-    console.print(f"    MCMC (nsamples, nwarmup) = ({mcmc_manager.n_samples}, {mcmc_manager.n_warmup})", style="bold")
-    console.print(f"    MCMC samples per second: {mcmc_manager.mcmc_it_per_second:0.1f}", style="bold")
+    console.print(f"    MCMC run time: {mcmc_run_time:0.2f} seconds", style="bold")
+    console.print(f"    MCMC (nbins, nchains, nsamples, nwarmup) = ({len(args.bins)}, {args.nchains}, {args.nsamples}, {args.nwarmup})", style="bold")
+    console.print(f"    MCMC samples per second: {mcmc_it_per_second:0.1f}", style="bold")
 
     sys.exit(0)
