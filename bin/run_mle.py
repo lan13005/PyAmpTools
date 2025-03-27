@@ -1,222 +1,307 @@
+from pyamptools.utility.general import load_yaml, Timer
+import numpy as np
+import sys
+import pickle as pkl
+from iminuit import Minuit
 import argparse
-import glob
-import multiprocessing
 import os
-import re
+from tqdm import tqdm
+from multiprocessing import Pool
+from pyamptools.utility.opt_utils import Objective
+from rich.console import Console
 
-from pyamptools import atiSetup
-from pyamptools.utility.general import Silencer, Timer, load_yaml
+Minuit.errordef = Minuit.LIKELIHOOD
+console = Console()
 
-pyamptools_fit_cmd = "pa fit"
-pyamptools_ff_cmd = "pa fitfrac"
+# TODO:
+# - NLOPT - another set of optimizers to consider. Could have better global optimization algorithms
 
-############################################################################
-# This function performs maximum likelihood fits using AmpTools on all cfg files
-# by calling pyamptools' fit and fitfrac commands on each of them.
-############################################################################
+# NOTE:
+# - Regularization is currently handled by the pwa manager class which will reference the key in the yaml file
+#       regularization:
+#           apply_regularization: false
+#           method: none
+#           lambdas: 0.0
+#           en_alpha: 0.0
+# - lambdas can be a dictionary of reg. strengths, i.e. {"Sp0+": 1e2, "Dm1-": 1e1, "Dp0-": 1e0}
 
-seed_file = "seed_nifty.txt"
+def run_single_bin_fits(
+    job_info
+    ):
+    """
+    Run a set of randomly initialized fits in a single bin
+    
+    Args: job_info contains the following:
+        pwa_manager: GluexJaxManager instance
+        bin_idx: Bin index to fit
+        bin_seed: Random seed for this bin for reproducibility
+        n_iterations: Number of random initializations to perform
+        scale: Scale for random initialization, real/imag parts are sampled from uniform [-scale, scale]
+        method: Optimization method to use
+    """
+    pwa_manager, bin_idx, bin_seed, n_iterations, scale, method = job_info
+    
+    # Create a bin-specific console if writing to files
+    bin_console = console
+    if not dump_to_stdout:
+        log_file = f"{output_folder}/{method}_bin{bin_idx}.log"
+        if not os.path.exists(os.path.dirname(log_file)):
+            os.makedirs(os.path.dirname(log_file))
+        bin_console = Console(file=open(log_file, "w"), highlight=False)
+    
+    pwa_manager.set_bins(np.array([bin_idx]))
+    np.random.seed(bin_seed)
+    seed_list = np.random.randint(0, 1000000, n_iterations)
+    
+    def run_single_random_fit(initial_guess):
+        """Single fit in a single bin"""
+                
+        reference_waves = pyamptools_yaml["phase_reference"].split("_")
+        acceptance_correct = pyamptools_yaml["acceptance_correct"]
+        obj = Objective(pwa_manager, bin_idx, nPars, nmbMasses, nmbTprimes, reference_waves=reference_waves)
+        
+        initial_likelihood = obj.objective(initial_guess).item()
+        bin_console.print("\n**************************************************************", style="bold")
+        bin_console.print(f"Bin {bin_idx} | Iteration {iteration_idx}", style="bold")
+        bin_console.print(f"Initial likelihood: {initial_likelihood}", style="bold")
+        bin_console.print(f"Using method: {method}", style="bold")
+        
+        final_result_dict = {}
+        optim_result = {}
+        if method == 'minuit-analytic':
+            from pyamptools.utility.opt_utils import optimize_single_bin_minuit
+            optim_result = optimize_single_bin_minuit(obj, initial_guess, bin_idx, use_analytic_grad=True)
+        elif method == 'minuit-numeric':
+            from pyamptools.utility.opt_utils import optimize_single_bin_minuit
+            optim_result = optimize_single_bin_minuit(obj, initial_guess, bin_idx, use_analytic_grad=False)
+        elif method == 'L-BFGS-B' or method == 'trust-ncg' or method == 'trust-krylov':
+            from pyamptools.utility.opt_utils import optimize_single_bin_scipy
+            optim_result = optimize_single_bin_scipy(obj, initial_guess, bin_idx, method=method)
+        else:
+            raise ValueError(f"Invalid Maximum Likelihood Based method: {method}")
+        
+        # NOTE: Here we force the usage of Tikhonov regularized covariance matrix to obtain the intensity and intensity errors
+        #       Minuit does not always return a covariance matrix (i.e. if it fails). Tikhonov regularization adds a small value
+        #       to the diagonal of the Hessian to ensure it is positive definite before inversion
+        
+        final_params = np.array(optim_result['parameters'])
+        intensity, intensity_error = obj.intensity_and_error(final_params, optim_result['covariance']['tikhonov'], pwa_manager.waveNames, acceptance_correct=acceptance_correct)
+        final_result_dict['total_intensity'] = intensity
+        final_result_dict['total_intensity_error'] = intensity_error
+        for wave in pwa_manager.waveNames:
+            intensity, intensity_error = obj.intensity_and_error(final_params, optim_result['covariance']['tikhonov'], [wave], acceptance_correct=acceptance_correct)
+            final_result_dict[wave] = intensity
+            final_result_dict[f"{wave}_error"] = intensity_error
+        final_result_dict['likelihood'] = optim_result['likelihood']
+        final_result_dict['initial_likelihood'] = initial_likelihood
+        
+        bin_console.print(f"\nTotal Intensity: value = {final_result_dict['total_intensity']:<10.5f} +- {final_result_dict['total_intensity_error']:<10.5f}", style="bold")
+        for iw, wave in enumerate(pwa_manager.waveNames):
+            real_part = final_params[2*iw]
+            imag_part = final_params[2*iw+1]
+            real_errs = {}
+            imag_errs = {}
+            for key in optim_result['covariance'].keys():
+                real_err = optim_result['covariance'][key]
+                imag_err = optim_result['covariance'][key]
+                if real_err is not None:
+                    real_errs[key] = np.sqrt(real_err[2*iw, 2*iw])
+                if imag_err is not None:
+                    imag_errs[key] = np.sqrt(imag_err[2*iw+1, 2*iw+1])
+            methods = list(real_errs.keys())
+            real_part_errs = [f"{real_errs[m]:<10.5f}" for m in methods]
+            imag_part_errs = [f"{imag_errs[m]:<10.5f}" for m in methods]
+            bounds = {}
+            bounds['rlb'] = optim_result['bounds'][2*iw][0]     # real part lower bound
+            bounds['rub'] = optim_result['bounds'][2*iw][1]     # real part upper bound
+            bounds['ilb'] = optim_result['bounds'][2*iw+1][0]   # imag part lower bound
+            bounds['iub'] = optim_result['bounds'][2*iw+1][1]   # imag part upper bound
+            for key in bounds.keys():
+                if bounds[key] is None: bounds[key] = "None"
+            bin_console.print(f"{wave:<10}  Intensity: value = {final_result_dict[wave]:<10.5f} +- {final_result_dict[f'{wave}_error']:<10.5f}", style="bold")
+            bin_console.print(f"            Real part: value = {real_part:<10.5f} | Errors ({', '.join(methods)}) = ({', '.join(real_part_errs)}) | Bounds: \[{bounds['rlb']:<10}, {bounds['rub']:<10}]) ", style="bold")
+            bin_console.print(f"            Imag part: value = {imag_part:<10.5f} | Errors ({', '.join(methods)}) = ({', '.join(imag_part_errs)}) | Bounds: \[{bounds['ilb']:<10}, {bounds['iub']:<10}]) ", style="bold")
 
-class MLE:
-    def __init__(self, yaml_file, dump='', yaml_name=''):
-        """
-        Args:
-            yaml_file (dict): Configuration file
-        """
+        bin_console.print(f"Optimization results:", style="bold")
+        bin_console.print(f"Success: {optim_result['success']}", style="bold")
+        bin_console.print(f"Final likelihood: {optim_result['likelihood']}", style="bold")
+        bin_console.print(f"Percent negative eigenvalues: {optim_result['hessian_diagnostics']['fraction_negative_eigenvalues']:0.3f}", style="bold")
+        bin_console.print(f"Percent small eigenvalues: {optim_result['hessian_diagnostics']['fraction_small_eigenvalues']:0.3f}", style="bold")
+        bin_console.print(f"Message: {optim_result['message']}", style="bold")
+        bin_console.print("**************************************************************\n", style="bold")
+        
+        final_par_values = {}
+        for iw, wave in enumerate(pwa_manager.waveNames):
+            final_par_values[f"{wave}_amp"] = complex(final_params[2*iw], final_params[2*iw+1]) # type convert away from np.complex to python complex
+        
+        final_result_dict['initial_guess_dict'] = initial_guess_dict
+        final_result_dict['final_par_values'] = final_par_values
+        final_result_dict['covariances'] = optim_result['covariance']
 
-        print("\n\n>>>>>>>>>>>>> ConfigLoader >>>>>>>>>>>>>>>")
-        self.output_directory = yaml_file["amptools"]["output_directory"]
-        self.n_randomizations = yaml_file["amptools"]["n_randomizations"]
-        self.ff_args = yaml_file["amptools"]["regex_merge"]
-        self.prepare_for_nifty = bool(yaml_file["amptools"]["prepare_for_nifty"])
-        self.devs = None
-        self.dump = dump
-        self.yaml_name = yaml_name
-        print("<<<<<<<<<<<<<< ConfigLoader <<<<<<<<<<<<<<\n\n")
+        return final_result_dict
+        ### End of run_single_random_fit function ###
+    
+    final_result_dicts = []
+    for iteration_idx in range(n_iterations):
+        np.random.seed(seed_list[iteration_idx])
+        initial_guess = scale * np.random.randn(nPars)
+        initial_guess_dict = {} 
+        for iw, wave in enumerate(waveNames):
+            if wave in reference_waves:
+                # Rotate away the imaginary part of the reference wave as to not bias initialization small for reference waves
+                initial_guess[2*iw] = np.abs(initial_guess[2*iw] + 1j * initial_guess[2*iw+1])
+                initial_guess[2*iw+1] = 0
+                initial_guess_dict[f"{wave}_amp"] = complex(initial_guess[2*iw], 0)
+            else:
+                initial_guess_dict[f"{wave}_amp"] = complex(initial_guess[2*iw], initial_guess[2*iw+1])
+        final_result_dict = run_single_random_fit(initial_guess)
+        final_result_dicts.append(final_result_dict)
 
-    def set_devs(self, devs):
-        self.devs = int(devs)
+    ofile = f"{output_folder}/{method}_bin{bin_idx}.pkl"
+    with open(ofile, "wb") as f:
+        pkl.dump(final_result_dicts, f)
+    bin_console.print(f"Saved results to {ofile}", style="bold")
+    
+    # Close the file if we opened one
+    if not dump_to_stdout:
+        bin_console.file.close()
 
-    def __call__(self, cfgfile):
+class OptimizerHelpFormatter(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write(f"Error: {message}\n")
+        self.print_help()
+        sys.exit(2)
 
-        base_fname = cfgfile.split("/")[-1].split(".")[0]
-        binNum = base_fname.split("_")[-1]
-
-        folder = os.path.dirname(cfgfile)
-        print(f"Running over: {folder}")
-
-        ###############################
-        # Perform MLE fit
-        ###############################
-        device = int(binNum) % self.devs
-        cmd = f"{pyamptools_fit_cmd} {cfgfile} --numRnd {self.n_randomizations} --seedfile seed_bin{binNum}"
-        if self.devs is not None and self.devs >= 0:
-            cmd += f" --device {device}"
-        if self.dump == 'null':
-            cmd += " > /dev/null"
-        elif self.dump != '':
-            if not os.path.exists(f"{self.dump}"):
-                os.makedirs(f"{self.dump}")
-            cmd += f" >> {self.dump}/log_{binNum}.txt 2>&1"
-        os.system(cmd)
-
-        if not os.path.exists(f"{base_fname}.fit"):
-            raise Exception(f"run_mle| Error: {base_fname}.fit does not exist!")
-
-        os.system(f"rm -f bin_{binNum}_*.ni")
-
-        ###############################
-        # Extract ff for best iteration
-        ###############################
-
-        cmd = f"{pyamptools_ff_cmd} {base_fname}.fit --outputfileName intensities_bin{binNum}.txt {self.ff_args} --yaml_file {self.yaml_name}"
-        if self.dump == 'null':
-            cmd += " > /dev/null"
-        elif self.dump != '':
-            cmd += f" >> {self.dump}/log_{binNum}.txt 2>&1"
-        print(cmd)
-        os.system(cmd)
-        os.system(f"mv intensities_bin{binNum}.txt {folder}/intensities.txt")
-        os.system(f"mv {base_fname}.fit {folder}/{base_fname}.fit")
-
-        # Extract ff for all iterations
-        for i in range(self.n_randomizations):
-            cmd = f"{pyamptools_ff_cmd} {base_fname}_{i}.fit --outputfileName intensities_bin{binNum}_{i}.txt {self.ff_args} --yaml_file {self.yaml_name}"
-            if self.dump == 'null':
-                cmd += " > /dev/null"
-            elif self.dump != '':
-                cmd += f" >> {self.dump}/log_{binNum}.txt 2>&1"
-            print(cmd)
-            os.system(cmd)
-            os.system(f"mv intensities_bin{binNum}_{i}.txt {folder}/intensities_{i}.txt")
-            os.system(f"mv {base_fname}_{i}.fit {folder}/{base_fname}_{i}.fit")
-
-        if self.prepare_for_nifty:
-            ## Some parameters (like scaling between polarized datasets) need to be fixed so that
-            # NIFTy does not pick it up as a free parameter. We handle this by taking the amptools
-            # seed file of the best fit remove all lines related to production coefficients and
-            # append "fixed" to every line that is associated with these scale parameters.
-            os.system(f"mv seed_bin{binNum}.txt {folder}/{seed_file}")
-            os.system(f"mv seed_bin{binNum}_*.txt {folder}")  # move all seed files to the folder
-            os.system(f"sed -i '/^initialize.*$/d' {folder}/{seed_file}")  # delete whole line for initializing production coefficients
-            os.system(f"sed -i 's|$| fixed|' {folder}/{seed_file}")  # append fixed to the remaning lines
-
-
-pat_fit = re.compile("bin_.*.fit")
-pat_txt = re.compile("seed_.*.txt")
-pat_reac = re.compile("reaction_.*.ni")
-pat_int = re.compile("intensities.*.txt")
-def cleanup(directories):
-    for root in directories:
-        for file in os.listdir(root):
-            if pat_fit.match(file) or pat_txt.match(file) or pat_reac.match(file) or pat_int.match(file):
-                cmd = f"rm -f {os.path.join(root, file)}"
-                # print(cmd)
-                os.system(cmd)
-        if not os.path.exists(os.path.join(root, "seed_nifty.txt")):
-            os.system(f"touch {os.path.join(root, 'seed_nifty.txt')}")
+    def format_help(self):
+        help_message = super().format_help()
+        
+        method_help = "\nOptimizer Descriptions:\n"
+        method_help += "\nMinuit-based Methods:\n"
+        method_help += "  * minuit-numeric:\n"
+        method_help += "      Let Minuit compute numerical gradients\n"
+        method_help += "  * minuit-analytic:\n"
+        method_help += "      Uses analytic gradients from PWA likelihood manager\n"
+        
+        method_help += "\nSciPy-based Methods:\n"
+        method_help += "  * L-BFGS-B:\n"
+        method_help += "      Limited-memory BFGS quasi-Newton method (stores approximate Hessian)\n"
+        method_help += "      + Efficient for large-scale problems\n"
+        method_help += "      - May struggle with highly correlated parameters\n"
+        
+        method_help += "  * trust-ncg:\n"
+        method_help += "      Trust-region Newton-Conjugate Gradient\n"
+        method_help += "      + Adaptively adjusts step size using local quadratic approximation\n"
+        method_help += "      + Efficient for large-scale problems\n"
+        method_help += "      - Can be unstable for ill-conditioned problems\n"
+        
+        method_help += "  * trust-krylov:\n"
+        method_help += "      Trust-region method with Krylov subspace solver\n"
+        method_help += "      + Better handling of indefinite (sparse) Hessians, Kyrlov subspcae accounts for non-Euclidean geometry\n"
+        method_help += "      + More robust for highly correlated parameters\n"
+        
+        return help_message + "\n" + method_help
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Perform maximum likelihood fits (using AmpTools) on all cfg files")
-    parser.add_argument("yaml_name", type=str, default="conf/configuration.yaml", help="Path a configuration yaml file")
-    parser.add_argument("-d", type=str, default='null', help="Dump log files for each bin to this directory path. If empty str will dump to stdout")
-    parser.add_argument("--clean", action="store_true", help="Cleanup all fit files, fitfrac files, and reaction files")
+    parser = OptimizerHelpFormatter(description="Run optimization fits using various methods.")
+    parser.add_argument("yaml_file", type=str,
+                       help="Path to PyAmpTools YAML configuration file")
+    parser.add_argument("-b", "--bins", type=int, nargs="+",
+                       help="List of kinematic bin indicies to process, if none provided then will run across all bins defined the YAML file")
+    parser.add_argument("--output_folder", type=str, default=None,
+                        help="Folder to save output results to. If not provided then will dump to 'MLE' subdirectory in YAML.base_directory")
+    parser.add_argument("--nprocesses", type=int, default=8,
+                        help="Number of processes to run in parallel")
+    
+    ##### OPTIMIZATION METHOD ARGS #####
+    # NOTE: L-BFGS-B is found to be very fast but Minuit appears to be more robust so set as default
+    #       Boris Grube - COMPASS uses LBFGS for their binned fits but minuit for their mass dependent fits due to L-BFGS-B performing worse
+    parser.add_argument("--method", type=str, 
+                       choices=['minuit-numeric', 'minuit-analytic', 'L-BFGS-B', 'trust-ncg', 'trust-krylov'], 
+                       default='minuit-analytic',
+                       help="Optimization method to use")
+    
+    ##### RANDOM INITIALIZATION ARGS #####
+    parser.add_argument("--n_random_intializations", type=int, default=20,
+                        help="Number of random initializations to perform")
+    parser.add_argument("--scale", type=float, default=50,
+                        help="Randomly sample real/imag parts of the amplitude on [-scale, scale]")
+    parser.add_argument("--seed", type=int, default=42,
+                        help="Seed for main random number generator")
+    
+    #### HELPFUL ARGS ####
+    parser.add_argument("--print_wave_names", action="store_true",
+                       help="Print wave names without running any fits")
+    parser.add_argument("--stdout", action="store_true",
+                       help="Print output to stdout instead of dumping to a log file")
+    
+    #### PARSE ARGS ####
     args = parser.parse_args()
-    yaml_name = args.yaml_name
-    dump = args.d
+    np.random.seed(args.seed)
+    scale = args.scale
+    n_iterations = args.n_random_intializations
+    nprocesses = args.nprocesses
+    dump_to_stdout = args.stdout
     
-    timer = Timer()
-    cwd = os.getcwd()
-
-    print("\n---------------------")
-    print(f"Running {__file__}")
-    print(f"  yaml location: {yaml_name}")
-    print(f"  dump logs to folder: {os.path.join(cwd, dump)}")
-    print("---------------------\n")
-
-    yaml_file = load_yaml(yaml_name)
+    #### LOAD YAML FILES ####
+    pyamptools_yaml = load_yaml(args.yaml_file)
+    iftpwa_yaml = pyamptools_yaml["nifty"]["yaml"]
+    iftpwa_yaml = load_yaml(iftpwa_yaml)
+    if not iftpwa_yaml:
+        raise ValueError("iftpwa YAML file is required")
+    if not pyamptools_yaml:
+        raise ValueError("PyAmpTools YAML file is required")
+    waveNames = pyamptools_yaml["waveset"].split("_")
+    nmbMasses = pyamptools_yaml["n_mass_bins"]
+    nmbTprimes = pyamptools_yaml["n_t_bins"]
+    nPars = 2 * len(waveNames)
+    reference_waves = pyamptools_yaml["phase_reference"].split("_")
     
-    if args.clean:
-        print(f"run_mle| Cleaning all fit files, fitfrac files, and reaction files in {yaml_file['base_directory']}")
-        subdirs = ['.']
-        for root, dirs, files in os.walk(yaml_file["base_directory"]):
-            for dir in dirs:
-                subdirs.append(os.path.join(root, dir))    
-        cleanup(subdirs)
+    if args.print_wave_names:
+        console.print(f"Wave names: {waveNames}", style="bold")
+        sys.exit(0)
 
-    mle = MLE(yaml_file, dump=dump, yaml_name=yaml_name)
-
-    output_directory = mle.output_directory
-    n_randomizations = mle.n_randomizations
-    bins_per_group = yaml_file['amptools']["bins_per_group"]
-    bins_per_group = 1 if bins_per_group < 1 or bins_per_group is None else bins_per_group
-    nBins = yaml_file["n_mass_bins"] * yaml_file["n_t_bins"]
-    if nBins % bins_per_group != 0:
-        raise Exception("run_mle| Number of bins is not divisible by bins_per_group!")
-    nGroups = nBins // bins_per_group
-
-    search_format = yaml_file["amptools"]["search_format"]
-    if search_format not in ["bin", "group"]:
-        raise Exception("run_mle| search_format must be either 'bin' or 'group'")
-    if search_format == "group" and bins_per_group == 1:
-        search_format = "bin"
-        print("mle| search_format set to 'bin' since bins_per_group is 1 (no grouping...)")
-
-    ###########################################
-    # Perform MLE fit and extract fit fractions
-    # for all cfg files if incomplete
-    ###########################################
-
-    _cfgfiles = glob.glob(f"{output_directory}/{search_format}_*/*.cfg")  # all cfg files
-    cfgfiles = []  # cfg files that need to be processed
-    print("mle| Will process following cfg files:")
-    for cfgfile in _cfgfiles:
-        folder = os.path.dirname(cfgfile)
-
-        # Check if all randomized fits and fit fraction files are there
-        fit_complete = len(glob.glob(f"{folder}/*.fit")) >= n_randomizations + 1
-        ff_complete = len(glob.glob(f"{folder}/intensities*.txt")) >= n_randomizations + 1
-        complete = fit_complete and ff_complete
-
-        if not complete:
-            cfgfiles.append(cfgfile)
-            print(f"  {cfgfile}")
-
-    n_processes = min(len(cfgfiles), yaml_file["amptools"]["n_processes"])
-
-    # Get number of gpu devices amptools sees
-    USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals())
-
-    devs = -1
-    if "GPUManager" in globals():
-        devs = GPUManager.getNumDevices()
-    mle.set_devs(devs)
-
-    if n_processes < 1:
-        if len(cfgfiles) > 0:
-            print("mle| all cfg files are complete, skipping MLE fits")
+    ##### LOAD DEFAULTS IF NONE PROVIDED #####
+    bins_to_process = args.bins
+    output_folder = args.output_folder
+    if bins_to_process is None:
+        bins_to_process = np.arange(nmbMasses * nmbTprimes)
+    if output_folder is None:
+        output_folder = os.path.join(os.path.dirname(pyamptools_yaml["base_directory"]), "MLE")
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
         else:
-            print("mle| no cfg files to process")
-    else:
-        with multiprocessing.Pool(n_processes) as pool:
-            pool.map(mle, cfgfiles)
+            raise ValueError(f"Output folder {output_folder} already exists! Please provide a different path or remove the folder.")
 
-    if bins_per_group > 1 and search_format == "bin":
-        print("mle| collecting seed files into group subfolders")
-        groups = glob.glob(f"{output_directory}/group_*")
-        if len(groups) != nGroups:
-            raise Exception("run_mle| Expected number of groups did not match actual groupings")
-        for ig, group in enumerate(groups):
-            group_name = group.split("/")[-1]
-            for relBin, absBin in enumerate(range(ig * bins_per_group, (ig + 1) * bins_per_group)):
-                # os.system(f"cat {output_directory}/bin_{ibin}/{seed_file} >> {group}/{seed_file}")
-                src_seed = f"{output_directory}/bin_{absBin}/{seed_file}"
-                dst_seed = f"{output_directory}/{group_name}/{seed_file}"
-                with open(src_seed) as f:
-                    lines = f.readlines()
-                    paras = [line.split(" ")[1] for line in lines if line.startswith("parameter")]
-                    for para in paras:
-                        cmd = f"sed -n 's|{para}|G{relBin}_{para}|p' {src_seed} >> {dst_seed}"
-                        os.system(cmd)
+    ##### LOAD PWA MANAGER #####
+    from iftpwa1.pwa.gluex.gluex_jax_manager import (
+        GluexJaxManager,
+    )
+    import logging
+    pwa_manager = GluexJaxManager(comm0=None, mpi_offset=1,
+                                yaml_file=pyamptools_yaml,
+                                resolved_secondary=iftpwa_yaml, prior_simulation=False, sum_returned_nlls=False, 
+                                logging_level=logging.WARNING)
 
-    print(f"mle| Elapsed time {timer.read()[2]}\n\n")
+    ##### CREATE JOB ASSIGNMENTS #####
+    max_concurrent = min(nprocesses, len(bins_to_process))
+    job_assignments = {}
+    job_counter = 0
+    bin_seeds = np.random.randint(0, 1000000, len(bins_to_process))
+    for bin_idx in bins_to_process:
+        job_assignments[job_counter] = (bin_idx, bin_seeds[bin_idx])
+        job_counter += 1
+    total_jobs = len(job_assignments)
+    console.print(f"Total jobs: {total_jobs}\n  Distributed across {max_concurrent} processes", style="bold")
+    
+    ##### RUN JOBS IN PARALLEL #####
+    timer = Timer()
+    with Pool(processes=max_concurrent) as pool:
+        job_args = [(pwa_manager, bin_idx, bin_seed, n_iterations, scale, args.method) for job_idx, (bin_idx, bin_seed) in job_assignments.items()]
+        # Distribute work across processes
+        with tqdm(total=total_jobs, desc="Processing jobs", unit="job") as pbar:
+            for _ in pool.imap_unordered(run_single_bin_fits, job_args):
+                pbar.update(1)
+    console.print(f"Total time elapsed: {timer.read()[2]}", style="bold")
+
+    sys.exit(0)
+
