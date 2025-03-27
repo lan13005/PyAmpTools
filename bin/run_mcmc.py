@@ -835,6 +835,10 @@ class OptimizerHelpFormatter(argparse.ArgumentParser):
         console.print(f"Error: {message}", style="red")
         self.print_help()
         sys.exit(2)
+        
+    def print_help(self, file=None):
+        help_text = self.format_help()
+        console.print(help_text)
 
     def format_help(self):
         help_message = super().format_help()
@@ -947,7 +951,7 @@ class TempMCMC:
         console.print(table)
 
 if __name__ == "__main__":
-    parser = OptimizerHelpFormatter(description="Run MCMC fits using numpyro. Lots of MCMC args accept list of values. Outer product of hyperparameters is automatically performed.")
+    parser = OptimizerHelpFormatter(description="Run MCMC fits using numpyro. [bold yellow]Lots of MCMC args accept list of values. Outer product of hyperparameters is automatically performed.[/bold yellow]")
     parser.add_argument("yaml_file", type=str,
                        help="Path to PyAmpTools YAML configuration file")    
     parser.add_argument("-b", "--bins", type=int, nargs="+", default=None,
@@ -962,10 +966,10 @@ if __name__ == "__main__":
     # A hyperparameter grid search is performed on the outer product of these lists
     #   This can be very expensive but its power to the people
     parser.add_argument("-ps", "--prior_scale", type=float, nargs="+", default=[1000.0],
-                       help="Prior scale(s) for the magnitude of the complex amplitudes, default is very large to be as non-informative as possible")
+                       help="Prior scale for the magnitude of the complex amplitudes, default is very large to be as non-informative as possible")
     # NOTE: Block usage of horseshoe prior using 'choice' argument, bad performance and limited testing
     parser.add_argument("-pd", "--prior_dist", type=str, choices=['laplace', 'gaussian'], nargs="+", default=['gaussian'], 
-                       help="Prior distribution(s) for the complex amplitudes")
+                       help="Prior distribution for the complex amplitudes")
     parser.add_argument("-nc", "--nchains", type=int, nargs="+", default=[6],
                        help="Number of chains to use for numpyro MCMC")
     parser.add_argument("-ns", "--nsamples", type=int, nargs="+", default=[1000],

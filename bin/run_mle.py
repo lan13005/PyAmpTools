@@ -172,30 +172,34 @@ class OptimizerHelpFormatter(argparse.ArgumentParser):
         sys.stderr.write(f"Error: {message}\n")
         self.print_help()
         sys.exit(2)
+    
+    def print_help(self, file=None):
+        help_text = self.format_help()
+        console.print(help_text)
 
     def format_help(self):
         help_message = super().format_help()
         
-        method_help = "\nOptimizer Descriptions:\n"
-        method_help += "\nMinuit-based Methods:\n"
+        method_help = "\n[bold green]Optimizer Descriptions:[/bold green]\n"
+        method_help += "\n[bold blue]Minuit-based Methods:[/bold blue]\n"
         method_help += "  * minuit-numeric:\n"
         method_help += "      Let Minuit compute numerical gradients\n"
         method_help += "  * minuit-analytic:\n"
         method_help += "      Uses analytic gradients from PWA likelihood manager\n"
         
-        method_help += "\nSciPy-based Methods:\n"
+        method_help += "\n[bold blue]SciPy-based Methods:[/bold blue]\n"
         method_help += "  * L-BFGS-B:\n"
         method_help += "      Limited-memory BFGS quasi-Newton method (stores approximate Hessian)\n"
         method_help += "      + Efficient for large-scale problems\n"
         method_help += "      - May struggle with highly correlated parameters\n"
         
-        method_help += "  * trust-ncg:\n"
+        method_help += "  * trust-ncg [bold yellow](limited testing)[/bold yellow]:\n"
         method_help += "      Trust-region Newton-Conjugate Gradient\n"
         method_help += "      + Adaptively adjusts step size using local quadratic approximation\n"
         method_help += "      + Efficient for large-scale problems\n"
         method_help += "      - Can be unstable for ill-conditioned problems\n"
         
-        method_help += "  * trust-krylov:\n"
+        method_help += "  * trust-krylov [bold yellow](limited testing)[/bold yellow]:\n"
         method_help += "      Trust-region method with Krylov subspace solver\n"
         method_help += "      + Better handling of indefinite (sparse) Hessians, Kyrlov subspcae accounts for non-Euclidean geometry\n"
         method_help += "      + More robust for highly correlated parameters\n"
