@@ -9,6 +9,7 @@ from tqdm import tqdm
 from multiprocessing import Pool
 from pyamptools.utility.opt_utils import Objective
 from rich.console import Console
+import logging
 
 Minuit.errordef = Minuit.LIKELIHOOD
 console = Console()
@@ -86,8 +87,8 @@ def run_single_bin_fits(
         
         final_params = np.array(optim_result['parameters'])
         intensity, intensity_error = obj.intensity_and_error(final_params, optim_result['covariance']['tikhonov'], pwa_manager.waveNames, acceptance_correct=acceptance_correct)
-        final_result_dict['total_intensity'] = intensity
-        final_result_dict['total_intensity_error'] = intensity_error
+        final_result_dict['intensity'] = intensity
+        final_result_dict['intensity_error'] = intensity_error
         for wave in pwa_manager.waveNames:
             intensity, intensity_error = obj.intensity_and_error(final_params, optim_result['covariance']['tikhonov'], [wave], acceptance_correct=acceptance_correct)
             final_result_dict[wave] = intensity
@@ -95,7 +96,7 @@ def run_single_bin_fits(
         final_result_dict['likelihood'] = optim_result['likelihood']
         final_result_dict['initial_likelihood'] = initial_likelihood
         
-        bin_console.print(f"\nTotal Intensity: value = {final_result_dict['total_intensity']:<10.5f} +- {final_result_dict['total_intensity_error']:<10.5f}", style="bold")
+        bin_console.print(f"\nTotal Intensity: value = {final_result_dict['intensity']:<10.5f} +- {final_result_dict['intensity_error']:<10.5f}", style="bold")
         for iw, wave in enumerate(pwa_manager.waveNames):
             real_part = final_params[2*iw]
             imag_part = final_params[2*iw+1]
@@ -207,8 +208,6 @@ if __name__ == "__main__":
                        help="Path to PyAmpTools YAML configuration file")
     parser.add_argument("-b", "--bins", type=int, nargs="+",
                        help="List of kinematic bin indicies to process, if none provided then will run across all bins defined the YAML file")
-    parser.add_argument("--output_folder", type=str, default=None,
-                        help="Folder to save output results to. If not provided then will dump to 'MLE' subdirectory in YAML.base_directory")
     parser.add_argument("--nprocesses", type=int, default=8,
                         help="Number of processes to run in parallel")
     
@@ -262,21 +261,18 @@ if __name__ == "__main__":
 
     ##### LOAD DEFAULTS IF NONE PROVIDED #####
     bins_to_process = args.bins
-    output_folder = args.output_folder
     if bins_to_process is None:
         bins_to_process = np.arange(nmbMasses * nmbTprimes)
-    if output_folder is None:
-        output_folder = os.path.join(os.path.dirname(pyamptools_yaml["base_directory"]), "MLE")
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
-        else:
-            raise ValueError(f"Output folder {output_folder} already exists! Please provide a different path or remove the folder.")
+    output_folder = os.path.join(os.path.dirname(pyamptools_yaml["base_directory"]), "MLE")
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    else:
+        raise ValueError(f"Output folder {output_folder} already exists! Please provide a different path or remove the folder.")
 
     ##### LOAD PWA MANAGER #####
     from iftpwa1.pwa.gluex.gluex_jax_manager import (
         GluexJaxManager,
     )
-    import logging
     pwa_manager = GluexJaxManager(comm0=None, mpi_offset=1,
                                 yaml_file=pyamptools_yaml,
                                 resolved_secondary=iftpwa_yaml, prior_simulation=False, sum_returned_nlls=False, 
