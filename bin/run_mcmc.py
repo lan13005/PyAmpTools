@@ -24,6 +24,8 @@ import pandas as pd
 from collections import OrderedDict
 from rich.table import Table
 
+from itertools import product
+
 # Set multiprocessing start method to 'spawn' to avoid deadlocks with JAX
 import multiprocessing as mp
 mp.set_start_method('spawn', force=True)
@@ -38,7 +40,7 @@ mp.set_start_method('spawn', force=True)
 ########################################################
 
 ########################################################
-# NOTE: SAVING MCMC STATE
+# NOTE: SAVING MCMC STATE TO CONTINUE DRAWING
 #   - due to (above) multiprocessing, we accumulate n_chains * n_bins states. Each MCMC state is not large <100KB so it could be saved but for now
 #     lets not worry about it. This becomes a bookkeeping problem.
 ########################################################
@@ -60,7 +62,8 @@ console = Console()
 # Define a worker function that will run a single MCMC chain
 def worker_function(pyamptools_yaml, iftpwa_yaml, bin_idx, prior_scale, prior_dist, n_samples, n_warmup, 
                    chain_idx, seed, output_file, cop, wave_prior_scales, target_accept_prob, max_tree_depth, 
-                   step_size, adapt_step_size, dense_mass, adapt_mass_matrix, enforce_positive_reference):
+                   step_size, adapt_step_size, dense_mass, adapt_mass_matrix, enforce_positive_reference, 
+                   mass_centers, t_centers, use_progress_bar):
     """Worker function to run a single MCMC chain"""
 
     worker_console = Console()
@@ -71,7 +74,7 @@ def worker_function(pyamptools_yaml, iftpwa_yaml, bin_idx, prior_scale, prior_di
         pyamptools_yaml, iftpwa_yaml, bin_idx,
         prior_scale=prior_scale, prior_dist=prior_dist,
         n_chains=1, n_samples=n_samples, n_warmup=n_warmup,
-        resume_path=None, output_folder=None, cop=cop,
+        resume_path=None, cop=cop,
         wave_prior_scales=wave_prior_scales,
         target_accept_prob=target_accept_prob,
         max_tree_depth=max_tree_depth,
@@ -101,20 +104,38 @@ def worker_function(pyamptools_yaml, iftpwa_yaml, bin_idx, prior_scale, prior_di
         num_warmup=worker_mcmc.n_warmup,
         num_samples=worker_mcmc.n_samples,
         num_chains=1,
-        progress_bar=True
+        progress_bar=use_progress_bar
     )
     start_time = time.time()
     mcmc.run(rng_key)
     end_time = time.time()
     
     # Get samples and extra fields
-    samples = mcmc.get_samples()
+    samples = mcmc.get_samples() # Dict[str, array] ~ {'complex_params': array([...]), 'real_params': array([...])}
     extra_fields = mcmc.get_extra_fields() # i.e. divergences
+    n_samples = len(list(samples.values())[0])
+    nmbTprimes = len(t_centers)
+    
+    # Create a temporary MCMC object for postprocessing
+    chain_ids = np.ones(n_samples, dtype=int) * chain_idx
+    temp_mcmc = TempMCMC(samples, extra_fields, chain_ids, bin_idx)
+    worker_mcmc.mcmc = temp_mcmc    
+    worker_console.print(f"Worker {chain_idx}: Postprocessing samples for bin {bin_idx}...", style="bold green")
+    bin_result_dict, _ = worker_mcmc._postprocess_samples()
+    
+    # Add mass and tprime information
+    mass_idx = bin_idx // nmbTprimes
+    tprime_idx = bin_idx % nmbTprimes
+    bin_result_dict["mass"] = mass_centers[mass_idx] * np.ones(n_samples)
+    bin_result_dict["tprime"] = t_centers[tprime_idx] * np.ones(n_samples)
+    bin_result_dict["bin_idx"] = bin_idx * np.ones(n_samples, dtype=int)
+    bin_result_dict["chain_idx"] = chain_idx * np.ones(n_samples, dtype=int)
     
     # Save results to file
     results = {
         "bin_idx": bin_idx,
         "chain_idx": chain_idx,
+        "bin_result_dict": bin_result_dict,
         "samples": samples,
         "extra_fields": extra_fields,
     }
@@ -130,7 +151,7 @@ def worker_function(pyamptools_yaml, iftpwa_yaml, bin_idx, prior_scale, prior_di
 class MCMCManager:
     
     def __init__(self, pyamptools_yaml, iftpwa_yaml, bin_idx, prior_scale=100.0, prior_dist='laplace', n_chains=20, n_samples=2000, n_warmup=1000, 
-                 resume_path=None, output_folder=None, cop="cartesian", wave_prior_scales=None, target_accept_prob=0.85, max_tree_depth=12, 
+                 resume_path=None, cop="cartesian", wave_prior_scales=None, target_accept_prob=0.85, max_tree_depth=12, 
                  step_size=0.1, adapt_step_size=True, dense_mass=True, adapt_mass_matrix=True, enforce_positive_reference=False, verbose=True):
 
         # GENERAL PARAMETERS
@@ -138,7 +159,6 @@ class MCMCManager:
         self.iftpwa_yaml = iftpwa_yaml
         self.bin_idx = bin_idx
         self.resume_path = resume_path
-        self.output_folder = output_folder
         self.cop = cop
         self.enforce_positive_reference = enforce_positive_reference
         self.verbose = verbose
@@ -389,16 +409,12 @@ class MCMCManager:
             
         return model
     
-    def run_mcmc_parallel(self, bins=None, nprocesses=None):
+    def run_mcmc_parallel(self, bins=None, nprocesses=None, use_progress_bar=False):
         """Run MCMC in parallel using multiple processes"""
 
         if self.model is None:
             console.print("Model not created. Call create_model() first.", style="bold red")
             sys.exit(1)
-        
-        # If bins is None, use all bins
-        if bins is None:
-            bins = np.arange(self.nmbMasses * self.nmbTprimes)
         
         # Determine number of processes to use
         if nprocesses is None:
@@ -425,7 +441,8 @@ class MCMCManager:
                     chain_idx, args.seed, output_file, self.cop, self.wave_prior_scales,
                     self.target_accept_prob, self.max_tree_depth, self.step_size,
                     self.adapt_step_size, self.dense_mass, self.adapt_mass_matrix,
-                    self.enforce_positive_reference
+                    self.enforce_positive_reference, self.mass_centers, self.t_centers,
+                    use_progress_bar
                 )
                 tasks.append(task)
         
@@ -449,12 +466,14 @@ class MCMCManager:
         if self.verbose:
             console.print("All worker processes have completed", style="bold green")
         
+        # Combine results from all workers
         final_result_dicts = {}
         for bin_idx in bins:
             bin_output_files = [f for f in output_files if f"bin_{bin_idx}_" in f]
             
             chain_results = []
             chain_ids = []
+            
             for output_file in bin_output_files:
                 with open(output_file, "rb") as f:
                     results = pkl.load(f)
@@ -480,10 +499,13 @@ class MCMCManager:
             self.set_bin(bin_idx)
             self.mcmc = TempMCMC(combined_samples, combined_extra_fields, chain_ids, bin_idx)
             
+            self._print_parameter_mappings()
+            
             # Print interpretation guide
             if self.verbose:
                 console.print("\n\n*********************************************************", style="bold")
                 console.print("Statistics Interpretation:", style="bold")
+                console.print("NOTE: These metrics are useful for unimodal distributions! Do not take these seriously for PWA multi-modal distributions.", style="bold red")
                 console.print("R-hat (Gelman-Rubin statistic): Measures chain convergence (between vs within-chain variance)")
                 console.print("  [green]< 1.01[/green]: Good convergence")
                 console.print("  [yellow]1.01-1.05[/yellow]: Potential convergence issues")
@@ -499,18 +521,21 @@ class MCMCManager:
                 console.print("  This necessarily implies that all values inside are larger than values outside the interval")
             
             self.mcmc.print_summary()  # Print diagnostics for this bin
-            bin_result_dict, n_samples = self._postprocess_samples()
-            mass_idx = bin_idx // self.nmbTprimes
-            tprime_idx = bin_idx % self.nmbTprimes
-            bin_result_dict["mass"] = self.mass_centers[mass_idx] * np.ones(n_samples)
-            bin_result_dict["tprime"] = self.t_centers[tprime_idx] * np.ones(n_samples)            
-            for key, array in bin_result_dict.items():
-                final_result_dicts.setdefault(key, [])
-                final_result_dicts[key] = np.concatenate([final_result_dicts[key], array])
+            
+            # Collect results for this bin from all chains
+            for chain_result in chain_results:
+                bin_result_dict = chain_result["bin_result_dict"]
+                for key, array in bin_result_dict.items():
+                    final_result_dicts.setdefault(key, [])
+                    final_result_dicts[key].append(array)
             
             if self.verbose:
                 console.print(f"Completed processing for bin {bin_idx}", style="bold green")
                 console.print("*********************************************************", style="bold")
+        
+        # Concatenate all arrays in the final dictionary
+        for key in final_result_dicts.keys():
+            final_result_dicts[key] = np.concatenate(final_result_dicts[key])
         
         # Clean up temporary directory
         try:
@@ -544,78 +569,6 @@ class MCMCManager:
         # Leave this call here. mcmc.run() call does not wait for results to finish so the following print statements
         #   will be flushed before fit is complete. Use this as a barrier
         divergence = self.mcmc.get_extra_fields()["diverging"]
-        
-        if self.cop == "cartesian":
-            if self.prior_dist != "horseshoe": # {Gaussian, Laplace}
-                # For complex_params (non-reference waves)
-                free_complex_indices = []
-                complex_idx_map = {}  # Map from complex_params idx to wave and component
-                idx = 0
-                for wave_idx, wave in enumerate(self.waveNames):
-                    if wave_idx not in self.ref_indices:
-                        complex_idx_map[idx] = (wave, "Re")
-                        free_complex_indices.append(2*wave_idx)
-                        idx += 1
-                        complex_idx_map[idx] = (wave, "Im")
-                        free_complex_indices.append(2*wave_idx+1)
-                        idx += 1
-                
-                # For real_params (reference waves real part)
-                free_real_indices = []
-                real_idx_map = {}  # Map from real_params idx to wave
-                idx = 0
-                for wave_idx, wave in enumerate(self.waveNames):
-                    if wave_idx in self.ref_indices:
-                        real_idx_map[idx] = (wave, "Re")
-                        free_real_indices.append(2*wave_idx)
-                        idx += 1
-                
-                # Print mappings
-                for idx, (wave, component) in complex_idx_map.items():
-                    console.print(f"complex_params[{idx}] corresponds to {component}[{wave}]", style="bold")
-                for idx, (wave, component) in real_idx_map.items():
-                    console.print(f"real_params[{idx}] corresponds to {component}[{wave}]", style="bold")
-            
-            else:  # Horseshoe prior
-                free_complex_indices = []
-                complex_idx_map = {}
-                idx = 0
-                for wave_idx, wave in enumerate(self.waveNames):
-                    if wave_idx not in self.ref_indices:
-                        complex_idx_map[idx] = (wave, "Re")
-                        free_complex_indices.append(2*wave_idx)
-                        idx += 1
-                        complex_idx_map[idx] = (wave, "Im")
-                        free_complex_indices.append(2*wave_idx+1)
-                        idx += 1
-                
-                free_real_indices = []
-                real_idx_map = {}
-                idx = 0
-                for wave_idx, wave in enumerate(self.waveNames):
-                    if wave_idx in self.ref_indices:
-                        real_idx_map[idx] = (wave, "Re")
-                        free_real_indices.append(2*wave_idx)
-                        idx += 1
-                
-                # Print mappings
-                for idx, (wave, component) in complex_idx_map.items():
-                    console.print(f"raw_params[{idx}] corresponds to {component}[{wave}]", style="bold")
-                
-                for idx, (wave, component) in real_idx_map.items():
-                    console.print(f"raw_params_real[{idx}] corresponds to {component}[{wave}]", style="bold")
-        
-        elif self.cop == "polar":
-            # For magnitudes (all waves)
-            console.print("\nParameter mapping for NumPyro summary:", style="bold")
-            for idx, wave in enumerate(self.waveNames):
-                console.print(f"magnitudes[{idx}] corresponds to magnitude of [{wave}]", style="bold")
-            
-            # For phase_params (non-reference waves)
-            free_phase_indices = [i for i in range(len(self.waveNames)) if i not in self.ref_indices]
-            for i, wave_idx in enumerate(free_phase_indices):
-                wave = self.waveNames[wave_idx]
-                console.print(f"phase_params[{i}] corresponds to phase of [{wave}]", style="bold")
         
         # Divergence information
         n_divergent = jnp.sum(divergence)
@@ -696,7 +649,7 @@ class MCMCManager:
                 if jnp.isnan(total_intensity):
                     console.print(f"Warning: NaN intensity calculated for sample {isample}", style="bold red")
             
-            final_result_dict.setdefault("total", []).append(total_intensity)
+            final_result_dict.setdefault("intensity", []).append(total_intensity)
                 
             for wave in self.pwa_manager.waveNames:
                 if jnp.any(jnp.isnan(params[isample])):
@@ -712,7 +665,7 @@ class MCMCManager:
             
         # Print some info on the resulting shape
         if self.verbose:
-            console.print(f"\nFinal result dict info (total=total intensity) ~ (nsamples={n_samples}):", style="bold")
+            console.print(f"\nFinal result dict info (intensity=total intensity) ~ (nsamples={n_samples}):", style="bold")
             for k, v in final_result_dict.items():
                 final_result_dict[k] = np.array(v)
                 console.print(f"{k}: shape {final_result_dict[k].shape}", style="italic")
@@ -797,6 +750,79 @@ class MCMCManager:
                 self.free_complex_indices.append(2*i+1)
         self.free_complex_indices = jnp.array(self.free_complex_indices)
         self.free_real_indices = jnp.array(self.free_real_indices)
+        
+    def _print_parameter_mappings(self):
+        if self.cop == "cartesian":
+            if self.prior_dist != "horseshoe": # {Gaussian, Laplace}
+                # For complex_params (non-reference waves)
+                free_complex_indices = []
+                complex_idx_map = {}  # Map from complex_params idx to wave and component
+                idx = 0
+                for wave_idx, wave in enumerate(self.waveNames):
+                    if wave_idx not in self.ref_indices:
+                        complex_idx_map[idx] = (wave, "Re")
+                        free_complex_indices.append(2*wave_idx)
+                        idx += 1
+                        complex_idx_map[idx] = (wave, "Im")
+                        free_complex_indices.append(2*wave_idx+1)
+                        idx += 1
+                
+                # For real_params (reference waves real part)
+                free_real_indices = []
+                real_idx_map = {}  # Map from real_params idx to wave
+                idx = 0
+                for wave_idx, wave in enumerate(self.waveNames):
+                    if wave_idx in self.ref_indices:
+                        real_idx_map[idx] = (wave, "Re")
+                        free_real_indices.append(2*wave_idx)
+                        idx += 1
+                
+                # Print mappings
+                for idx, (wave, component) in complex_idx_map.items():
+                    console.print(f"complex_params[{idx}] corresponds to {component}[{wave}]", style="bold")
+                for idx, (wave, component) in real_idx_map.items():
+                    console.print(f"real_params[{idx}] corresponds to {component}[{wave}]", style="bold")
+            
+            else:  # Horseshoe prior
+                free_complex_indices = []
+                complex_idx_map = {}
+                idx = 0
+                for wave_idx, wave in enumerate(self.waveNames):
+                    if wave_idx not in self.ref_indices:
+                        complex_idx_map[idx] = (wave, "Re")
+                        free_complex_indices.append(2*wave_idx)
+                        idx += 1
+                        complex_idx_map[idx] = (wave, "Im")
+                        free_complex_indices.append(2*wave_idx+1)
+                        idx += 1
+                
+                free_real_indices = []
+                real_idx_map = {}
+                idx = 0
+                for wave_idx, wave in enumerate(self.waveNames):
+                    if wave_idx in self.ref_indices:
+                        real_idx_map[idx] = (wave, "Re")
+                        free_real_indices.append(2*wave_idx)
+                        idx += 1
+                
+                # Print mappings
+                for idx, (wave, component) in complex_idx_map.items():
+                    console.print(f"raw_params[{idx}] corresponds to {component}[{wave}]", style="bold")
+                
+                for idx, (wave, component) in real_idx_map.items():
+                    console.print(f"raw_params_real[{idx}] corresponds to {component}[{wave}]", style="bold")
+        
+        elif self.cop == "polar":
+            # For magnitudes (all waves)
+            console.print("\nParameter mapping for NumPyro summary:", style="bold")
+            for idx, wave in enumerate(self.waveNames):
+                console.print(f"magnitudes[{idx}] corresponds to magnitude of [{wave}]", style="bold")
+            
+            # For phase_params (non-reference waves)
+            free_phase_indices = [i for i in range(len(self.waveNames)) if i not in self.ref_indices]
+            for i, wave_idx in enumerate(free_phase_indices):
+                wave = self.waveNames[wave_idx]
+                console.print(f"phase_params[{i}] corresponds to phase of [{wave}]", style="bold")
         
     def _get_initial_params(self):
         # NOTE: See commit for test code: 2f14970
@@ -921,43 +947,43 @@ class TempMCMC:
         console.print(table)
 
 if __name__ == "__main__":
-    parser = OptimizerHelpFormatter(description="Run MCMC fits using numpyro.")
+    parser = OptimizerHelpFormatter(description="Run MCMC fits using numpyro. Lots of MCMC args accept list of values. Outer product of hyperparameters is automatically performed.")
     parser.add_argument("yaml_file", type=str,
                        help="Path to PyAmpTools YAML configuration file")    
-    parser.add_argument("-b", "--bins", type=int, nargs="+",
+    parser.add_argument("-b", "--bins", type=int, nargs="+", default=None,
                        help="List of bin indices to process")
-    parser.add_argument("--output_folder", type=str, default=None,
-                        help="Folder to save output results to. If not provided then will dump to 'MCMC' subdirectory in YAML.base_directory")
+    # parser.add_argument("--output_folder", type=str, default=None,
+    #                     help="Folder to save output results to. If not provided then will dump to 'MCMC' subdirectory in YAML.base_directory")
     parser.add_argument("-np", "--nprocesses", type=int, default=None,
                        help="Maximum number of parallel processes to use. Default is min(CPU count, bins*chains)")
 
     #### MCMC ARGS ####
-    parser.add_argument("-ps", "--prior_scale", type=float, default=1000.0,
-                       help="Prior scale for the magnitude of the complex amplitudes, default is very large to be as non-informative as possible")
+    # Everything in this section accepts a list of values!
+    # A hyperparameter grid search is performed on the outer product of these lists
+    #   This can be very expensive but its power to the people
+    parser.add_argument("-ps", "--prior_scale", type=float, nargs="+", default=[1000.0],
+                       help="Prior scale(s) for the magnitude of the complex amplitudes, default is very large to be as non-informative as possible")
     # NOTE: Block usage of horseshoe prior using 'choice' argument, bad performance and limited testing
-    parser.add_argument("-pd", "--prior_dist", type=str, choices=['laplace', 'gaussian'], default='gaussian', 
-                       help="Prior distribution for the complex amplitudes")
-    parser.add_argument("-nc", "--nchains", type=int, default=6,
+    parser.add_argument("-pd", "--prior_dist", type=str, choices=['laplace', 'gaussian'], nargs="+", default=['gaussian'], 
+                       help="Prior distribution(s) for the complex amplitudes")
+    parser.add_argument("-nc", "--nchains", type=int, nargs="+", default=[6],
                        help="Number of chains to use for numpyro MCMC")
-    parser.add_argument("-ns", "--nsamples", type=int, default=1000,
+    parser.add_argument("-ns", "--nsamples", type=int, nargs="+", default=[1000],
                        help="Number of samples to draw per chain")
-    parser.add_argument("-nw", "--nwarmup", type=int, default=500,
+    parser.add_argument("-nw", "--nwarmup", type=int, nargs="+", default=[500],
                        help="Number of warmup samples to draw")
-    
-    #### MCMC SAMPLER ARGS ####
-    parser.add_argument("-ta", "--target_accept", type=float, default=0.80,
+    parser.add_argument("-ta", "--target_accept_prob", type=float, nargs="+", default=[0.80],
                        help="Target acceptance probability for NUTS sampler (default: 0.80)")
-    parser.add_argument("-mtd", "--max_tree_depth", type=int, default=12,
+    parser.add_argument("-mtd", "--max_tree_depth", type=int, nargs="+", default=[12],
                        help="Maximum tree depth for NUTS sampler (default: 12)")
-    parser.add_argument("-ss", "--step_size", type=float, default=0.1,
+    parser.add_argument("-ss", "--step_size", type=float, nargs="+", default=[0.1],
                        help="Initial step size for NUTS sampler (default: 0.05 for polar, 0.1 for cartesian)")
-    parser.add_argument("--no_adapt_step_size", action="store_false", dest="adapt_step_size",
-                       help="Disable step size adaptation")
-    parser.add_argument("--no_dense_mass", action="store_false", dest="dense_mass",
-                       help="Disable dense mass matrix adaptation (use diagonal instead). Speeds up sampling")
-    parser.add_argument("--no_adapt_mass", action="store_false", dest="adapt_mass_matrix",
-                       help="Disable mass matrix adaptation. Significantly speeds up sampling")
-    parser.set_defaults(adapt_step_size=True, dense_mass=True, adapt_mass_matrix=True)
+    parser.add_argument("--adapt_step_size", type=str, nargs="+", choices=["True", "False"], default=["True"],
+                       help="Enable/disable step size adaptation")
+    parser.add_argument("--dense_mass", type=str, nargs="+", choices=["True", "False"], default=["True"],
+                       help="Enable/disable dense mass matrix adaptation")
+    parser.add_argument("--adapt_mass_matrix", type=str, nargs="+", choices=["True", "False"], default=["True"],
+                       help="Enable/disable mass matrix adaptation")
     
     #### SAVE/RESUME ARGS ####
     parser.add_argument("-r", "--resume", type=str, default=None,
@@ -972,6 +998,8 @@ if __name__ == "__main__":
                        help="Coordinate system to use for the complex amplitudes. polar is not really supported.")
     parser.add_argument("--enforce_positive_reference", action="store_true",
                        help="Force the real part of reference waves to be strictly positive (default: allow negative values)")
+    parser.add_argument("--use_progress_bar", action="store_true",
+                       help="Use progress bar to track MCMC progress (warning: messy printing when used with multiple processes)")
     
     args = parser.parse_args()
 
@@ -992,61 +1020,139 @@ if __name__ == "__main__":
     #     "Sp0+": 150,
     #     "Dp2+": 150,
     # }
+    
+    def run_mcmc_on_output_folder(name, prior_scale, prior_dist, nchains, nsamples, nwarmup, 
+                                 target_accept_prob, max_tree_depth, step_size, adapt_step_size, 
+                                 dense_mass, adapt_mass_matrix):
+        """Run MCMC with specific parameters and save to output folder"""
+        if not isinstance(name, str) or name == "":
+            raise ValueError("name should be a non-empty string")
+        output_folder = os.path.join(pyamptools_yaml["base_directory"], "MCMC")
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+        if os.path.exists(os.path.join(output_folder, name)):
+            console.print(f"Output folder {name} already exists! Skipping this configuration.", style="bold yellow")
+            return
+        
+        # Initialize MCMC Manager
+        mcmc_manager = MCMCManager(
+            pyamptools_yaml, iftpwa_yaml, 0, 
+            prior_scale=prior_scale, prior_dist=prior_dist,
+            n_chains=nchains, n_samples=nsamples, n_warmup=nwarmup, 
+            resume_path=args.resume, cop=args.coordinate_system, 
+            wave_prior_scales=wave_prior_scales,
+            target_accept_prob=target_accept_prob,
+            max_tree_depth=max_tree_depth,
+            step_size=step_size,
+            adapt_step_size=adapt_step_size,
+            dense_mass=dense_mass,
+            adapt_mass_matrix=adapt_mass_matrix,
+            enforce_positive_reference=args.enforce_positive_reference
+        )
+        
+        console.print(f"\n\n***************************************************", style="bold")
+        console.print(f"Configuration: {name}", style="bold blue")
+        console.print(f"Using {mcmc_manager.n_chains} chains with {mcmc_manager.n_samples} samples per chain with {mcmc_manager.n_warmup} warmup samples", style="bold")
+        console.print(f"Prior: {mcmc_manager.prior_dist} with scale {mcmc_manager.prior_scale}", style="bold")
+        console.print(f"NUTS: Target accept prob: {mcmc_manager.target_accept_prob}", style="bold")
+        console.print(f"NUTS: Max tree depth: {mcmc_manager.max_tree_depth}", style="bold")
+        console.print(f"NUTS: Step size: {mcmc_manager.step_size}", style="bold")
+        console.print(f"NUTS: Adapt step size? {mcmc_manager.adapt_step_size}", style="bold")
+        console.print(f"NUTS: Dense mass? {mcmc_manager.dense_mass}", style="bold")
+        console.print(f"NUTS: Adapt mass matrix? {mcmc_manager.adapt_mass_matrix}", style="bold")
+        console.print(f"***************************************************\n\n", style="bold")
+        
+        if args.print_wave_names:
+            console.print(f"Wave names: {mcmc_manager.waveNames}", style="bold")
+            return
+        
+        #### RUN MCMC ####
+        timer = Timer()
+                
+        # If bins is None, use all bins
+        if args.bins is None:
+            bins = np.arange(mcmc_manager.nmbMasses * mcmc_manager.nmbTprimes)
+        else:
+            bins = args.bins
+        
+        # Run MCMC in parallel
+        start_time = timer.read(return_str=False)[1]
+        final_result_dicts = mcmc_manager.run_mcmc_parallel(bins=bins, nprocesses=args.nprocesses, use_progress_bar=args.use_progress_bar)
+        end_time = timer.read(return_str=False)[1]
+        mcmc_run_time = end_time - start_time
+        mcmc_it_per_second = (nsamples + nwarmup) * nchains * len(bins) / mcmc_run_time
+        
+        ofile = f"{output_folder}/{name}_samples.pkl"
+        with open(ofile, "wb") as f:
+            pkl.dump(final_result_dicts, f)
+        if name != "mcmc": # always symlink the latest run 
+            target = os.path.join(output_folder, "mcmc_samples.pkl")
+            console.print(f"Attempting to symlink {ofile} to {target} (the target for default plotting scripts)", style="bold blue")            
+            if os.path.exists(target):
+                if os.path.islink(target):
+                    console.print(f"  Warning: {target} already exists and is a symlink! Overwriting this link with new run", style="bold yellow")
+                    os.remove(target)
+                else:
+                    console.print(f"  Warning: {target} already exists and is not a symlink! Unable to link over it", style="bold yellow")
+            os.symlink(ofile, target)
 
-    # TODO: remove dirname later in here and opt_mle and fix subdir
-    output_folder = args.output_folder
-    if output_folder is None:
-        output_folder = os.path.join(os.path.dirname(pyamptools_yaml["base_directory"]), "MCMC")
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-    else:
-        console.print(f"Output folder {output_folder} already exists! Please provide a different path or remove the folder.", style="bold red")
-        sys.exit(1)
+        console.print(f"Configuration {name} completed", style="bold green")
+        console.print(f"Total time elapsed:  {timer.read(return_str=False)[2]:0.2f} seconds", style="bold")
+        console.print(f"    MCMC run time: {mcmc_run_time:0.2f} seconds", style="bold")
+        console.print(f"    MCMC samples per second: {mcmc_it_per_second:0.1f}", style="bold")
     
-    # Initialize MCMC Manager
-    mcmc_manager = MCMCManager(
-        pyamptools_yaml, iftpwa_yaml, 0, 
-        prior_scale=args.prior_scale, prior_dist=args.prior_dist,
-        n_chains=args.nchains, n_samples=args.nsamples, n_warmup=args.nwarmup, 
-        resume_path=args.resume, output_folder=args.output_folder, cop=args.coordinate_system, 
-        wave_prior_scales=wave_prior_scales,
-        target_accept_prob=args.target_accept,
-        max_tree_depth=args.max_tree_depth,
-        step_size=args.step_size,
-        adapt_step_size=args.adapt_step_size,
-        dense_mass=args.dense_mass,
-        adapt_mass_matrix=args.adapt_mass_matrix,
-        enforce_positive_reference=args.enforce_positive_reference
-    )
+    # Convert string boolean arguments to actual booleans
+    adapt_step_size_values = [val == "True" for val in args.adapt_step_size]
+    dense_mass_values = [val == "True" for val in args.dense_mass]
+    adapt_mass_matrix_values = [val == "True" for val in args.adapt_mass_matrix]
     
-    console.print(f"\n\n***************************************************", style="bold")
-    console.print(f"Using {mcmc_manager.n_chains} chains with {mcmc_manager.n_samples} samples per chain with {mcmc_manager.n_warmup} warmup samples", style="bold")
-    console.print(f"NUTS: Max tree depth: {mcmc_manager.max_tree_depth}", style="bold")
-    console.print(f"NUTS: Step size: {mcmc_manager.step_size}", style="bold")
-    console.print(f"NUTS: Adapt step size? {mcmc_manager.adapt_step_size}", style="bold")
-    console.print(f"NUTS: Dense mass? {mcmc_manager.dense_mass}", style="bold")
-    console.print(f"NUTS: Adapt mass matrix? {mcmc_manager.adapt_mass_matrix}", style="bold")
-    console.print(f"***************************************************\n\n", style="bold")
-    if args.print_wave_names:
-        console.print(f"Wave names: {mcmc_manager.waveNames}", style="bold")
-        sys.exit(0)
+    # Create all combinations of parameters
+    param_combinations = list(product(
+        args.prior_scale,
+        args.prior_dist,
+        args.nchains,
+        args.nsamples,
+        args.nwarmup,
+        args.target_accept_prob,
+        args.max_tree_depth,
+        args.step_size,
+        adapt_step_size_values,
+        dense_mass_values,
+        adapt_mass_matrix_values
+    ))
     
-    #### RUN MCMC ####
+    console.print(f"\nUser requested {len(param_combinations)} hyperparameter combinations to test", style="bold blue")
+    
+    # Create output folder names based on parameter combinations
+    names = []
+    for combo in param_combinations:
+        prior_scale, prior_dist, nchains, nsamples, nwarmup, target_accept, max_tree_depth, step_size, adapt_step_size, dense_mass, adapt_mass_matrix = combo        
+        name = f"ps{prior_scale}_pd{prior_dist}"
+        name += f"_nc{nchains}_ns{nsamples}_nw{nwarmup}"
+        name += f"_ta{target_accept}_mtd{max_tree_depth}_ss{step_size}"
+
+        # Add boolean parameters only if they're False (assume True is default)
+        if not adapt_step_size:
+            name += "_noAS"
+        if not dense_mass:
+            name += "_noDM"
+        if not adapt_mass_matrix:
+            name += "_noAM"
+            
+        names.append(name)
+    
+    # Run MCMC for each parameter combination
     timer = Timer()
     
-    # Run MCMC in parallel
-    start_time = timer.read(return_str=False)[1]
-    final_result_dicts = mcmc_manager.run_mcmc_parallel(bins=args.bins, nprocesses=args.nprocesses)
-    end_time = timer.read(return_str=False)[1]
-    mcmc_run_time = end_time - start_time
-    mcmc_it_per_second = (args.nsamples + args.nwarmup) * args.nchains * len(args.bins) / mcmc_run_time
+    for i, (name, combo) in enumerate(zip(names, param_combinations)):
+        console.print(f"Running configuration {i+1}/{len(param_combinations)}: {name}", style="bold blue")
+        prior_scale, prior_dist, nchains, nsamples, nwarmup, target_accept, max_tree_depth, step_size, adapt_step_size, dense_mass, adapt_mass_matrix = combo
+        
+        run_mcmc_on_output_folder(
+            name, prior_scale, prior_dist, nchains, nsamples, nwarmup,
+            target_accept, max_tree_depth, step_size, adapt_step_size,
+            dense_mass, adapt_mass_matrix
+        )
     
-    with open(f"{output_folder}/mcmc_samples.pkl", "wb") as f:
-        pkl.dump(final_result_dicts, f)
-
-    console.print(f"Total time elapsed: {timer.read(return_str=False)[2]:0.2f} seconds", style="bold")
-    console.print(f"    MCMC run time: {mcmc_run_time:0.2f} seconds", style="bold")
-    console.print(f"    MCMC (nbins, nchains, nsamples, nwarmup) = ({len(args.bins)}, {args.nchains}, {args.nsamples}, {args.nwarmup})", style="bold")
-    console.print(f"    MCMC samples per second: {mcmc_it_per_second:0.1f}", style="bold")
-
+    console.print(f"All configurations completed in {timer.read(return_str=False)[2]:0.2f} seconds", style="bold green")
     sys.exit(0)
