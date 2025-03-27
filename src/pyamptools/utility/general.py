@@ -381,22 +381,24 @@ def dump_yaml(cfg, output_file_path, indent=4, resolve=False):
             Dumper=get_yaml_dumper(),
         )
 
-
 class Timer:
     def __init__(self):
         """No reason not to start the timer upon creation right?"""
         self._start_time = time.time()
 
-    def read(self):
+    def read(self, return_str: bool = False):
         """Read the start time, stop time, and elapsed time."""
 
         read_time = time.time()
         elapsed_time = read_time - self._start_time
 
-        start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self._start_time))
-        read_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(read_time))
-        elapsed_time = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
-        return start_time, read_time, elapsed_time
+        if return_str:
+            start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self._start_time))
+            read_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(read_time))
+            elapsed_time = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
+            return start_time, read_time, elapsed_time
+        else:
+            return self._start_time, read_time, elapsed_time
 
 
 def get_gpu_status():

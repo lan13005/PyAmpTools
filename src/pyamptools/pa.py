@@ -95,10 +95,10 @@ def main():
             return help_message + "\n" + command_help
 
         def format_files(self):
-            file_help = "Command file locations:\n"
+            file_help = "[bold green]Command file locations:[/bold green]\n"
             for command, (path, description) in func_map.items():
                 file_help += f"  * {command:25} {path}\n"
-            file_help += "\n  ==== YAML based command files ====\n"
+            file_help += "\n  [bold green]==== YAML based command files ====[/bold green]\n"
             for command, (path, description) in analysis_map.items():
                 file_help += f"  * {command:25} {path}\n"
             return file_help
