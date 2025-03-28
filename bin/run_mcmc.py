@@ -642,14 +642,14 @@ class MCMCManager:
             # Check if parameters contain NaN values
             if jnp.any(jnp.isnan(params[isample])):
                 console.print(f"Warning: NaN detected in parameters for sample {isample}", style="bold red")
-                total_intensity = jnp.nan
+                intensity = jnp.nan
             else:
-                total_intensity, _ = self.obj.intensity_and_error(params[isample], acceptance_correct=False)
+                intensity, _ = self.obj.intensity_and_error(params[isample], acceptance_correct=False)
                 # Check if intensity calculation resulted in NaN
-                if jnp.isnan(total_intensity):
+                if jnp.isnan(intensity):
                     console.print(f"Warning: NaN intensity calculated for sample {isample}", style="bold red")
             
-            final_result_dict.setdefault("intensity", []).append(total_intensity)
+            final_result_dict.setdefault("intensity", []).append(intensity)
                 
             for wave in self.pwa_manager.waveNames:
                 if jnp.any(jnp.isnan(params[isample])):
@@ -955,39 +955,37 @@ if __name__ == "__main__":
     parser.add_argument("yaml_file", type=str,
                        help="Path to PyAmpTools YAML configuration file")    
     parser.add_argument("-b", "--bins", type=int, nargs="+", default=None,
-                       help="List of bin indices to process")
-    # parser.add_argument("--output_folder", type=str, default=None,
-    #                     help="Folder to save output results to. If not provided then will dump to 'MCMC' subdirectory in YAML.base_directory")
+                       help="List of bin indices to process (default: all bins)")
     parser.add_argument("-np", "--nprocesses", type=int, default=None,
-                       help="Maximum number of parallel processes to use. Default is min(CPU count, bins*chains)")
+                       help="Maximum number of parallel processes to use (default: min(CPU count, bins*chains))")
 
     #### MCMC ARGS ####
     # Everything in this section accepts a list of values!
     # A hyperparameter grid search is performed on the outer product of these lists
     #   This can be very expensive but its power to the people
     parser.add_argument("-ps", "--prior_scale", type=float, nargs="+", default=[1000.0],
-                       help="Prior scale for the magnitude of the complex amplitudes, default is very large to be as non-informative as possible")
+                       help="Prior scale for the magnitude of the complex amplitudes (default: %(default)s)")
     # NOTE: Block usage of horseshoe prior using 'choice' argument, bad performance and limited testing
     parser.add_argument("-pd", "--prior_dist", type=str, choices=['laplace', 'gaussian'], nargs="+", default=['gaussian'], 
-                       help="Prior distribution for the complex amplitudes")
+                       help="Prior distribution for the complex amplitudes (default: %(default)s)")
     parser.add_argument("-nc", "--nchains", type=int, nargs="+", default=[6],
-                       help="Number of chains to use for numpyro MCMC")
+                       help="Number of chains to use for numpyro MCMC (default: %(default)s)")
     parser.add_argument("-ns", "--nsamples", type=int, nargs="+", default=[1000],
-                       help="Number of samples to draw per chain")
+                       help="Number of samples to draw per chain (default: %(default)s)")
     parser.add_argument("-nw", "--nwarmup", type=int, nargs="+", default=[500],
-                       help="Number of warmup samples to draw")
+                       help="Number of warmup samples to draw (default: %(default)s)")
     parser.add_argument("-ta", "--target_accept_prob", type=float, nargs="+", default=[0.80],
-                       help="Target acceptance probability for NUTS sampler (default: 0.80)")
+                       help="Target acceptance probability for NUTS sampler (default: %(default)s)")
     parser.add_argument("-mtd", "--max_tree_depth", type=int, nargs="+", default=[12],
-                       help="Maximum tree depth for NUTS sampler (default: 12)")
+                       help="Maximum tree depth for NUTS sampler (default: %(default)s)")
     parser.add_argument("-ss", "--step_size", type=float, nargs="+", default=[0.1],
-                       help="Initial step size for NUTS sampler (default: 0.05 for polar, 0.1 for cartesian)")
+                       help="Initial step size for NUTS sampler (default: %(default)s for cartesian)")
     parser.add_argument("--adapt_step_size", type=str, nargs="+", choices=["True", "False"], default=["True"],
-                       help="Enable/disable step size adaptation")
+                       help="Enable/disable step size adaptation (default: %(default)s)")
     parser.add_argument("--dense_mass", type=str, nargs="+", choices=["True", "False"], default=["True"],
-                       help="Enable/disable dense mass matrix adaptation")
+                       help="Enable/disable dense mass matrix adaptation (default: %(default)s)")
     parser.add_argument("--adapt_mass_matrix", type=str, nargs="+", choices=["True", "False"], default=["True"],
-                       help="Enable/disable mass matrix adaptation")
+                       help="Enable/disable mass matrix adaptation (default: %(default)s)")
     
     #### SAVE/RESUME ARGS ####
     parser.add_argument("-r", "--resume", type=str, default=None,
@@ -997,9 +995,9 @@ if __name__ == "__main__":
     parser.add_argument("--print_wave_names", action="store_true",
                        help="Print wave names")
     parser.add_argument("--seed", type=int, default=42,
-                       help="Random seed")
+                       help="Random seed (default: %(default)s)")
     parser.add_argument("-cop", "--coordinate_system", type=str, choices=["cartesian", "polar"], default="cartesian",
-                       help="Coordinate system to use for the complex amplitudes. polar is not really supported.")
+                       help="Coordinate system to use for the complex amplitudes (default: %(default)s)")
     parser.add_argument("--enforce_positive_reference", action="store_true",
                        help="Force the real part of reference waves to be strictly positive (default: allow negative values)")
     parser.add_argument("--use_progress_bar", action="store_true",
