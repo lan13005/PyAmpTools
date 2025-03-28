@@ -55,6 +55,7 @@ def main():
 
     analysis_map = {
         # 'command' : (path, description)
+        "run_priorSim": (f"{PYAMPTOOLS_HOME}/bin/run_priorSim.py", "Draw sample from NIFTy prior, generate simulated data, and split into kinematic bins"),
         "run_cfgGen": (f"{PYAMPTOOLS_HOME}/bin/run_cfgGen.py", "[AmpTools] Generate an AmpTools fit configuration file"),
         "run_divideData": (f"{PYAMPTOOLS_HOME}/bin/run_divideData.py", "Divide data into kinematic bins (separate folders)"),
         "run_processEvents": (f"{PYAMPTOOLS_HOME}/bin/run_processEvents.py", "[AmpTools] Process binned datasets to dump AmpTools' ampvecs data structure and normalization integrals into pkl files"),
