@@ -17,7 +17,7 @@ import yaml
 from IPython.display import Code
 from omegaconf import OmegaConf
 from omegaconf._utils import OmegaConfDumper, _ensure_container
-
+from rich.console import Console
 
 # ===================================================================================================
 # ===================================================================================================
@@ -52,7 +52,7 @@ def vps_amp_name(refl, J, M, l):
     return f"{J}{spectroscopic_map[l]}{M_sign}{abs(M)}{_refl}"
 
 
-converter = {}  # i.e. {'Sp0+': [1, 0, 0]}
+converter = {}  # i.e. {'Sp0+': [1, 0, 0]} ~ [refl, l, m]
 channel_map = {}
 prettyLabels = {}  # i.e. {'Sp0+': '$S_{0}^{+}$'}
 example_zlm_names = []  # i.e. ['Sp0+', 'Pp1+', 'Dm2-']
@@ -88,7 +88,10 @@ def identify_channel(wave_names: List[str]) -> str:
         channels.append(channel_map[w])
     if len(set(channels)) > 1:
         raise ValueError(f"io| wave_names appears to use multiple channels. This is not supported! wave_names = {wave_names}")
-    return channels[0]
+    channel = channels[0]
+    if channel not in ["TwoPseudoscalar", "VectorPseudoscalar"]:
+        raise ValueError(f"Unknown channel: {channel}")
+    return channel
 
 # If there is no prettyLabel version, just pass back the key
 class KeyReturningDict(dict):
@@ -101,7 +104,7 @@ prettyLabels = KeyReturningDict(prettyLabels)
 
 def append_kinematics(
     infile, 
-    output_location, 
+    output_location=None, 
     treeName="kin",
     console=None,
     beam_angle=None,
@@ -122,19 +125,22 @@ def append_kinematics(
     #########################################################################
     
     Args:
-        infile (List[str], str): Input ROOT file(s) that can be put into a TChain
-        output_location (str): output file path
+        infile (List[str], str): Input ROOT file(s)
+        output_location (str): output root file path. If None will overwrite the input file. Output has calculated kinematics included as branchs. 
         treeName (str): Name of the TTree in the input ROOT file
         console (rich.console.Console): Console object for printing
         beam_angle (float, str): Beam angle in degrees or branch name in the tree the beam angles (deg) are stored in
     
     Returns:
-        df: ROOT.RDataFrame with kinematics appended
-        output_location: str, location of the output ROOT file
+        df: ROOT.RDataFrame with kinematics appended, None if file already exists
+        KINEMATIC_QUANTITIES: Dictionary of kinematic quantities calculated by fsroot
     """
     
     # Import here to ensure a clean ROOT environment for each call
     import ROOT
+    import tempfile
+    import os
+    import shutil
     
     # # Setup environment
     # atiSetup.setup(globals(), use_fsroot=True)
@@ -153,62 +159,75 @@ def append_kinematics(
         "mPhiHel": "HELPHI(X1,X2,RECOIL,GLUEXBEAM)",
         "mt": "T(GLUEXTARGET,RECOIL)"
     }
+    
+    if console is None:
+        from rich.console import Console
+        console = Console()
+    
     if beam_angle is not None:
         KINEMATIC_QUANTITIES["mPhi"] = f"BIGPHI({beam_angle},X1,X2,RECOIL,GLUEXBEAM)"
     else:
         console.print("beam_angle not set, will not calculate Phi (angle between production plane and beam polarization)", style="bold yellow")
-
-    if console is None:
-        from rich.console import Console
-        console = Console()
         
-    if output_location is not None and os.path.exists(f"{output_location}"):
-        console.print(f"File {output_location} already exists, will not overwrite", style="bold yellow")
-        return None, KINEMATIC_QUANTITIES
-
-    console.print(f"Processing {infile}", style="bold blue")
-    
+    # Ensure infile is a list of strings
     if isinstance(infile, str):
-        infile = [infile]
-    if not isinstance(infile, list):
+        infile = [infile]  # Convert single string to list
+    if not isinstance(infile, list): # if not a list by now
         raise ValueError(f"infile must be a list of strings or a single string, got {type(infile)}")
-
-    chain = ROOT.TChain(treeName)
-    for f in infile:
-        chain.Add(f)
+    if output_location is None:
+        if len(infile) == 1:
+            output_location = infile[0]
+        else:
+            raise ValueError(f"output_location is None! Check caller.")
     
-    # Open input file and get the tree
+    # Load input file and get the tree
+    console.print(f"Processing {infile}", style="bold blue")
     df = ROOT.RDataFrame(treeName, infile)
-    
-    # Get column names to check if we need to redefine
     columns = df.GetColumnNames()
     console.print(f"Available columns: {list(columns)}", style="bold blue")
     
-    # Define particle four-vectors
-    particles = ["RECOIL", "X2", "X1"] # Particle order in AmpTools output tree
-    df = df.Define("GLUEXTARGET", "std::vector<float> p{0.0, 0.0, 0.0, 0.938272}; return p;")
-    df = df.Define("GLUEXBEAM",   "std::vector<float> p{{Px_Beam, Py_Beam, Pz_Beam, E_Beam}}; return p;")
+    if "mMassX" in columns and "mt" in columns: # woo nothing to do
+        console.print(f"Expected kinematics already present in {infile}, loading...", style="bold yellow")
+        return df, KINEMATIC_QUANTITIES
+    else:
+        # Define particle four-vectors
+        particles = ["RECOIL", "X2", "X1"] # Particle order in AmpTools output tree
+        df = df.Define("GLUEXTARGET", "std::vector<float> p{0.0, 0.0, 0.0, 0.938272}; return p;")
+        df = df.Define("GLUEXBEAM",   "std::vector<float> p{{Px_Beam, Py_Beam, Pz_Beam, E_Beam}}; return p;")
 
-    # Assuming AmpTools formatted tree
-    for i, particle in enumerate(particles):
-        cmd = f"std::vector<float> p{{ Px_FinalState[{i}], Py_FinalState[{i}], Pz_FinalState[{i}], E_FinalState[{i}] }}; return p;"
-        df = df.Define(f"{particle}", cmd)
-    
-    # Define kinematic quantities
-    for name, function in KINEMATIC_QUANTITIES.items():
-        df = df.Define(name, function)
+        # Assuming AmpTools formatted tree
+        for i, particle in enumerate(particles):
+            cmd = f"std::vector<float> p{{ Px_FinalState[{i}], Py_FinalState[{i}], Pz_FinalState[{i}], E_FinalState[{i}] }}; return p;"
+            df = df.Define(f"{particle}", cmd)
+        
+        # Define kinematic quantities
+        for name, function in KINEMATIC_QUANTITIES.items():
+            df = df.Define(name, function)
 
-    # Do not save the particle four-vectors
-    original_columns = list(columns)
-    kinematic_columns = list(KINEMATIC_QUANTITIES.keys())
-    columns_to_keep = original_columns + kinematic_columns
-    
-    # Save only the selected columns - use different tree name to avoid conflicts
-    if output_location is not None:
-        df.Snapshot(treeName, f"{output_location}", columns_to_keep)
-        console.print(f"Created augmented tree with all events at {output_location}", style="bold green")
+        # Do not save the particle four-vectors
+        original_columns = list(columns)
+        kinematic_columns = list(KINEMATIC_QUANTITIES.keys())
+        columns_to_keep = original_columns + kinematic_columns
             
-    return df, KINEMATIC_QUANTITIES
+        if not isinstance(output_location, str):
+            raise ValueError(f"output_location must be a string/path, got {type(output_location)}")
+
+        # ROOT does not support writing to the same file we are reading from
+        #    Instead, snapshot to temp file then move to overwrite original
+        is_overwriting = output_location in infile # infile ~ List[str]
+        if is_overwriting:
+            temp_dir = tempfile.gettempdir()
+            temp_file = os.path.join(temp_dir, f"temp_{os.path.basename(output_location)}")            
+            df.Snapshot(treeName, temp_file, columns_to_keep)
+            df = None # close dataframe releasing input file
+            shutil.move(temp_file, output_location)
+            df = ROOT.RDataFrame(treeName, output_location)
+            console.print(f"Overwrote existing tree with augmented tree at {output_location}", style="bold green")
+        else:
+            df.Snapshot(treeName, output_location, columns_to_keep)
+            console.print(f"Created new augmented tree with all events at {output_location}", style="bold green")
+                
+        return df, KINEMATIC_QUANTITIES
 
 class Styler:
     def __init__(self):
@@ -347,7 +366,7 @@ def get_yaml_dumper():
     return YamlDumper
 
 
-def dump_yaml(cfg, output_file_path, indent=4, resolve=False):
+def dump_yaml(cfg, output_file_path, indent=4, resolve=False, console=None):
     """
     Function enforcing flow style for lists
 
@@ -369,7 +388,11 @@ def dump_yaml(cfg, output_file_path, indent=4, resolve=False):
             raise ValueError("cfg could not be converted to OmegaConf object")
     _ensure_container(cfg)
     container = OmegaConf.to_container(cfg, resolve=resolve, enum_to_str=True)
-    print(f"Writing yaml file to: {output_file_path}")
+    
+    if console is None:
+        console = Console()
+    console.print(f"Writing yaml file to: {output_file_path}", style="bold blue")
+    
     with open(output_file_path, "w") as f:
         yaml.dump(  # type: ignore
             container,
@@ -714,3 +737,15 @@ def get_git_commit_hash_for_package(package_name):
     except Exception as e:
         print(e)
         return 'unknown, package must be installed in editable mode: `pip install -e .`'
+    
+def recursive_replace(d, old, new):
+    """
+    Recursively replace a string in a dictionary with another string
+    Useful to update yaml dictionaries
+    """
+    for k, v in d.items():
+        if isinstance(v, dict):
+            recursive_replace(v, old, new)
+        elif isinstance(v, str):
+            if old in v:
+                d[k] = v.replace(old, new)

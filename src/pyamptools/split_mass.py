@@ -54,14 +54,15 @@ def split_mass_t(
         t_edges = np.linspace(lowT, highT, nTBins + 1)
     else:
         t_edges = np.array(t_edges)
-    
-    df = append_kinematics(infile, outputBase, treeName, dump_augmented_tree)
-    
+
+    console.print(f"Appending kinematics to {infile}", style="bold blue")
+    df, kin_quantities = append_kinematics(infile, None, treeName, console=console)
+
     # Initialize arrays to store the bin information
     nBar = np.zeros((nMBins, nTBins))
     nBar_err = np.zeros((nMBins, nTBins))
     
-    # Create separate dataframes for each (MX, t) bin
+    # Create separate dataframes for each (mMassX, t) bin
     for i in range(nMBins):
         mass_low = mass_edges[i]
         mass_high = mass_edges[i+1]
@@ -79,7 +80,7 @@ def split_mass_t(
                 console.print(f"File {fname} already exists, skipping bin {k}", style="bold yellow")
                 continue
             
-            bin_df = df.Filter(f"MX >= {mass_low} && MX < {mass_high} && t >= {t_low} && t < {t_high}")
+            bin_df = df.Filter(f"mMassX >= {mass_low} && mMassX < {mass_high} && mt >= {t_low} && mt < {t_high}")
             
             nentries = bin_df.Count().GetValue()
 
