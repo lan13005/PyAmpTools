@@ -211,9 +211,9 @@ if __name__ == "__main__":
     parser.add_argument("yaml_file", type=str,
                        help="Path to PyAmpTools YAML configuration file")
     parser.add_argument("-b", "--bins", type=int, nargs="+",
-                       help="List of kinematic bin indicies to process, if none provided then will run across all bins defined the YAML file")
+                       help=f"List of bin indicies to process (default: all bins)")
     parser.add_argument("--nprocesses", type=int, default=8,
-                        help="Number of processes to run in parallel")
+                        help="Number of processes to run in parallel (default: %(default)s)")
     
     ##### OPTIMIZATION METHOD ARGS #####
     # NOTE: L-BFGS-B is found to be very fast but Minuit appears to be more robust so set as default
@@ -221,22 +221,21 @@ if __name__ == "__main__":
     parser.add_argument("--method", type=str, 
                        choices=['minuit-numeric', 'minuit-analytic', 'L-BFGS-B', 'trust-ncg', 'trust-krylov'], 
                        default='minuit-analytic',
-                       help="Optimization method to use")
+                       help="Optimization method to use (default: %(default)s)")
     
     ##### RANDOM INITIALIZATION ARGS #####
     parser.add_argument("--n_random_intializations", type=int, default=20,
-                        help="Number of random initializations to perform")
+                        help="Number of random initializations to perform (default: %(default)s)")
     parser.add_argument("--scale", type=float, default=50,
-                        help="Randomly sample real/imag parts of the amplitude on [-scale, scale]")
+                        help="Randomly sample real/imag parts of the amplitude on [-scale, scale] (default: %(default)s)")
     parser.add_argument("--seed", type=int, default=42,
-                        help="Seed for main random number generator")
+                        help="Seed for main random number generator (default: %(default)s)")
     
     #### HELPFUL ARGS ####
     parser.add_argument("--print_wave_names", action="store_true",
                        help="Print wave names without running any fits")
     parser.add_argument("--stdout", action="store_true",
                        help="Print output to stdout instead of dumping to a log file")
-    
     #### PARSE ARGS ####
     args = parser.parse_args()
     np.random.seed(args.seed)
@@ -267,7 +266,7 @@ if __name__ == "__main__":
     bins_to_process = args.bins
     if bins_to_process is None:
         bins_to_process = np.arange(nmbMasses * nmbTprimes)
-    output_folder = os.path.join(os.path.dirname(pyamptools_yaml["base_directory"]), "MLE")
+    output_folder = os.path.join(pyamptools_yaml["base_directory"], "MLE")
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     else:
