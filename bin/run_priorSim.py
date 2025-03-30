@@ -1,28 +1,22 @@
 import os
 import argparse
 from rich.console import Console
-from pyamptools.utility.general import load_yaml, dump_yaml, calculate_subplot_grid_size, identify_channel, converter
+from pyamptools.utility.general import load_yaml, dump_yaml, calculate_subplot_grid_size, identify_channel, converter, execute_cmd
 from pyamptools.utility.cfg_gen_utils import generate_amptools_cfg, amptools_zlm_ampName, amptools_vps_ampName
 import numpy as np
 import pickle as pkl
 import numpy as np
 import pandas as pd
 from iftpwa1.utilities.helpers import load_callable_from_module, reload_fields_and_components
-from omegaconf import OmegaConf, DictConfig
+from omegaconf import DictConfig
 from pyamptools.utility.resultManager import ResultManager, plot_gen_curves
 import tempfile
-import matplotlib.pyplot as plt
 
 # TODO:
 # - currently only one polarization is supported with 100% pol mag
 
 subidr = "GENERATED"
 console = Console()
-
-def execute_cmd(cmd_list):
-    for cmd in cmd_list:
-        console.print(f"[bold yellow]Executing shell command:[/bold yellow] [bold blue]{cmd}[/bold blue]")
-        os.system(cmd)
 
 def simulate_from_prior(main_yaml_path, iftpwa_yaml_path, base_directory, channel, verbose=True):
     
@@ -45,7 +39,7 @@ def simulate_from_prior(main_yaml_path, iftpwa_yaml_path, base_directory, channe
     
     # Need to execute immediately since sim_to_amptools_cfg needs to use it
     #   Generate amptools cfg file using piecewise amplitudes
-    execute_cmd(cmd_list)
+    execute_cmd(cmd_list, console=console)
     cmd_list = []
     sim_to_amptools_cfg(stage1_dir + "/niftypwa_fit.pkl", main_yaml_path, output_file=f"{base_directory}/GENERATED/prior_sim_amptools.cfg")
 
@@ -74,7 +68,7 @@ def simulate_from_prior(main_yaml_path, iftpwa_yaml_path, base_directory, channe
     cmd_list.append(f"mv {base_directory}/NiftyFits/niftypwa_fit.pkl {base_directory}/GENERATED/niftypwa_fit.pkl")
     cmd_list.append(f"rm -rf {base_directory}/NiftyFits")
     
-    execute_cmd(cmd_list)
+    execute_cmd(cmd_list, console=console)
 
 def sim_to_amptools_cfg(resultFile, yamlFile, output_file):
     
@@ -362,7 +356,7 @@ if __name__ == "__main__":
          open(main_yaml_path, "w") as main_yaml_file:
 
         iftpwa_yaml['GENERAL']['seed'] = seed
-        iftpwa_yaml["PWA_MANAGER"]["yaml_file"] = main_yaml_path
+        iftpwa_yaml["PWA_MANAGER"]["yaml"] = main_yaml_path
         iftpwa_yaml["IFT_MODEL"]["scale"] = 'auto'
         console.print("Updated 'scale' in iftpwa yaml file to 'auto' to auto-scale amplitudes for downstream fitting", style="bold green")
         yaml_file["nifty"]["yaml"] = iftpwa_yaml_path

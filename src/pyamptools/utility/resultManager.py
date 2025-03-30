@@ -14,6 +14,7 @@ import tqdm
 from matplotlib.patches import Ellipse
 import matplotlib.patheffects as path_effects
 import mplhep as hep
+import gc
 
 # TODO:
 # - Ensure all IFT, MLE, MCMC uses intensity, intensity_error
@@ -37,7 +38,7 @@ ift_color_dict = {
 gen_color = 'xkcd:green'
 mcmc_color = 'black'
 
-ift_alpha = 0.6 # transparency of IFT fit results
+ift_alpha = 0.35 # transparency of IFT fit results
 mle_jitter_scale = 0.1 # percent of the bin width the MLE results are jittered
 
 # All plots are stored in this directory within the `base_directory` key in the YAML file
@@ -300,10 +301,10 @@ class ResultManager:
                         results.setdefault(key, []).append(data["final_par_values"][key])
                     
                     results.setdefault("intensity", []).append(data["intensity"])
-                    results.setdefault("intensity_error", []).append(data["intensity_error"])
+                    results.setdefault("intensity_err", []).append(data["intensity_err"])
                     for waveName in waveNames:
                         results.setdefault(f"{waveName}", []).append(data[f"{waveName}"])
-                        results.setdefault(f"{waveName}_error", []).append(data[f"{waveName}_error"])
+                        results.setdefault(f"{waveName}_err", []).append(data[f"{waveName}_err"])
                     
                     method = "tikhonov"
                     for iw, wave in enumerate(waveNames):
@@ -337,11 +338,7 @@ class ResultManager:
                             submatrix = covariance[np.ix_(indicies, indicies)]
                             relative_phase, relative_phase_error = calculate_relative_phase_and_error(amp1, amp2, submatrix)
                             results.setdefault(f'{wave}_relative_phase', []).append(relative_phase)
-                            results.setdefault(f'{wave}_relative_phase_error', []).append(relative_phase_error)
-
-                    # for key in list(data["initial_guess_dict"].keys()) + ["intensity"]:
-                    #     if key not in results: results[key] = [data[key]]
-                    #     else: results[key].append(data[key])
+                            results.setdefault(f'{wave}_relative_phase_err', []).append(relative_phase_error)
                     
             results = pd.DataFrame(results)
             
@@ -474,24 +471,43 @@ class ResultManager:
             self.source_list[source_type].append(source_name)
         return df
     
+    def __del__(self):
+        """Ensure proper cleanup when the object is deleted"""
+        try:
+            plt.close('all')
+            # Delete references to original dataframes allowing them to be garbage collected
+            self._mle_results = None 
+            self._mcmc_results = None
+            self._hist_results = None
+            self._gen_results = None
+            self._ift_results = None            
+            gc.collect()
+        except Exception:
+            # Silently continue on failure, good idea?
+            pass
+
 ########################################################
 # PLOTTING FUNCTIONS HERE
 ########################################################
 
-def save_plot(output_file_location, fig, axes, overwrite=False, verbose=True):
-    directory = os.path.dirname(output_file_location)
-    if not os.path.exists(directory):
-        os.makedirs(directory, exist_ok=True)
-    if not overwrite and os.path.exists(output_file_location):
-        if verbose: console.print(f"[bold red]File {output_file_location} already exists. Set overwrite=True to overwrite.\n[/bold red]")
-        return
-
-    for ax in axes.flatten(): # Detect unused axes and set them to not visible
-        if not ax.has_data():
-            ax.set_visible(False)
-
-    fig.savefig(output_file_location)
-    if verbose: console.print(f"[bold green]Creating plot at {output_file_location}[/bold green]")
+def save_and_close_fig(output_file_location, fig, axes, overwrite=False, verbose=True):
+    try:
+        # Perform checks
+        directory = os.path.dirname(output_file_location)
+        if not os.path.exists(directory):
+            os.makedirs(directory, exist_ok=True)
+        if not overwrite and os.path.exists(output_file_location):
+            if verbose: console.print(f"[bold red]File {output_file_location} already exists. Set overwrite=True to overwrite.\n[/bold red]")
+            return
+        # Detect unused axes and set them to not visible
+        for ax in axes.flatten():
+            if not ax.has_data():
+                ax.set_visible(False)
+        # Save plot
+        fig.savefig(output_file_location)
+        if verbose: console.print(f"[bold green]Creating plot at:[/bold green] {output_file_location}")
+    finally: # always executed even if return is called in try block
+        plt.close(fig)
     
 def query_default(df):
     return df.query("source == 'yaml'") if not df.empty else pd.DataFrame()
@@ -543,8 +559,7 @@ def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10)):
 
     plt.tight_layout()
     ofile = f"{resultManager.base_directory}/{default_plot_subdir}/gen_curves.png"
-    save_plot(ofile, fig, axes, overwrite=True)
-    plt.close()
+    save_and_close_fig(ofile, fig, axes, overwrite=True)
     
 def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, figsize=(10, 10)):
     name = "binned intensity"
@@ -598,7 +613,10 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
             # TODO: after computing errors for intensities, use axvspan
             if not binned_mle_results.empty and wave in binned_mle_results.columns:
                 for irow in binned_mle_results.index: # for each random start MLE fit
-                    ax.axvline(binned_mle_results.loc[irow, wave], color=mle_color, linestyle='--', alpha=0.1)
+                    mean = binned_mle_results.loc[irow, wave]
+                    error = binned_mle_results.loc[irow, f"{wave}_err"]
+                    ax.axvline(mean, color=mle_color, linestyle='--', alpha=0.5)
+                    ax.axvspan(mean - error, mean + error, color=mle_color, alpha=0.01)
             
             #### PLOT GENERATED RESULTS ####
             col = f"{wave}" if wave != "intensity" else "fitted_intensity"
@@ -626,7 +644,7 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
             
         plt.tight_layout()
         ofile = f"{resultManager.base_directory}/{default_plot_subdir}/intensity/bin{bin}_intensities.png"
-        save_plot(ofile, fig, axes, overwrite=True, verbose=False)
+        save_and_close_fig(ofile, fig, axes, overwrite=True, verbose=False)
         saved_files.append(ofile)
         plt.close()
         
@@ -660,7 +678,7 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
     
     saved_files = []
     if not default_mle_results.empty:
-        console.print(f"Warning: MLE error ellipses does not currently propagate errors from the reference wave rotation", style="bold yellow")
+        console.print(f"Warning: MLE error ellipses does not currently propagate errors from any reference wave rotation", style="bold yellow")
     for bin in tqdm.tqdm(bins_to_plot):
         
         fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
@@ -683,17 +701,19 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
         bin_edges = np.linspace(-max_lim, max_lim, 100)
 
         for i, wave in enumerate(cols_to_plot):
+            
+            reference_wave = resultManager.sector_to_ref_wave[wave[-1]].strip("_amp")
+            is_reference = wave == reference_wave
+            
             if not binned_mcmc_samples.empty and wave in binned_mcmc_samples.columns:
                 cval = binned_mcmc_samples[f"{wave}_amp"] # [chain_offset*nsamples:(chain_offset+1)*nsamples]
                 rval, ival = np.real(cval), np.imag(cval)
-                reference_wave = resultManager.sector_to_ref_wave[wave[-1]].strip("_amp")
-                is_reference = wave == reference_wave
                 reference_intensity = np.array(binned_mcmc_samples[reference_wave])
                 norm = plt.Normalize(reference_intensity.min(), reference_intensity.max())
                 cmap = plt.cm.inferno
                         
                 #### PLOT MCMC RESULTS ####
-                if np.all(ival < 1e-5): # if imaginary part is ~ 0 then plot real part as a histogram (i.e. reference waves)
+                if np.all(np.abs(ival) < 1e-5): # if imaginary part is ~ 0 then plot real part as a histogram (i.e. reference waves)
                     digitized = np.digitize(rval, bin_edges)
                     binned_mcmc_intensities = np.zeros(len(bin_edges)-1)
                     for j in range(len(bin_edges)-1):
@@ -717,23 +737,22 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
                     axes[i].set_xlim(-max_lim, max_lim)
                     axes[i].set_ylim(-max_lim, max_lim)
                     
-                #### PLOT MLE RESULTS ####
-                if not binned_mle_results.empty and wave in binned_mle_results.columns:
-                    for irow in binned_mle_results.index: # for each random start MLE fit
-                        error_method = 'tikhonov'
-                        cval = binned_mle_results.loc[irow, f"{wave}_amp"]
-                        real_part = np.real(cval)
-                        imag_part = np.imag(cval)
-                        real_part_semimajor = binned_mle_results.loc[irow, f'{wave}_{error_method}_re_err']
-                        imag_part_semiminor = binned_mle_results.loc[irow, f'{wave}_{error_method}_im_err']
-                        
-                        if wave == is_reference:
-                            axes[i].axvspan(real_part - real_part_semimajor, real_part + real_part_semimajor, color=mle_color, alpha=0.01)
-                            axes[i].axvline(real_part, color=mle_color, linestyle='--', alpha=0.5, linewidth=1)
-                        else:
-                            part_angle = binned_mle_results.loc[irow, f'{wave}_{error_method}_err_angle'] * 180 / np.pi
-                            ellipse = Ellipse(xy=(real_part, imag_part), width=2 * real_part_semimajor, height=2 * imag_part_semiminor, angle=part_angle, facecolor='none', edgecolor='xkcd:red', alpha=0.5)
-                            axes[i].add_patch(ellipse) 
+            #### PLOT MLE RESULTS ####
+            if not binned_mle_results.empty and wave in binned_mle_results.columns:
+                for irow in binned_mle_results.index: # for each random start MLE fit
+                    error_method = 'tikhonov'
+                    cval = binned_mle_results.loc[irow, f"{wave}_amp"]
+                    real_part = np.real(cval)
+                    imag_part = np.imag(cval)
+                    real_part_semimajor = binned_mle_results.loc[irow, f'{wave}_{error_method}_re_err']
+                    imag_part_semiminor = binned_mle_results.loc[irow, f'{wave}_{error_method}_im_err']
+                    if is_reference:
+                        axes[i].axvspan(real_part - real_part_semimajor, real_part + real_part_semimajor, color=mle_color, alpha=0.01)
+                        axes[i].axvline(real_part, color=mle_color, linestyle='--', alpha=0.5, linewidth=1)
+                    else:
+                        part_angle = binned_mle_results.loc[irow, f'{wave}_{error_method}_err_angle'] * 180 / np.pi
+                        ellipse = Ellipse(xy=(real_part, imag_part), width=2 * real_part_semimajor, height=2 * imag_part_semiminor, angle=part_angle, facecolor='none', edgecolor='xkcd:red', alpha=0.5)
+                        axes[i].add_patch(ellipse) 
             
             #### PLOT GENERATED RESULTS ####
             if not binned_gen_results.empty and wave in binned_gen_results.columns:
@@ -748,20 +767,25 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
             if not binned_ift_results.empty and wave in binned_ift_results.columns:
                 real_part = np.real(binned_ift_results[f"{wave}_amp"])
                 imag_part = np.imag(binned_ift_results[f"{wave}_amp"])
-                cov = np.cov(real_part, imag_part)
-                cov_re = cov[0, 0]
-                cov_im = cov[1, 1]
-                rho = cov[0, 1]
-                real_part_semimajor = np.sqrt(cov_re)
-                imag_part_semiminor = np.sqrt(cov_im)
+                real_part_semimajor = 0 # If we only have 1 sample -> no covariance -> no error -> no error ellipse
+                imag_part_semiminor = 0
+                if len(real_part) > 1:
+                    cov = np.cov(real_part, imag_part)
+                    cov_re = cov[0, 0]
+                    cov_im = cov[1, 1]
+                    rho = cov[0, 1]
+                    real_part_semimajor = np.sqrt(cov_re)
+                    imag_part_semiminor = np.sqrt(cov_im)
                 if is_reference:
-                    axes[i].axvspan(np.mean(real_part) - real_part_semimajor, np.mean(real_part) + real_part_semimajor, color=ift_color_dict["Signal"], alpha=0.2)
+                    if len(real_part) > 1:
+                        axes[i].axvspan(np.mean(real_part) - real_part_semimajor, np.mean(real_part) + real_part_semimajor, color=ift_color_dict["Signal"], alpha=0.2)
                     axes[i].axvline(np.mean(real_part), color=ift_color_dict["Signal"], linestyle='--', alpha=1.0, linewidth=1)
                 else:
-                    part_angle = 0.5 * np.arctan2(2 * rho, cov_re - cov_im) * 180 / np.pi
-                    ellipse = Ellipse(xy=(np.mean(real_part), np.mean(imag_part)), width=2 * real_part_semimajor, height=2 * imag_part_semiminor, angle=part_angle, 
-                                        facecolor='none', edgecolor=ift_color_dict["Signal"], alpha=1.0, linewidth=2)
-                    axes[i].add_patch(ellipse)
+                    if len(real_part) > 1:
+                        part_angle = 0.5 * np.arctan2(2 * rho, cov_re - cov_im) * 180 / np.pi
+                        ellipse = Ellipse(xy=(np.mean(real_part), np.mean(imag_part)), width=2 * real_part_semimajor, height=2 * imag_part_semiminor, angle=part_angle, 
+                                            facecolor='none', edgecolor=ift_color_dict["Signal"], alpha=1.0, linewidth=2)
+                        axes[i].add_patch(ellipse)
                     axes[i].scatter(real_part, imag_part, color=ift_color_dict["Signal"], alpha=0.4, marker='o', s=2)
 
             # Remove the set_title and use text to place title in top right corner
@@ -772,7 +796,7 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
 
         plt.tight_layout()
         ofile = f"{resultManager.base_directory}/{default_plot_subdir}/complex_plane/bin{bin}_complex_plane.png"
-        save_plot(ofile, fig, axes, overwrite=True, verbose=False)
+        save_and_close_fig(ofile, fig, axes, overwrite=True, verbose=False)
         saved_files.append(ofile)
         plt.close()
 
@@ -781,27 +805,48 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
         console.print(f"  - {file}")
     console.print(f"\n")
     
-def montage_and_gif_binned_plots(resultManager: ResultManager):
+# def montage_and_gif_binned_plots(resultManager: ResultManager):
     
-    console.print(header_fmt.format(f"Montaging / GIFing all plots..."))
+#     console.print(header_fmt.format(f"Montaging / GIFing all plots..."))
     
-    base_directory = resultManager.base_directory
+#     base_directory = resultManager.base_directory
     
-    subdirs = ["complex_plane", "intensity"]
-    montage_cmd = "montage {0}/{1}/{2}/bin*.png -density 300 -geometry +10+10 {0}/{1}/{2}/montage_output.png"
-    gif_cmd = "convert -delay 40 {0}/{1}/{2}/bin*.png -layers optimize -colors 256 -fuzz 2% {0}/{1}/{2}/output.gif"
-    for subdir in subdirs:
-        console.print(f"Create montage + gif of plots in '{base_directory}/{default_plot_subdir}/{subdir}'")
-        os.system(montage_cmd.format(base_directory, default_plot_subdir, subdir))
-        os.system(gif_cmd.format(base_directory, default_plot_subdir, subdir))
+#     subdirs = ["complex_plane", "intensity"]
+#     for subdir in subdirs:
+#         output_directory = f"{base_directory}/{default_plot_subdir}/{subdir}"
         
-    subdirs = ["intensity_and_phases"]
-    for subdir in subdirs:
-        montage_cmd = "montage {0}/{1}/{2}/intensity_phase_plot_*.png -density 300 -geometry +10+10 {0}/{1}/{2}/montage_output.png"
-        console.print(f"Create montage of plots in '{base_directory}/{default_plot_subdir}/{subdir}'")
-        os.system(montage_cmd.format(base_directory, default_plot_subdir, subdir))
+#         # Sort files by bin number
+#         bin_files_path = f"{output_directory}/bin*.png"
+#         bin_files = sorted(glob.glob(bin_files_path), 
+#                           key=lambda x: int(re.search(r'bin(\d+)', x).group(1)))
+#         if bin_files:
+#             files_str = " ".join(bin_files)            
+#             montage_output = f"{output_directory}/montage_output.png"
+#             gif_output = f"{output_directory}/output.gif"
+#             console.print(f"Create montage + gif of plots in '{output_directory}'")
+#             os.system(f"montage {files_str} -density 300 -geometry +10+10 {montage_output}")
+#             os.system(f"convert -delay 40 {files_str} -layers optimize -colors 256 -fuzz 2% {gif_output}")
+#         else:
+#             console.print(f"[bold yellow]No bin files found in {bin_files_path}[/bold yellow]")
         
-    console.print(f"\n")
+#     subdirs = ["intensity_and_phases"]
+#     for subdir in subdirs:
+#         output_directory = f"{base_directory}/{default_plot_subdir}/{subdir}"        
+#         phase_files_path = f"{output_directory}/intensity_phase_plot_*.png"
+#         phase_files = glob.glob(phase_files_path)
+        
+#         if phase_files:
+#             # No numeric sorting needed here, but join the files with spaces
+#             files_str = " ".join(phase_files)
+            
+#             montage_output = f"{base_directory}/{default_plot_subdir}/{subdir}/montage_output.png"
+            
+#             console.print(f"Create montage of plots in '{base_directory}/{default_plot_subdir}/{subdir}'")
+#             os.system(f"montage {files_str} -density 300 -geometry +10+10 {montage_output}")
+#         else:
+#             console.print(f"[bold yellow]No intensity phase plot files found in {phase_files_path}[/bold yellow]")
+        
+#     console.print(f"\n")
         
 def plot_overview_across_bins(resultManager: ResultManager, n_samples_per_bin=300):
 
@@ -911,7 +956,7 @@ def plot_overview_across_bins(resultManager: ResultManager, n_samples_per_bin=30
         if not mle_results.empty:
             jitter_scale = mle_jitter_scale * bin_width
             mass_jitter = np.random.uniform(-jitter_scale, jitter_scale, size=len(mle_results)) # shared with phases below
-            ax.errorbar(mle_results['mass'] + mass_jitter, mle_results[waveName], yerr=mle_results[f"{waveName}_error"], 
+            ax.errorbar(mle_results['mass'] + mass_jitter, mle_results[waveName], yerr=mle_results[f"{waveName}_err"], 
                         color=mle_color, alpha=0.2, fmt='o', markersize=2, capsize=3)
             mle_bars = ax.plot([], [], label="MLE", color=mle_color, alpha=1.0,  markersize=2)[0]
         
@@ -948,14 +993,18 @@ def plot_overview_across_bins(resultManager: ResultManager, n_samples_per_bin=30
                         linewidth=1)
         
         #### PLOT GENERATED PHASES
+        # For NIFTy plots we also plot the mirror ambiguity (since sometimes the fit finds the reflection of the generated phase)
         if not gen_results.empty:
             phase = np.angle(gen_results[f"{waveName}_amp"], deg=True)
             phase = np.unwrap(phase, period=360)
             for offset in [-360, 0, 360]:
-                phase_ax.plot(gen_results['mass'], phase + offset, color='white',  linestyle='-', alpha=0.3, linewidth=4, zorder=9)
+                phase_ax.plot(gen_results['mass'], phase + offset, color='white',  linestyle='-', alpha=0.3, linewidth=4, zorder=9) # highlight to make more noticeable
                 phase_ax.plot(gen_results['mass'], phase + offset, color=ift_color_dict["Signal"],  linestyle='--', alpha=1.0, linewidth=3, zorder=10)
+                phase_ax.plot(gen_results['mass'], -phase + offset, color='white',  linestyle='-', alpha=0.3, linewidth=4, zorder=9)
+                phase_ax.plot(gen_results['mass'], -phase + offset, color=ift_color_dict["Signal"],  linestyle='--', alpha=1.0, linewidth=3, zorder=10)
             
         #### PLOT NIFTY PHASES
+        # For NIFTy plots we also plot the mirror ambiguity (since sometimes the fit finds the reflection of the generated phase)
         if not ift_results.empty:
             for isample in range(ift_nsamples):
                 tmp = ift_results.query('sample == @isample')
@@ -963,11 +1012,12 @@ def plot_overview_across_bins(resultManager: ResultManager, n_samples_per_bin=30
                 phase = np.unwrap(phase, period=360)
                 for offset in [-360, 0, 360]:
                     phase_ax.plot(tmp['mass'], phase + offset, color=ift_color_dict["Signal"], linestyle='-', alpha=ift_alpha, linewidth=1)
+                    phase_ax.plot(tmp['mass'], -phase + offset, color=ift_color_dict["Signal"], linestyle='-', alpha=ift_alpha, linewidth=1)
             
         #### PLOT MLE PHASES
         if not mle_results.empty:
             phase = mle_results[f"{waveName}_relative_phase"]
-            phase_error = mle_results[f"{waveName}_relative_phase_error"]
+            phase_error = mle_results[f"{waveName}_relative_phase_err"]
             phase_ax.errorbar(mle_results['mass'] + mass_jitter, phase, yerr=phase_error, 
                             color=mle_color, alpha=0.2, fmt='o', markersize=2, capsize=3)
             
@@ -988,7 +1038,7 @@ def plot_overview_across_bins(resultManager: ResultManager, n_samples_per_bin=30
         # Save each figure to its own PNG file
         plt.tight_layout()
         ofile = f"{resultManager.base_directory}/{default_plot_subdir}/intensity_and_phases/intensity_phase_plot_{waveName}.png"
-        save_plot(ofile, fig, axes, overwrite=True, verbose=True)
+        save_and_close_fig(ofile, fig, axes, overwrite=True, verbose=True)
         plt.close()
         
     console.print(f"\n")

@@ -88,15 +88,15 @@ def run_single_bin_fits(
         final_params = np.array(optim_result['parameters'])
         intensity, intensity_error = obj.intensity_and_error(final_params, optim_result['covariance']['tikhonov'], pwa_manager.waveNames, acceptance_correct=acceptance_correct)
         final_result_dict['intensity'] = intensity
-        final_result_dict['intensity_error'] = intensity_error
+        final_result_dict['intensity_err'] = intensity_error
         for wave in pwa_manager.waveNames:
             intensity, intensity_error = obj.intensity_and_error(final_params, optim_result['covariance']['tikhonov'], [wave], acceptance_correct=acceptance_correct)
             final_result_dict[wave] = intensity
-            final_result_dict[f"{wave}_error"] = intensity_error
+            final_result_dict[f"{wave}_err"] = intensity_error
         final_result_dict['likelihood'] = optim_result['likelihood']
         final_result_dict['initial_likelihood'] = initial_likelihood
         
-        bin_console.print(f"\nTotal Intensity: value = {final_result_dict['intensity']:<10.5f} +- {final_result_dict['intensity_error']:<10.5f}", style="bold")
+        bin_console.print(f"\nTotal Intensity: value = {final_result_dict['intensity']:<10.5f} +- {final_result_dict['intensity_err']:<10.5f}", style="bold")
         for iw, wave in enumerate(pwa_manager.waveNames):
             real_part = final_params[2*iw]
             imag_part = final_params[2*iw+1]
@@ -105,9 +105,11 @@ def run_single_bin_fits(
             for key in optim_result['covariance'].keys():
                 real_err = optim_result['covariance'][key]
                 imag_err = optim_result['covariance'][key]
-                if real_err is not None:
+                real_errs[key] = 0 # Default to 0 if none or non-positive
+                imag_errs[key] = 0 # Default to 0 if none or non-positive
+                if real_err is not None and real_err[2*iw, 2*iw] > 0:
                     real_errs[key] = np.sqrt(real_err[2*iw, 2*iw])
-                if imag_err is not None:
+                if imag_err is not None and imag_err[2*iw+1, 2*iw+1] > 0:
                     imag_errs[key] = np.sqrt(imag_err[2*iw+1, 2*iw+1])
             methods = list(real_errs.keys())
             real_part_errs = [f"{real_errs[m]:<10.5f}" for m in methods]
@@ -119,7 +121,7 @@ def run_single_bin_fits(
             bounds['iub'] = optim_result['bounds'][2*iw+1][1]   # imag part upper bound
             for key in bounds.keys():
                 if bounds[key] is None: bounds[key] = "None"
-            bin_console.print(f"{wave:<10}  Intensity: value = {final_result_dict[wave]:<10.5f} +- {final_result_dict[f'{wave}_error']:<10.5f}", style="bold")
+            bin_console.print(f"{wave:<10}  Intensity: value = {final_result_dict[wave]:<10.5f} +- {final_result_dict[f'{wave}_err']:<10.5f}", style="bold")
             bin_console.print(f"            Real part: value = {real_part:<10.5f} | Errors ({', '.join(methods)}) = ({', '.join(real_part_errs)}) | Bounds: \[{bounds['rlb']:<10}, {bounds['rub']:<10}]) ", style="bold")
             bin_console.print(f"            Imag part: value = {imag_part:<10.5f} | Errors ({', '.join(methods)}) = ({', '.join(imag_part_errs)}) | Bounds: \[{bounds['ilb']:<10}, {bounds['iub']:<10}]) ", style="bold")
 

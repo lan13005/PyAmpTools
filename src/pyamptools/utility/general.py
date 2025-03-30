@@ -102,6 +102,16 @@ prettyLabels = KeyReturningDict(prettyLabels)
 # ===================================================================================================
 # ===================================================================================================
 
+def execute_cmd(cmd_list, console=None):
+    if console is None:
+        from rich.console import Console
+        console = Console()
+    for cmd in cmd_list:
+        console.print(f"[bold yellow]Executing shell command:[/bold yellow] [bold blue]{cmd}[/bold blue]")
+        result = subprocess.run(cmd, shell=True)
+        if result.returncode != 0:
+            raise Exception(f"Command failed with return code {result.returncode}")
+
 def append_kinematics(
     infile, 
     output_location=None, 

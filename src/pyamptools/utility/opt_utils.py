@@ -354,7 +354,9 @@ def calculate_intensity_and_error(amp, cov_amp, ampMatrix, ampMatrixTermOrder, w
         for i in range(len(deriv)):
             for j in range(len(deriv)):
                 variance += deriv[i] * deriv[j] * cov_amp[i, j]
-        error = np.sqrt(variance)
+        error = 0
+        if variance is not None and variance > 0:
+            error = np.sqrt(variance)
     
     return intensity, error
 

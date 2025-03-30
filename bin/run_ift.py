@@ -166,11 +166,6 @@ if __name__ == "__main__":
     
     print(f"\nmpiexec command:\n {cmd}\n")
     os.system(cmd) # Run IFT pwa fit
-
-    # TODO: Need to support prior simulation
-    # Plotting should also be done
-    # os.system(f"iftPwaFit --iftpwa_config .nifty.yaml --prior_simulation")
-    
     os.system("rm -f .nifty.yaml") # Cleanup
 
     logger.info(f"ift| Elapsed time {timer.read()[2]}\n\n")

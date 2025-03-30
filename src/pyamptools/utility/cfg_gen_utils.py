@@ -195,8 +195,6 @@ def generate_amptools_cfg(
             sumNames, numPairs = refl_sum_numpair_map[ref]
             for sumName, numPair in zip(sumNames, numPairs):
                 
-                print(f"sumName: {sumName}, numPair: {numPair}")
-                
                 # TODO: Actually another half of the terms disappear if polMag=0 so at some point we need to implement this
                 if exclude_sums_zeroed_by_polmag_value and float(polMag) == 1:  # Terms with (1-polMag) prefactor disappear if polMag=1
                     if sumName in ["RealNeg", "ImagNeg"]:
