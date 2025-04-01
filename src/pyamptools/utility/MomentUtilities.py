@@ -9,13 +9,15 @@ from pyamptools.utility.general import converter, identify_channel
 import pandas as pd
 from typing import List, Tuple
 import numpy as np
+import multiprocessing
 from multiprocessing import Pool
 import itertools
+from tqdm import tqdm
 
 # This file contains additional code acting as an interface
 #   Both approaches has a function to calculate moments from some struct per fit result
-# 1. Boris's MomentCalculatorTwoPS and PyAmpTools
-# 2. Kevin's MomentCalculatorVecPS and PyAmpTools
+# 1. Boris Grube's MomentCalculatorTwoPS
+# 2. Kevin Scheuer's MomentCalculatorVecPS
 
 # Base class for all MomentManager classes
 class MomentManager: # ~base class
@@ -31,20 +33,29 @@ class MomentManager: # ~base class
         self.wave_names = wave_names
         self.channel = identify_channel(wave_names)
     
-    def process_and_return_df(self, normalization_scheme=0, pool_size=4, append=True):
+    def process_and_return_df(self, normalization_scheme=0, pool_size=4, append=True, batch_size=100):
         """
         Process the partial wave amplitudes DataFrame and return a new dataframe with the moments
         
         Args:
-            normalization_scheme (int): Normalization scheme to use: {0: normalize to H_0(0, 0), 1: norm to acceptance corrected intensity 2: normalize to uncorrected intensity in the bin}
+            normalization_scheme (int): Normalization scheme to use: {0: normalize to H_0(0, 0), 1: norm to intensity in the bin}
             pool_size (int): Number of processes to use by multiprocessing.Pool
             append (bool): Whether to append the moments dataframe to the original dataframe
-            
+            batch_size (int): Number of rows to process at a time for each process in the pool (considers overhead of process creation)
+
         Returns:
             moment_results (pd.DataFrame): DataFrame containing (atleast) the moments
             latex_name_dict (dict): Dictionary with the latex naming of the moments
         """
         pass
+
+# Top level wrapper functions so we can use with multiprocessing (must be serializable)
+def _calc_moments_vecps_batch_wrapper(args):
+    instance, indices, normalization_scheme = args
+    return [instance.calc_moments(i, normalization_scheme) for i in indices]
+def _calc_moments_twops_batch_wrapper(args):
+    instance, indices, normalization_scheme = args
+    return [instance.calc_moments(i, normalization_scheme) for i in indices]
 
 class MomentManagerVecPS(MomentManager):
     
@@ -72,23 +83,24 @@ class MomentManagerVecPS(MomentManager):
         self.J_array = np.arange(0, self.max_J + 1)
         self.M_array = np.arange(0, self.max_M + 1)  # like Lambda, -m ∝ +m moments
 
-    def process_and_return_df(self, normalization_scheme=0, pool_size=4, append=True):
-        
-        """
-        Process the partial wave amplitudes DataFrame and return a new dataframe with the moments
-        
-        Args:
-            normalization_scheme (int): Normalization scheme to use: {0: normalize to H_0(0, 0), 1: norm to acceptance corrected intensity 2: normalize to uncorrected intensity in the bin}
-            pool_size (int): Number of processes to use by multiprocessing.Pool
-            append (bool): Whether to append the moments dataframe to the original dataframe
-            
-        Returns:
-            moment_results (pd.DataFrame): DataFrame containing (atleast) the moments
-            latex_name_dict (dict): Dictionary with the latex naming of the moments
-        """
+    def process_and_return_df(self, normalization_scheme=0, pool_size=4, append=True, batch_size=100):
+    
+        if len(self.df) == 0:
+            return pd.DataFrame(), {}
 
+        # Process in batches to avoid excess process creation overhead
+        all_indices = list(range(len(self.df)))
+        batches = [all_indices[i:i + batch_size] for i in range(0, len(all_indices), batch_size)]
         with Pool(pool_size) as pool:
-            moment_results = pool.starmap(self.calc_moments, [(i, normalization_scheme) for i in range(len(self.df))])
+            args_list = [(self, batch, normalization_scheme) for batch in batches]
+            batch_results = list(tqdm(
+                pool.imap(_calc_moments_vecps_batch_wrapper, args_list),
+                total=len(batches),
+                desc=f"Calculating VecPS moments in batches of {batch_size}"
+            ))
+            
+        # Flatten the list of batch results
+        moment_results = [result for batch in batch_results for result in batch]
                         
         # Convert to list of dicts to dict of lists then into a dataframe
         moment_results = {k: [d[k] for d in moment_results] for k in moment_results[0].keys()}
@@ -110,12 +122,14 @@ class MomentManagerVecPS(MomentManager):
         return moment_results, latex_name_dict
 
     def calc_moments(self, i, normalization_scheme=0):
+        """
+        0: normalize to H_0(0, 0)
+        1: normalize to the intensity in the bin (acceptance corrected or not depends on your setting in the YAML file when the dataframe was created)
+        """
         
         if normalization_scheme == 0:
             normalization = True
         elif normalization_scheme == 1:
-            normalization = int(self.df.iloc[i]['intensity_corr'].real)
-        elif normalization_scheme == 2:
             normalization = int(self.df.iloc[i]['intensity'].real)
         else:
             raise ValueError(f"Invalid normalization scheme: {normalization_scheme}")
@@ -184,13 +198,24 @@ class MomentManagerTwoPS(MomentManager):
         
         print(f"MomentManagerTwoPS| Calculating moments assuming a {self.channel} system with max J = {self.max_J}")
 
-    def process_and_return_df(self, normalization_scheme=0, pool_size=4, append=True):
+    def process_and_return_df(self, normalization_scheme=0, pool_size=4, append=True, batch_size=100):
         
         if len(self.df) == 0:
             return pd.DataFrame(), {}
 
+        # Process in batches to avoid excess process creation overhead
+        all_indices = list(range(len(self.df)))
+        batches = [all_indices[i:i + batch_size] for i in range(0, len(all_indices), batch_size)]
         with Pool(pool_size) as pool:
-            moment_results = pool.starmap(self.calc_moments, [(i, normalization_scheme) for i in range(len(self.df))])
+            args_list = [(self, batch, normalization_scheme) for batch in batches]
+            batch_results = list(tqdm(
+                pool.imap(_calc_moments_twops_batch_wrapper, args_list),
+                total=len(batches),
+                desc=f"Calculating TwoPS moments in batches of {batch_size}"
+            ))
+            
+        # Flatten the list of batch results
+        moment_results = [result for batch in batch_results for result in batch]
 
         # Convert to list of dicts to dict of lists then into a dataframe
         moment_results = {k: [d[k] for d in moment_results] for k in moment_results[0].keys()}
@@ -219,8 +244,7 @@ class MomentManagerTwoPS(MomentManager):
         
         """
         0: normalize to H_0(0, 0)
-        1: normalize to the acceptance corrected intensity in the bin
-        2: normalize to the uncorrected intensity in the bin (unsure if this makes sense but will allow it)
+        1: normalize to the intensity in the bin (acceptance corrected or not depends on your setting in the YAML file when the dataframe was created)
         """
         
         moment_results = {}
@@ -228,8 +252,6 @@ class MomentManagerTwoPS(MomentManager):
         if normalization_scheme == 0:
             normalization = True
         elif normalization_scheme == 1:
-            normalization = int(self.df.iloc[i]['intensity_corr'].real)
-        elif normalization_scheme == 2:
             normalization = int(self.df.iloc[i]['intensity'].real)
         else:
             raise ValueError(f"Invalid normalization scheme: {normalization_scheme}")

@@ -1,4 +1,5 @@
-from pyamptools.utility.general import load_yaml, calculate_subplot_grid_size, prettyLabels # TODO: must be loaded before loadIFTResultsFromPkl, IDKY yet
+from pyamptools.utility.general import load_yaml, calculate_subplot_grid_size, prettyLabels, identify_channel # TODO: must be loaded before loadIFTResultsFromPkl, IDKY yet
+from pyamptools.utility.MomentUtilities import MomentManagerTwoPS, MomentManagerVecPS
 from pyamptools.utility.IO import loadIFTResultsFromPkl
 from pyamptools.utility.IO import get_nEventsInBin
 import pandas as pd
@@ -47,10 +48,14 @@ default_plot_subdir = "PLOTS"
 class ResultManager:
     
     def __init__(self, yaml_file):
+        """
+        Args:
+            yaml_file [str, Dict]: path to the yaml file or already loaded as a dictionary
+        """
         
         self._mle_results  = pd.DataFrame()
-        self._gen_results  = (pd.DataFrame(), pd.DataFrame()) # (generated samples of amplitudes, generated samples of resonance parameters)
-        self._ift_results  = (pd.DataFrame(), pd.DataFrame()) # (fitted samples of amplitudes, fitted samples of resonance parameters)
+        self._gen_results  = [pd.DataFrame(), pd.DataFrame()] # (generated samples of amplitudes, generated samples of resonance parameters)
+        self._ift_results  = [pd.DataFrame(), pd.DataFrame()] # (fitted samples of amplitudes, fitted samples of resonance parameters)
         self._mcmc_results = pd.DataFrame()
         self._hist_results = pd.DataFrame()
         
@@ -62,11 +67,39 @@ class ResultManager:
         self.phase_reference = self.yaml['phase_reference'].split("_")
         min_mass = self.yaml['min_mass']
         max_mass = self.yaml['max_mass']
+
         self.n_mass_bins = self.yaml['n_mass_bins']
         self.masses = np.linspace(min_mass, max_mass, self.n_mass_bins+1)
         self.mass_centers = (self.masses[:-1] + self.masses[1:]) / 2
+        self.mass_bin_width = self.masses[1] - self.masses[0]
+        
+        self.n_t_bins = self.yaml['n_t_bins']
+        self.ts = np.linspace(self.yaml['min_t'], self.yaml['max_t'], self.n_t_bins+1)
+        self.t_centers = (self.ts[:-1] + self.ts[1:]) / 2
+        self.t_bin_width = self.ts[1] - self.ts[0]
+        
+        # Round all floats in kinematic binning
         self.n_decimal_places = 5
+        self.masses = np.round(self.masses, self.n_decimal_places)
         self.mass_centers = np.round(self.mass_centers, self.n_decimal_places)
+        self.ts = np.round(self.ts, self.n_decimal_places)
+        self.t_centers = np.round(self.t_centers, self.n_decimal_places)
+        self.mass_bin_width = np.round(self.mass_bin_width, self.n_decimal_places)
+        self.t_bin_width = np.round(self.t_bin_width, self.n_decimal_places)
+        
+        self.channel = identify_channel(self.waveNames) # ~str: TwoPseudoscalar or VectorPseudoscalar
+        self.moment_latex_dict = None
+        
+        # Moment calculations can take a long time (especially lots of MCMC samples, we can cache the result)
+        #    NOTE: This will technically cache the entire dataframe (including amplitudes, etc)
+        self.moment_cache_location = f"{self.base_directory}/projected_moments_cache.pkl"
+        
+        # TODO: fix bins per group
+        self.bpg = self.yaml['amptools']['bins_per_group']
+        
+        n_t_bins = self.yaml['n_t_bins']
+        if n_t_bins != 1:
+            console.print(f"[bold yellow]warning: Default plotting scripts will not work with more than 1 t-bin. Data loading should be fine[/bold yellow]")
         
         # Keep track of all the unique fit sources that the user loads
         #   Why would the user want to load multiple gen/hist sources?
@@ -100,14 +133,85 @@ class ResultManager:
     def attempt_load_all(self):
         if self._hist_results.empty:
             self._hist_results = self.load_hist_results()
-        if self._mle_results.empty:
-            self._mle_results = self.load_mle_results()
-        if self._mcmc_results.empty:
+            
+        if os.path.exists(self.moment_cache_location):
+            console.print(f"Loading cached data with projected moments from {self.moment_cache_location}")
+            with open(self.moment_cache_location, "rb") as f:
+                _results = pkl.load(f)
+                self._mle_results  = _results["mle"]  if "mle"  in _results else self.load_mle_results()
+                self._mcmc_results = _results["mcmc"] if "mcmc" in _results else self.load_mcmc_results()
+                self._ift_results  = _results["ift"]  if "ift"  in _results else self.load_ift_results(source_type="FITTED")
+                self._gen_results  = _results["gen"]  if "gen"  in _results else self.load_ift_results(source_type="GENERATED")
+                self.moment_latex_dict = _results["moment_latex_dict"] if "moment_latex_dict" in _results else None
+            return
+        else:
+            self._mle_results  = self.load_mle_results()
             self._mcmc_results = self.load_mcmc_results()
-        if self._ift_results[0].empty:
             self._ift_results = self.load_ift_results(source_type="FITTED")
-        if self._gen_results[0].empty:
             self._gen_results = self.load_ift_results(source_type="GENERATED")
+            
+    def attempt_project_moments(self, pool_size=1):
+        
+        console.print(f"User requested moments to be calculated")
+        dfs_to_process = [
+            ("mle",  self._mle_results ), 
+            ("mcmc", self._mcmc_results),
+            ("ift",  self._ift_results[0]),
+            ("gen",  self._gen_results[0])
+        ]
+        
+        _results = {}
+        # Project dataframe of partial wave amplitudes into moment basis
+        for df_name, df in dfs_to_process:
+            # Check if the dataframe has any columns that start with "H0" which is the zeroth moment that is equal to the intensity
+            #   This should exist for every channel?
+            #   If so, we skip the entire moment projection process. If there was a missing moment, you would need to restart by deleting the cache file
+            if df.empty:
+                console.print(f"'{df_name}' is empty, skipping moment projection")
+            else:
+                if any(["H0" in col for col in df.columns]):
+                    console.print(f"'{df_name}' already has projected moments, skipping moment projection")
+                else:
+                    console.print(f"Begin projecting amplitudes onto moment basis for '{df_name}' with {pool_size} processes")
+                    if self.channel == "TwoPseudoscalar":
+                        momentManager = MomentManagerTwoPS(df, self.waveNames)
+                    elif self.channel == "VectorPseudoscalar":
+                        momentManager = MomentManagerVecPS(df, self.waveNames)
+                    else:
+                        raise ValueError(f"Unknown channel for moment projection: {self.channel}")
+                    console.print(f"  Dataset: '{df_name}'")
+                    
+                    # Normalize to the intensity in the bin [scheme=1] (acceptance corrected or not depends on your setting in the YAML file when the dataframe was created)
+                    processed_df, moment_latex_dict = momentManager.process_and_return_df(
+                        normalization_scheme=1,
+                        pool_size=pool_size, 
+                        append=True
+                    )                
+                    if   df_name == "mle":  self._mle_results    = processed_df
+                    elif df_name == "mcmc": self._mcmc_results   = processed_df
+                    elif df_name == "ift":  self._ift_results[0] = processed_df
+                    elif df_name == "gen":  self._gen_results[0] = processed_df
+                    
+                    # Save updated dataframes (with moments) to cache
+                    if df_name == 'ift':
+                        _results[df_name] = [processed_df, self._ift_results[1]]
+                    elif df_name == 'gen':
+                        _results[df_name] = [processed_df, self._gen_results[1]]
+                    else:
+                        _results[df_name] = processed_df
+                        
+                    # Track dictionary of latex names for plotting moments, should be OK to overwrite
+                    self.moment_latex_dict = moment_latex_dict
+        
+        # The above loop projects moments if they do not exist in the dataframe yet
+        #   We update the cache with the previous results (that already had projected moments) with new dataframes with projected moments
+        if "mle" not in _results:  _results["mle"]  = self._mle_results
+        if "mcmc" not in _results: _results["mcmc"] = self._mcmc_results
+        if "ift" not in _results:  _results["ift"]  = self._ift_results
+        if "gen" not in _results:  _results["gen"]  = self._gen_results
+        _results["moment_latex_dict"] = self.moment_latex_dict
+        with open(self.moment_cache_location, "wb") as f:
+            pkl.dump(_results, f)
 
     @property
     def mle_results(self) -> pd.DataFrame:
@@ -162,7 +266,15 @@ class ResultManager:
     
     def load_ift_results(self, base_directory=None, source_type="GENERATED", alias=None):
         
-        """Currently only supports generated curves from iftpwa"""
+        """
+        Currently only supports generated curves from iftpwa
+        
+        NOTE: Whenever you want to determine some statistics from IFT you should do it on a sample by sample basis (curve across kinematics bins)
+                For instance to calculate integrated intensity (across mass) option 1 is more accurate:
+                1. Grouping by sample, sum over mass, then calculate mean / std produces very different results compared to
+                2. Grouping by mass and summing over samples. This is due to the fact that the samples are entire curves!
+                In one test case, the relative uncertainties went from 20% to 4% where first number comes from grouping by sample
+        """
         
         if base_directory is None:
             base_directory = self.base_directory
@@ -199,7 +311,7 @@ class ResultManager:
             if self._hist_results is None:
                 raise ValueError("Histogram results not found. We use this dataset to scale the generated curves, cannot proceed without it.")
             mle_totals = self._hist_results['nEvents'].sum()
-            rescaling = mle_totals / np.sum(ift_df['fitted_intensity'])
+            rescaling = mle_totals / np.sum(ift_df['intensity'])
             amp_cols = [c for c in ift_df.columns if c.endswith('_amp')]
             intensity_cols = [c for c in ift_df.columns if 'intensity' in c] + [amp.strip('_amp') for amp in amp_cols]
             ift_df[amp_cols] *= np.sqrt(rescaling)
@@ -228,7 +340,7 @@ class ResultManager:
         console.print(f"Resonance Parameters DataFrame shape: {ift_res_df.shape}")
         console.print(f"\n")
     
-        return ift_df, ift_res_df
+        return [ift_df, ift_res_df]
         
     def load_mle_results(self, base_directory=None, alias=None):
         
@@ -306,9 +418,12 @@ class ResultManager:
                         results.setdefault(f"{waveName}", []).append(data[f"{waveName}"])
                         results.setdefault(f"{waveName}_err", []).append(data[f"{waveName}_err"])
                     
+                     # Use this regularized covariance so we always have some error estimate
+                     # Obtained by shifting Hessian by smallest eigenvalue (to make positive definite)
+                     #    Then inverting to get covariance
                     method = "tikhonov"
                     for iw, wave in enumerate(waveNames):
-                        tag = f"{wave}_{method}"
+                        tag = f"{wave}"
                         covariance = data['covariances'][method]
                         reference_wave = self.sector_to_ref_wave[wave[-1]]
                         if covariance is None: # this can happen for Minuit if it fails to converge (IDK about scipy)
@@ -471,6 +586,65 @@ class ResultManager:
             self.source_list[source_type].append(source_name)
         return df
     
+    def print_schema(self):
+        print_schema = "\n\n\n## [bold]SUMMARY OF COLLECTED RESULTS[/bold] ##\n"
+        print_schema += (
+            "\n********************************************************************\n"
+            "[bold]SCHEMA:[/bold]\n"
+            "- [cyan]t-bins / mass-bins:[/cyan] Bin centers.\n"
+        )
+        print_schema += (
+            "- [cyan]All DataFrames:[/cyan] Quantities per (t, mass, sample).\n"
+            "    - [bold]'intensity'[/bold]: Fitted intensity values (whether acceptance corrected or not depends on YAML file at creation of DataFrame). Aggregate over samples to get mean/std.\n"
+            "    - [bold]'<wave>_amp'[/bold]: Contain complex amplitude values for the coherent sum of parameteric and correlated field components.\n"
+            "    - [bold]'<wave>'[/bold]: Contain intensity values (not just amp^2 due to normalization integrals) for the coherent sum of parameteric and correlated field components.\n"
+            "    - [bold]'Hi_LM'[/bold]: Moment with index i for given LM quantum number. i.e. H0_00 is the $H_{0}(0,0)$ moment. Different for VectorPseudoscalar\n"
+            ""
+        )
+        
+        print_schema += (
+            "- [cyan]IFT DataFrames:[/cyan] Quantities per (t, mass, sample).\n"
+            "    - [bold]'<wave>_<res>_amp'[/bold]: Contain complex amplitude values for parameteric components.\n"
+            "    - [bold]'<wave>_cf_amp'[/bold]: Contain complex amplitude values for (c)orrelated (f)ield components.\n"
+            "    - [bold]'<wave>_<res>'[/bold]: Contain intensity values (not just amp^2 due to normalization integrals) for parameteric components.\n"
+            "    - [bold]'<wave>_cf'[/bold]: Contain intensity values (not just amp^2 due to normalization integrals) for (c)orrelated (f)ield components.\n"
+            "    - [bold]'<prior_parameter_name>' (Resonance DataFrame) columns[/bold]: Contain the value of the resonance parameter.\n"
+        )    
+    
+        print_schema += (
+            "- [cyan]MLE DataFrame:[/cyan] Quantities per (t, mass, random initialization).\n"
+            "    - [bold]'nll'[/bold]: likelihoode\n"
+            "    - [bold]'status'[/bold]: minuit return status (0=success)\n"
+            "    - [bold]'ematrix'[/bold]: error matrix status (3=success)\n"
+            "    - [bold]'<wave> err'[/bold]: Error on fitted wave intensity values\n"
+            "    - [bold]'<wave>_re_err'[/bold]: Error on real part of complex amplitude\n"
+            "    - [bold]'<wave>_im_err'[/bold]: Error on imaginary part of complex amplitude\n"
+            "    - [bold]'<wave>_err_angle'[/bold]: Error ellipse angle from covariance of Real/Imag parts\n"
+            "    - [bold]'<wave>_relative_phase'[/bold]: Relative phase 'wave' and its reference wave\n"
+            "    - [bold]'<wave>_relative_phase_err'[/bold]: Error on relative phase between 'wave' and its reference wave (error not propagated from rotation)\n"
+        )
+        
+        console.print(print_schema)
+        console.print("\n\n********************************************************************")
+        console.print(f" Number of t-bins: {len(self.t_centers)}: {np.array(self.t_centers)}")
+        console.print(f" Number of mass-bins: {len(self.mass_centers)}: {np.array(self.mass_centers)}")
+        console.print(f" Number of wave names: {len(self.waveNames)}: {self.waveNames}")
+        console.print("********************************************************************")
+        
+        if not self._gen_results[0].empty:
+            console.print(f" Shape of GENERATED DataFrame {self._gen_results[0].shape} with columns: {self._gen_results[0].columns}")
+        if not self._hist_results.empty:
+            console.print(f" Shape of HISTOGRAM DataFrame {self._hist_results.shape} with columns: {self._hist_results.columns}")
+        if not self._ift_results[0].empty:
+            console.print(f" Shape of IFT results DataFrame {self._ift_results[0].shape} with columns: {self._ift_results[0].columns}")
+        if not self._ift_results[1].empty:
+            console.print(f" Shape of IFT resonance DataFrame {self._ift_results[1].shape} with columns: {self._ift_results[1].columns}")
+        if not self._mle_results.empty:
+            console.print(f" Shape of MLE DataFrame {self._mle_results.shape} with columns: {self._mle_results.columns}")
+        if not self._mcmc_results.empty:
+            console.print(f" Shape of MCMC DataFrame {self._mcmc_results.shape} with columns: {self._mcmc_results.columns}")
+        console.print("\n********************************************************************")
+    
     def __del__(self):
         """Ensure proper cleanup when the object is deleted"""
         try:
@@ -500,6 +674,8 @@ def save_and_close_fig(output_file_location, fig, axes, overwrite=False, verbose
             if verbose: console.print(f"[bold red]File {output_file_location} already exists. Set overwrite=True to overwrite.\n[/bold red]")
             return
         # Detect unused axes and set them to not visible
+        if not isinstance(axes, np.ndarray): # if it was just a single axis
+            axes = np.array([axes])
         for ax in axes.flatten():
             if not ax.has_data():
                 ax.set_visible(False)
@@ -510,6 +686,7 @@ def save_and_close_fig(output_file_location, fig, axes, overwrite=False, verbose
         plt.close(fig)
     
 def query_default(df):
+    """ 'yaml' key is reserved for default source """
     return df.query("source == 'yaml'") if not df.empty else pd.DataFrame()
     
 def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10)):
@@ -533,12 +710,12 @@ def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10)):
     for i, wave in enumerate(waveNames):
         irow = i // ncols
         icol = i % ncols
-        wave_fit_fraction = ift_gen_df[wave] / ift_gen_df['fitted_intensity']
+        wave_fit_fraction = ift_gen_df[wave] / ift_gen_df['intensity']
         axes[irow, icol].plot(mass_centers, wave_fit_fraction, color=ift_color_dict['Signal'], label="Signal")
         for col in cols:
             col_parts = col.split("_")
             if wave in col and len(col_parts) > 1 and "amp" not in col_parts:
-                wave_fit_fraction = ift_gen_df[col] / ift_gen_df['fitted_intensity']
+                wave_fit_fraction = ift_gen_df[col] / ift_gen_df['intensity']
                 color = ift_color_dict['Bkgnd'] if "cf" in col_parts else ift_color_dict['Param']
                 label = 'Bkgnd' if "cf" in col_parts else 'Param.'
                 axes[irow, icol].plot(mass_centers, wave_fit_fraction, color=color, label=label)
@@ -619,16 +796,15 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
                     ax.axvspan(mean - error, mean + error, color=mle_color, alpha=0.01)
             
             #### PLOT GENERATED RESULTS ####
-            col = f"{wave}" if wave != "intensity" else "fitted_intensity"
+            col = f"{wave}"
             if not binned_gen_results.empty and col in binned_gen_results.columns:
                 ax.axvline(binned_gen_results[col].values[0], color=gen_color, linestyle='dashdot', alpha=1.0, linewidth=2)
             
             #### PLOT NIFTY FIT RESULTS ####
             mass_center = resultManager.mass_centers[bin]
-            _wave = "fitted_intensity" if wave == "intensity" else wave
-            if not binned_ift_results.empty and _wave in binned_ift_results.columns:
-                mean = np.mean(binned_ift_results[_wave].values) # mean over nifty samples
-                std = np.std(binned_ift_results[_wave].values)   # std over nifty samples
+            if not binned_ift_results.empty and wave in binned_ift_results.columns:
+                mean = np.mean(binned_ift_results[wave].values) # mean over nifty samples
+                std  = np.std(binned_ift_results[wave].values)   # std over nifty samples
                 ax.axvline(mean, color=ift_color_dict["Signal"], linestyle='--', alpha=1.0, linewidth=1)
                 ax.axvspan(mean - std, mean + std, color=ift_color_dict["Signal"], alpha=0.3)
 
@@ -740,17 +916,16 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
             #### PLOT MLE RESULTS ####
             if not binned_mle_results.empty and wave in binned_mle_results.columns:
                 for irow in binned_mle_results.index: # for each random start MLE fit
-                    error_method = 'tikhonov'
                     cval = binned_mle_results.loc[irow, f"{wave}_amp"]
                     real_part = np.real(cval)
                     imag_part = np.imag(cval)
-                    real_part_semimajor = binned_mle_results.loc[irow, f'{wave}_{error_method}_re_err']
-                    imag_part_semiminor = binned_mle_results.loc[irow, f'{wave}_{error_method}_im_err']
+                    real_part_semimajor = binned_mle_results.loc[irow, f'{wave}_re_err']
+                    imag_part_semiminor = binned_mle_results.loc[irow, f'{wave}_im_err']
                     if is_reference:
                         axes[i].axvspan(real_part - real_part_semimajor, real_part + real_part_semimajor, color=mle_color, alpha=0.01)
                         axes[i].axvline(real_part, color=mle_color, linestyle='--', alpha=0.5, linewidth=1)
                     else:
-                        part_angle = binned_mle_results.loc[irow, f'{wave}_{error_method}_err_angle'] * 180 / np.pi
+                        part_angle = binned_mle_results.loc[irow, f'{wave}_err_angle'] * 180 / np.pi
                         ellipse = Ellipse(xy=(real_part, imag_part), width=2 * real_part_semimajor, height=2 * imag_part_semiminor, angle=part_angle, facecolor='none', edgecolor='xkcd:red', alpha=0.5)
                         axes[i].add_patch(ellipse) 
             
@@ -804,52 +979,11 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
     for file in saved_files:
         console.print(f"  - {file}")
     console.print(f"\n")
-    
-# def montage_and_gif_binned_plots(resultManager: ResultManager):
-    
-#     console.print(header_fmt.format(f"Montaging / GIFing all plots..."))
-    
-#     base_directory = resultManager.base_directory
-    
-#     subdirs = ["complex_plane", "intensity"]
-#     for subdir in subdirs:
-#         output_directory = f"{base_directory}/{default_plot_subdir}/{subdir}"
         
-#         # Sort files by bin number
-#         bin_files_path = f"{output_directory}/bin*.png"
-#         bin_files = sorted(glob.glob(bin_files_path), 
-#                           key=lambda x: int(re.search(r'bin(\d+)', x).group(1)))
-#         if bin_files:
-#             files_str = " ".join(bin_files)            
-#             montage_output = f"{output_directory}/montage_output.png"
-#             gif_output = f"{output_directory}/output.gif"
-#             console.print(f"Create montage + gif of plots in '{output_directory}'")
-#             os.system(f"montage {files_str} -density 300 -geometry +10+10 {montage_output}")
-#             os.system(f"convert -delay 40 {files_str} -layers optimize -colors 256 -fuzz 2% {gif_output}")
-#         else:
-#             console.print(f"[bold yellow]No bin files found in {bin_files_path}[/bold yellow]")
-        
-#     subdirs = ["intensity_and_phases"]
-#     for subdir in subdirs:
-#         output_directory = f"{base_directory}/{default_plot_subdir}/{subdir}"        
-#         phase_files_path = f"{output_directory}/intensity_phase_plot_*.png"
-#         phase_files = glob.glob(phase_files_path)
-        
-#         if phase_files:
-#             # No numeric sorting needed here, but join the files with spaces
-#             files_str = " ".join(phase_files)
-            
-#             montage_output = f"{base_directory}/{default_plot_subdir}/{subdir}/montage_output.png"
-            
-#             console.print(f"Create montage of plots in '{base_directory}/{default_plot_subdir}/{subdir}'")
-#             os.system(f"montage {files_str} -density 300 -geometry +10+10 {montage_output}")
-#         else:
-#             console.print(f"[bold yellow]No intensity phase plot files found in {phase_files_path}[/bold yellow]")
-        
-#     console.print(f"\n")
-        
-def plot_overview_across_bins(resultManager: ResultManager, n_samples_per_bin=300):
-
+def plot_overview_across_bins(resultManager: ResultManager, n_mcmc_samples_per_bin=300):
+    """
+    This is a money plot. Two plots stacked vertically (intensity on top, relative phases on bottom)
+    """
     name = "intensity + phases"
     console.print(header_fmt.format(f"Plotting '{name}' plots..."))
     
@@ -868,8 +1002,7 @@ def plot_overview_across_bins(resultManager: ResultManager, n_samples_per_bin=30
     n_mass_bins = resultManager.n_mass_bins
     masses = resultManager.masses
     mass_centers = resultManager.mass_centers
-    bin_width = mass_centers[1] - mass_centers[0]
-    line_half_width = bin_width / 2
+    line_half_width = resultManager.mass_bin_width / 2
     
     nEvents, nEvents_err = None, None
     if not hist_results.empty:
@@ -878,7 +1011,7 @@ def plot_overview_across_bins(resultManager: ResultManager, n_samples_per_bin=30
 
     samples_to_draw = pd.DataFrame()
     if not mcmc_results.empty:
-        samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.sample(n=n_samples_per_bin, replace=False)).reset_index(drop=True)
+        samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.sample(n=n_mcmc_samples_per_bin, replace=False)).reset_index(drop=True)
     
     for k, waveName in enumerate(waveNames):
         
@@ -916,7 +1049,7 @@ def plot_overview_across_bins(resultManager: ResultManager, n_samples_per_bin=30
                 if "_cf" in col: fit_type = "Bkgnd"
                 elif len(col.split("_")) > 1: fit_type = "Param"
                 else: fit_type = "Signal"
-                ax.plot(gen_results['mass'], gen_results[col], color='white',  linestyle='-', alpha=0.3, linewidth=4, zorder=9)
+                ax.plot(gen_results['mass'], gen_results[col], color='white',  linestyle='-', alpha=0.4, linewidth=4, zorder=9)
                 ax.plot(gen_results['mass'], gen_results[col], color=ift_color_dict[fit_type],  linestyle='--', alpha=1.0, linewidth=3, zorder=10)
 
         #### PLOT MCMC FIT INTENSITY
@@ -954,7 +1087,7 @@ def plot_overview_across_bins(resultManager: ResultManager, n_samples_per_bin=30
         
         #### PLOT MLE FIT INTENSITY
         if not mle_results.empty:
-            jitter_scale = mle_jitter_scale * bin_width
+            jitter_scale = mle_jitter_scale * resultManager.mass_bin_width
             mass_jitter = np.random.uniform(-jitter_scale, jitter_scale, size=len(mle_results)) # shared with phases below
             ax.errorbar(mle_results['mass'] + mass_jitter, mle_results[waveName], yerr=mle_results[f"{waveName}_err"], 
                         color=mle_color, alpha=0.2, fmt='o', markersize=2, capsize=3)
@@ -1022,14 +1155,14 @@ def plot_overview_across_bins(resultManager: ResultManager, n_samples_per_bin=30
                             color=mle_color, alpha=0.2, fmt='o', markersize=2, capsize=3)
             
         #### PLOT WAVE NAME IN CORNER
-        text = ax.text(0.05, 0.87, f"{prettyLabels[waveName]}", transform=ax.transAxes, fontsize=36, c='black', zorder=9)
+        text = ax.text(0.05, 0.92, f"{prettyLabels[waveName]}", transform=ax.transAxes, fontsize=36, c='black', zorder=9)
         text.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
         
         #### AXIS SETTINGS
-        ax.set_ylim(0)
+        ax.set_ylim(0, 1.15 * np.max(nEvents))
         phase_ax.set_xlabel(r"$m_X$ [GeV]", size=20)
         phase_ax.tick_params(axis='x', labelsize=16)
-        ax.set_ylabel(rf"Intensity / {bin_width:.2f} GeV", size=22)
+        ax.set_ylabel(rf"Intensity / {resultManager.mass_bin_width:.3f} GeV", size=22)
         ax.tick_params(axis='y', labelsize=16)
         wave_label1 = prettyLabels[waveName].strip("$")
         wave_label2 = prettyLabels[reference_wave].strip("$")
@@ -1042,3 +1175,179 @@ def plot_overview_across_bins(resultManager: ResultManager, n_samples_per_bin=30
         plt.close()
         
     console.print(f"\n")
+    
+def plot_moments_across_bins(resultManager: ResultManager, n_mcmc_samples_per_bin=300, save_file=None):
+    
+    """
+    This is another money plot. All non-zero projected moments are plotted
+    """
+    
+    name = "moments"
+    console.print(header_fmt.format(f"Plotting '{name}' plots..."))
+    
+    if resultManager.moment_latex_dict is None:
+        console.print("[bold yellow]Does not appear that moments have been calculated yet. Skipping.[/bold yellow]")
+        return
+    
+    mcmc_results = query_default(resultManager.mcmc_results)
+    mle_results  = query_default(resultManager.mle_results)
+    gen_results  = query_default(resultManager.gen_results[0])
+    ift_results  = query_default(resultManager.ift_results[0])
+    
+    # If everything is missing, nothing to do
+    if mcmc_results.empty and mle_results.empty and gen_results.empty and ift_results.empty:
+        console.print(f"[bold yellow]No data available for binned intensity plots. Skipping.[/bold yellow]")
+        return
+    
+    n_mass_bins = resultManager.n_mass_bins
+    mass_centers = resultManager.mass_centers
+    line_half_width = resultManager.mass_bin_width / 2
+    
+    samples_to_draw = pd.DataFrame()
+    if not mcmc_results.empty:
+        samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.sample(n=n_mcmc_samples_per_bin, replace=False)).reset_index(drop=True)
+
+    def plot_moment(moment_name, ofile):
+        fig, axis = plt.subplots(figsize=(10, 10))
+        axis.set_ylabel(f"Moment Value / {resultManager.mass_bin_width:.3f} GeV$/c^2$", size=22)
+        axis.set_xlabel("$m_X$ [GeV$/c^2$]", size=22)
+        
+        # Track available legend elements. We primarily do this so we have control over the alpha of the
+        #   legend lines. We do this by creating empty plots with appropriate styles
+        mcmc_legend_line = None
+        mle_bars = None
+        ift_legend_lines = []
+        
+        # NOTE: Assume that the set of moments are all the same in the DataFrames as they should all have the same waveset
+        moment_is_zero = False
+        dfs_to_process = [
+            ("mle",  mle_results), 
+            ("mcmc", mcmc_results),
+            ("ift",  ift_results),
+            ("gen",  gen_results)
+        ]
+        for df_name, _df in dfs_to_process:
+            if not _df.empty:
+                if moment_name not in _df.columns:
+                    console.print(f"[bold yellow]Moment '{moment_name}' not found in DataFrame '{df_name}', skipping.[/bold yellow]")
+                    plt.close()
+                    return
+                moment_value = _df[moment_name].values # no need to rescale with bpg (bins_per_group). Zero is zero
+                if np.allclose(moment_value, 0, atol=1e-6):
+                    moment_is_zero = True
+            if moment_is_zero:
+                console.print(f"[bold yellow]Moment '{moment_name}' is zero in DataFrame'{df_name}', skipping.[/bold yellow]")
+                plt.close()
+                return
+        
+        ### PLOT THE GENERATED MOMENTS
+        maxy = -np.inf
+        if not gen_results.empty:
+            for sample in gen_results['sample'].unique(): # should just be 1 sample
+                df_sample = gen_results.query(f'sample == {sample}')
+                moment_value = df_sample[moment_name].values
+                moment_value = moment_value * resultManager.bpg # ift generally uses finer binning than amptools, rescale to match
+                axis.plot(df_sample['mass'], moment_value, color='white',  linestyle='-', alpha=0.4, linewidth=4, zorder=9)
+                axis.plot(df_sample['mass'], moment_value, color=ift_color_dict["Signal"],  linestyle='--', alpha=1.0, linewidth=3, zorder=10)
+                maxy = np.max([maxy, np.max(moment_value)])
+            
+        #### PLOT MCMC FIT INTENSITY
+        if not samples_to_draw.empty:
+            for bin_idx in range(n_mass_bins):
+                mass = mass_centers[bin_idx]
+                binned_samples = samples_to_draw.query('mass == @mass')
+                x_starts = np.full_like(binned_samples[moment_name], mass - line_half_width)
+                x_ends   = np.full_like(binned_samples[moment_name], mass + line_half_width)
+                axis.hlines(y=binned_samples[moment_name],   
+                        xmin=x_starts,
+                        xmax=x_ends,
+                        colors=mcmc_color,
+                        alpha=0.1,
+                        linewidth=1)
+                maxy = np.max([maxy, np.max(binned_samples[moment_name])])
+            mcmc_legend_line = axis.plot([], [], color=mcmc_color, alpha=0.7, linewidth=2, label="MCMC")[0]
+        
+        #### PLOT IFT MOMENTS
+        if not ift_results.empty:
+            for isample, sample in enumerate(ift_results['sample'].unique()):
+                df_sample = ift_results.query('sample == @sample')
+                axis.plot(df_sample['mass'], df_sample[moment_name], color=ift_color_dict["Signal"], 
+                                linestyle='-', alpha=ift_alpha, linewidth=1)
+                if isample == 0: # create empty plot just for the legend to have lines with different alpha
+                    ift_line = axis.plot([], [], color=ift_color_dict["Signal"], linestyle='-', alpha=1.0, linewidth=1, label="IFT")[0]
+                    ift_legend_lines.append(ift_line)
+                maxy = np.max([maxy, np.max(df_sample[moment_name])])
+            
+        #### PLOT MLE MOMENTS
+        if not mle_results.empty:
+            jitter_scale = mle_jitter_scale * resultManager.mass_bin_width
+            mass_jitter = np.random.uniform(-jitter_scale, jitter_scale, size=len(mle_results)) # shared with phases below
+            axis.errorbar(mle_results['mass'] + mass_jitter, mle_results[moment_name], yerr=0, 
+                        color=mle_color, alpha=0.2, fmt='o', markersize=3, capsize=0)
+            mle_bars = axis.plot([], [], label="MLE", color=mle_color, alpha=1.0,  markersize=2)[0]
+            maxy = np.max([maxy, np.max(mle_results[moment_name])])
+
+        handles = []
+        if mcmc_legend_line is not None: handles.append(mcmc_legend_line)
+        if mle_bars is not None: handles.append(mle_bars)
+        handles += ift_legend_lines
+        axis.legend(handles=handles, labelcolor="linecolor", handlelength=0.3,
+                 handletextpad=0.15, frameon=False, loc='upper right', prop={'size': 16})
+        
+        axis.axhline(0, color="black", linestyle="--", linewidth=1)
+        text = axis.text(0.05, 0.92, f"{resultManager.moment_latex_dict[moment_name]}", transform=axis.transAxes, fontsize=36, c='black', zorder=9)
+        text.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
+        axis.set_box_aspect(1.0)
+        axis.tick_params(axis='x', labelsize=16)
+        axis.tick_params(axis='y', labelsize=16)
+        miny = axis.get_ylim()[0]
+        yrange = maxy - miny
+        axis.set_ylim(miny, miny + 1.15 * yrange) # leave minimum the same, increase height so we can squeeze in some text at the top
+        plt.tight_layout()
+        
+        save_and_close_fig(ofile, fig, axis, overwrite=True, verbose=True)
+
+    for moment_name in resultManager.moment_latex_dict.keys():
+        plot_moment(moment_name, ofile=f"{resultManager.base_directory}/{default_plot_subdir}/moments/moment_{moment_name}.png")
+    
+def montage_and_gif_select_plots(resultManager: ResultManager):
+    
+    console.print(header_fmt.format(f"Montaging / GIFing all plots..."))
+    
+    base_directory = resultManager.base_directory
+    
+    subdirs = ["complex_plane", "intensity"]
+    for subdir in subdirs:
+        output_directory = f"{base_directory}/{default_plot_subdir}/{subdir}"
+        
+        # Sort files by bin number
+        bin_files_path = f"{output_directory}/bin*.png"
+        bin_files = sorted(glob.glob(bin_files_path), 
+                          key=lambda x: int(re.search(r'bin(\d+)', x).group(1)))
+        if bin_files:
+            files_str = " ".join(bin_files)            
+            montage_output = f"{output_directory}/montage_output.png"
+            gif_output = f"{output_directory}/output.gif"
+            console.print(f"Create montage + gif of plots in '{output_directory}'")
+            os.system(f"montage {files_str} -density 300 -geometry +10+10 {montage_output}")
+            os.system(f"convert -delay 40 {files_str} -layers optimize -colors 256 -fuzz 2% {gif_output}")
+        else:
+            console.print(f"[bold yellow]No bin files found in {bin_files_path}[/bold yellow]")
+        
+    subdirs = ["intensity_and_phases"]
+    for subdir in subdirs:
+        output_directory = f"{base_directory}/{default_plot_subdir}/{subdir}"
+        files = [] # Montage in the same order as waveNames
+        for wave in resultManager.waveNames:
+            files_path = f"{output_directory}/intensity_phase_plot_{wave}.png"
+            files.append(files_path)
+        if files:
+            files_str = " ".join(files)
+            montage_output = f"{base_directory}/{default_plot_subdir}/{subdir}/montage_output.png"
+            console.print(f"Create montage of plots in '{base_directory}/{default_plot_subdir}/{subdir}'")
+            os.system(f"montage {files_str} -density 300 -geometry +10+10 {montage_output}")
+        else:
+            console.print(f"[bold yellow]No intensity phase plot files found in {output_directory}[/bold yellow]")
+        
+    console.print(f"\n")
+
