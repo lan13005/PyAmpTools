@@ -84,6 +84,9 @@ for e, refl in zip([-1, 1], refls):
 def identify_channel(wave_names: List[str]) -> str:
     """ Loops over wave_names and checks if all reaction channels (i.e. TwoPseudoscalar or VectorPseudoscalar) are the same """
     channels = []
+    wave_names_is_list_like = hasattr(wave_names, "__iter__") and not isinstance(wave_names, str) # strings are list-like...
+    if not wave_names_is_list_like:
+        raise ValueError(f"wave_names must be an iterable like list or array, got {type(wave_names)}")
     for w in wave_names:
         channels.append(channel_map[w])
     if len(set(channels)) > 1:

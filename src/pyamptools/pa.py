@@ -63,8 +63,6 @@ def main():
         "run_mle": (f"{PYAMPTOOLS_HOME}/bin/run_mle.py", "Run MLE fits over kinematic bins using variety of optimizers (minuit, lbfgs, ...)"),
         "run_mcmc": (f"{PYAMPTOOLS_HOME}/bin/run_mcmc.py", "Run MCMC fits over kinematic bins using numpyro NUTS sampler"),
         "run_ift": (f"{PYAMPTOOLS_HOME}/bin/run_ift.py", "Run IFT fit over kinematic bins"),
-        "run_momentPlotter": (f"{PYAMPTOOLS_HOME}/bin/run_momentPlotter.py", "After running IFT + MLE fits we can attempt to plot all the (projected) moments"),
-        "run_resultDump": (f"{PYAMPTOOLS_HOME}/bin/run_resultDump.py", "Dump IFT and AmpTools results to csv files + (projected) moments if possible"),
         "dash_ift_cmp": (f"{PYAMPTOOLS_HOME}/bin/dash_ift_cmp.py", "Compare multiple IFT fits (intensity and phase) using dash package"),
     }
 

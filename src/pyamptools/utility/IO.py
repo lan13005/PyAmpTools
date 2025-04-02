@@ -124,7 +124,7 @@ def parse_fit_file(filename):
     
     return complex_amps, status_dict
 
-def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean=False, apply_mle_queries=True):
+def loadAmptoolsIFTResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean=False, apply_mle_queries=True):
     
     """
     Loads the AmpTools and IFT results from the provided yaml file. Moments will be calculated if possible with multiprocessing.Pool with pool_size
@@ -153,10 +153,10 @@ def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean=False, 
     # Store a cache of the results to avoid recalculating them, calculating moments is quite time consuming
     cache = f"{yaml['base_directory']}/.moment_cache.pkl"
     if clean and os.path.exists(cache):
-        console.print(f"[red]loadAllResultsFromYaml| User requested to start clean, do not use any cached results. Recalculating...[/red]\n")
+        console.print(f"[red]loadAmptoolsIFTResultsFromYaml| User requested to start clean, do not use any cached results. Recalculating...[/red]\n")
         os.remove(cache)
     elif os.path.exists(cache):
-        console.print(f"[green]loadAllResultsFromYaml| Loading cache from {cache}[/green]\n")
+        console.print(f"[green]loadAmptoolsIFTResultsFromYaml| Loading cache from {cache}[/green]\n")
         with open(cache, "rb") as f:
             cache = pkl.load(f)
         return cache
@@ -248,7 +248,7 @@ def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean=False, 
         latex_name_dict = latex_name_dict_amp if latex_name_dict_amp is not None else latex_name_dict_ift
         
     with open(cache, "wb") as f:
-        console.print(f"[green]loadAllResultsFromYaml| Dumping cache to {cache}[/green]")
+        console.print(f"[green]loadAmptoolsIFTResultsFromYaml| Dumping cache to {cache}[/green]")
         cache = (amptools_df, ift_df, ift_res_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict)
         pkl.dump(cache, f)
     
@@ -383,7 +383,7 @@ def loadIFTResultsFromPkl(resultData, sums_dict=None):
                 flat_intens_waves_tprime[f'{col.strip("_amp")}'] = np.concatenate((flat_amps_waves_tprime[f'{col.strip("_amp")}'], intens.flatten().real))
         all_values = [tmp[f"{wave_name}_amp"].values.reshape(nmb_samples, nmb_masses) for wave_name in wave_names]
         _intens = calc_intens(wave_names, tbin, all_values)
-        flat_intens_waves_tprime['fitted_intensity'] = _intens.flatten().real
+        flat_intens_waves_tprime['intensity'] = _intens.flatten().real
                     
     # Stage 3: Calculate intensity for user requested coherent sums defined in yaml["result_dump"]["coherent_sums"]
     # NOTE: There might be something wrong with calc_intens? Directly summing intensities across GP waves (i.e. Pm1+_Pp0+_Pp1+) gives very similar results as the coherent sum P+
@@ -428,8 +428,8 @@ def loadIFTResultsFromPkl(resultData, sums_dict=None):
     intensity_samples_no_acc = np.array(resultData['expected_nmb_events_no_acc'], dtype=float) # ~ (nmb_samples, nmb_masses, nmb_tprimes)
     intensity_samples = intensity_samples.reshape(-1, 1)
     intensity_samples_no_acc = intensity_samples_no_acc.reshape(-1, 1)
-    ift_pwa_df['intensity'] = intensity_samples
-    ift_pwa_df['intensity_corr'] = intensity_samples_no_acc
+    ift_pwa_df['nBar'] = intensity_samples
+    ift_pwa_df['nBar_corrected'] = intensity_samples_no_acc
     
     # Extract (res)onance parameter samples, dump into independent DataFrame/csv
     #   This is only an array over samples, and is the same value for all masses and tprimes
@@ -585,8 +585,8 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
                     intensity_corr, intensity = float(intensity_corr), float(intensity)
                     if 'intensity' not in df: df['intensity'] = [intensity]
                     else: df['intensity'].append(intensity)
-                    if 'intensity_corr' not in df: df['intensity_corr'] = [intensity_corr]
-                    else: df['intensity_corr'].append(intensity_corr)
+                    if 'intensity_corrected' not in df: df['intensity_corrected'] = [intensity_corr]
+                    else: df['intensity_corrected'].append(intensity_corr)
                     
                     totalYield = intensity_corr if accCorrect else intensity
 
