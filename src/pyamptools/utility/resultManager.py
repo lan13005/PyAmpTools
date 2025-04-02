@@ -432,18 +432,39 @@ class ResultManager:
                             results.setdefault(f'{tag}_err_angle', []).append(None)
                         else:
                             assert covariance.shape == (2 * len(waveNames), 2 * len(waveNames))
-                            cov_re = covariance[2*iw  , 2*iw  ]
-                            cov_im = covariance[2*iw+1, 2*iw+1]
-                            if np.isclose(cov_re, cov_im):
-                                angle = 0.0
-                            else:
-                                rho = covariance[2*iw+1, 2*iw]  # off-diagonal term
-                                angle = 0.5 * np.arctan2(2 * rho, cov_re - cov_im)
-                            re_err = np.sqrt(max(0, cov_re))
-                            im_err = np.sqrt(max(0, cov_im))
-                            results.setdefault(f'{tag}_re_err', []).append(re_err)
-                            results.setdefault(f'{tag}_im_err', []).append(im_err)
+                            
+                            # NOTE: The following is not really necessary if our reference wave only allows for [0, pi] values, angles are preserved
+                            #       Leave this code here in case things change?
+                            # 1. Extract 2x2 submatrix for real/imag parts of ONE amplitude
+                            # 2. Create orthogonal SO(2) rotation matrix to rotate 2x2 real/imag part submatrix
+                            #    There is no error propagation from the uncertainty in the reference wave. Too complicated. We have MCMC/IFT samples anyways
+                            # 3. Perform eigendecomposition, get major/minor axes and angle (of the major axis)
+                            indices = [2*iw, 2*iw+1]
+                            submatrix = covariance[np.ix_(indices, indices)]
+                            
+                            reference_wave = self.sector_to_ref_wave[wave[-1]] # contains '_amp' suffix
+                            jw = waveNames.index(reference_wave.strip("_amp")) # waveNames has no suffix                            
+                            amp2 = data[f"{reference_wave}"]
+                            ref_phase = np.angle(amp2)
+                            cos_phase = np.cos(ref_phase)
+                            sin_phase = np.sin(ref_phase)
+                            rot = np.array([
+                                [cos_phase, sin_phase],
+                                [-sin_phase, cos_phase]
+                            ])                            
+                            rotated_submatrix = rot @ submatrix @ rot.T # apply rotation on submatrix
+                            
+                            # Perform eigendecomposition on the rotated covariance matrix
+                            eigenvalues, eigenvectors = np.linalg.eigh(rotated_submatrix) # eigenvalues in ascending order, eigenvectors as columns [:, i]
+                            eigenvalues = np.maximum(0, eigenvalues) # Covariance matrices are positive semi-definite so IDK if I need this
+                            major_axis = np.sqrt(eigenvalues[1])  # Largest eigenvalue
+                            minor_axis = np.sqrt(eigenvalues[0])  # Smallest eigenvalue                            
+                            angle = np.arctan2(eigenvectors[1, 1], eigenvectors[0, 1]) # atan2 of opposite / adjacent
+                            
+                            results.setdefault(f'{tag}_re_err', []).append(major_axis)
+                            results.setdefault(f'{tag}_im_err', []).append(minor_axis)
                             results.setdefault(f'{tag}_err_angle', []).append(angle)
+                            
                             reference_wave = self.sector_to_ref_wave[wave[-1]].strip("_amp")
                             amp1 = results[f"{wave}_amp"][-1] # get most recent value
                             amp2 = results[f"{reference_wave}_amp"][-1]
@@ -942,28 +963,31 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
             if not binned_ift_results.empty and wave in binned_ift_results.columns:
                 real_part = np.real(binned_ift_results[f"{wave}_amp"])
                 imag_part = np.imag(binned_ift_results[f"{wave}_amp"])
-                real_part_semimajor = 0 # If we only have 1 sample -> no covariance -> no error -> no error ellipse
-                imag_part_semiminor = 0
+                semimajor = 0 # If we only have 1 sample -> no covariance -> no error -> no error ellipse
+                semiminor = 0
                 if len(real_part) > 1:
                     cov = np.cov(real_part, imag_part)
-                    cov_re = cov[0, 0]
-                    cov_im = cov[1, 1]
-                    rho = cov[0, 1]
-                    real_part_semimajor = np.sqrt(cov_re)
-                    imag_part_semiminor = np.sqrt(cov_im)
+                    eigenvalues, eigenvectors = np.linalg.eigh(cov) # eigenvalues in ascending order, eigenvectors as columns [:, i]
+                    part_angle = np.degrees(np.arctan2(eigenvectors[1, 1], eigenvectors[0, 1])) # atan2 of opposite / adjacent
+                    semimajor = np.sqrt(eigenvalues[1]) # larger  eigenvalue
+                    semiminor = np.sqrt(eigenvalues[0]) # smaller eigenvalue                    
                 if is_reference:
+                    if not np.allclose(imag_part, 0):
+                        raise ValueError("Current implementation expects reference waves to have zero imaginary part")
                     if len(real_part) > 1:
-                        axes[i].axvspan(np.mean(real_part) - real_part_semimajor, np.mean(real_part) + real_part_semimajor, color=ift_color_dict["Signal"], alpha=0.2)
+                        axes[i].axvspan(np.mean(real_part) - semimajor, np.mean(real_part) + semimajor, color=ift_color_dict["Signal"], alpha=0.4)
                     axes[i].axvline(np.mean(real_part), color=ift_color_dict["Signal"], linestyle='--', alpha=1.0, linewidth=1)
                 else:
                     if len(real_part) > 1:
-                        part_angle = 0.5 * np.arctan2(2 * rho, cov_re - cov_im) * 180 / np.pi
-                        ellipse = Ellipse(xy=(np.mean(real_part), np.mean(imag_part)), width=2 * real_part_semimajor, height=2 * imag_part_semiminor, angle=part_angle, 
-                                            facecolor='none', edgecolor=ift_color_dict["Signal"], alpha=1.0, linewidth=2)
+                        ellipse = Ellipse(xy=(np.mean(real_part), np.mean(imag_part)), 
+                                         width  = 2 * semimajor, 
+                                         height = 2 * semiminor, 
+                                         angle  = part_angle, 
+                                         facecolor='none', edgecolor=ift_color_dict["Signal"], alpha=1.0, linewidth=2)
                         axes[i].add_patch(ellipse)
                     axes[i].scatter(real_part, imag_part, color=ift_color_dict["Signal"], alpha=0.4, marker='o', s=2)
 
-            # Remove the set_title and use text to place title in top right corner
+            # Instead of title we add a text in the top right corner
             axes[i].text(0.975, 0.975, prettyLabels[wave],
                         size=20, color='black', fontweight='bold',
                         horizontalalignment='right', verticalalignment='top',
@@ -1348,6 +1372,6 @@ def montage_and_gif_select_plots(resultManager: ResultManager):
             os.system(f"montage {files_str} -density 300 -geometry +10+10 {montage_output}")
         else:
             console.print(f"[bold yellow]No intensity phase plot files found in {output_directory}[/bold yellow]")
-        
+    
     console.print(f"\n")
 
