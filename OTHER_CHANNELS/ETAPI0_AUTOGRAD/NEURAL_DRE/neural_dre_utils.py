@@ -1,5 +1,5 @@
 import os
-os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=8"
+os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=24"
 
 import jax
 import jax.numpy as jnp
@@ -7,6 +7,9 @@ import jax.lax as lax
 import numpy as np
 from orbax import checkpoint as orbax_checkpoint
 import matplotlib.pyplot as plt
+import pickle
+import optax
+from tqdm import tqdm
 
 loss_type_map = {"bce": 0, "mse": 1, "mlc": 2, "sqrt": 3}
 loss_type_map_reverse = {v: k for k, v in loss_type_map.items()}
@@ -634,3 +637,537 @@ def plot_efficiency_by_variable(X_data, model_output, feature_names=None, nbins=
         print(f"Feature-wise '{metric_type_str}' metrics: {[f'{name}: {metric:.6f}' for name, metric in zip(feature_names, metrics)]}")
     
     return metrics
+
+def create_corner_plot(X1, X2, labels, feature_names, title, filename, checkpoint_dir, n_samples=10000):
+    """
+    Create a corner plot showing pairwise relationships between dimensions.
+    - Diagonal: 1D histograms showing marginal distributions
+    - Upper triangle: Pairwise scatter plots
+    - Lower triangle: Turned off
+    
+    Args:
+        X1, X2: Arrays of shape (n_samples, n_dims)
+        labels: List of labels for X1 and X2, i.e. ['accepted', 'generated']
+        feature_names: List of feature names for each dimension
+        title: Title for the plot
+        filename: Output filename
+        checkpoint_dir: Directory to save the plot
+        n_samples: Number of samples to plot (subsampling for large datasets)
+    """
+    os.makedirs(checkpoint_dir, exist_ok=True)
+    
+    n_dims = X1.shape[1]
+    
+    # Subsample if necessary
+    if X1.shape[0] > n_samples:
+        idx1 = np.random.choice(X1.shape[0], size=n_samples, replace=False)
+        X1_plot = X1[idx1]
+    else:
+        X1_plot = X1
+        
+    if X2.shape[0] > n_samples:
+        idx2 = np.random.choice(X2.shape[0], size=n_samples, replace=False)
+        X2_plot = X2[idx2]
+    else:
+        X2_plot = X2
+    
+    # Create figure
+    fig, axes = plt.subplots(n_dims, n_dims, figsize=(15, 15))
+    plt.subplots_adjust(wspace=0.1, hspace=0.1)
+    
+    # Colors for the two distributions
+    colors = ['black', 'orange']
+    alphas = [0.8, 0.5]
+    zorders = [1, 2]
+    
+    # Loop through dimensions
+    for i in range(n_dims):
+        for j in range(n_dims):
+            ax = axes[i, j]
+            
+            # Turn off lower triangle
+            if i > j:
+                ax.set_visible(False)
+                continue
+                
+            # Diagonal: 1D histograms
+            if i == j:
+                ax.hist(X1_plot[:, i], bins=50, alpha=alphas[0], color=colors[0], density=True, label=labels[0], zorder=zorders[0])
+                ax.hist(X2_plot[:, i], bins=50, alpha=alphas[1], color=colors[1], density=True, label=labels[1], zorder=zorders[1])
+                
+                # Only show x-label for bottom row
+                if i == n_dims - 1:
+                    ax.set_xlabel(feature_names[j])
+                    
+                # Only show y-label for left column
+                if j == 0:
+                    ax.set_ylabel('Density')
+                    
+                # Remove y-ticks for clarity
+                ax.set_yticks([])
+                
+                # Add feature name as text in the plot
+                if i == 0:
+                    ax.set_title(feature_names[j])
+            
+            # Upper triangle: Scatter plots
+            elif i < j:
+                ax.scatter(X1_plot[:, j], X1_plot[:, i], s=1, alpha=alphas[0], color=colors[0], label=labels[0], zorder=zorders[0])
+                ax.scatter(X2_plot[:, j], X2_plot[:, i], s=1, alpha=alphas[1], color=colors[1], label=labels[1], zorder=zorders[1])
+                
+                # Only show x-label for bottom row
+                if i == n_dims - 1:
+                    ax.set_xlabel(feature_names[j])
+                    
+                # Only show y-label for left column
+                if j == 0:
+                    ax.set_ylabel(feature_names[i])
+                    
+                # Remove ticks for cleaner look
+                ax.tick_params(axis='both', which='major', labelsize=8)
+    
+    # Add legend to the top-right plot
+    handles, labels_legend = axes[0, n_dims-1].get_legend_handles_labels()
+    if handles:  # Check if legend handles exist
+        fig.legend(handles, labels_legend, loc='upper right', bbox_to_anchor=(0.99, 0.99))
+    
+    # Add title
+    plt.suptitle(title, fontsize=16, y=0.995)
+    plt.tight_layout(rect=[0, 0, 1, 0.98])
+    plt.savefig(f'{checkpoint_dir}/{filename}', dpi=150)
+    print(f"Corner plot saved to {checkpoint_dir}/{filename}")
+    plt.close()
+
+##############################################
+# NORMALIZING FLOW IMPLEMENTATION
+##############################################
+
+class MADE:
+    """
+    Masked Autoregressive Density Estimator for MAF implementation.
+    
+    Implements the autoregressive network that outputs the shift and scale
+    parameters for the normalizing flow.
+    """
+    
+    def __init__(self, input_dim, hidden_dims, key, reverse=False):
+        """
+        Initialize a MADE network.
+        
+        Args:
+            input_dim: Input dimensionality
+            hidden_dims: List of hidden layer dimensions
+            key: PRNG key for initialization
+            reverse: Whether to reverse the ordering of dependencies
+        """
+        self.input_dim = input_dim
+        self.hidden_dims = hidden_dims
+        self.output_dim = input_dim * 2  # For mean and log_scale
+        
+        # Create masks to enforce autoregressive property
+        self.masks = self._create_masks(reverse)
+        
+        # Initialize network parameters
+        keys = jax.random.split(key, len(hidden_dims) + 1)
+        self.params = []
+        
+        # Input to first hidden layer
+        self.params.append({
+            'w': jax.random.normal(keys[0], (input_dim, hidden_dims[0])) * 0.01,
+            'b': jax.random.normal(keys[0], (hidden_dims[0],)) * 0.01,
+            'mask': self.masks[0]
+        })
+        
+        # Hidden to hidden layers
+        for l in range(len(hidden_dims) - 1):
+            self.params.append({
+                'w': jax.random.normal(keys[l+1], (hidden_dims[l], hidden_dims[l+1])) * 0.01,
+                'b': jax.random.normal(keys[l+1], (hidden_dims[l+1],)) * 0.01,
+                'mask': self.masks[l+1]
+            })
+        
+        # Hidden to output layer
+        self.params.append({
+            'w': jax.random.normal(keys[-1], (hidden_dims[-1], self.output_dim)) * 0.01,
+            'b': jax.random.normal(keys[-1], (self.output_dim,)) * 0.01,
+            'mask': self.masks[-1]
+        })
+    
+    def _create_masks(self, reverse):
+        """
+        Create the autoregressive masks for MADE.
+        
+        Args:
+            reverse: Whether to reverse the order of dependencies
+        
+        Returns:
+            List of masks for each layer
+        """
+        # Assign degrees to input nodes
+        degrees = jnp.arange(1, self.input_dim + 1)
+        if reverse:
+            degrees = jnp.flip(degrees)
+        
+        masks = []
+        
+        # Input to first hidden layer
+        m = jnp.zeros((self.input_dim, self.hidden_dims[0]))
+        for i in range(self.input_dim):
+            for j in range(self.hidden_dims[0]):
+                m = m.at[i, j].set(degrees[i] <= j % self.input_dim + 1)
+        masks.append(m)
+        
+        # Hidden to hidden layers
+        for l in range(len(self.hidden_dims) - 1):
+            m = jnp.zeros((self.hidden_dims[l], self.hidden_dims[l+1]))
+            for i in range(self.hidden_dims[l]):
+                for j in range(self.hidden_dims[l+1]):
+                    m = m.at[i, j].set((i % self.input_dim + 1) <= j % self.input_dim + 1)
+            masks.append(m)
+        
+        # Hidden to output layer
+        # For MAF, output needs two parameters per input (shift and scale)
+        m = jnp.zeros((self.hidden_dims[-1], self.output_dim))
+        for i in range(self.hidden_dims[-1]):
+            for j in range(self.input_dim):  # half for means
+                m = m.at[i, j].set((i % self.input_dim + 1) < (j % self.input_dim + 1))
+            for j in range(self.input_dim):  # half for log scales
+                m = m.at[i, j + self.input_dim].set((i % self.input_dim + 1) < (j % self.input_dim + 1))
+        masks.append(m)
+        
+        return masks
+
+class MAF:
+    """
+    Masked Autoregressive Flow implementation.
+    
+    This flow transforms between data space and latent space through a series
+    of autoregressive transformations.
+    """
+    
+    def __init__(self, input_dim, hidden_dims, num_flows, key):
+        """
+        Initialize a MAF model.
+        
+        Args:
+            input_dim: Input dimensionality
+            hidden_dims: List of hidden layer dimensions for each MADE
+            num_flows: Number of flow layers
+            key: PRNG key for initialization
+        """
+        self.input_dim = input_dim
+        self.hidden_dims = hidden_dims
+        self.num_flows = num_flows
+        
+        # Initialize MADE layers
+        keys = jax.random.split(key, num_flows)
+        self.made_layers = []
+        
+        for i in range(num_flows):
+            # Alternate between forward and reverse ordering
+            reverse = i % 2 == 1
+            self.made_layers.append(MADE(input_dim, hidden_dims, keys[i], reverse=reverse))
+    
+    def forward(self, params, x):
+        """
+        Transform data from input space to latent space (forward flow).
+        
+        Args:
+            params: The model parameters
+            x: Input data of shape (batch_size, input_dim)
+            
+        Returns:
+            z: Transformed data in latent space
+            log_det: Log determinant of the Jacobian
+        """
+        z = x
+        log_det_sum = jnp.zeros(x.shape[0])
+        
+        for i in range(self.num_flows):
+            # Get means and scales from MADE using the parameters for this layer
+            means, scales = self._apply_made_layer(params[i], self.made_layers[i], z)
+            
+            # Transform
+            z = (z - means) / scales
+            
+            # Compute log determinant
+            log_det = -jnp.sum(jnp.log(scales), axis=1)
+            log_det_sum += log_det
+            
+            # Permute dimensions for the next flow (except for the last one)
+            if i < self.num_flows - 1:
+                # Simple reversing permutation
+                z = jnp.flip(z, axis=-1)
+        
+        return z, log_det_sum
+    
+    def _apply_made_layer(self, params, made_layer, x):
+        """Apply a MADE layer with its parameters."""
+        h = x
+        
+        # Apply all layers except the last one with ReLU activation
+        for layer_idx, layer_params in enumerate(params[:-1]):
+            h = jnp.dot(h, layer_params['w'] * made_layer.masks[layer_idx]) + layer_params['b']
+            h = jax.nn.relu(h)
+        
+        # Apply the last layer (output layer) without activation
+        layer_params = params[-1]
+        output = jnp.dot(h, layer_params['w'] * made_layer.masks[-1]) + layer_params['b']
+        
+        # Split output into means and log_scales
+        means = output[..., :self.input_dim]
+        log_scales = output[..., self.input_dim:]
+        
+        # Constrain scales to prevent numerical issues
+        log_scales = jnp.clip(log_scales, -5, 5)
+        
+        return means, jnp.exp(log_scales)
+    
+    def inverse(self, params, z):
+        """
+        Transform data from latent space to input space (inverse flow).
+        
+        Args:
+            params: The model parameters
+            z: Latent variables of shape (batch_size, input_dim)
+            
+        Returns:
+            x: Transformed data in input space
+            log_det: Log determinant of the Jacobian
+        """
+        x = z
+        log_det_sum = jnp.zeros(z.shape[0])
+        
+        # Apply flows in reverse order
+        for i in range(self.num_flows - 1, -1, -1):
+            # Inverse permutation (if not the last flow)
+            if i < self.num_flows - 1:
+                x = jnp.flip(x, axis=-1)
+            
+            # Get means and scales
+            means, scales = self._apply_made_layer(params[i], self.made_layers[i], x)
+            
+            # Inverse transform
+            x = x * scales + means
+            
+            # Compute log determinant
+            log_det = jnp.sum(jnp.log(scales), axis=1)
+            log_det_sum += log_det
+        
+        return x, log_det_sum
+    
+    def log_prob(self, params, x):
+        """
+        Compute log probability of data under the MAF model.
+        
+        Args:
+            params: The model parameters
+            x: Input data of shape (batch_size, input_dim)
+            
+        Returns:
+            Log probability of each input point
+        """
+        z, log_det = self.forward(params, x)
+        # Prior is a standard normal
+        log_prior = -0.5 * jnp.sum(z**2, axis=1) - 0.5 * self.input_dim * jnp.log(2 * jnp.pi)
+        return log_prior + log_det
+    
+    def init_params(self):
+        """
+        Initialize the parameters for the MAF model.
+        
+        Returns:
+            A list of parameters for each MADE layer.
+        """
+        return [layer.params for layer in self.made_layers]
+
+def weighted_maximum_likelihood_loss(params, maf, x, sample_weights=None):
+    """
+    Compute negative log likelihood loss, optionally weighted.
+    
+    Args:
+        params: MAF model parameters
+        maf: MAF model
+        x: Input data
+        sample_weights: Optional weights for each sample
+    
+    Returns:
+        Negative log likelihood (weighted if weights provided)
+    """
+    log_probs = maf.log_prob(params, x)
+    
+    if sample_weights is not None:
+        # Ensure weights are normalized
+        normalized_weights = sample_weights / jnp.sum(sample_weights)
+        # Compute weighted negative log likelihood
+        return -jnp.sum(log_probs * normalized_weights)
+    else:
+        # Standard unweighted negative log likelihood
+        return -jnp.mean(log_probs)
+
+def update_step(params, opt_state, maf, x, sample_weights, optimizer):
+    """Single optimization step for MAF training."""
+    # Define a jitted inner function that doesn't take maf as an argument
+    @jax.jit
+    def _update_step(params, opt_state, x, sample_weights):
+        if sample_weights is not None:
+            loss_fn = lambda p: weighted_maximum_likelihood_loss(p, maf, x, sample_weights)
+        else:
+            loss_fn = lambda p: weighted_maximum_likelihood_loss(p, maf, x, None)
+        
+        loss_value, grads = jax.value_and_grad(loss_fn)(params)
+        updates, new_opt_state = optimizer.update(grads, opt_state)
+        new_params = optax.apply_updates(params, updates)
+        return new_params, new_opt_state, loss_value
+    
+    return _update_step(params, opt_state, x, sample_weights)
+
+def fit_maf(maf, params, data, batch_size=1024, learning_rate=1e-3, num_epochs=100, 
+           sample_weights=None, key=None):
+    # Create optimizer
+    optimizer = optax.adam(learning_rate)
+    
+    # Initialize parameters and optimizer state
+    opt_state = optimizer.init(params)
+    
+    # Get data size and prepare for batching
+    data_size = data.shape[0]
+    steps_per_epoch = data_size // batch_size
+    # Calculate the actual batch size for the last batch
+    last_batch_size = data_size - (steps_per_epoch * batch_size)
+    if last_batch_size > 0:
+        steps_per_epoch += 1
+    total_steps = steps_per_epoch * num_epochs
+    
+    # Initialize losses list
+    losses = []
+    epoch_losses = []
+    
+    # Get number of devices for parallelization
+    num_devices = jax.device_count()
+    print(f"Training MAF using {num_devices} devices")
+    
+    # Define a pmapped update function to parallelize across devices
+    @jax.pmap
+    def parallel_update(params_device, opt_state_device, batch_x_device, batch_weights_device):
+        def loss_fn(p):
+            return weighted_maximum_likelihood_loss(p, maf, batch_x_device, batch_weights_device)
+        
+        loss_value, grads = jax.value_and_grad(loss_fn)(params_device)
+        updates, new_opt_state = optimizer.update(grads, opt_state_device)
+        new_params = optax.apply_updates(params_device, updates)
+        return new_params, new_opt_state, loss_value
+    
+    # Replicate parameters and optimizer state across devices
+    params_replicated = jax.device_put_replicated(params, jax.devices())
+    opt_state_replicated = jax.device_put_replicated(opt_state, jax.devices())
+    
+    # Training loop with tqdm over all batches
+    progress_bar = tqdm(total=total_steps, desc=f"Training MAF [Epoch 1/{num_epochs}]")
+    
+    for epoch in range(num_epochs):
+        epoch_loss = 0.0
+        
+        # Create a new key for each epoch
+        if key is not None:
+            key, subkey = jax.random.split(key)
+            perm = jax.random.permutation(subkey, data_size)
+        else: # Without a key, just use simple slicing for batches
+            indices = np.arange(data_size)
+            np.random.shuffle(indices)
+            perm = indices
+        
+        # Process each batch
+        for idx in range(steps_per_epoch):
+            # Calculate batch start/end indices
+            start_idx = idx * batch_size
+            end_idx = min(start_idx + batch_size, data_size)
+            actual_batch_size = end_idx - start_idx
+            
+            # Extract batch data using the permutation
+            batch_idx = perm[start_idx:end_idx]
+            batch_x = data[batch_idx]
+            
+            # Extract batch weights if provided
+            batch_weights = None
+            if sample_weights is not None:
+                batch_weights = sample_weights[batch_idx]
+            
+            # Pad batch to be divisible by number of devices
+            if actual_batch_size % num_devices != 0:
+                pad_size = num_devices - (actual_batch_size % num_devices)
+                batch_x = jnp.pad(batch_x, ((0, pad_size), (0, 0)), mode='constant')
+                if batch_weights is not None:
+                    batch_weights = jnp.pad(batch_weights, (0, pad_size), mode='constant')
+            
+            # Reshape for pmap
+            batch_x_shaped = batch_x.reshape(num_devices, -1, batch_x.shape[1])
+            if batch_weights is not None:
+                batch_weights_shaped = batch_weights.reshape(num_devices, -1)
+            else:
+                batch_weights_shaped = jnp.ones((num_devices, batch_x_shaped.shape[1]))
+            
+            # Update model in parallel across devices
+            params_replicated, opt_state_replicated, losses_device = parallel_update(
+                params_replicated, opt_state_replicated, batch_x_shaped, batch_weights_shaped
+            )
+            
+            # Average loss across devices
+            loss_value = jnp.mean(losses_device)
+            epoch_loss += loss_value
+            
+            # Update progress bar with batch info
+            progress_bar.set_description(f"Training MAF [Epoch {epoch+1}/{num_epochs}, Batch {idx+1}/{steps_per_epoch}, Loss: {loss_value:.4f}]")
+            progress_bar.update(1)
+        
+        # Record average epoch loss
+        avg_loss = epoch_loss / steps_per_epoch
+        epoch_losses.append(avg_loss)
+        
+        # Print epoch summary
+        if epoch % 10 == 0 or epoch == num_epochs - 1:
+            print(f"\nEpoch {epoch+1}/{num_epochs}, Average Loss: {avg_loss:.4f}")
+        
+        # Update progress bar description for next epoch
+        if epoch < num_epochs - 1:
+            progress_bar.set_description(f"Training MAF [Epoch {epoch+2}/{num_epochs}]")
+    
+    progress_bar.close()
+    
+    # Get the parameters from the first device (they should be synchronized)
+    params = jax.tree_map(lambda x: x[0], params_replicated)
+    
+    maf_trained = MAF(maf.input_dim, maf.hidden_dims, maf.num_flows, key=key)
+    maf_trained.made_layers = maf.made_layers  # Copy the architecture
+    
+    # Return the trained model and losses
+    return {"maf": maf_trained, "params": params, "losses": epoch_losses}
+
+def save_maf_model(maf_result, filepath):
+    """
+    Save MAF model to disk.
+    
+    Args:
+        maf_result: Dictionary containing the MAF model and trained parameters
+        filepath: Path to save the model
+    """
+    directory = os.path.dirname(filepath)
+    if directory: os.makedirs(directory, exist_ok=True)
+    with open(filepath, 'wb') as f:
+        pickle.dump(maf_result, f)
+    print(f"Successfully saved MAF model to {filepath}")
+
+def load_maf_model(filepath):
+    """
+    Load MAF model from disk.
+
+    Args:
+        filepath: Path to the saved model
+
+    Returns:
+        Dictionary containing the MAF model and trained parameters
+    """
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"MAF model file not found: {filepath}")
+    with open(filepath, 'rb') as f:
+        return pickle.load(f)

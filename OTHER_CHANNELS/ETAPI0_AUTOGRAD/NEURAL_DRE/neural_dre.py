@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
-os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=12"
+os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=24"
 
 import jax
 import jax.numpy as jnp
@@ -18,12 +18,18 @@ import numpy as np
 from tqdm import tqdm
 import pickle as pkl
 
-from neural_dre_utils import load_checkpoint, save_checkpoint, load_and_use_model, plot_efficiency_by_variable, combined_loss_adaptive, loss_type_map, loss_type_map_reverse
+from neural_dre_utils import (
+    load_checkpoint, save_checkpoint, load_and_use_model, plot_efficiency_by_variable, 
+    combined_loss_adaptive, loss_type_map,
+    create_corner_plot, fit_maf, save_maf_model, load_maf_model, MAF
+)
+
 
 # Set a seed for reproducibility
 seed = 42
 key = random.PRNGKey(seed)
 num_devices = jax.device_count()
+print(f"Using {num_devices} CPU cores for training")
 
 # Add a flag to control which loss function to use
 # Options: "bce" (default), "mse", "mlc", or "sqrt"
@@ -68,59 +74,97 @@ class DensityRatioEstimator(nn.Module):
 # BEGIN LOADING STUFF
 ##############################################
 
-print("Loading data...")
-with open('full_dump.pkl', 'rb') as f:
-    results = pkl.load(f)
-    
 feature_names = ["mMassX", "mCosHel", "mPhiHel", "mt", "mPhi"]
 metric_type = "standard"
 metric_label = {"standard": "MAE", "relative": "Rel. MAE"}
+standardized_dump = "standardized_dump.pkl"
 
-# class balance
-class_ratio = np.sum(results['label'] == 1) / np.sum(results['label'] == 0)
-print(f"Pre-balancing class ratio: {class_ratio:0.2f}x (acc/gen)")
+if os.path.exists(standardized_dump):
+    print("Loading standardized data...")
+    with open(standardized_dump, 'rb') as f:
+        results = pkl.load(f)
+    X_train = results['X_train']
+    weights_train = results['weights_train']
+    y_train = results['y_train']
+    X_acc = results['X_acc']
+    X_gen = results['X_gen']
+    y_acc = results['y_acc']
+    y_gen = results['y_gen']
+    weights_acc = results['weights_acc']
+    weights_gen = results['weights_gen']
+    if 'scaler' in results:
+        scaler = results['scaler']
+    else:
+        print("WARNING: Scaler not found in saved data. Creating a new scaler.")
+        # Create and fit a new scaler using the training data
+        scaler = StandardScaler()
+        scaler.fit(X_train)
+else:
+    print("Loading data...")
+    with open('full_dump.pkl', 'rb') as f:
+        results = pkl.load(f)
 
-########################################################
-### NOTE: This block tests whether the imbalanced nature of the dataset is a problem
-#         This will directly affect the estimated efficiencvy but can be useful to probe
-#         how this model responds
-# # randomly select 25% of the events with label 0 and drop them from the results dataset
-# if os.path.exists('results_balanced.pkl'):
-#     print("pre-balancing results already exist, loading...")
-#     with open('results_balanced.pkl', 'rb') as f:
-#         results = pkl.load(f)
-# else:
-#     gen_ids = np.where(results['label'] == 0)[0]
-#     acc_ids = np.where(results['label'] == 1)[0]
-#     drop_ids = np.random.choice(gen_ids, size= int(1 * (len(gen_ids) - len(acc_ids))), replace=False)
-#     results = results.drop(drop_ids)
-#     with open('results_balanced.pkl', 'wb') as f:
-#         pkl.dump(results, f)
-        
-# print(f"Shape of results: {results.shape}")
-# results = results.sample(frac=0.01).reset_index(drop=True)
-# print(f"Shape of results after sampling: {results.shape}")
-########################################################
+    # class balance
+    class_ratio = np.sum(results['label'] == 1) / np.sum(results['label'] == 0)
+    print(f"Pre-balancing class ratio: {class_ratio:0.2f}x (acc/gen)")
 
-percent = 100
-train_size = int(percent / 100 * len(results)) - 1 # zero indexed
-print(f"Train size: {train_size}")
-X_train = results.loc[:train_size, feature_names].values
-weights_train = results.loc[:train_size, 'Weight'].values
-y_train = results.loc[:train_size, 'label'].values
+    ########################################################
+    ### NOTE: This block tests whether the imbalanced nature of the dataset is a problem
+    #         This will directly affect the estimated efficiencvy but can be useful to probe
+    #         how this model responds
+    # # randomly select 25% of the events with label 0 and drop them from the results dataset
+    # if os.path.exists('results_balanced.pkl'):
+    #     print("pre-balancing results already exist, loading...")
+    #     with open('results_balanced.pkl', 'rb') as f:728291
+    
+    #         results = pkl.load(f)
+    # else:
+    #     gen_ids = np.where(results['label'] == 0)[0]
+    #     acc_ids = np.where(results['label'] == 1)[0]
+    #     drop_ids = np.random.choice(gen_ids, size= int(1 * (len(gen_ids) - len(acc_ids))), replace=False)
+    #     results = results.drop(drop_ids)
+    #     with open('results_balanced.pkl', 'wb') as f:
+    #         pkl.dump(results, f)
+            
+    # print(f"Shape of results: {results.shape}")
+    # results = results.sample(frac=0.01).reset_index(drop=True)
+    # print(f"Shape of results after sampling: {results.shape}")
+    ########################################################
 
-# standardize the data
-print("Standardizing data with shape:", X_train.shape)
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-print("Standardization complete...")
+    percent = 100
+    train_size = int(percent / 100 * len(results)) - 1 # zero indexed
+    print(f"Train size: {train_size}")
+    X_train = results.loc[:train_size, feature_names].values
+    weights_train = results.loc[:train_size, 'Weight'].values
+    y_train = results.loc[:train_size, 'label'].values
 
-X_acc = results.loc[results['label'] == 1, feature_names].values
-X_gen = results.loc[results['label'] == 0, feature_names].values
-y_acc = results.loc[results['label'] == 1, 'label'].values
-y_gen = results.loc[results['label'] == 0, 'label'].values
-weights_acc = results.loc[results['label'] == 1, 'Weight'].values
-weights_gen = results.loc[results['label'] == 0, 'Weight'].values
+    # standardize the data
+    print("Standardizing data with shape:", X_train.shape)
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    print("Standardization complete...")
+
+    X_acc = results.loc[results['label'] == 1, feature_names].values
+    X_gen = results.loc[results['label'] == 0, feature_names].values
+    y_acc = results.loc[results['label'] == 1, 'label'].values
+    y_gen = results.loc[results['label'] == 0, 'label'].values
+    weights_acc = results.loc[results['label'] == 1, 'Weight'].values
+    weights_gen = results.loc[results['label'] == 0, 'Weight'].values
+    
+    standardized_results = {
+        'X_train': X_train,
+        'weights_train': weights_train,
+        'y_train': y_train,
+        'X_acc': X_acc,
+        'X_gen': X_gen,
+        'y_acc': y_acc,
+        'y_gen': y_gen,
+        'weights_acc': weights_acc,
+        'weights_gen': weights_gen,
+        'scaler': scaler  # Save the scaler too
+    }
+    with open(standardized_dump, 'wb') as f:
+        pkl.dump(standardized_results, f)
 
 # Test on uniformly distributed points on the min-max domain of the generated data
 #    Do not include min/max values from the accepted MC since smearing will leave to no generated events in the tails
@@ -134,11 +178,128 @@ X_test = scaler.transform(X_test_raw)
 weight_rescaling = 1.0
 print(f"weight_rescaling: {weight_rescaling}")
 
+# Add a flag for flow pretraining
+use_flow_pretraining = True
+flow_hidden_dims = [64, 64]  # Hidden dimensions for flow networks
+num_flow_layers = 5          # Number of flow transformations
+flow_batch_size = 1024       # Batch size for flow training
+flow_learning_rate = 1e-3    # Learning rate for flow training
+flow_num_epochs = 1        # Max epochs for flow training
+cwd = os.getcwd()
+checkpoint_dir = f'{cwd}/model_checkpoints'
+
+##############################################
+# TRAINING FUNCTIONS
+##############################################
+
+##############################################
+# BEGIN NORMALIZING FLOW PRETRAINING
+##############################################
+
+if use_flow_pretraining:
+    print("Initializing normalizing flow pretraining...")
+    
+    # Create key for flow initialization
+    key, flow_key = random.split(key)
+    
+    # Check if a previously trained flow model exists
+    flow_save_path = f"{checkpoint_dir}/maf_model.pkl"
+    if os.path.exists(flow_save_path):
+        print(f"Loading pre-trained flow model from {flow_save_path}")
+        try:
+            maf_result = load_maf_model(flow_save_path)
+            maf = maf_result["maf"]
+            maf_params = maf_result["params"]
+        except Exception as e:
+            print(f"Error loading flow model: {e}")
+            print("Initializing new flow model instead")
+            # Initialize the MAF model
+            print(f"Initializing MAF with {num_flow_layers} layers and {flow_hidden_dims} hidden dimensions")
+            maf = MAF(X_train.shape[1], flow_hidden_dims, num_flow_layers, flow_key)
+            maf_params = maf.init_params()
+    else:
+        # Initialize the MAF model
+        print(f"Initializing MAF with {num_flow_layers} layers and {flow_hidden_dims} hidden dimensions")
+        maf = MAF(X_train.shape[1], flow_hidden_dims, num_flow_layers, flow_key)
+        maf_params = maf.init_params()
+    
+    # Create corner plot for original data
+    print("Creating corner plot for original data...")
+    create_corner_plot(
+        X_gen, X_acc,
+        labels=['Generated', 'Accepted'],
+        feature_names=feature_names,
+        title='Original Data Distribution Overlap',
+        filename='original_corner_plot.png',
+        checkpoint_dir=checkpoint_dir,
+        n_samples=5000
+    )
+    
+    # Train the flow model
+    print(f"Training MAF for {flow_num_epochs} epochs...")
+    
+    key, train_key = random.split(key)
+    maf_result = fit_maf(
+        maf,
+        maf_params,
+        jnp.array(X_train),
+        batch_size=flow_batch_size,
+        learning_rate=flow_learning_rate,
+        num_epochs=flow_num_epochs,
+        sample_weights=jnp.array(weights_train) if weight_rescaling != 1.0 else None,
+        key=train_key
+    )
+    
+    maf = maf_result["maf"]
+    maf_params = maf_result["params"]
+    flow_losses = maf_result["losses"]
+    
+    # Save the trained flow model
+    save_maf_model({"maf": maf, "params": maf_params, "losses": flow_losses}, flow_save_path)
+    
+    # Transform data to latent space
+    print("Transforming data to latent space...")
+    X_train_latent, _ = maf.forward(maf_params, jnp.array(X_train))
+    X_train_latent = np.array(X_train_latent)
+    
+    X_acc_latent, _ = maf.forward(maf_params, jnp.array(scaler.transform(X_acc)))
+    X_acc_latent = np.array(X_acc_latent)
+    
+    X_gen_latent, _ = maf.forward(maf_params, jnp.array(scaler.transform(X_gen)))
+    X_gen_latent = np.array(X_gen_latent)
+    
+    X_test_latent, _ = maf.forward(maf_params, jnp.array(X_test))
+    X_test_latent = np.array(X_test_latent)
+    
+    # Create corner plot for transformed data
+    print("Creating corner plot for latent space data...")
+    create_corner_plot(
+        X_gen_latent, X_acc_latent,
+        labels=['Generated', 'Accepted'],
+        feature_names=[f'z{i+1}' for i in range(X_train.shape[1])],
+        title='Latent Space Distribution Overlap',
+        filename='latent_corner_plot.png',
+        checkpoint_dir=checkpoint_dir,
+        n_samples=10000
+    )
+    
+    # Use latent representations for training
+    X_train = np.array(X_train_latent)
+    # X_acc = np.array(X_acc_latent)
+    # X_gen = np.array(X_gen_latent)
+    X_test = np.array(X_test_latent)
+else:
+    print("Skipping flow pretraining, using original data directly.")
+
+##############################################
+# BEGIN NEURAL DRE TRAINING
+##############################################
+
 # Initialize model
-print("Initializing model...")
+print("Initializing neural DRE model...")
 model = DensityRatioEstimator()
-key, subkey = random.split(key)
-params = model.init(subkey, jnp.ones((1, X_train.shape[1])))
+key, model_init_key = random.split(key)
+params = model.init(model_init_key, jnp.ones((1, X_train.shape[1])))
 
 # Create optimizer
 print("Creating optimizer...")
@@ -243,6 +404,12 @@ try:
 except Exception as e:
     print(f"Error loading checkpoint: {e}")
     print("Starting training from scratch.")
+    start_epoch = 0
+    train_losses = []
+    main_losses = []
+    grad_losses = []
+    accuracies = []
+    feature_metrics = {feature_name: [] for feature_name in feature_names}
 
 ##############################################
 # TRAINING FUNCTIONS
@@ -343,6 +510,57 @@ def eval_model(params, x, y, weights=None, batch_size=1024, reg_strength=0.0001,
         total_grad_loss += batch_grad_loss
     
     return total_loss, total_accuracy, total_main_loss, total_grad_loss
+
+@jit
+def eval_model_with_flow(flow, params, x, y, batch_weights=None, reg_strength=0.0001, 
+              transition_sensitivity=0.5, loss_type_code=0):
+    """Evaluate model with flow transformation if available"""
+    if flow is not None:
+        x = flow.forward(x)
+    
+    model_outputs = model.apply(params, x, training=False)
+    
+    # Compute loss with the selected loss function
+    total_loss, (main_loss, grad_loss) = combined_loss_adaptive(
+        model_outputs, y, model, params, x, 
+        reg_strength=reg_strength, 
+        transition_sensitivity=transition_sensitivity,
+        weights=batch_weights,
+        loss_type_code=loss_type_code
+    )
+    probs = convert_to_probabilities(model_outputs, loss_type_code)
+    accuracy = jnp.mean((probs > 0.5) == y)
+    return total_loss, accuracy, main_loss, grad_loss
+
+def load_and_apply_flow(x, flow_path):
+    """Load a flow model and transform the input data"""
+    try:
+        maf_result = load_maf_model(flow_path)
+        maf = maf_result["maf"]
+        maf_params = maf_result["params"]
+        latent, _ = maf.forward(maf_params, jnp.array(x))
+        return np.array(latent)
+    except Exception as e:
+        print(f"Error loading or applying flow: {e}")
+        return x
+
+def load_and_use_model_with_flow(model, state, x, checkpoint_dir, step=None, loss_type_code=None, use_flow=False):
+    """Load model and flow (if available) and apply to data"""
+    # First load the neural DRE model
+    params = load_checkpoint(model, state, checkpoint_dir, step)
+    
+    # If flow is enabled, load and apply it
+    if use_flow:
+        flow_path = f"{checkpoint_dir}/maf_model.pkl"
+        try:
+            x_transformed = load_and_apply_flow(x, flow_path)
+            return model.apply(params, x_transformed, training=False)
+        except Exception as e:
+            print(f"Error loading or applying flow: {e}")
+            # Fall back to non-flow model
+            return model.apply(params, x, training=False)
+    else:
+        return model.apply(params, x, training=False)
 
 ##############################################
 # TRAINING LOOP
@@ -546,4 +764,3 @@ if start_epoch < num_epochs:
 #     print(f"Efficiency data saved to 'efficiency_data_{loss_type}.pkl'")
 # except Exception as e:
 #     print(f"Error saving efficiency data: {e}")
-
