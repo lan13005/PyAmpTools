@@ -14,6 +14,10 @@ from tqdm import tqdm
 loss_type_map = {"bce": 0, "mse": 1, "mlc": 2, "sqrt": 3}
 loss_type_map_reverse = {v: k for k, v in loss_type_map.items()}
 
+##########################################################################
+######################### LOSS FUNCTIONS #################################
+##########################################################################
+
 def likelihood_ratio_loss(model_outputs, labels, loss_type_code=0, weights=None):
     """
     Unified loss function for likelihood ratio estimation
@@ -140,7 +144,7 @@ def combined_loss_adaptive(model_outputs, labels, model, params, x, reg_strength
         model_outputs: Model output
         labels: Ground truth labels
         model: The neural network model
-        params: Model parameters
+        params: Model parameters (should be direct params, not wrapped in {'params': ...})
         x: Input data
         reg_strength: Regularization strength hyperparameter
         transition_sensitivity: Controls how quickly regularization decreases in high-gradient regions
@@ -151,8 +155,11 @@ def combined_loss_adaptive(model_outputs, labels, model, params, x, reg_strength
     Returns:
         Combined loss value with adaptive gradient regularization
     """
+    
+    # Calculate main loss
     main_loss = likelihood_ratio_loss(model_outputs, labels, loss_type_code=loss_type_code, weights=weights)
     
+    # Calculate gradient regularization loss if needed
     grad_reg_loss = lax.cond(
         reg_strength > 0,
         lambda _: adaptive_gradient_regularization_loss(
@@ -162,7 +169,35 @@ def combined_loss_adaptive(model_outputs, labels, model, params, x, reg_strength
         operand=None
     )
     
+    # Return combined loss and components
     return main_loss + reg_strength * grad_reg_loss, (main_loss, grad_reg_loss)
+
+def weighted_maximum_likelihood_loss(params, maf, x, sample_weights=None):
+    """
+    Compute negative log likelihood loss, optionally weighted.
+    
+    Args:
+        params: MAF model parameters
+        maf: MAF model
+        x: Input data
+        sample_weights: Optional weights for each sample
+    
+    Returns:
+        Negative log likelihood (weighted if weights provided)
+    """
+    log_probs = maf.log_prob(params, x)
+    
+    if sample_weights is not None:
+        # Use normalized weights to make loss function ~scale-invariant
+        #   Optimizers are sensitive to size of gradients
+        normalized_weights = sample_weights / jnp.sum(sample_weights)
+        return -jnp.sum(log_probs * normalized_weights)
+    else:
+        return -jnp.mean(log_probs)
+
+##########################################################################
+############################ UTILITY FUNCTIONS ############################
+##########################################################################
 
 # Checkpointing utilities
 def save_checkpoint(state, step, checkpoint_dir=None):
@@ -230,6 +265,7 @@ def load_checkpoint(checkpoint_dir, step=None):
     return restored_state
 
 # Load and use a saved model
+# TODO: change name for DRE classifier
 def load_and_use_model(model, state, X_data, checkpoint_dir, step=None, loss_type_code=0):
     """
     Load a model from checkpoint and use it for inference
@@ -246,26 +282,442 @@ def load_and_use_model(model, state, X_data, checkpoint_dir, step=None, loss_typ
         For "bce"/"mse": Probabilities in range (0,1)
         For "mlc"/"sqrt": Direct likelihood ratios in range (0,∞)
     """
-    try:
-        # Load the checkpoint
-        restored_state = load_checkpoint(checkpoint_dir, step)
-        if restored_state is None:
-            raise ValueError("Failed to load checkpoint - restored state is None")
-        model_params = restored_state['params']['params'] # extract params
-    except Exception as e:
-        print(f"Error loading model from checkpoint: {e}")
-        print("Falling back to current model parameters")
-        model_params = jax.tree_util.tree_map(lambda x: x[0], state.params)['params']
-        
-    model_outputs = model.apply({'params': model_params}, X_data, training=False)
+    # Store original input shape to ensure output matches
+    original_sample_count = X_data.shape[0]
+    print(f"Original input sample count: {original_sample_count}")
     
-    preds = lax.cond(
-        loss_type_code < 2,
-        lambda _: jnp.clip(jax.nn.sigmoid(model_outputs), 1e-7, 1 - 1e-7),  # Maps to (0,1)
-        lambda _: jnp.exp(model_outputs),                                   # Maps to (0,∞),
-        operand=None
-    )
-    return preds
+    # Get the number of devices being used
+    num_devices = jax.device_count()
+    
+    # Extract parameters from state
+    if isinstance(state, dict) and 'params' in state:
+        model_params = state['params']
+    else:
+        model_params = state.params
+    
+    # Check if we need to extract from first device
+    if hasattr(model_params, '__len__') and not isinstance(model_params, dict):
+        model_params = jax.tree_map(lambda x: x[0], model_params)
+    
+    # Ensure we have the inner params, not nested params
+    if isinstance(model_params, dict) and 'params' in model_params:
+        model_params = model_params['params']
+    
+    print(f"Input data shape: {X_data.shape}")
+    print(f"Model structure: {jax.tree_map(lambda x: x.shape, model_params)}")
+    
+    try:
+        # For multi-device setup, we need to replicate parameters across devices
+        if num_devices > 1:
+            # Define a pmapped inference function
+            @jax.pmap
+            def infer_batch(params, batch):
+                outputs = model.apply({'params': params}, batch, training=False)
+                # Return raw outputs, process later based on loss type
+                return outputs
+            
+            # Calculate padding needed for even distribution
+            pad_size = 0
+            if X_data.shape[0] % num_devices != 0:
+                pad_size = num_devices - (X_data.shape[0] % num_devices)
+                X_data_padded = jnp.pad(X_data, ((0, pad_size), (0, 0)), mode='edge')
+                print(f"Padded input data from {X_data.shape} to {X_data_padded.shape} for even device distribution")
+            else:
+                X_data_padded = X_data
+            
+            # Create properly shaped parameters for each device by replicating the single device parameters
+            replicated_params = {}
+            for layer_name, layer_params in model_params.items():
+                replicated_params[layer_name] = {}
+                for param_name, param_value in layer_params.items():
+                    # Create a stack of identical parameters for each device
+                    replicated_params[layer_name][param_name] = jnp.stack([param_value] * num_devices)
+            
+            print(f"Replicated parameter structure: {jax.tree_map(lambda x: x.shape, replicated_params)}")
+                
+            # Reshape for pmap
+            batched_data = X_data_padded.reshape(num_devices, -1, X_data_padded.shape[1])
+            
+            # Run inference across devices
+            device_outputs = infer_batch(replicated_params, batched_data)
+            
+            # Combine results
+            raw_outputs = device_outputs.reshape(-1, 1)
+            
+            # Remove padding to match original input size
+            if pad_size > 0:
+                raw_outputs = raw_outputs[:original_sample_count]
+                
+            print(f"Raw outputs shape after multi-device inference: {raw_outputs.shape}")
+                
+        else:
+            # Single device case - simpler
+            print("Using single device for inference")
+            raw_outputs = model.apply({'params': model_params}, X_data, training=False)
+        
+        # Use lax.cond to handle different loss types
+        preds = lax.cond(
+            loss_type_code < 2,
+            lambda _: jnp.clip(jax.nn.sigmoid(raw_outputs), 1e-7, 1 - 1e-7),  # Maps to (0,1)
+            lambda _: jnp.exp(raw_outputs),                                   # Maps to (0,∞),
+            operand=None
+        )
+        
+        # Ensure output has correct shape
+        if len(preds.shape) > 1 and preds.shape[1] == 1:
+            preds = preds.reshape(-1)
+            
+        # Final check to ensure output matches input sample count
+        if preds.shape[0] != original_sample_count:
+            print(f"WARNING: Output sample count {preds.shape[0]} doesn't match input {original_sample_count}")
+            # Truncate or pad to match original size
+            if preds.shape[0] > original_sample_count:
+                preds = preds[:original_sample_count]
+            else:
+                # This shouldn't happen, but just in case
+                preds = jnp.pad(preds, (0, original_sample_count - preds.shape[0]), mode='edge')
+                
+        print(f"Final output shape: {preds.shape}")
+        return preds
+            
+    except Exception as e:
+        print(f"Error applying model: {e}")
+        print("Model parameter structure doesn't match expected shape. Initializing fresh model.")
+        
+        # Initialize a fresh model for inference
+        key = jax.random.PRNGKey(0)
+        dummy_input = jnp.ones((1, X_data.shape[1]))
+        variables = model.init(key, dummy_input, training=False)
+        fresh_params = variables['params']
+        
+        print(f"Fresh model structure: {jax.tree_map(lambda x: x.shape, fresh_params)}")
+        
+        # Apply the fresh model
+        raw_outputs = model.apply({'params': fresh_params}, X_data, training=False)
+        
+        # Use lax.cond to handle different loss types
+        preds = lax.cond(
+            loss_type_code < 2,
+            lambda _: jnp.clip(jax.nn.sigmoid(raw_outputs), 1e-7, 1 - 1e-7),  # Maps to (0,1)
+            lambda _: jnp.exp(raw_outputs),                                   # Maps to (0,∞),
+            operand=None
+        )
+        
+        # Ensure output has correct shape
+        if len(preds.shape) > 1 and preds.shape[1] == 1:
+            preds = preds.reshape(-1)
+            
+        print(f"Final output shape from fresh model: {preds.shape}")
+        return preds
+
+def batch_transform_maf(maf, params, data, batch_size=1024, direction="forward", key=None):
+    """
+    Transform data using MAF in batches to avoid memory issues.
+    
+    Args:
+        maf: The MAF model
+        params: Model parameters
+        data: Input data to transform
+        batch_size: Size of batches to process
+        direction: "forward" for data->latent or "inverse" for latent->data
+        key: Optional PRNG key for sampling
+        
+    Returns:
+        Transformed data and log determinants
+    """
+    # Convert input to numpy for easier handling
+    data_np = np.array(data)
+    data_size = len(data_np)
+    
+    # Initialize output arrays
+    result = np.zeros((data_size, data_np.shape[1]), dtype=np.float32)
+    log_dets = np.zeros(data_size, dtype=np.float32)
+    
+    # Process in batches
+    for i in range(0, data_size, batch_size):
+        end_idx = min(i + batch_size, data_size)
+        batch = jnp.array(data_np[i:end_idx])
+        
+        # Transform batch
+        if direction == "forward":
+            batch_result, batch_log_dets = maf.forward(params, batch)
+        elif direction == "inverse":
+            batch_result, batch_log_dets = maf.inverse(params, batch)
+        elif direction == "sample" and key is not None:
+            batch_size_actual = end_idx - i
+            batch_key = jax.random.split(key, batch_size_actual)
+            batch_result, batch_log_dets = maf.sample(params, batch_key)
+        else:
+            raise ValueError(f"Unknown direction: {direction}")
+            
+        # Store results
+        result[i:end_idx] = np.array(batch_result)
+        log_dets[i:end_idx] = np.array(batch_log_dets)
+        
+        # # Optional progress reporting for large datasets
+        # if data_size > 10000 and i % (10 * batch_size) == 0:
+        #     print(f"Processed {i}/{data_size} samples ({i/data_size*100:.1f}%)")
+    
+    return result, log_dets
+
+def fit_maf(maf, params, data, key, batch_size=1024, learning_rate=1e-3, num_epochs=100, patience=10,
+           sample_weights=None, plot_frequency=None, checkpoint_dir=None,
+           feature_names=None, X_gen=None, X_acc=None, use_gpu=False,
+           n_samples_flow_diagnostic=10000, 
+           clip_norm=0.5, adam_b1=0.9, adam_b2=0.999, adam_eps=1e-8,
+           weight_decay=1e-5, warmup_steps=500):
+
+    # Create a learning rate schedule with warmup
+    if warmup_steps > 0:
+        schedule_fn = optax.warmup_cosine_decay_schedule(
+            init_value=0.0,
+            peak_value=learning_rate,
+            warmup_steps=warmup_steps,
+            decay_steps=num_epochs * (data.shape[0] // batch_size),
+            end_value=learning_rate / 10
+        )
+    else:
+        schedule_fn = learning_rate
+    
+    # Add L2 regularization through AdamW
+    optimizer = optax.chain(
+        optax.clip_by_global_norm(clip_norm),
+        optax.adamw(schedule_fn, b1=adam_b1, b2=adam_b2, eps=adam_eps, weight_decay=weight_decay)
+    )    
+    opt_state = optimizer.init(params)
+    
+    # Get data size and prepare for batching
+    data_size = data.shape[0]
+    if batch_size == -1: # -1 is reserved for batch size = data size (if your data is smaller relative to RAM size)
+        steps_per_epoch = 1
+        batch_size = data_size
+    else:
+        steps_per_epoch = data_size // batch_size
+        last_batch_size = data_size - (steps_per_epoch * batch_size)
+        if last_batch_size > 0:
+            steps_per_epoch += 1
+    
+    epoch_losses = [] # track losses for plotting
+    
+    # Check for GPU availability
+    if use_gpu and jax.devices('gpu'):
+        print(f"Training MAF using GPU: {jax.devices('gpu')[0]}")
+        # Define a jitted update function for single GPU
+        @jax.jit
+        def update_step(params, opt_state, batch_x, batch_weights):
+            def loss_fn(p):
+                return weighted_maximum_likelihood_loss(p, maf, batch_x, batch_weights)
+            
+            loss_value, grads = jax.value_and_grad(loss_fn)(params)
+            updates, new_opt_state = optimizer.update(grads, opt_state, params)
+            new_params = optax.apply_updates(params, updates)
+            return new_params, new_opt_state, loss_value
+    else:
+        # Get number of devices for parallelization
+        num_devices = jax.device_count()
+        print(f"Training MAF using {num_devices} CPU cores")
+        
+        # Define a pmapped update function to parallelize across devices
+        @jax.pmap
+        def update_step_parallel(params_device, opt_state_device, batch_x_device, batch_weights_device):
+            def loss_fn(p):
+                return weighted_maximum_likelihood_loss(p, maf, batch_x_device, batch_weights_device)
+            
+            loss_value, grads = jax.value_and_grad(loss_fn)(params_device)
+            updates, new_opt_state = optimizer.update(grads, opt_state_device, params_device)
+            new_params = optax.apply_updates(params_device, updates)
+            return new_params, new_opt_state, loss_value
+        
+        # Replicate parameters and optimizer state across devices
+        params = jax.device_put_replicated(params, jax.devices())
+        opt_state = jax.device_put_replicated(opt_state, jax.devices())
+    
+    progress_bar = tqdm(total=num_epochs, desc=f"Training MAF")
+    
+    best_loss = float('inf')
+    patience_counter = 0
+    
+    for epoch in range(num_epochs):
+        epoch_loss = 0.0
+        
+        # Create a new random key for each epoch
+        key, subkey = jax.random.split(key)
+        perm = jax.random.permutation(subkey, data_size)
+        
+        # Process each batch
+        for idx in range(steps_per_epoch):
+            
+            # Calculate batch start/end indices
+            start_idx = idx * batch_size
+            end_idx = min(start_idx + batch_size, data_size)
+            actual_batch_size = end_idx - start_idx            
+            batch_idx = perm[start_idx:end_idx]
+            batch_x = data[batch_idx]
+            
+            # Extract batch weights if provided
+            batch_weights = None
+            if sample_weights is not None:
+                batch_weights = sample_weights[batch_idx]
+            else:
+                batch_weights = jnp.ones(actual_batch_size)
+            
+            if use_gpu and jax.devices('gpu'):
+                # Single GPU update
+                params, opt_state, loss_value = update_step(
+                    params, opt_state, batch_x, batch_weights
+                )
+            else:
+                # Multi-CPU update
+                # Pad batch to be divisible by number of devices
+                if actual_batch_size % num_devices != 0:
+                    pad_size = num_devices - (actual_batch_size % num_devices)
+                    batch_x = jnp.pad(batch_x, ((0, pad_size), (0, 0)), mode='constant')
+                    batch_weights = jnp.pad(batch_weights, (0, pad_size), mode='constant')
+                
+                # Reshape for pmap
+                batch_x_shaped = batch_x.reshape(num_devices, -1, batch_x.shape[1])
+                batch_weights_shaped = batch_weights.reshape(num_devices, -1)
+                
+                # Update model in parallel across devices
+                params, opt_state, losses_device = update_step_parallel(
+                    params, opt_state, batch_x_shaped, batch_weights_shaped
+                )
+                
+                # Average loss across devices
+                loss_value = jnp.mean(losses_device)
+            
+            # Check for NaN loss and break if detected
+            if jnp.isnan(loss_value):
+                print(f"\nWARNING: NaN loss detected at epoch {epoch+1}, batch {idx+1}. Stopping training.")
+                progress_bar.close()
+                
+                # Get the parameters from the last stable iteration
+                if not use_gpu or not jax.devices('gpu'):
+                    params = jax.tree_map(lambda x: x[0], params)
+                
+                maf_trained = MAF(maf.input_dim, maf.hidden_dims, maf.num_flows, key=key)
+                maf_trained.made_layers = maf.made_layers  # Copy the architecture
+                
+                return {"maf": maf_trained, "params": params, "losses": epoch_losses}
+            
+            epoch_loss += loss_value
+            
+        # Record average epoch loss
+        avg_loss = epoch_loss / steps_per_epoch
+        epoch_losses.append(float(avg_loss))  # Convert to Python float for better serialization
+        
+        # Update progress bar with epoch info (only once per epoch)
+        progress_bar.update(1)
+        progress_bar.set_description(f"Training MAF [Epoch {epoch+1}/{num_epochs}, Avg Loss: {avg_loss:.4f}]")
+        
+        # Print epoch summary
+        if epoch % 10 == 0 or epoch == num_epochs - 1:
+            print(f"\nEpoch {epoch+1}/{num_epochs}, Average Loss: {avg_loss:.4f}")
+        
+        # Early stopping check
+        if avg_loss < best_loss:
+            best_loss = avg_loss
+            patience_counter = 0
+            best_params = jax.tree_map(lambda x: jnp.copy(x), params) # save best model
+        else:
+            patience_counter += 1
+        
+        if patience_counter >= patience:
+            print(f"\nEarly stopping at epoch {epoch+1}. No improvement for {patience} epochs.")
+            break
+        
+        # Generate diagnostic plots if requested
+        if plot_frequency is not None and checkpoint_dir is not None and (epoch + 1) % plot_frequency == 0:
+            if X_gen is not None and X_acc is not None:
+                try:
+                    # Get current parameters
+                    current_params = params
+                    if not use_gpu or not jax.devices('gpu'):
+                        current_params = jax.tree_map(lambda x: x[0], params)
+                    
+                    # Use batched transformation instead of all-at-once
+                    print(f"Transforming subsampled data to latent space...")
+                    X_gen_latent_np, _ = batch_transform_maf(
+                        maf, current_params, X_gen, batch_size=1000, direction="forward"
+                    )
+                    X_acc_latent_np, _ = batch_transform_maf(
+                        maf, current_params, X_acc, batch_size=1000, direction="forward"
+                    )
+                    
+                    # Create corner plot for transformed data
+                    print(f"\nCreating corner plot at epoch {epoch+1}...")
+                    create_corner_plot(
+                        X_gen_latent_np, X_acc_latent_np,
+                        labels=['Generated', 'Accepted'],
+                        feature_names=feature_names,
+                        filename=f'latent_corner_plot_epoch_{epoch+1}.png',
+                        checkpoint_dir=checkpoint_dir
+                    )
+                    
+                    # Free memory explicitly
+                    X_gen_latent_np = None
+                    X_acc_latent_np = None
+                    
+                    # Also save the loss curve
+                    plt.figure(figsize=(10, 6))
+                    plt.plot(epoch_losses)
+                    min_loss = min(epoch_losses[0], epoch_losses[-1])
+                    max_loss = max(epoch_losses[0], epoch_losses[-1])
+                    plt.ylim(min_loss*1.15, max_loss*0.85)
+                    plt.xlabel('Epoch')
+                    plt.ylabel('Negative Log-Likelihood')
+                    plt.title('MAF Training Loss')
+                    plt.grid(True, alpha=0.3)
+                    plt.savefig(f'{checkpoint_dir}/maf_loss.png')
+                    plt.close()
+                    
+                except Exception as e:
+                    print(f"Error creating diagnostic plots: {e}")
+    
+    progress_bar.close()
+    
+    # Get final parameters (extract from first device if using multi-CPU)
+    if not use_gpu or not jax.devices('gpu'):
+        params = jax.tree_map(lambda x: x[0], params)
+    
+    maf_trained = MAF(maf.input_dim, maf.hidden_dims, maf.num_flows, key=key)
+    maf_trained.made_layers = maf.made_layers  # Copy the architecture
+    
+    # Return the best model parameters
+    return {"maf": maf_trained, "params": best_params, "losses": epoch_losses}
+
+def save_maf_model(maf_result, filepath):
+    """
+    Save MAF model to disk.
+    
+    Args:
+        maf_result: Dictionary containing the MAF model and trained parameters
+        filepath: Path to save the model
+    """
+    directory = os.path.dirname(filepath)
+    if directory: os.makedirs(directory, exist_ok=True)
+    with open(filepath, 'wb') as f:
+        pickle.dump(maf_result, f)
+    print(f"Successfully saved MAF model to {filepath}")
+
+def load_maf_model(filepath):
+    """
+    Load MAF model from disk.
+
+    Args:
+        filepath: Path to the saved model
+
+    Returns:
+        Dictionary containing the MAF model and trained parameters
+    """
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"MAF model file not found: {filepath}")
+    with open(filepath, 'rb') as f:
+        return pickle.load(f)
+    
+##########################################################################
+######################### PLOTTING FUNCTIONS #############################
+##########################################################################
 
 # Calculate and plot 1D efficiency for each variable
 def plot_efficiency_by_variable(X_data, model_output, feature_names=None, nbins=50, figsize=(15, 15), 
@@ -638,49 +1090,31 @@ def plot_efficiency_by_variable(X_data, model_output, feature_names=None, nbins=
     
     return metrics
 
-def create_corner_plot(X1, X2, labels, feature_names, title, filename, checkpoint_dir, n_samples=10000):
+def create_corner_plot(X1, X2, labels, feature_names, filename, checkpoint_dir):
     """
     Create a corner plot showing pairwise relationships between dimensions.
     - Diagonal: 1D histograms showing marginal distributions
     - Upper triangle: Pairwise scatter plots
-    - Lower triangle: Turned off
     
     Args:
-        X1, X2: Arrays of shape (n_samples, n_dims)
+        X1, X2: Arrays of shape (samples, n_dims)
         labels: List of labels for X1 and X2, i.e. ['accepted', 'generated']
         feature_names: List of feature names for each dimension
-        title: Title for the plot
         filename: Output filename
         checkpoint_dir: Directory to save the plot
-        n_samples: Number of samples to plot (subsampling for large datasets)
     """
     os.makedirs(checkpoint_dir, exist_ok=True)
     
     n_dims = X1.shape[1]
-    
-    # Subsample if necessary
-    if X1.shape[0] > n_samples:
-        idx1 = np.random.choice(X1.shape[0], size=n_samples, replace=False)
-        X1_plot = X1[idx1]
-    else:
-        X1_plot = X1
-        
-    if X2.shape[0] > n_samples:
-        idx2 = np.random.choice(X2.shape[0], size=n_samples, replace=False)
-        X2_plot = X2[idx2]
-    else:
-        X2_plot = X2
-    
-    # Create figure
     fig, axes = plt.subplots(n_dims, n_dims, figsize=(15, 15))
     plt.subplots_adjust(wspace=0.1, hspace=0.1)
     
-    # Colors for the two distributions
+    # Specs for the two distributions
     colors = ['black', 'orange']
-    alphas = [0.8, 0.5]
+    alphas = [0.5, 0.3]
     zorders = [1, 2]
     
-    # Loop through dimensions
+    # Begin plotting
     for i in range(n_dims):
         for j in range(n_dims):
             ax = axes[i, j]
@@ -692,51 +1126,29 @@ def create_corner_plot(X1, X2, labels, feature_names, title, filename, checkpoin
                 
             # Diagonal: 1D histograms
             if i == j:
-                ax.hist(X1_plot[:, i], bins=50, alpha=alphas[0], color=colors[0], density=True, label=labels[0], zorder=zorders[0])
-                ax.hist(X2_plot[:, i], bins=50, alpha=alphas[1], color=colors[1], density=True, label=labels[1], zorder=zorders[1])
-                
-                # Only show x-label for bottom row
-                if i == n_dims - 1:
-                    ax.set_xlabel(feature_names[j])
-                    
-                # Only show y-label for left column
-                if j == 0:
-                    ax.set_ylabel('Density')
-                    
-                # Remove y-ticks for clarity
-                ax.set_yticks([])
-                
-                # Add feature name as text in the plot
-                if i == 0:
-                    ax.set_title(feature_names[j])
+                ax.hist(X1[:, i], bins=50, alpha=alphas[0], color=colors[0], density=True, label=labels[0], zorder=zorders[0])
+                ax.hist(X2[:, i], bins=50, alpha=alphas[1], color=colors[1], density=True, label=labels[1], zorder=zorders[1])
+                ax.set_ylabel('Density')    
+                ax.set_yticks([]) # remove ticks since we already know its a density
+                ax.set_xlabel(feature_names[j])
             
             # Upper triangle: Scatter plots
             elif i < j:
-                ax.scatter(X1_plot[:, j], X1_plot[:, i], s=1, alpha=alphas[0], color=colors[0], label=labels[0], zorder=zorders[0])
-                ax.scatter(X2_plot[:, j], X2_plot[:, i], s=1, alpha=alphas[1], color=colors[1], label=labels[1], zorder=zorders[1])
-                
-                # Only show x-label for bottom row
-                if i == n_dims - 1:
-                    ax.set_xlabel(feature_names[j])
-                    
-                # Only show y-label for left column
-                if j == 0:
-                    ax.set_ylabel(feature_names[i])
-                    
-                # Remove ticks for cleaner look
+                ax.scatter(X1[:, j], X1[:, i], s=5, alpha=alphas[0], color=colors[0], label=labels[0], zorder=zorders[0])
+                ax.scatter(X2[:, j], X2[:, i], s=5, alpha=alphas[1], color=colors[1], label=labels[1], zorder=zorders[1])
                 ax.tick_params(axis='both', which='major', labelsize=8)
     
     # Add legend to the top-right plot
     handles, labels_legend = axes[0, n_dims-1].get_legend_handles_labels()
     if handles:  # Check if legend handles exist
-        fig.legend(handles, labels_legend, loc='upper right', bbox_to_anchor=(0.99, 0.99))
+        fig.legend(handles, labels_legend, loc='upper right', bbox_to_anchor=(0.99, 0.99), prop={'size': 12})
     
-    # Add title
-    plt.suptitle(title, fontsize=16, y=0.995)
     plt.tight_layout(rect=[0, 0, 1, 0.98])
     plt.savefig(f'{checkpoint_dir}/{filename}', dpi=150)
     print(f"Corner plot saved to {checkpoint_dir}/{filename}")
-    plt.close()
+    fig = None
+    axes = None
+    plt.close('all')
 
 ##############################################
 # NORMALIZING FLOW IMPLEMENTATION
@@ -980,194 +1392,3 @@ class MAF:
             A list of parameters for each MADE layer.
         """
         return [layer.params for layer in self.made_layers]
-
-def weighted_maximum_likelihood_loss(params, maf, x, sample_weights=None):
-    """
-    Compute negative log likelihood loss, optionally weighted.
-    
-    Args:
-        params: MAF model parameters
-        maf: MAF model
-        x: Input data
-        sample_weights: Optional weights for each sample
-    
-    Returns:
-        Negative log likelihood (weighted if weights provided)
-    """
-    log_probs = maf.log_prob(params, x)
-    
-    if sample_weights is not None:
-        # Ensure weights are normalized
-        normalized_weights = sample_weights / jnp.sum(sample_weights)
-        # Compute weighted negative log likelihood
-        return -jnp.sum(log_probs * normalized_weights)
-    else:
-        # Standard unweighted negative log likelihood
-        return -jnp.mean(log_probs)
-
-def update_step(params, opt_state, maf, x, sample_weights, optimizer):
-    """Single optimization step for MAF training."""
-    # Define a jitted inner function that doesn't take maf as an argument
-    @jax.jit
-    def _update_step(params, opt_state, x, sample_weights):
-        if sample_weights is not None:
-            loss_fn = lambda p: weighted_maximum_likelihood_loss(p, maf, x, sample_weights)
-        else:
-            loss_fn = lambda p: weighted_maximum_likelihood_loss(p, maf, x, None)
-        
-        loss_value, grads = jax.value_and_grad(loss_fn)(params)
-        updates, new_opt_state = optimizer.update(grads, opt_state)
-        new_params = optax.apply_updates(params, updates)
-        return new_params, new_opt_state, loss_value
-    
-    return _update_step(params, opt_state, x, sample_weights)
-
-def fit_maf(maf, params, data, batch_size=1024, learning_rate=1e-3, num_epochs=100, 
-           sample_weights=None, key=None):
-    # Create optimizer
-    optimizer = optax.adam(learning_rate)
-    
-    # Initialize parameters and optimizer state
-    opt_state = optimizer.init(params)
-    
-    # Get data size and prepare for batching
-    data_size = data.shape[0]
-    steps_per_epoch = data_size // batch_size
-    # Calculate the actual batch size for the last batch
-    last_batch_size = data_size - (steps_per_epoch * batch_size)
-    if last_batch_size > 0:
-        steps_per_epoch += 1
-    total_steps = steps_per_epoch * num_epochs
-    
-    # Initialize losses list
-    losses = []
-    epoch_losses = []
-    
-    # Get number of devices for parallelization
-    num_devices = jax.device_count()
-    print(f"Training MAF using {num_devices} devices")
-    
-    # Define a pmapped update function to parallelize across devices
-    @jax.pmap
-    def parallel_update(params_device, opt_state_device, batch_x_device, batch_weights_device):
-        def loss_fn(p):
-            return weighted_maximum_likelihood_loss(p, maf, batch_x_device, batch_weights_device)
-        
-        loss_value, grads = jax.value_and_grad(loss_fn)(params_device)
-        updates, new_opt_state = optimizer.update(grads, opt_state_device)
-        new_params = optax.apply_updates(params_device, updates)
-        return new_params, new_opt_state, loss_value
-    
-    # Replicate parameters and optimizer state across devices
-    params_replicated = jax.device_put_replicated(params, jax.devices())
-    opt_state_replicated = jax.device_put_replicated(opt_state, jax.devices())
-    
-    # Training loop with tqdm over all batches
-    progress_bar = tqdm(total=total_steps, desc=f"Training MAF [Epoch 1/{num_epochs}]")
-    
-    for epoch in range(num_epochs):
-        epoch_loss = 0.0
-        
-        # Create a new key for each epoch
-        if key is not None:
-            key, subkey = jax.random.split(key)
-            perm = jax.random.permutation(subkey, data_size)
-        else: # Without a key, just use simple slicing for batches
-            indices = np.arange(data_size)
-            np.random.shuffle(indices)
-            perm = indices
-        
-        # Process each batch
-        for idx in range(steps_per_epoch):
-            # Calculate batch start/end indices
-            start_idx = idx * batch_size
-            end_idx = min(start_idx + batch_size, data_size)
-            actual_batch_size = end_idx - start_idx
-            
-            # Extract batch data using the permutation
-            batch_idx = perm[start_idx:end_idx]
-            batch_x = data[batch_idx]
-            
-            # Extract batch weights if provided
-            batch_weights = None
-            if sample_weights is not None:
-                batch_weights = sample_weights[batch_idx]
-            
-            # Pad batch to be divisible by number of devices
-            if actual_batch_size % num_devices != 0:
-                pad_size = num_devices - (actual_batch_size % num_devices)
-                batch_x = jnp.pad(batch_x, ((0, pad_size), (0, 0)), mode='constant')
-                if batch_weights is not None:
-                    batch_weights = jnp.pad(batch_weights, (0, pad_size), mode='constant')
-            
-            # Reshape for pmap
-            batch_x_shaped = batch_x.reshape(num_devices, -1, batch_x.shape[1])
-            if batch_weights is not None:
-                batch_weights_shaped = batch_weights.reshape(num_devices, -1)
-            else:
-                batch_weights_shaped = jnp.ones((num_devices, batch_x_shaped.shape[1]))
-            
-            # Update model in parallel across devices
-            params_replicated, opt_state_replicated, losses_device = parallel_update(
-                params_replicated, opt_state_replicated, batch_x_shaped, batch_weights_shaped
-            )
-            
-            # Average loss across devices
-            loss_value = jnp.mean(losses_device)
-            epoch_loss += loss_value
-            
-            # Update progress bar with batch info
-            progress_bar.set_description(f"Training MAF [Epoch {epoch+1}/{num_epochs}, Batch {idx+1}/{steps_per_epoch}, Loss: {loss_value:.4f}]")
-            progress_bar.update(1)
-        
-        # Record average epoch loss
-        avg_loss = epoch_loss / steps_per_epoch
-        epoch_losses.append(avg_loss)
-        
-        # Print epoch summary
-        if epoch % 10 == 0 or epoch == num_epochs - 1:
-            print(f"\nEpoch {epoch+1}/{num_epochs}, Average Loss: {avg_loss:.4f}")
-        
-        # Update progress bar description for next epoch
-        if epoch < num_epochs - 1:
-            progress_bar.set_description(f"Training MAF [Epoch {epoch+2}/{num_epochs}]")
-    
-    progress_bar.close()
-    
-    # Get the parameters from the first device (they should be synchronized)
-    params = jax.tree_map(lambda x: x[0], params_replicated)
-    
-    maf_trained = MAF(maf.input_dim, maf.hidden_dims, maf.num_flows, key=key)
-    maf_trained.made_layers = maf.made_layers  # Copy the architecture
-    
-    # Return the trained model and losses
-    return {"maf": maf_trained, "params": params, "losses": epoch_losses}
-
-def save_maf_model(maf_result, filepath):
-    """
-    Save MAF model to disk.
-    
-    Args:
-        maf_result: Dictionary containing the MAF model and trained parameters
-        filepath: Path to save the model
-    """
-    directory = os.path.dirname(filepath)
-    if directory: os.makedirs(directory, exist_ok=True)
-    with open(filepath, 'wb') as f:
-        pickle.dump(maf_result, f)
-    print(f"Successfully saved MAF model to {filepath}")
-
-def load_maf_model(filepath):
-    """
-    Load MAF model from disk.
-
-    Args:
-        filepath: Path to the saved model
-
-    Returns:
-        Dictionary containing the MAF model and trained parameters
-    """
-    if not os.path.exists(filepath):
-        raise FileNotFoundError(f"MAF model file not found: {filepath}")
-    with open(filepath, 'rb') as f:
-        return pickle.load(f)

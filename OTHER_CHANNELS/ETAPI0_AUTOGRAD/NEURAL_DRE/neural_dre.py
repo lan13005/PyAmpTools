@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
-os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=24"
+os.environ["JAX_PLATFORMS"] = "cpu"
 
 import jax
 import jax.numpy as jnp
@@ -21,23 +21,77 @@ import pickle as pkl
 from neural_dre_utils import (
     load_checkpoint, save_checkpoint, load_and_use_model, plot_efficiency_by_variable, 
     combined_loss_adaptive, loss_type_map,
-    create_corner_plot, fit_maf, save_maf_model, load_maf_model, MAF
+    create_corner_plot, fit_maf, save_maf_model, load_maf_model, MAF, batch_transform_maf
 )
 
+# Set device configuration
+use_gpu = False  # Set to False to use CPU
+cpu_cores = 24  # Number of CPU cores to use if not using GPU
+
+# Configure device
+if use_gpu and jax.devices('gpu'):
+    print(f"Using GPU for training: {jax.devices('gpu')[0]}") # Already performs a check if GPU is available
+    # No need to set XLA_FLAGS for GPU
+    num_devices = 1  # Use a single GPU
+else:
+    # Set CPU cores for training
+    os.environ["XLA_FLAGS"] = f"--xla_force_host_platform_device_count={cpu_cores}"
+    num_devices = cpu_cores
+    print(f"Using {num_devices} CPU cores for training")
 
 # Set a seed for reproducibility
 seed = 42
 key = random.PRNGKey(seed)
-num_devices = jax.device_count()
-print(f"Using {num_devices} CPU cores for training")
 
+feature_names = ["mMassX", "mCosHel", "mPhiHel", "mt", "mPhi"]
+standardized_dump = "standardized_dump.pkl"
+
+########################################################
+############### Normalizing flow pretraining ###########
+########################################################
+use_flow_pretraining = False
+flow_hidden_dims = [128, 128] # Hidden dimensions for flow networks
+num_flow_layers = 5           # Number of flow transformations
+flow_batch_size = 8192        
+flow_learning_rate = 1e-4     
+flow_num_epochs = 10         # Max epochs for flow training
+n_test_samples = 2000000      # Evaluation test size
+flow_patience = 10            # Early stopping patience for flow training
+flow_clip_norm = 0.1          # Prevent large gradients
+flow_adam_b1 = 0.9            # Adam beta1 parameter
+flow_adam_b2 = 0.999          # Adam beta2 parameter
+flow_adam_eps = 1e-8          # Adam epsilon parameter
+flow_warmup_steps = 500       # Add warmup to stabilize initial training
+flow_weight_decay = 1e-5      # Add weight decay to stabilize
+
+########################################################
+############### Classifier training ####################
+########################################################
 # Add a flag to control which loss function to use
 # Options: "bce" (default), "mse", "mlc", or "sqrt"
 loss_type = "bce"  # Change this to select the loss function
-print(f"Using loss function: {loss_type}")
+loss_type_code = loss_type_map[loss_type] # Mapping loss types to integer codes for jax device replication
+metric_type = "standard"
+metric_label = {"standard": "MAE", "relative": "Rel. MAE"}
+# Hyperparameters for adaptive gradient regularization
+reg_strength = 0.0001  # Strength of the gradient regularization, if 0 then do not add gradient regularization
+transition_sensitivity = 0.5  # Controls how quickly regularization decreases in high-gradient regions
+learning_rate = 1e-3
+weight_decay = 1e-4
+batch_size = 1024
+num_epochs = 20
 
-# Map loss types to integer codes for device replication
-loss_type_code = loss_type_map[loss_type]
+########################################################
+############## Plotting and checkpointing ##############
+########################################################
+### FLOW
+plot_flow_diagnostic_frequency = 10  # save diagnostics plots for flow frequency (epochs)
+n_samples_flow_diagnostic = 5000  # Number of samples to use for flow diagnostic plots (triangular distribution plots)
+### CLASSIFIER
+checkpoint_frequency = 5  # Save checkpoint every checkpoint_frequency epochs
+plot_classifier_diagnostic_frequency = 5  # save diagnostics plots for classifier frequency (epochs)
+plot_training_frequency = 1  # Update plots every iteration
+print(f"Using loss function: {loss_type}")
 
 # Define neural network model
 class DensityRatioEstimator(nn.Module):
@@ -73,11 +127,6 @@ class DensityRatioEstimator(nn.Module):
 ##############################################
 # BEGIN LOADING STUFF
 ##############################################
-
-feature_names = ["mMassX", "mCosHel", "mPhiHel", "mt", "mPhi"]
-metric_type = "standard"
-metric_label = {"standard": "MAE", "relative": "Rel. MAE"}
-standardized_dump = "standardized_dump.pkl"
 
 if os.path.exists(standardized_dump):
     print("Loading standardized data...")
@@ -169,24 +218,26 @@ else:
 # Test on uniformly distributed points on the min-max domain of the generated data
 #    Do not include min/max values from the accepted MC since smearing will leave to no generated events in the tails
 print("Generating test data (uniform sampling on generated data domain)...")
-n_test_samples = 2000000
 min_vals = np.min(X_gen, axis=0)
 max_vals = np.max(X_gen, axis=0)
 X_test_raw = np.random.uniform(min_vals, max_vals, size=(n_test_samples, X_gen.shape[1]))
 X_test = scaler.transform(X_test_raw)
 
+# subsample the generated data for flow diagnostic plots
+X_gen_flow_plot = X_gen[np.random.choice(X_gen.shape[0], size=n_samples_flow_diagnostic, replace=False)]
+X_acc_flow_plot = X_acc[np.random.choice(X_acc.shape[0], size=n_samples_flow_diagnostic, replace=False)]
+
+num_batches = int(np.ceil(len(X_train) / batch_size))
+
 weight_rescaling = 1.0
 print(f"weight_rescaling: {weight_rescaling}")
 
-# Add a flag for flow pretraining
-use_flow_pretraining = True
-flow_hidden_dims = [64, 64]  # Hidden dimensions for flow networks
-num_flow_layers = 5          # Number of flow transformations
-flow_batch_size = 1024       # Batch size for flow training
-flow_learning_rate = 1e-3    # Learning rate for flow training
-flow_num_epochs = 1        # Max epochs for flow training
+
 cwd = os.getcwd()
 checkpoint_dir = f'{cwd}/model_checkpoints'
+print("Creating checkpoint directory...")
+os.makedirs(checkpoint_dir, exist_ok=True)
+
 
 ##############################################
 # TRAINING FUNCTIONS
@@ -226,14 +277,16 @@ if use_flow_pretraining:
     # Create corner plot for original data
     print("Creating corner plot for original data...")
     create_corner_plot(
-        X_gen, X_acc,
+        X_gen_flow_plot, X_acc_flow_plot,
         labels=['Generated', 'Accepted'],
         feature_names=feature_names,
-        title='Original Data Distribution Overlap',
         filename='original_corner_plot.png',
         checkpoint_dir=checkpoint_dir,
-        n_samples=5000
     )
+    
+    # standard scale X_acc_flow_plot and X_gen_flow_plot for diagnostic plots, overwrite since we dont need for anything else
+    X_acc_flow_plot = scaler.transform(X_acc_flow_plot)
+    X_gen_flow_plot = scaler.transform(X_gen_flow_plot)
     
     # Train the flow model
     print(f"Training MAF for {flow_num_epochs} epochs...")
@@ -243,11 +296,28 @@ if use_flow_pretraining:
         maf,
         maf_params,
         jnp.array(X_train),
+        train_key,
+        #### TRAINING ####
         batch_size=flow_batch_size,
         learning_rate=flow_learning_rate,
         num_epochs=flow_num_epochs,
+        patience=flow_patience,
         sample_weights=jnp.array(weights_train) if weight_rescaling != 1.0 else None,
-        key=train_key
+        #### FLOW OPTIMIZER ####
+        clip_norm=flow_clip_norm,
+        adam_b1=flow_adam_b1,
+        adam_b2=flow_adam_b2,
+        adam_eps=flow_adam_eps,
+        #### PLOTTING ####
+        plot_frequency=plot_flow_diagnostic_frequency,
+        checkpoint_dir=checkpoint_dir,
+        feature_names=feature_names,
+        X_gen=X_gen_flow_plot,
+        X_acc=X_acc_flow_plot,
+        use_gpu=use_gpu,
+        n_samples_flow_diagnostic=n_samples_flow_diagnostic,
+        warmup_steps=flow_warmup_steps,
+        weight_decay=flow_weight_decay
     )
     
     maf = maf_result["maf"]
@@ -257,36 +327,25 @@ if use_flow_pretraining:
     # Save the trained flow model
     save_maf_model({"maf": maf, "params": maf_params, "losses": flow_losses}, flow_save_path)
     
-    # Transform data to latent space
-    print("Transforming data to latent space...")
-    X_train_latent, _ = maf.forward(maf_params, jnp.array(X_train))
-    X_train_latent = np.array(X_train_latent)
-    
-    X_acc_latent, _ = maf.forward(maf_params, jnp.array(scaler.transform(X_acc)))
-    X_acc_latent = np.array(X_acc_latent)
-    
-    X_gen_latent, _ = maf.forward(maf_params, jnp.array(scaler.transform(X_gen)))
-    X_gen_latent = np.array(X_gen_latent)
-    
-    X_test_latent, _ = maf.forward(maf_params, jnp.array(X_test))
-    X_test_latent = np.array(X_test_latent)
+    # Transform data to latent space using batches to prevent OOM
+    print("Transforming data to latent space in batches...")
+    X_train_latent, _ = batch_transform_maf(maf, maf_params, X_train, batch_size=1024, direction="forward")
+    X_acc_latent_flow_plot, _ = batch_transform_maf(maf, maf_params, X_acc_flow_plot, batch_size=1024, direction="forward")
+    X_gen_latent_flow_plot, _ = batch_transform_maf(maf, maf_params, X_gen_flow_plot, batch_size=1024, direction="forward")
+    X_test_latent, _ = batch_transform_maf(maf, maf_params, X_test, batch_size=1024, direction="forward")
     
     # Create corner plot for transformed data
     print("Creating corner plot for latent space data...")
     create_corner_plot(
-        X_gen_latent, X_acc_latent,
+        X_gen_latent_flow_plot, X_acc_latent_flow_plot,
         labels=['Generated', 'Accepted'],
         feature_names=[f'z{i+1}' for i in range(X_train.shape[1])],
-        title='Latent Space Distribution Overlap',
         filename='latent_corner_plot.png',
         checkpoint_dir=checkpoint_dir,
-        n_samples=10000
     )
     
     # Use latent representations for training
     X_train = np.array(X_train_latent)
-    # X_acc = np.array(X_acc_latent)
-    # X_gen = np.array(X_gen_latent)
     X_test = np.array(X_test_latent)
 else:
     print("Skipping flow pretraining, using original data directly.")
@@ -303,30 +362,13 @@ params = model.init(model_init_key, jnp.ones((1, X_train.shape[1])))
 
 # Create optimizer
 print("Creating optimizer...")
-learning_rate = 1e-3
 # optimizer = optax.adam(learning_rate)
-optimizer = optax.adamw(learning_rate=1e-3, weight_decay=1e-4)  # L2 regularization
+optimizer = optax.adamw(learning_rate=learning_rate, weight_decay=weight_decay)  # L2 regularization
 state = train_state.TrainState.create(
     apply_fn=model.apply,
     params=params,
     tx=optimizer
 )
-batch_size = 1024
-num_epochs = 20
-num_batches = int(np.ceil(len(X_train) / batch_size))
-
-# Create checkpoint directory
-print("Creating checkpoint directory...")
-cwd = os.getcwd()
-checkpoint_dir = f'{cwd}/model_checkpoints'
-os.makedirs(checkpoint_dir, exist_ok=True)
-checkpoint_frequency = 5  # Save checkpoint every checkpoint_frequency epochs
-plot_diagnostics_frequency = 5  # save diagnostics plots every plot_diagnostics_frequency epochs
-plot_training_frequency = 1  # Update plots every iteration
-
-# Hyperparameters for adaptive gradient regularization
-reg_strength = 0.0001  # Strength of the gradient regularization
-transition_sensitivity = 0.5  # Controls how quickly regularization decreases in high-gradient regions
 
 # Create a dropout PRNG key
 dropout_rng = random.PRNGKey(123)
@@ -433,10 +475,46 @@ def convert_to_probabilities(model_outputs, loss_type_code):
         operand=None
     )
     return probs
+
+# Define both parallel and single-device training functions
+def train_step_single(state, batch_x, batch_y, dropout_rng, batch_weights=None, 
+                     reg_strength=None, transition_sensitivity=None, loss_type_code=None):
+    """Single-device training step (for GPU)"""
+    def loss_fn(params):
+        dropout_rng_split, new_dropout_rng = random.split(dropout_rng)
+        model_outputs = model.apply(
+            params, 
+            batch_x, 
+            training=True, 
+            rngs={'dropout': dropout_rng_split},
+            mutable=['batch_stats']
+        )
+        model_outputs = model_outputs[0] if isinstance(model_outputs, tuple) else model_outputs
+        
+        # Compute loss with the selected loss function
+        total_loss, (main_loss, grad_loss) = combined_loss_adaptive(
+            model_outputs, batch_y, model, params, batch_x, 
+            reg_strength=reg_strength, 
+            transition_sensitivity=transition_sensitivity,
+            weights=batch_weights, 
+            rngs={'dropout': dropout_rng_split},
+            loss_type_code=loss_type_code
+        )
+        
+        return total_loss, (model_outputs, main_loss, grad_loss, new_dropout_rng)
+
+    (loss, (model_outputs, main_loss, grad_loss, new_dropout_rng)), grads = jax.value_and_grad(loss_fn, has_aux=True)(state.params)
+    state = state.apply_gradients(grads=grads)
+
+    probs = convert_to_probabilities(model_outputs, loss_type_code)
+    accuracy = jnp.mean((probs > 0.5) == batch_y)
+    return state, loss, accuracy, new_dropout_rng, main_loss, grad_loss
+
+# Keep the original pmap function for multi-CPU training
 @pmap
 def train_step_parallel(state, batch_x, batch_y, dropout_rngs, batch_weights=None, 
                         reg_strength=None, transition_sensitivity=None, loss_type_code=None):
-
+    """Multi-device parallel training step (for CPU)"""
     def loss_fn(params):
         model_outputs = model.apply(
             params, 
@@ -466,117 +544,35 @@ def train_step_parallel(state, batch_x, batch_y, dropout_rngs, batch_weights=Non
     accuracy = jnp.mean((probs > 0.5) == batch_y)
     return state, loss, accuracy, dropout_rngs, main_loss, grad_loss
 
-@jit
-def eval_step(params, x, y, batch_weights=None, reg_strength=0.0001, 
-              transition_sensitivity=0.5, loss_type_code=0):
-    model_outputs = model.apply(params, x, training=False)
-    
-    # Compute loss with the selected loss function
-    total_loss, (main_loss, grad_loss) = combined_loss_adaptive(
-        model_outputs, y, model, params, x, 
-        reg_strength=reg_strength, 
-        transition_sensitivity=transition_sensitivity,
-        weights=batch_weights,
-        loss_type_code=loss_type_code
-    )
-    probs = convert_to_probabilities(model_outputs, loss_type_code)
-    accuracy = jnp.mean((probs > 0.5) == y)
-    return total_loss, accuracy, main_loss, grad_loss
-   
-def eval_model(params, x, y, weights=None, batch_size=1024, reg_strength=0.0001, transition_sensitivity=0.5, loss_type_code=None):
-    n_samples = len(x)
-    n_batches = int(np.ceil(n_samples / batch_size))
-    
-    total_loss = 0
-    total_accuracy = 0
-    total_main_loss = 0
-    total_grad_loss = 0
-    
-    for i in range(n_batches):
-        start_idx = i * batch_size
-        end_idx = min((i + 1) * batch_size, n_samples)
-        
-        batch_x = x[start_idx:end_idx]
-        batch_y = y[start_idx:end_idx]
-        batch_weights = None if weights is None else weights[start_idx:end_idx]
-        
-        batch_loss, batch_accuracy, batch_main_loss, batch_grad_loss = eval_step(
-            params, batch_x, batch_y, batch_weights, reg_strength, transition_sensitivity, loss_type_code
-        )
-    
-        total_loss += batch_loss
-        total_accuracy += batch_accuracy
-        total_main_loss += batch_main_loss
-        total_grad_loss += batch_grad_loss
-    
-    return total_loss, total_accuracy, total_main_loss, total_grad_loss
-
-@jit
-def eval_model_with_flow(flow, params, x, y, batch_weights=None, reg_strength=0.0001, 
-              transition_sensitivity=0.5, loss_type_code=0):
-    """Evaluate model with flow transformation if available"""
-    if flow is not None:
-        x = flow.forward(x)
-    
-    model_outputs = model.apply(params, x, training=False)
-    
-    # Compute loss with the selected loss function
-    total_loss, (main_loss, grad_loss) = combined_loss_adaptive(
-        model_outputs, y, model, params, x, 
-        reg_strength=reg_strength, 
-        transition_sensitivity=transition_sensitivity,
-        weights=batch_weights,
-        loss_type_code=loss_type_code
-    )
-    probs = convert_to_probabilities(model_outputs, loss_type_code)
-    accuracy = jnp.mean((probs > 0.5) == y)
-    return total_loss, accuracy, main_loss, grad_loss
-
-def load_and_apply_flow(x, flow_path):
-    """Load a flow model and transform the input data"""
-    try:
-        maf_result = load_maf_model(flow_path)
-        maf = maf_result["maf"]
-        maf_params = maf_result["params"]
-        latent, _ = maf.forward(maf_params, jnp.array(x))
-        return np.array(latent)
-    except Exception as e:
-        print(f"Error loading or applying flow: {e}")
-        return x
-
-def load_and_use_model_with_flow(model, state, x, checkpoint_dir, step=None, loss_type_code=None, use_flow=False):
-    """Load model and flow (if available) and apply to data"""
-    # First load the neural DRE model
-    params = load_checkpoint(model, state, checkpoint_dir, step)
-    
-    # If flow is enabled, load and apply it
-    if use_flow:
-        flow_path = f"{checkpoint_dir}/maf_model.pkl"
-        try:
-            x_transformed = load_and_apply_flow(x, flow_path)
-            return model.apply(params, x_transformed, training=False)
-        except Exception as e:
-            print(f"Error loading or applying flow: {e}")
-            # Fall back to non-flow model
-            return model.apply(params, x, training=False)
-    else:
-        return model.apply(params, x, training=False)
+# JIT the single-device training function
+train_step_single_jit = jit(train_step_single)
 
 ##############################################
 # TRAINING LOOP
 ##############################################
-# Replicate some variables across devices
-state = jax.device_put_replicated(state, jax.local_devices())
-dropout_rngs = jax.random.split(dropout_rng, num_devices)
-loss_type_code_devices = jnp.array([loss_type_code] * num_devices)
-reg_strength_devices = jnp.array([reg_strength] * num_devices)
-transition_sensitivity_devices = jnp.array([transition_sensitivity] * num_devices)
+# Initialize dropout RNG
+dropout_rng = random.PRNGKey(123)
+
+# Prepare for training based on device type
+if use_gpu and jax.devices('gpu'):
+    # Single GPU training setup
+    print("Setting up for single GPU training")
+    # No need to replicate state or parameters
+else:
+    # Multi-CPU training setup
+    print(f"Setting up for {num_devices} CPU cores training")
+    # Replicate state across devices
+    state = jax.device_put_replicated(state, jax.local_devices())
+    dropout_rngs = jax.random.split(dropout_rng, num_devices)
+    loss_type_code_devices = jnp.array([loss_type_code] * num_devices)
+    reg_strength_devices = jnp.array([reg_strength] * num_devices)
+    transition_sensitivity_devices = jnp.array([transition_sensitivity] * num_devices)
 
 if start_epoch < num_epochs:
     print(f"Starting training from epoch {start_epoch} to {num_epochs}...")
     
     # Create progress bar
-    pbar = tqdm(total=(num_epochs - start_epoch) * num_batches, desc=f"Epoch {start_epoch}")
+    pbar = tqdm(total=(num_epochs - start_epoch), desc=f"Epoch {start_epoch}")
     
     for epoch in range(start_epoch, num_epochs):
         epoch_loss = 0
@@ -593,33 +589,43 @@ if start_epoch < num_epochs:
             batch_y = y_train[start_idx:end_idx]
             batch_weights = weights_train[start_idx:end_idx]
             
-            # Pad the batch to be divisible by num_devices
-            if len(batch_x) % num_devices != 0:
-                pad_size = num_devices - (len(batch_x) % num_devices)
-                batch_x = np.pad(batch_x, ((0, pad_size), (0, 0)), mode='constant')
-                batch_y = np.pad(batch_y, (0, pad_size), mode='constant')
-                batch_weights = np.pad(batch_weights, (0, pad_size), mode='constant')
-            
-            # Reshape for pmap
-            batch_x = batch_x.reshape(num_devices, -1, X_train.shape[1])
-            batch_y = batch_y.reshape(num_devices, -1)
-            batch_weights = batch_weights.reshape(num_devices, -1)
-            
-            # train_step_parallel uses pmap so return is a list of length num_devices
-            state, loss, accuracy, dropout_rngs, main_loss, grad_loss = train_step_parallel(
-                state, batch_x, batch_y, dropout_rngs, batch_weights, 
-                reg_strength_devices, transition_sensitivity_devices, loss_type_code_devices
-            )
-            
-            # Update metrics (AGGRGATED ACROSS COMPUTE DEVICES)
-            epoch_loss += jnp.mean(loss)
-            epoch_accuracy += jnp.mean(accuracy)
-            epoch_main_loss += jnp.mean(main_loss)
-            epoch_grad_loss += jnp.mean(grad_loss)
-            
-            # Update progress bar
-            pbar.update(1)
-            pbar.set_description(f"Epoch {epoch} - Avg Batch Loss: {epoch_loss/(batch+1):.4e}")
+            if use_gpu and jax.devices('gpu'):
+                # Single GPU training step
+                state, loss, accuracy, dropout_rng, main_loss, grad_loss = train_step_single_jit(
+                    state, batch_x, batch_y, dropout_rng, batch_weights, 
+                    reg_strength, transition_sensitivity, loss_type_code
+                )
+                
+                # Update metrics (no need to aggregate across devices)
+                epoch_loss += loss
+                epoch_accuracy += accuracy
+                epoch_main_loss += main_loss
+                epoch_grad_loss += grad_loss
+            else:
+                # Multi-CPU training step
+                # Pad the batch to be divisible by num_devices
+                if len(batch_x) % num_devices != 0:
+                    pad_size = num_devices - (len(batch_x) % num_devices)
+                    batch_x = np.pad(batch_x, ((0, pad_size), (0, 0)), mode='constant')
+                    batch_y = np.pad(batch_y, (0, pad_size), mode='constant')
+                    batch_weights = np.pad(batch_weights, (0, pad_size), mode='constant')
+                
+                # Reshape for pmap
+                batch_x = batch_x.reshape(num_devices, -1, X_train.shape[1])
+                batch_y = batch_y.reshape(num_devices, -1)
+                batch_weights = batch_weights.reshape(num_devices, -1)
+                
+                # train_step_parallel uses pmap so return is a list of length num_devices
+                state, loss, accuracy, dropout_rngs, main_loss, grad_loss = train_step_parallel(
+                    state, batch_x, batch_y, dropout_rngs, batch_weights, 
+                    reg_strength_devices, transition_sensitivity_devices, loss_type_code_devices
+                )
+                
+                # Update metrics (AGGREGATED ACROSS COMPUTE DEVICES)
+                epoch_loss += jnp.mean(loss)
+                epoch_accuracy += jnp.mean(accuracy)
+                epoch_main_loss += jnp.mean(main_loss)
+                epoch_grad_loss += jnp.mean(grad_loss)
         
         # Compute average metrics for the epoch
         epoch_loss /= num_batches
@@ -633,6 +639,10 @@ if start_epoch < num_epochs:
         main_losses.append(float(epoch_main_loss))
         grad_losses.append(float(epoch_grad_loss))
         
+        # Update progress bar after each epoch
+        pbar.update(1)
+        pbar.set_description(f"Epoch {epoch} - Loss: {epoch_loss:.4e}, Acc: {epoch_accuracy:.4f}")
+        
         # Print metrics
         print(f"Epoch {epoch}: Train Acc: {epoch_accuracy:.4f}, Train Loss: {train_losses[-1]:.4f}, "
               f"Main Loss ({loss_type}): {main_losses[-1]:.4f}, Grad Loss: {grad_losses[-1]:.4f}")
@@ -640,21 +650,40 @@ if start_epoch < num_epochs:
         # Save checkpoint periodically
         if (epoch + 1) % checkpoint_frequency == 0 or epoch == num_epochs - 1 and checkpoint_dir is not None:
             # Add metrics to the state for resuming training
-            checkpoint_state = {
-                'params': state.params,
-                'epoch': epoch + 1,
-                'train_losses': train_losses,
-                'main_losses': main_losses,
-                'grad_losses': grad_losses,
-                'accuracies': accuracies,
-                'feature_metrics': feature_metrics,
-                'loss_type': loss_type  # Save the loss type
-            }
+            if use_gpu and jax.devices('gpu'):
+                # For GPU, no need to extract from device array
+                checkpoint_state = {
+                    'params': state.params,
+                    'epoch': epoch + 1,
+                    'train_losses': train_losses,
+                    'main_losses': main_losses,
+                    'grad_losses': grad_losses,
+                    'accuracies': accuracies,
+                    'feature_metrics': feature_metrics,
+                    'loss_type': loss_type  # Save the loss type
+                }
+            else:
+                # For multi-CPU, extract from first device
+                single_device_params = jax.tree_util.tree_map(lambda x: x[0], state.params)
+                checkpoint_state = {
+                    'params': single_device_params,
+                    'epoch': epoch + 1,
+                    'train_losses': train_losses,
+                    'main_losses': main_losses,
+                    'grad_losses': grad_losses,
+                    'accuracies': accuracies,
+                    'feature_metrics': feature_metrics,
+                    'loss_type': loss_type  # Save the loss type
+                }
             save_checkpoint(checkpoint_state, epoch + 1, checkpoint_dir)
             
         # Draw diagnostics plots
-        if (epoch + 1) % plot_diagnostics_frequency == 0 or epoch == num_epochs - 1 and checkpoint_dir is not None:
-            single_device_params = jax.tree_util.tree_map(lambda x: x[0], state.params)
+        if (epoch + 1) % plot_classifier_diagnostic_frequency == 0 or epoch == num_epochs - 1 and checkpoint_dir is not None:
+            if use_gpu and jax.devices('gpu'):
+                single_device_params = state.params
+            else:
+                single_device_params = jax.tree_util.tree_map(lambda x: x[0], state.params)
+            
             print(f"calculating density ratios for {n_test_samples} events")
             model_outputs = load_and_use_model(model, state, X_test, checkpoint_dir, step=None, loss_type_code=loss_type_code)
             print(f"plotting efficiency for these events")
@@ -698,11 +727,11 @@ if start_epoch < num_epochs:
                 # Create x-axis points for MAE (only epochs where we calculated MAE)
                 metrics_epochs = []
                 for i in range(max(len(metrics) for metrics in feature_metrics.values())):
-                    metrics_epoch = start_epoch + i * plot_diagnostics_frequency + plot_diagnostics_frequency
+                    metrics_epoch = start_epoch + i * plot_classifier_diagnostic_frequency + plot_classifier_diagnostic_frequency
                     metrics_epochs.append(metrics_epoch)
                 
                 # Add the final epoch if it's not already included
-                if (epoch + 1) % plot_diagnostics_frequency != 0 and epoch == num_epochs - 1:
+                if (epoch + 1) % plot_classifier_diagnostic_frequency != 0 and epoch == num_epochs - 1:
                     metrics_epochs.append(epoch + 1)  # +1 because we're at the end of the epoch
                 
                 # Find the epoch with the lowest MAE
@@ -736,6 +765,27 @@ if start_epoch < num_epochs:
             plt.tight_layout()
             plt.savefig(f'{checkpoint_dir}/training_curve.png')
             plt.close()
+
+        # After each epoch, add debugging code to check predictions
+        if batch == 0 and epoch % 5 == 0:  # Every 5 epochs, first batch
+            # Get a small sample for debugging
+            sample_x = X_train[:10]
+            if use_gpu and jax.devices('gpu'):
+                params = state.params
+            else:
+                params = jax.tree_map(lambda x: x[0], state.params)
+            
+            # Get raw model outputs
+            raw_outputs = model.apply({'params': params}, sample_x, training=False)
+            print(f"DEBUG - Raw model outputs (first 10 samples): {raw_outputs.flatten()}")
+            
+            # Get probabilities 
+            probs = jax.nn.sigmoid(raw_outputs)
+            print(f"DEBUG - Probabilities: {probs.flatten()}")
+            
+            # Get density ratios
+            ratios = probs / (1 - probs)
+            print(f"DEBUG - Density ratios: {ratios.flatten()}")
 
     pbar.close()
 
