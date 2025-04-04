@@ -16,6 +16,7 @@ from matplotlib.patches import Ellipse
 import matplotlib.patheffects as path_effects
 import mplhep as hep
 import gc
+import io
 
 # TODO:
 # - Ensure all IFT, MLE, MCMC uses intensity, intensity_error
@@ -24,6 +25,10 @@ import gc
 # - implement t-dependence?
 # - ResultsManager can already do this, just move output helpful comments from resultDump.py into the manager
 # - add guards to not plot things that do not exist in the plotting functions
+
+# NOTE:
+# - Code allows users to load additional results from different sources manually using load_*_results functions
+#   Users must provide an alias (source name) which will be added to the loaded dataframe and then pd.concat will be called
 
 console = Console()
 
@@ -47,11 +52,18 @@ default_plot_subdir = "PLOTS"
 
 class ResultManager:
     
-    def __init__(self, yaml_file):
+    def __init__(self, yaml_file, silence=False):
         """
         Args:
             yaml_file [str, Dict]: path to the yaml file or already loaded as a dictionary
+            verbose [bool]: whether to print verbose output to console
         """
+        
+        # Set up console based on verbose flag
+        self.silence = silence
+        self.console = console
+        if silence: # silence output even for jupyter notebooks
+            self.console = Console(file=io.StringIO(), force_terminal=True, force_jupyter=False)
         
         self._mle_results  = pd.DataFrame()
         self._gen_results  = [pd.DataFrame(), pd.DataFrame()] # (generated samples of amplitudes, generated samples of resonance parameters)
@@ -99,7 +111,7 @@ class ResultManager:
         
         n_t_bins = self.yaml['n_t_bins']
         if n_t_bins != 1:
-            console.print(f"[bold yellow]warning: Default plotting scripts will not work with more than 1 t-bin. Data loading should be fine[/bold yellow]")
+            self.console.print(f"[bold yellow]warning: Default plotting scripts will not work with more than 1 t-bin. Data loading should be fine[/bold yellow]")
         
         # Keep track of all the unique fit sources that the user loads
         #   Why would the user want to load multiple gen/hist sources?
@@ -122,20 +134,20 @@ class ResultManager:
         for wave in self.waveNames:
             self.sectors[wave[-1]].append(f"{wave}_amp")
         
-        console.print(f"\n")
-        console.print(header_fmt.format(f"Parsing yaml_file with these expected settings:"))
-        console.print(f"wave_names: {self.waveNames}")
-        console.print(f"identified {len(self.sectors)} incoherent sectors: {self.sectors}")
-        console.print(f"n_mass_bins: {self.n_mass_bins}")
-        console.print(f"mass_centers: {self.mass_centers}")
-        console.print(f"\n")
+        self.console.print(f"\n")
+        self.console.print(header_fmt.format(f"Parsing yaml_file with these expected settings:"))
+        self.console.print(f"wave_names: {self.waveNames}")
+        self.console.print(f"identified {len(self.sectors)} incoherent sectors: {self.sectors}")
+        self.console.print(f"n_mass_bins: {self.n_mass_bins}")
+        self.console.print(f"mass_centers: {self.mass_centers}")
+        self.console.print(f"\n")
         
     def attempt_load_all(self):
         if self._hist_results.empty:
             self._hist_results = self.load_hist_results()
             
         if os.path.exists(self.moment_cache_location):
-            console.print(f"Loading cached data with projected moments from {self.moment_cache_location}")
+            self.console.print(f"Loading cached data with projected moments from {self.moment_cache_location}")
             with open(self.moment_cache_location, "rb") as f:
                 _results = pkl.load(f)
                 self._mle_results  = _results["mle"]  if "mle"  in _results else self.load_mle_results()
@@ -152,7 +164,7 @@ class ResultManager:
             
     def attempt_project_moments(self, pool_size=1):
         
-        console.print(f"User requested moments to be calculated")
+        self.console.print(f"User requested moments to be calculated")
         dfs_to_process = [
             ("mle",  self._mle_results ), 
             ("mcmc", self._mcmc_results),
@@ -167,19 +179,19 @@ class ResultManager:
             #   This should exist for every channel?
             #   If so, we skip the entire moment projection process. If there was a missing moment, you would need to restart by deleting the cache file
             if df.empty:
-                console.print(f"'{df_name}' is empty, skipping moment projection")
+                self.console.print(f"'{df_name}' is empty, skipping moment projection")
             else:
                 if any(["H0" in col for col in df.columns]):
-                    console.print(f"'{df_name}' already has projected moments, skipping moment projection")
+                    self.console.print(f"'{df_name}' already has projected moments, skipping moment projection")
                 else:
-                    console.print(f"Begin projecting amplitudes onto moment basis for '{df_name}' with {pool_size} processes")
+                    self.console.print(f"Begin projecting amplitudes onto moment basis for '{df_name}' with {pool_size} processes")
                     if self.channel == "TwoPseudoscalar":
                         momentManager = MomentManagerTwoPS(df, self.waveNames)
                     elif self.channel == "VectorPseudoscalar":
                         momentManager = MomentManagerVecPS(df, self.waveNames)
                     else:
                         raise ValueError(f"Unknown channel for moment projection: {self.channel}")
-                    console.print(f"  Dataset: '{df_name}'")
+                    self.console.print(f"  Dataset: '{df_name}'")
                     
                     # Normalize to the intensity in the bin [scheme=1] (acceptance corrected or not depends on your setting in the YAML file when the dataframe was created)
                     processed_df, moment_latex_dict = momentManager.process_and_return_df(
@@ -245,22 +257,22 @@ class ResultManager:
         
         result_dir = f"{base_directory}/AmpToolsFits"
         if not os.path.exists(result_dir):
-            console.print(f"[bold red]No 'histogram' results found in {result_dir}, return existing results with shape {self._hist_results.shape}\n[/bold red]")
+            self.console.print(f"[bold red]No 'histogram' results found in {result_dir}, return existing results with shape {self._hist_results.shape}\n[/bold red]")
             return self._hist_results
         
-        console.print(header_fmt.format(f"Loading 'HISTOGRAM' result from {result_dir}"))
+        self.console.print(header_fmt.format(f"Loading 'HISTOGRAM' result from {result_dir}"))
         nEvents, nEvents_err = get_nEventsInBin(result_dir)
         hist_df = {'mass': self.mass_centers, 'nEvents': nEvents, 'nEvents_err': nEvents_err}
         hist_df = pd.DataFrame(hist_df)
         
-        console.print(f"[bold green]Total Events Histogram Summary:[/bold green]")
-        console.print(f"columns: {hist_df.columns}")
-        console.print(f"shape: {hist_df.shape}")
-        console.print(f"\n")
+        self.console.print(f"[bold green]Total Events Histogram Summary:[/bold green]")
+        self.console.print(f"columns: {hist_df.columns}")
+        self.console.print(f"shape: {hist_df.shape}")
+        self.console.print(f"\n")
         
         hist_df = self._add_source_to_dataframe(hist_df, 'hist', source_name)
         if not self._hist_results.empty:
-            console.print(f"[bold green]Previous histogram results were loaded already, concatenating[/bold green]")
+            self.console.print(f"[bold green]Previous histogram results were loaded already, concatenating[/bold green]")
             hist_df = pd.concat([self._hist_results, hist_df])
         return hist_df
     
@@ -286,7 +298,7 @@ class ResultManager:
         
         subdir = "GENERATED" if source_type == "GENERATED" else "NiftyFits"
         result_dir = f"{base_directory}/{subdir}"
-        console.print(header_fmt.format(f"Loading '{source_type}' results from {result_dir}"))
+        self.console.print(header_fmt.format(f"Loading '{source_type}' results from {result_dir}"))
         
         if source_type == "GENERATED":
             ift_results = self._gen_results
@@ -299,7 +311,7 @@ class ResultManager:
         
         truth_loc = f"{result_dir}/niftypwa_fit.pkl"
         if not os.path.exists(truth_loc):
-            console.print(f"[bold red]No '{subdir.lower()}' curves found in {truth_loc}, return existing results with shape {ift_results[0].shape}\n[/bold red]")
+            self.console.print(f"[bold red]No '{subdir.lower()}' curves found in {truth_loc}, return existing results with shape {ift_results[0].shape}\n[/bold red]")
             return ift_results
         with open(truth_loc, "rb") as f:
             truth_pkl = pkl.load(f)
@@ -318,7 +330,7 @@ class ResultManager:
             ift_df[intensity_cols] *= rescaling
         
         if len(ift_df) == 0:
-            console.print(f"[bold red]No '{subdir.lower()}' curves found in {truth_loc}, return existing results with shape {ift_results[0].shape}\n[/bold red]")
+            self.console.print(f"[bold red]No '{subdir.lower()}' curves found in {truth_loc}, return existing results with shape {ift_results[0].shape}\n[/bold red]")
             return ift_results
         
         # rotate away reference waves
@@ -328,17 +340,17 @@ class ResultManager:
         ift_df = self._add_source_to_dataframe(ift_df, f'ift_{source_type}', source_name)
         ift_res_df = self._add_source_to_dataframe(ift_res_df, None, source_name) # already appeneded above, dont track again
         if not ift_results[0].empty:
-            console.print(f"[bold green]Previous IFT results were loaded already, concatenating[/bold green]")
+            self.console.print(f"[bold green]Previous IFT results were loaded already, concatenating[/bold green]")
             ift_df = pd.concat([ift_results[0], ift_df])        
             ift_res_df = pd.concat([ift_results[1], ift_res_df])
             
         # NOTE: These print statements should come before self.hist_results is called since additional results will be loaded and printed
-        console.print(f"[bold green]\nIFT {subdir} Summary:[/bold green]")
-        console.print(f"Amplitudes DataFrame columns: {list(ift_df.columns)}")
-        console.print(f"Amplitudes DataFrame shape: {ift_df.shape}")
-        console.print(f"Resonance Parameters DataFrame columns: {list(ift_res_df.columns)}")
-        console.print(f"Resonance Parameters DataFrame shape: {ift_res_df.shape}")
-        console.print(f"\n")
+        self.console.print(f"[bold green]\nIFT {subdir} Summary:[/bold green]")
+        self.console.print(f"Amplitudes DataFrame columns: {list(ift_df.columns)}")
+        self.console.print(f"Amplitudes DataFrame shape: {ift_df.shape}")
+        self.console.print(f"Resonance Parameters DataFrame columns: {list(ift_res_df.columns)}")
+        self.console.print(f"Resonance Parameters DataFrame shape: {ift_res_df.shape}")
+        self.console.print(f"\n")
     
         return [ift_df, ift_res_df]
         
@@ -350,7 +362,7 @@ class ResultManager:
             raise FileNotFoundError(f"Base directory {base_directory} does not exist!")
         
         result_dir = f"{base_directory}/MLE"
-        console.print(header_fmt.format(f"Loading 'MLE' results from {result_dir}"))
+        self.console.print(header_fmt.format(f"Loading 'MLE' results from {result_dir}"))
         
         source_name = self._check_and_get_source_name(self._mle_results, 'mle', base_directory, alias)
         if source_name is None:
@@ -398,16 +410,16 @@ class ResultManager:
                 with open(pkl_file, "rb") as f:
                     datas = pkl.load(f)
                     
-                console.print(f"Loaded {len(datas)} fits with random starts from {pkl_file}")
+                self.console.print(f"Loaded {len(datas)} fits with random starts from {pkl_file}")
                     
                 bin_idx = int(pkl_file.split("_")[-1].lstrip("bin").rstrip(".pkl"))
 
                 for i, data in enumerate(datas):
-               
-                    results.setdefault("bin", []).append(bin_idx)
+
+                    results.setdefault("mass", []).append(mass_centers[bin_idx])
                     results.setdefault("initial_likelihood", []).append(data["initial_likelihood"])
                     results.setdefault("likelihood", []).append(data["likelihood"])
-                    results.setdefault("iteration", []).append(i)
+                    results.setdefault("sample", []).append(i)
                     
                     for key in data["final_par_values"].keys():
                         results.setdefault(key, []).append(data["final_par_values"][key])
@@ -444,7 +456,7 @@ class ResultManager:
                             
                             reference_wave = self.sector_to_ref_wave[wave[-1]] # contains '_amp' suffix
                             jw = waveNames.index(reference_wave.strip("_amp")) # waveNames has no suffix                            
-                            amp2 = data[f"{reference_wave}"]
+                            amp2 = data['final_par_values'][f"{reference_wave}"]
                             ref_phase = np.angle(amp2)
                             cos_phase = np.cos(ref_phase)
                             sin_phase = np.sin(ref_phase)
@@ -461,10 +473,11 @@ class ResultManager:
                             minor_axis = np.sqrt(eigenvalues[0])  # Smallest eigenvalue                            
                             angle = np.arctan2(eigenvectors[1, 1], eigenvectors[0, 1]) # atan2 of opposite / adjacent
                             
+                            # I think this is correct? We can still call the real/imag axes as the major/minor axes since we also compute an ellipse angle
                             results.setdefault(f'{tag}_re_err', []).append(major_axis)
                             results.setdefault(f'{tag}_im_err', []).append(minor_axis)
                             results.setdefault(f'{tag}_err_angle', []).append(angle)
-                            
+                                                        
                             reference_wave = self.sector_to_ref_wave[wave[-1]].strip("_amp")
                             amp1 = results[f"{wave}_amp"][-1] # get most recent value
                             amp2 = results[f"{reference_wave}_amp"][-1]
@@ -479,10 +492,8 @@ class ResultManager:
             results = pd.DataFrame(results)
             
             if len(results) == 0:
-                console.print(f"[bold red]No results found in pkl files for: {pkl_list}\n[/bold red]")
+                self.console.print(f"[bold red]No results found in pkl files for: {pkl_list}\n[/bold red]")
                 return pd.DataFrame()
-            
-            results['mass'] = results['bin'].apply(lambda x: mass_centers[x])
             
             results = results.sort_values(by=["mass"]).reset_index(drop=True)
             
@@ -492,26 +503,26 @@ class ResultManager:
         
         pkl_list = glob.glob(f"{result_dir}/*pkl")
         if len(pkl_list) == 0:
-            console.print(f"[bold red]No 'MLE' results found in {result_dir}, return existing results with shape {self._mle_results.shape}\n[/bold red]")
+            self.console.print(f"[bold red]No 'MLE' results found in {result_dir}, return existing results with shape {self._mle_results.shape}\n[/bold red]")
             return self._mle_results
         
         mle_results = load_from_pkl_list(pkl_list, self.mass_centers, self.waveNames)
         
         if mle_results.empty:
-            console.print(f"[bold red]No 'MLE' results found in {result_dir}, return existing results with shape {self._mle_results.shape}\n[/bold red]")
+            self.console.print(f"[bold red]No 'MLE' results found in {result_dir}, return existing results with shape {self._mle_results.shape}\n[/bold red]")
             return self._mle_results
         
-        console.print(f"[bold green]\nMLE Summary:[/bold green]")
-        console.print(f"columns: {list(mle_results.columns)}")
-        console.print(f"n_random_starts: {mle_results.shape[0] // self.n_mass_bins}")
-        console.print(f"shape: {mle_results.shape} ~ (n_bins * n_random_starts, columns)")        
-        console.print(f"\n")
+        self.console.print(f"[bold green]\nMLE Summary:[/bold green]")
+        self.console.print(f"columns: {list(mle_results.columns)}")
+        self.console.print(f"n_random_starts: {mle_results.shape[0] // self.n_mass_bins}")
+        self.console.print(f"shape: {mle_results.shape} ~ (n_bins * n_random_starts, columns)")        
+        self.console.print(f"\n")
         
         mle_results['mass'] = np.round(mle_results['mass'], self.n_decimal_places)
 
         mle_results = self._add_source_to_dataframe(mle_results, 'mle', source_name)
         if not self._mle_results.empty:
-            console.print(f"[bold green]Previous MLE results were loaded already, concatenating[/bold green]")
+            self.console.print(f"[bold green]Previous MLE results were loaded already, concatenating[/bold green]")
             mle_results = pd.concat([self._mle_results, mle_results])        
         return mle_results
         
@@ -533,7 +544,7 @@ class ResultManager:
             raise FileNotFoundError(f"Base directory {base_directory} does not exist!")
         
         result_dir = f"{base_directory}/MCMC"
-        console.print(header_fmt.format(f"Loading 'MCMC' results from {result_dir}"))
+        self.console.print(header_fmt.format(f"Loading 'MCMC' results from {result_dir}"))
         
         source_name = self._check_and_get_source_name(self._mcmc_results, 'mcmc', base_directory, alias)
         if source_name is None:
@@ -541,7 +552,7 @@ class ResultManager:
         
         pkl_list = glob.glob(f"{result_dir}/*_samples.pkl")
         if len(pkl_list) == 0:
-            console.print(f"[bold red]No 'MCMC' results found in {result_dir}, return existing results with shape {self._mcmc_results.shape}\n[/bold red]")
+            self.console.print(f"[bold red]No 'MCMC' results found in {result_dir}, return existing results with shape {self._mcmc_results.shape}\n[/bold red]")
             return self._mcmc_results
 
         with open(pkl_list[0], "rb") as f:
@@ -549,7 +560,7 @@ class ResultManager:
         mcmc_results = pd.DataFrame(mcmc_results)
         
         if len(mcmc_results) == 0:
-            console.print(f"[bold red]No 'MCMC' results found in {result_dir}, return existing results with shape {self._mcmc_results.shape}\n[/bold red]")
+            self.console.print(f"[bold red]No 'MCMC' results found in {result_dir}, return existing results with shape {self._mcmc_results.shape}\n[/bold red]")
             return self._mcmc_results
         
         # rotate away reference waves
@@ -558,15 +569,15 @@ class ResultManager:
         
         mcmc_results = self._add_source_to_dataframe(mcmc_results, 'mcmc', source_name)
         if not self._mcmc_results.empty:
-            console.print(f"[bold green]Previous MCMC results were loaded already, concatenating[/bold green]")
+            self.console.print(f"[bold green]Previous MCMC results were loaded already, concatenating[/bold green]")
             mcmc_results = pd.concat([self._mcmc_results, mcmc_results])
         
         # print diagnostics
-        console.print(f"[bold green]\nMCMC Summary:[/bold green]")
-        console.print(f"columns: {list(mcmc_results.columns)}")
-        console.print(f"n_samples: {mcmc_results.shape[0] // self.n_mass_bins}")
-        console.print(f"shape: {mcmc_results.shape} ~ (n_samples * n_bins, columns)")
-        console.print(f"\n")
+        self.console.print(f"[bold green]\nMCMC Summary:[/bold green]")
+        self.console.print(f"columns: {list(mcmc_results.columns)}")
+        self.console.print(f"n_samples: {mcmc_results.shape[0] // self.n_mass_bins}")
+        self.console.print(f"shape: {mcmc_results.shape} ~ (n_samples * n_bins, columns)")
+        self.console.print(f"\n")
 
         return mcmc_results
     
@@ -589,7 +600,7 @@ class ResultManager:
                 source_name = 'yaml'
                 # Check if default source is already loaded
                 if 'yaml' in self.source_list[source_type] and df_already_loaded:
-                    console.print(f"[bold green]Default {source_type} results already loaded. Will return existing DataFrame[/bold green]")
+                    self.console.print(f"[bold green]Default {source_type} results already loaded. Will return existing DataFrame[/bold green]")
                     source_name = None
                     return source_name
             else:
@@ -607,7 +618,36 @@ class ResultManager:
             self.source_list[source_type].append(source_name)
         return df
     
+    def __repr__(self):
+        """Return a string representation of the ResultManager object."""
+        repr_str = "\n********************************************************************\n"
+        repr_str += f" Number of t-bins (centers): {len(self.t_centers)}: {np.array(self.t_centers)}\n"
+        repr_str += f" Number of mass-bins (centers): {len(self.mass_centers)}: {np.array(self.mass_centers)}\n"
+        repr_str += f" Number of wave names: {len(self.waveNames)}: {self.waveNames}\n"
+        repr_str += f" Access below dataframes as attributes [mle_results, mcmc_results, gen_results, hist_results, ift_results]\n"
+        repr_str += "********************************************************************\n"
+        
+        if not self._gen_results[0].empty:
+            repr_str += f" Shape of GENERATED DataFrame {self._gen_results[0].shape} with columns: {self._gen_results[0].columns}\n"
+        if not self._hist_results.empty:
+            repr_str += f" Shape of HISTOGRAM DataFrame {self._hist_results.shape} with columns: {self._hist_results.columns}\n"
+        if not self._ift_results[0].empty:
+            repr_str += f" Shape of IFT results DataFrame {self._ift_results[0].shape} with columns: {self._ift_results[0].columns}\n"
+        if not self._ift_results[1].empty:
+            repr_str += f" Shape of IFT resonance DataFrame {self._ift_results[1].shape} with columns: {self._ift_results[1].columns}\n"
+        if not self._mle_results.empty:
+            repr_str += f" Shape of MLE DataFrame {self._mle_results.shape} with columns: {self._mle_results.columns}\n"
+        if not self._mcmc_results.empty:
+            repr_str += f" Shape of MCMC DataFrame {self._mcmc_results.shape} with columns: {self._mcmc_results.columns}\n"
+        repr_str += "\n********************************************************************"
+        return repr_str
+    
     def print_schema(self):
+        
+        if self.silence:
+            print("User requested silence. Skipping print_schema.")
+            return
+        
         print_schema = "\n\n\n## [bold]SUMMARY OF COLLECTED RESULTS[/bold] ##\n"
         print_schema += (
             "\n********************************************************************\n"
@@ -645,26 +685,9 @@ class ResultManager:
             "    - [bold]'<wave>_relative_phase_err'[/bold]: Error on relative phase between 'wave' and its reference wave (error not propagated from rotation)\n"
         )
         
-        console.print(print_schema)
-        console.print("\n\n********************************************************************")
-        console.print(f" Number of t-bins: {len(self.t_centers)}: {np.array(self.t_centers)}")
-        console.print(f" Number of mass-bins: {len(self.mass_centers)}: {np.array(self.mass_centers)}")
-        console.print(f" Number of wave names: {len(self.waveNames)}: {self.waveNames}")
-        console.print("********************************************************************")
-        
-        if not self._gen_results[0].empty:
-            console.print(f" Shape of GENERATED DataFrame {self._gen_results[0].shape} with columns: {self._gen_results[0].columns}")
-        if not self._hist_results.empty:
-            console.print(f" Shape of HISTOGRAM DataFrame {self._hist_results.shape} with columns: {self._hist_results.columns}")
-        if not self._ift_results[0].empty:
-            console.print(f" Shape of IFT results DataFrame {self._ift_results[0].shape} with columns: {self._ift_results[0].columns}")
-        if not self._ift_results[1].empty:
-            console.print(f" Shape of IFT resonance DataFrame {self._ift_results[1].shape} with columns: {self._ift_results[1].columns}")
-        if not self._mle_results.empty:
-            console.print(f" Shape of MLE DataFrame {self._mle_results.shape} with columns: {self._mle_results.columns}")
-        if not self._mcmc_results.empty:
-            console.print(f" Shape of MCMC DataFrame {self._mcmc_results.shape} with columns: {self._mcmc_results.columns}")
-        console.print("\n********************************************************************")
+        self.console.print(print_schema)
+        # Print the representation of the object
+        self.console.print(str(self))
     
     def __del__(self):
         """Ensure proper cleanup when the object is deleted"""
@@ -685,14 +708,17 @@ class ResultManager:
 # PLOTTING FUNCTIONS HERE
 ########################################################
 
-def save_and_close_fig(output_file_location, fig, axes, overwrite=False, verbose=True):
+def save_and_close_fig(output_file_location, fig, axes, console=None, overwrite=False, verbose=True):
     try:
         # Perform checks
         directory = os.path.dirname(output_file_location)
         if not os.path.exists(directory):
             os.makedirs(directory, exist_ok=True)
         if not overwrite and os.path.exists(output_file_location):
-            if verbose: console.print(f"[bold red]File {output_file_location} already exists. Set overwrite=True to overwrite.\n[/bold red]")
+            if verbose: 
+                output_string = f"[bold red]File {output_file_location} already exists. Set overwrite=True to overwrite.\n[/bold red]"  
+                if console is None: print(output_string)
+                else: console.print(output_string)
             return
         # Detect unused axes and set them to not visible
         if not isinstance(axes, np.ndarray): # if it was just a single axis
@@ -702,13 +728,18 @@ def save_and_close_fig(output_file_location, fig, axes, overwrite=False, verbose
                 ax.set_visible(False)
         # Save plot
         fig.savefig(output_file_location)
-        if verbose: console.print(f"[bold green]Creating plot at:[/bold green] {output_file_location}")
+        if verbose: 
+            output_string = f"[bold green]Creating plot at:[/bold green] {output_file_location}"
+            if console is None: print(output_string)
+            else: console.print(output_string)
     finally: # always executed even if return is called in try block
         plt.close(fig)
     
 def query_default(df):
     """ 'yaml' key is reserved for default source """
     return df.query("source == 'yaml'") if not df.empty else pd.DataFrame()
+def safe_query(df, query):
+    return df.query(query) if not df.empty else pd.DataFrame()
     
 def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10)):
     ift_gen_df = resultManager.gen_results[0]
@@ -717,10 +748,10 @@ def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10)):
     
     # Guard against missing data
     if ift_gen_df is None or ift_gen_df.empty:
-        console.print(f"[bold yellow]No 'generated' curves data available. Skipping gen_curves plot.[/bold yellow]")
+        resultManager.console.print(f"[bold yellow]No 'generated' curves data available. Skipping gen_curves plot.[/bold yellow]")
         return
     
-    console.print(f"\n[bold blue]Plotting 'generated curves' plots...[/bold blue]")
+    resultManager.console.print(f"\n[bold blue]Plotting 'generated curves' plots...[/bold blue]")
     
     waveNames = resultManager.waveNames
     mass_centers = resultManager.mass_centers
@@ -757,11 +788,11 @@ def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10)):
 
     plt.tight_layout()
     ofile = f"{resultManager.base_directory}/{default_plot_subdir}/gen_curves.png"
-    save_and_close_fig(ofile, fig, axes, overwrite=True)
+    save_and_close_fig(ofile, fig, axes, console=resultManager.console, overwrite=True)
     
 def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, figsize=(10, 10)):
     name = "binned intensity"
-    console.print(header_fmt.format(f"Plotting '{name}' plots..."))
+    resultManager.console.print(header_fmt.format(f"Plotting '{name}' plots..."))
     
     default_mcmc_results = query_default(resultManager.mcmc_results)
     default_mle_results  = query_default(resultManager.mle_results)
@@ -770,7 +801,7 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
     
     # If everything is missing, nothing to do
     if default_mcmc_results.empty and default_mle_results.empty and default_gen_results.empty and default_ift_results.empty:
-        console.print(f"[bold yellow]No data available for binned intensity plots. Skipping.[/bold yellow]")
+        resultManager.console.print(f"[bold yellow]No data available for binned intensity plots. Skipping.[/bold yellow]")
         return
     
     if bins_to_plot is None:
@@ -785,19 +816,20 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
         fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
         
         mass_center = resultManager.mass_centers[bin]
-        binned_mcmc_samples = default_mcmc_results.query(f'mass == {mass_center}')
-        binned_mle_results = default_mle_results.query(f'mass == {mass_center}')
-        binned_gen_results = default_gen_results.query(f'mass == {mass_center}')
-        binned_ift_results = default_ift_results.query(f'mass == {mass_center}')
+        binned_mcmc_samples = safe_query(default_mcmc_results, f'mass == {mass_center}')
+        binned_mle_results  = safe_query(default_mle_results,  f'mass == {mass_center}')
+        binned_gen_results  = safe_query(default_gen_results,  f'mass == {mass_center}')
+        binned_ift_results  = safe_query(default_ift_results,  f'mass == {mass_center}')
         
         # Skip bin if no data available for this mass bin
         if (binned_mcmc_samples.empty and binned_mle_results.empty and 
             binned_gen_results.empty and binned_ift_results.empty):
-            console.print(f"[bold yellow]No data available for bin {bin} (mass {mass_center}). Skipping this bin.[/bold yellow]")
+            resultManager.console.print(f"[bold yellow]No data available for bin {bin} (mass {mass_center}). Skipping this bin.[/bold yellow]")
             plt.close()
             continue
         
-        edges = np.linspace(0, binned_mcmc_samples["intensity"].max(), 200)
+        # bins = np.linspace(0, binned_mcmc_samples["intensity"].max(), 200)
+        bins = 200
 
         for i, wave in enumerate(cols_to_plot):
             irow, icol = i // ncols, i % ncols
@@ -805,7 +837,7 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
             
             #### PLOT MCMC RESULTS ####
             if not binned_mcmc_samples.empty and wave in binned_mcmc_samples.columns:
-                ax.hist(binned_mcmc_samples[f"{wave}"], bins=edges, alpha=1.0, color=mcmc_color)
+                ax.hist(binned_mcmc_samples[f"{wave}"], bins=bins, alpha=1.0, color=mcmc_color)
             
             #### PLOT MLE RESULTS ####
             # TODO: after computing errors for intensities, use axvspan
@@ -832,7 +864,6 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
         for ax, wave in zip(axes.flatten(), cols_to_plot):
             ax.set_title(prettyLabels[wave], size=14, color='red', fontweight='bold')
             ax.set_ylim(0)
-            ax.set_xlim(0)
         for icol in range(ncols):
             axes[nrows-1, icol].set_xlabel("Intensity", size=12)
         for irow in range(nrows):
@@ -841,21 +872,35 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
             
         plt.tight_layout()
         ofile = f"{resultManager.base_directory}/{default_plot_subdir}/intensity/bin{bin}_intensities.png"
-        save_and_close_fig(ofile, fig, axes, overwrite=True, verbose=False)
+        save_and_close_fig(ofile, fig, axes, console=resultManager.console, overwrite=True, verbose=False)
         saved_files.append(ofile)
         plt.close()
         
-    console.print(f"\nSaved '{name}' plots to:")
+    resultManager.console.print(f"\nSaved '{name}' plots to:")
     for file in saved_files:
-        console.print(f"  - {file}")
-    console.print(f"\n")
+        resultManager.console.print(f"  - {file}")
+    resultManager.console.print(f"\n")
 
 def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, figsize=(10, 10),
-                              max_samples=500):
+                              mcmc_nsamples=500, mcmc_selection="thin"):
+    
+    """
+    Plot ~posterior distribution of the complex plane, overlaying generated curves, MLE, MCMC, IFT results when possible
+    
+    Args:
+        resultManager: ResultManager instance
+        bins_to_plot: List of bin indices to plot. If None, all bins are plotted
+        figsize: Tuple of the figure size
+        mcmc_nsamples: Number of MCMC samples to scatter (can get too dense if too many are plotted)
+        mcmc_selection: ["random", "thin", "last"] mcmc_nsamples will be selected by this criteria
+            "random": random samples will be used
+            "thin": draw mcmc_nsamples using nsamples / mcmc_nsamples steps
+            "last": last mcmc_nsamples will be used
+    """
     
     name = "binned complex plane"
     
-    console.print(header_fmt.format(f"Plotting '{name}' plots..."))
+    resultManager.console.print(header_fmt.format(f"Plotting '{name}' plots..."))
     
     default_mcmc_results = query_default(resultManager.mcmc_results)
     default_mle_results  = query_default(resultManager.mle_results)
@@ -864,7 +909,7 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
     
     # If everything is missing, nothing to do
     if default_mcmc_results.empty and default_mle_results.empty and default_gen_results.empty and default_ift_results.empty:
-        console.print(f"[bold yellow]No data available for binned complex plane plots. Skipping.[/bold yellow]")
+        resultManager.console.print(f"[bold yellow]No data available for binned complex plane plots. Skipping.[/bold yellow]")
         return
 
     if bins_to_plot is None:
@@ -875,20 +920,20 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
     
     saved_files = []
     if not default_mle_results.empty:
-        console.print(f"Warning: MLE error ellipses does not currently propagate errors from any reference wave rotation", style="bold yellow")
+        resultManager.console.print(f"Warning: MLE error ellipses does not currently propagate errors from any reference wave rotation", style="bold yellow")
     for bin in tqdm.tqdm(bins_to_plot):
         
         fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
         axes = axes.flatten()
         
         mass_center = resultManager.mass_centers[bin]
-        binned_mcmc_samples = default_mcmc_results.query(f'mass == {mass_center}')
-        binned_mle_results = default_mle_results.query(f'mass == {mass_center}')
-        binned_gen_results = default_gen_results.query(f'mass == {mass_center}')
-        binned_ift_results = default_ift_results.query(f'mass == {mass_center}')
+        binned_mcmc_samples = safe_query(default_mcmc_results, f'mass == {mass_center}')
+        binned_mle_results  = safe_query(default_mle_results,  f'mass == {mass_center}')
+        binned_gen_results  = safe_query(default_gen_results,  f'mass == {mass_center}')
+        binned_ift_results  = safe_query(default_ift_results,  f'mass == {mass_center}')
         
         if binned_mcmc_samples.empty and binned_mle_results.empty and binned_gen_results.empty and binned_ift_results.empty:
-            console.print(f"[bold yellow]No data available for bin {bin} (mass {mass_center}). Skipping this bin.[/bold yellow]")
+            resultManager.console.print(f"[bold yellow]No data available for bin {bin} (mass {mass_center}). Skipping this bin.[/bold yellow]")
             plt.close()
             continue
         
@@ -927,7 +972,12 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
                     axes[i].set_xlim(-max_lim, max_lim)
                     axes[i].set_ylim(0)
                 else: # scatter plot complex plane
-                    rnd = np.random.permutation(np.arange(len(rval)))[:max_samples]
+                    if mcmc_selection == "random":
+                        rnd = np.random.permutation(np.arange(len(rval)))[:mcmc_nsamples]
+                    elif mcmc_selection == "thin":
+                        rnd = np.linspace(0, len(rval)-1, mcmc_nsamples, dtype=int)
+                    elif mcmc_selection == "last":
+                        rnd = np.arange(len(rval)-mcmc_nsamples, len(rval))
                     axes[i].scatter(rval[rnd], ival[rnd], alpha=0.1, c=reference_intensity[rnd], cmap=cmap, norm=norm)
                     axes[i].set_xlabel("Real", size=12)
                     axes[i].set_ylabel("Imaginary", size=12)
@@ -992,24 +1042,36 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
                         size=20, color='black', fontweight='bold',
                         horizontalalignment='right', verticalalignment='top',
                         transform=axes[i].transAxes)
+            
+            # Add cross hairs for (0, 0)
+            axes[i].axvline(0, color='black', linestyle='--', alpha=0.2, linewidth=1)
+            axes[i].axhline(0, color='black', linestyle='--', alpha=0.2, linewidth=1)
 
         plt.tight_layout()
         ofile = f"{resultManager.base_directory}/{default_plot_subdir}/complex_plane/bin{bin}_complex_plane.png"
-        save_and_close_fig(ofile, fig, axes, overwrite=True, verbose=False)
+        save_and_close_fig(ofile, fig, axes, console=resultManager.console, overwrite=True, verbose=False)
         saved_files.append(ofile)
         plt.close()
 
-    console.print(f"\nSaved '{name}' plots to:")
+    resultManager.console.print(f"\nSaved '{name}' plots to:")
     for file in saved_files:
-        console.print(f"  - {file}")
-    console.print(f"\n")
+        resultManager.console.print(f"  - {file}")
+    resultManager.console.print(f"\n")
         
-def plot_overview_across_bins(resultManager: ResultManager, n_mcmc_samples_per_bin=300):
+def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin"):
     """
     This is a money plot. Two plots stacked vertically (intensity on top, relative phases on bottom)
+    
+    Args:
+        resultManager: ResultManager instance
+        mcmc_nsamples_per_bin: Number of MCMC samples to use per bin
+        mcmc_selection: ["random", "thin", "last"] mcmc_nsamples will be selected by this criteria
+            "random": random samples will be used
+            "thin": draw mcmc_nsamples using nsamples / mcmc_nsamples steps
+            "last": last mcmc_nsamples will be used
     """
     name = "intensity + phases"
-    console.print(header_fmt.format(f"Plotting '{name}' plots..."))
+    resultManager.console.print(header_fmt.format(f"Plotting '{name}' plots..."))
     
     hist_results = query_default(resultManager.hist_results)
     mcmc_results = query_default(resultManager.mcmc_results)
@@ -1019,7 +1081,7 @@ def plot_overview_across_bins(resultManager: ResultManager, n_mcmc_samples_per_b
     
     # If everything is missing, nothing to do
     if hist_results.empty and mcmc_results.empty and mle_results.empty and gen_results.empty and ift_results.empty:
-        console.print(f"[bold yellow]No data available for binned intensity plots. Skipping.[/bold yellow]")
+        resultManager.console.print(f"[bold yellow]No data available for binned intensity plots. Skipping.[/bold yellow]")
         return
 
     waveNames = resultManager.waveNames
@@ -1035,7 +1097,13 @@ def plot_overview_across_bins(resultManager: ResultManager, n_mcmc_samples_per_b
 
     samples_to_draw = pd.DataFrame()
     if not mcmc_results.empty:
-        samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.sample(n=n_mcmc_samples_per_bin, replace=False)).reset_index(drop=True)
+        if mcmc_selection == "random":
+            samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.sample(n=mcmc_nsamples_per_bin, replace=False)).reset_index(drop=True)
+        elif mcmc_selection == "thin":
+            step_size = mcmc_results['sample'].unique().size // mcmc_nsamples_per_bin
+            samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.iloc[::step_size]).reset_index(drop=True)
+        elif mcmc_selection == "last":
+            samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.iloc[-mcmc_nsamples_per_bin:]).reset_index(drop=True)
     
     for k, waveName in enumerate(waveNames):
         
@@ -1068,7 +1136,7 @@ def plot_overview_across_bins(resultManager: ResultManager, n_mcmc_samples_per_b
         if not gen_results.empty:
             gen_cols = [col for col in gen_results.columns if waveName in col and "_amp" not in col]
             if len(gen_cols) == 0:
-                console.print(f"[bold yellow]No generated results found for {waveName}[/bold yellow]")
+                resultManager.console.print(f"[bold yellow]No generated results found for {waveName}[/bold yellow]")
             for col in gen_cols:
                 if "_cf" in col: fit_type = "Bkgnd"
                 elif len(col.split("_")) > 1: fit_type = "Param"
@@ -1095,7 +1163,7 @@ def plot_overview_across_bins(resultManager: ResultManager, n_mcmc_samples_per_b
         if not ift_results.empty:
             ift_cols = [col for col in ift_results.columns if waveName in col and "_amp" not in col]
             if len(ift_cols) == 0:
-                console.print(f"[bold yellow]No 'IFT' results found for {waveName}[/bold yellow]")
+                resultManager.console.print(f"[bold yellow]No 'IFT' results found for {waveName}[/bold yellow]")
             ift_nsamples = ift_results['sample'].unique().size
             for col in ift_cols:
                 if "_cf" in col: fit_type = "Bkgnd"
@@ -1195,22 +1263,29 @@ def plot_overview_across_bins(resultManager: ResultManager, n_mcmc_samples_per_b
         # Save each figure to its own PNG file
         plt.tight_layout()
         ofile = f"{resultManager.base_directory}/{default_plot_subdir}/intensity_and_phases/intensity_phase_plot_{waveName}.png"
-        save_and_close_fig(ofile, fig, axes, overwrite=True, verbose=True)
+        save_and_close_fig(ofile, fig, axes, console=resultManager.console, overwrite=True, verbose=True)
         plt.close()
         
-    console.print(f"\n")
+    resultManager.console.print(f"\n")
     
-def plot_moments_across_bins(resultManager: ResultManager, n_mcmc_samples_per_bin=300, save_file=None):
+def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin", save_file=None):
     
     """
     This is another money plot. All non-zero projected moments are plotted
-    """
     
+    Args:
+        resultManager: ResultManager instance
+        mcmc_nsamples_per_bin: Number of MCMC samples to use per bin
+        mcmc_selection: ["random", "thin", "last"] mcmc_nsamples will be selected by this criteria
+            "random": random samples will be used
+            "thin": draw mcmc_nsamples using nsamples / mcmc_nsamples steps
+            "last": last mcmc_nsamples will be used
+    """
     name = "moments"
-    console.print(header_fmt.format(f"Plotting '{name}' plots..."))
+    resultManager.console.print(header_fmt.format(f"Plotting '{name}' plots..."))
     
     if resultManager.moment_latex_dict is None:
-        console.print("[bold yellow]Does not appear that moments have been calculated yet. Skipping.[/bold yellow]")
+        resultManager.console.print("[bold yellow]Does not appear that moments have been calculated yet. Skipping.[/bold yellow]")
         return
     
     mcmc_results = query_default(resultManager.mcmc_results)
@@ -1220,7 +1295,7 @@ def plot_moments_across_bins(resultManager: ResultManager, n_mcmc_samples_per_bi
     
     # If everything is missing, nothing to do
     if mcmc_results.empty and mle_results.empty and gen_results.empty and ift_results.empty:
-        console.print(f"[bold yellow]No data available for binned intensity plots. Skipping.[/bold yellow]")
+        resultManager.console.print(f"[bold yellow]No data available for binned intensity plots. Skipping.[/bold yellow]")
         return
     
     n_mass_bins = resultManager.n_mass_bins
@@ -1229,7 +1304,13 @@ def plot_moments_across_bins(resultManager: ResultManager, n_mcmc_samples_per_bi
     
     samples_to_draw = pd.DataFrame()
     if not mcmc_results.empty:
-        samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.sample(n=n_mcmc_samples_per_bin, replace=False)).reset_index(drop=True)
+        if mcmc_selection == "random":
+            samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.sample(n=mcmc_nsamples_per_bin, replace=False)).reset_index(drop=True)
+        elif mcmc_selection == "thin":
+            step_size = mcmc_results['sample'].unique().size // mcmc_nsamples_per_bin
+            samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.iloc[::step_size]).reset_index(drop=True)
+        elif mcmc_selection == "last":
+            samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.iloc[-mcmc_nsamples_per_bin:]).reset_index(drop=True)
 
     def plot_moment(moment_name, ofile):
         fig, axis = plt.subplots(figsize=(10, 10))
@@ -1253,14 +1334,14 @@ def plot_moments_across_bins(resultManager: ResultManager, n_mcmc_samples_per_bi
         for df_name, _df in dfs_to_process:
             if not _df.empty:
                 if moment_name not in _df.columns:
-                    console.print(f"[bold yellow]Moment '{moment_name}' not found in DataFrame '{df_name}', skipping.[/bold yellow]")
+                    resultManager.console.print(f"[bold yellow]Moment '{moment_name}' not found in DataFrame '{df_name}', skipping.[/bold yellow]")
                     plt.close()
                     return
                 moment_value = _df[moment_name].values # no need to rescale with bpg (bins_per_group). Zero is zero
                 if np.allclose(moment_value, 0, atol=1e-6):
                     moment_is_zero = True
             if moment_is_zero:
-                console.print(f"[bold yellow]Moment '{moment_name}' is zero in DataFrame'{df_name}', skipping.[/bold yellow]")
+                resultManager.console.print(f"[bold yellow]Moment '{moment_name}' is zero in DataFrame'{df_name}', skipping.[/bold yellow]")
                 plt.close()
                 return
         
@@ -1329,14 +1410,14 @@ def plot_moments_across_bins(resultManager: ResultManager, n_mcmc_samples_per_bi
         axis.set_ylim(miny, miny + 1.15 * yrange) # leave minimum the same, increase height so we can squeeze in some text at the top
         plt.tight_layout()
         
-        save_and_close_fig(ofile, fig, axis, overwrite=True, verbose=True)
+        save_and_close_fig(ofile, fig, axis, console=resultManager.console, overwrite=True, verbose=True)
 
     for moment_name in resultManager.moment_latex_dict.keys():
         plot_moment(moment_name, ofile=f"{resultManager.base_directory}/{default_plot_subdir}/moments/moment_{moment_name}.png")
     
 def montage_and_gif_select_plots(resultManager: ResultManager):
     
-    console.print(header_fmt.format(f"Montaging / GIFing all plots..."))
+    resultManager.console.print(header_fmt.format(f"Montaging / GIFing all plots..."))
     
     base_directory = resultManager.base_directory
     
@@ -1352,11 +1433,11 @@ def montage_and_gif_select_plots(resultManager: ResultManager):
             files_str = " ".join(bin_files)            
             montage_output = f"{output_directory}/montage_output.png"
             gif_output = f"{output_directory}/output.gif"
-            console.print(f"Create montage + gif of plots in '{output_directory}'")
+            resultManager.console.print(f"Create montage + gif of plots in '{output_directory}'")
             os.system(f"montage {files_str} -density 300 -geometry +10+10 {montage_output}")
             os.system(f"convert -delay 40 {files_str} -layers optimize -colors 256 -fuzz 2% {gif_output}")
         else:
-            console.print(f"[bold yellow]No bin files found in {bin_files_path}[/bold yellow]")
+            resultManager.console.print(f"[bold yellow]No bin files found in {bin_files_path}[/bold yellow]")
         
     subdirs = ["intensity_and_phases"]
     for subdir in subdirs:
@@ -1368,10 +1449,18 @@ def montage_and_gif_select_plots(resultManager: ResultManager):
         if files:
             files_str = " ".join(files)
             montage_output = f"{base_directory}/{default_plot_subdir}/{subdir}/montage_output.png"
-            console.print(f"Create montage of plots in '{base_directory}/{default_plot_subdir}/{subdir}'")
+            resultManager.console.print(f"Create montage of plots in '{base_directory}/{default_plot_subdir}/{subdir}'")
             os.system(f"montage {files_str} -density 300 -geometry +10+10 {montage_output}")
         else:
-            console.print(f"[bold yellow]No intensity phase plot files found in {output_directory}[/bold yellow]")
+            resultManager.console.print(f"[bold yellow]No intensity phase plot files found in {output_directory}[/bold yellow]")
     
-    console.print(f"\n")
+    resultManager.console.print(f"\n")
+    
+# resultManager = ResultManager("pyamptools_mc.yaml")
 
+# resultManager = ResultManager("/w/halld-scshelf2101/lng/WORK/PyAmpTools9/OTHER_CHANNELS/ETAPI0_AUTOGRAD/RESULTS_MC/GENERATED/main.yaml")
+
+# resultManager.attempt_load_all()
+# plot_binned_complex_plane(resultManager)
+# plot_binned_intensities(resultManager)
+# plot_overview_across_bins(resultManager)

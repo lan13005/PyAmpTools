@@ -111,9 +111,11 @@ def execute_cmd(cmd_list, console=None):
         console = Console()
     for cmd in cmd_list:
         console.print(f"[bold yellow]Executing shell command:[/bold yellow] [bold blue]{cmd}[/bold blue]")
-        result = subprocess.run(cmd, shell=True)
-        if result.returncode != 0:
-            raise Exception(f"Command failed with return code {result.returncode}")
+        result = subprocess.run(cmd, shell=True, check=True, text=True, capture_output=True)
+        if result.stdout:
+            console.print(result.stdout)
+        if result.stderr:
+            console.print(result.stderr)
 
 def append_kinematics(
     infile, 

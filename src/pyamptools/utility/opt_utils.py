@@ -188,47 +188,67 @@ class Objective:
 
 def regularize_hessian_return_covariance(hessian_matrix, tikhonov_delta=1e-4, ref_indices=None):
     """
-    Compute regularized covariance matrices from a Hessian using two approaches.
+    Compute regularized covariance matrices from a Hessian using Tikhonov regularization.
+    NOTE: The covariance matrix is conditionally positive semi-definite (submatrix of non-fixed parameters is positive semi-definite)
+          If you were to use the full matrix for sampling (from multivariate normal distribution), you must ignore the fixed indices
+          If you are doing linear error propagation zeroed out covariance matrix elements should be fine since fixed parameters indeed have no variance
     
     Args:
         hessian_matrix: The Hessian matrix to invert
         tikhonov_delta: Delta parameter for Tikhonov regularization to avoid singularity
+        ref_indices: Indices of reference waves with fixed parameters
     
     Returns:
-        tuple: (cov_clipping, cov_tikhonov, eigenvalues, hessian_diagnostics)
+        tuple: (conditionally PSD covariance, eigenvalues, hessian_diagnostics)
     """
     
     min_eigenvalue=1e-6 # eigenvalue threshold to determine if it is "small"
     
-    # Convert to numpy if it's a JAX array
-    if hasattr(hessian_matrix, 'copy_to_host'):
+    # Convert to numpy if it's a JAX array - ensure we're actually getting a numpy array
+    if hasattr(hessian_matrix, 'copy_to_host') or hasattr(hessian_matrix, 'device_buffer'):
+        hessian_matrix = np.array(hessian_matrix)    
+    if not isinstance(hessian_matrix, np.ndarray):
         hessian_matrix = np.array(hessian_matrix)
     
     try:
-        # Calculate eigenvalues and eigenvectors
+        # Make a copy of the hessian to avoid modifying the original
+        hess_copy = hessian_matrix.copy()
+        
+        # Calculate eigenvalues and eigenvectors of the original hessian (for diagnostics)
         eigenvalues, eigenvectors = np.linalg.eigh(hessian_matrix)
         
-        if np.all(eigenvalues > 0):
-            covariance = np.linalg.inv(hessian_matrix) * 2
-        else:
-            # NOTE: Invert the hessian to get Covariance then multiply by 2 so user can simply sqrt(covariance) to get standard errors
-            #       This is because our objective is NLL instead of 2NLL
-            
-            # Method 1: Eigenvalue clipping - should perform better if only a small number of negative eigenvalues
-            # clipped_eigenvalues = np.maximum(eigenvalues, min_eigenvalue)
-            # precision_clipped = eigenvectors @ np.diag(clipped_eigenvalues) @ eigenvectors.T
-            # cov_clipping = np.linalg.inv(precision_clipped) * 2
-            
-            # Method 2: Tikhonov regularization - better than clipping if more small to negative eigenvalues
-            # Add a small positive value to the diagonal
-            non_fixed_eigenvalues = eigenvalues[np.abs(eigenvalues - 1) > 1e-10] # We set hessian elements to 1 for fixed parameters (see Objective)
+        # Handle fixed parameters BEFORE regularization and inversion otherwise covariance matrix might not be positive semi-definite afterwards
+        # Set the row and column to zero except for reference waves and diagonal element to 1
+        if ref_indices:
+            for ref_idx in ref_indices:
+                hess_copy[2*ref_idx+1, :] = 0.0
+                hess_copy[:, 2*ref_idx+1] = 0.0
+                hess_copy[2*ref_idx+1, 2*ref_idx+1] = 1.0
+        
+        # Calculate eigenvalues of the ref-wave modified hessian
+        mod_eigenvalues = np.linalg.eigvalsh(hess_copy)
+        
+        # Apply Tikhonov regularization if needed - better than eigenvalue clipping if more small to negative eigenvalues
+        #    Basically adding a small positive value to the diagonal
+        if np.any(mod_eigenvalues <= 0):
+            non_fixed_eigenvalues = mod_eigenvalues[np.abs(mod_eigenvalues - 1) > 1e-10] # eigenvalues set to 1 for fixed parameters
             lambda_max = np.max(non_fixed_eigenvalues) if len(non_fixed_eigenvalues) > 0 else 1.0
             regularization_amount = tikhonov_delta * lambda_max # scale invariant regularization (depends on the largest eigenvalue)
-            precision_tikhonov = hessian_matrix + np.eye(hessian_matrix.shape[0]) * regularization_amount
-            covariance = np.linalg.inv(precision_tikhonov) * 2
 
-        # Zero out fixed parameter (co)variances for reference waves (some fixed parameters)
-        if ref_indices:
+            # Do not shift fixed parameters            
+            diag_indices = np.diag_indices(hess_copy.shape[0])
+            for i in range(hess_copy.shape[0]):
+                if ref_indices and any(i == 2*ref_idx+1 for ref_idx in ref_indices):
+                    continue
+                hess_copy[i, i] += regularization_amount
+        
+        # NOTE: Invert the hessian to get Covariance then multiply by 2 so user can simply sqrt(covariance) to get standard errors
+        #       This is because our objective is NLL instead of 2NLL
+        covariance = np.linalg.inv(hess_copy) * 2
+        
+        # NOTE: This returns a conditionally positive semi-definite matrix (submatrix is positive semi-definite)
+        #       Including the zeroed cols/rows does not guarantee positive semi-definiteness
+        if ref_indices: # zero out covariance elements for fixed parameters
             for ref_idx in ref_indices:
                 covariance[2*ref_idx+1, :] = 0.0
                 covariance[:, 2*ref_idx+1] = 0.0
@@ -240,14 +260,15 @@ def regularize_hessian_return_covariance(hessian_matrix, tikhonov_delta=1e-4, re
             'largest_eigenvalue': float(np.max(eigenvalues)),
             'condition_number': float(np.max(np.abs(eigenvalues)) / np.min(np.abs(eigenvalues))),
             'fraction_negative_eigenvalues': np.sum(eigenvalues < 0) / len(eigenvalues),
-            'fraction_small_eigenvalues':   np.sum((eigenvalues > 0) & (eigenvalues < min_eigenvalue)) / len(eigenvalues),
+            'fraction_small_eigenvalues': np.sum((eigenvalues > 0) & (eigenvalues < min_eigenvalue)) / len(eigenvalues),
         }
         
+        # NOTE: covariance is conditionally positive semi-definite (see above!)
         return covariance, eigenvalues, hessian_diagnostics
         
     except np.linalg.LinAlgError as e:
         print(f"Error calculating covariance matrix: {e}")
-        return None, None, None, {'error': str(e)}
+        return None, None, {'error': str(e)}
     
 def calculate_intensity_and_error(amp, cov_amp, ampMatrix, ampMatrixTermOrder, wave_list, all_waves_list, scale_factors=None):
     """

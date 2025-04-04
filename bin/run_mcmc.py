@@ -128,8 +128,8 @@ def worker_function(pyamptools_yaml, iftpwa_yaml, bin_idx, prior_scale, prior_di
     tprime_idx = bin_idx % nmbTprimes
     bin_result_dict["mass"] = mass_centers[mass_idx] * np.ones(n_samples)
     bin_result_dict["tprime"] = t_centers[tprime_idx] * np.ones(n_samples)
-    bin_result_dict["bin_idx"] = bin_idx * np.ones(n_samples, dtype=int)
     bin_result_dict["chain_idx"] = chain_idx * np.ones(n_samples, dtype=int)
+    bin_result_dict["sample"] = np.arange(chain_idx * n_samples, (chain_idx + 1) * n_samples, dtype=int)
     
     # Save results to file
     results = {

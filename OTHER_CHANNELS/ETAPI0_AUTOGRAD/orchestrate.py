@@ -1,17 +1,34 @@
 import os
+
+os.environ["JAX_PLATFORMS"] = "cpu"
+
 import random
 import tempfile
+import glob
 from pyamptools.utility.general import load_yaml, recursive_replace, dump_yaml, execute_cmd
 from pyamptools.utility.resultManager import ResultManager, plot_binned_intensities, plot_binned_complex_plane, plot_overview_across_bins, montage_and_gif_select_plots, plot_moments_across_bins
 from rich.console import Console
+import sys
 
 console = Console()
 
-random.seed(1420)
-nseeds = 20
+random.seed(1422)
+nseeds = 30
 seeds = random.sample(range(10000000), nseeds)
 
 yaml_file = "/w/halld-scshelf2101/lng/WORK/PyAmpTools9/OTHER_CHANNELS/ETAPI0_AUTOGRAD/pyamptools_mc.yaml"
+
+def exit_if_no_files_at(pathname_pattern, name=""):
+    """
+    Check if pickled results are present. Needed to manually crash if errors occurs.
+        For some cannot get execute_cmd to crash if any errors show up. Probably because
+        execute_cmd calls pa which calls a python script. Too much layeres of indirection?
+    """
+    files = glob.glob(pathname_pattern)
+    if len(files) == 0:
+        name = f"{name}: " if name else ""
+        console.print(f"[bold red]{name}fit did not complete as expected. Pickled results not found in {pathname_pattern}[/bold red]")
+        sys.exit(1)
 
 for seed in seeds:
     
@@ -38,11 +55,18 @@ for seed in seeds:
         ift_yaml["PWA_MANAGER"]["yaml"] = tmp_ift_yaml.name
         dump_yaml(main_yaml, tmp_main_yaml.name)
         dump_yaml(ift_yaml, tmp_ift_yaml.name)
-        
+
         execute_cmd([f"pa run_priorSim {tmp_main_yaml.name} -s {seed}"], console=console) # Generate data, divide data, ready to fit
+        exit_if_no_files_at(f"{parent_directory}/SEED_{seed}/GENERATED/*pkl", "PriorSim")
+        
         execute_cmd([f"pa run_mle {parent_directory}/SEED_{seed}/GENERATED/main.yaml"], console=console) # Run on new yaml files created by run_priorSim
+        exit_if_no_files_at(f"{parent_directory}/SEED_{seed}/MLE/*.pkl", "MLE")
+        
         execute_cmd([f"pa run_ift {parent_directory}/SEED_{seed}/GENERATED/main.yaml"], console=console)
+        exit_if_no_files_at(f"{parent_directory}/SEED_{seed}/NiftyFits/*.pkl", "IFT")
+        
         execute_cmd([f"pa run_mcmc {parent_directory}/SEED_{seed}/GENERATED/main.yaml -np {n_processes} -nc 8 -nw 500 -ns 1000"], console=console)
+        exit_if_no_files_at(f"{parent_directory}/SEED_{seed}/MCMC/*.pkl", "MCMC")
 
 # NOTE: If we try to run the following commands in the above for-loop we run into a problem with the run_priorSim call
 #       on the second iteration over the seeds array. The mpiexec command silently fails. 
@@ -52,6 +76,7 @@ for seed in seeds:
     ift_yaml  = load_yaml(main_yaml["nifty"]["yaml"])
     base_directory = main_yaml["base_directory"]
     parent_directory = os.path.dirname(base_directory)
+    n_processes = main_yaml["n_mass_bins"]
 
     resultManager = ResultManager(f"{parent_directory}/SEED_{seed}/GENERATED/main.yaml")
     resultManager.attempt_load_all() # load all possible results (generated, data histogram, mle, mcmc, ift) in the 'base_directory' of the yaml file
