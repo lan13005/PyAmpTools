@@ -19,6 +19,8 @@ from omegaconf import OmegaConf
 from omegaconf._utils import OmegaConfDumper, _ensure_container
 from rich.console import Console
 
+_general_console = Console()
+
 # ===================================================================================================
 # ===================================================================================================
 
@@ -107,13 +109,18 @@ prettyLabels = KeyReturningDict(prettyLabels)
 
 def execute_cmd(cmd_list, console=None):
     if console is None:
-        from rich.console import Console
-        console = Console()
+        console = _general_console
     for cmd in cmd_list:
         console.print(f"[bold yellow]Executing shell command:[/bold yellow] [bold blue]{cmd}[/bold blue]")
         result = subprocess.run(cmd, shell=True)
         if result.returncode != 0:
             raise Exception(f"Command failed with return code {result.returncode}")
+        
+def console_print(msg, style="bold blue", console=None):
+    """Safe printing, if console not provided will default to a shared general console"""
+    if console is None:
+        console = _general_console
+    console.print(msg, style=style)
 
 def append_kinematics(
     infile, 

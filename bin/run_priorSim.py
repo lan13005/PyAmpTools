@@ -285,12 +285,12 @@ def sim_to_amptools_cfg(resultFile, yamlFile, output_file):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Draw sample from NIFTy prior, create amptools cfg file, generate data using {simulator}, and split data into kinematic bins")
     parser.add_argument("yaml_file", type=str, help="Path to yaml file")
-    parser.add_argument("-emin", "--min_ebeam", type=float, default=8.2, help="Minimum photon beam energy")
-    parser.add_argument("-emax", "--max_ebeam", type=float, default=8.8, help="Maximum photon beam energy")
-    parser.add_argument("-t", "--t_slope", type=float, default=-1, help="Slope of t distribution, reserved -1 to calculate from min_t and max_t")
-    parser.add_argument("-nd", "--n_data", type=int, default=100000, help="Number of data events to generate")
-    parser.add_argument("-np", "--n_phasespace", type=int, default=500000, help="Number of phase space events to generate")
-    parser.add_argument("-s", "--seed", type=int, default=42, help="Random seed")
+    parser.add_argument("-emin", "--min_ebeam", type=float, default=8.2, help="Minimum photon beam energy (default: %(default)s)")
+    parser.add_argument("-emax", "--max_ebeam", type=float, default=8.8, help="Maximum photon beam energy (default: %(default)s)")
+    parser.add_argument("-t", "--t_slope", type=float, default=-1, help="Slope of t distribution, reserved -1 to calculate from min_t and max_t (default: %(default)s)")
+    parser.add_argument("-nd", "--n_data", type=int, default=100000, help="Number of data events to generate (default: %(default)s)")
+    parser.add_argument("-np", "--n_phasespace", type=int, default=500000, help="Number of phase space events to generate (default: %(default)s)")
+    parser.add_argument("-s", "--seed", type=int, default=42, help="Random seed (default: %(default)s)")
     args = parser.parse_args()
 
     str_yaml_file = args.yaml_file
