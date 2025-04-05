@@ -748,8 +748,8 @@ class MCMCManager:
             else:
                 self.free_complex_indices.append(2*i)
                 self.free_complex_indices.append(2*i+1)
-        self.free_complex_indices = jnp.array(self.free_complex_indices)
-        self.free_real_indices = jnp.array(self.free_real_indices)
+        self.free_complex_indices = jnp.array(self.free_complex_indices, dtype=jnp.int32)
+        self.free_real_indices = jnp.array(self.free_real_indices, dtype=jnp.int32)
         
     def _print_parameter_mappings(self):
         if self.cop == "cartesian":
@@ -853,6 +853,11 @@ def calculate_mcmc_diagnostics(samples_dict, chain_ids):
     unique_chains = np.unique(chain_ids)
     
     for param_name, param_samples in samples_dict.items():
+        
+        if 0 in param_samples.shape: # check if any dimension is 0 (no samples, or no dimensions / no fit parameters)
+            console.print(f"\nInteresting: Found no samples found for parameter {param_name}", style="bold yellow")
+            continue
+
         chain_arrays = []
         
         for chain_idx in unique_chains:
