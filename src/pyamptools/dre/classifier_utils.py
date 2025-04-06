@@ -4,7 +4,6 @@ import jax.lax as lax
 from orbax import checkpoint as orbax_checkpoint
 import os
 from flax import nnx
-import numpy as np
 from pyamptools.utility.general import console_print
 
 
@@ -70,50 +69,50 @@ def load_checkpoint(checkpoint_dir, step=None, console=None):
     return restored_state
 
 def try_resume_from_checkpoint(model, optimizer, checkpoint_dir, console):
-    # try:
-    latest_checkpoint = None
-    if os.path.exists(checkpoint_dir):
-        checkpoints = [f for f in os.listdir(checkpoint_dir) if f.startswith("epoch_")]
-        if checkpoints:
-            # Extract epoch numbers and find the latest
-            epoch_nums = [int(cp.split("_")[1]) for cp in checkpoints]
-            latest_epoch = max(epoch_nums)
-            latest_checkpoint = f"epoch_{latest_epoch}"
-    
-    if latest_checkpoint:
-        console_print(f"Found checkpoint {latest_checkpoint}. Attempting to resume...", console=console)
+    try:
+        latest_checkpoint = None
+        if os.path.exists(checkpoint_dir):
+            checkpoints = [f for f in os.listdir(checkpoint_dir) if f.startswith("epoch_")]
+            if checkpoints:
+                # Extract epoch numbers and find the latest
+                epoch_nums = [int(cp.split("_")[1]) for cp in checkpoints]
+                latest_epoch = max(epoch_nums)
+                latest_checkpoint = f"epoch_{latest_epoch}"
         
-        restored_state = load_checkpoint(checkpoint_dir, latest_checkpoint)
+        if latest_checkpoint:
+            console_print(f"Found checkpoint {latest_checkpoint}. Attempting to resume...", console=console)
             
-        # Restore model and optimizer parameters
-        # Convert the dictionary to a state object that nnx.update can use
-        model_state = nnx.state(model)
-        for key, value in restored_state['model'].items():
-            if key in model_state:
-                model_state[key] = value
-        
-        # Optax optimizer's first elements contains actual parameter statistics
-        #   Other elements are auxillary
-        # Currently, optimizer.opt_state returns [Dict, None, None]
-        optimizer_state = nnx.state(optimizer)
-        for opt_dict in restored_state['optimizer']:
-            if not isinstance(opt_dict, dict): continue
-            for key, value in opt_dict.items():
-                if key in optimizer_state:
-                    optimizer_state[key] = value
-        
-        # Get starting epoch
-        start_epoch = restored_state.get('epoch', 0)
-        loss_type_code = restored_state.get('loss_type_code', None)
-        console_print(f"Successfully resumed from epoch {start_epoch}", console=console)
-        return start_epoch, loss_type_code
-    else:
-        console_print("No checkpoint found. Starting training from scratch.", console=console)
+            restored_state = load_checkpoint(checkpoint_dir, latest_checkpoint)
+                
+            # Restore model and optimizer parameters
+            # Convert the dictionary to a state object that nnx.update can use
+            model_state = nnx.state(model)
+            for key, value in restored_state['model'].items():
+                if key in model_state:
+                    model_state[key] = value
+            
+            # Optax optimizer's first elements contains actual parameter statistics
+            #   Other elements are auxillary
+            # Currently, optimizer.opt_state returns [Dict, None, None]
+            optimizer_state = nnx.state(optimizer)
+            for opt_dict in restored_state['optimizer']:
+                if not isinstance(opt_dict, dict): continue
+                for key, value in opt_dict.items():
+                    if key in optimizer_state:
+                        optimizer_state[key] = value
+            
+            # Get starting epoch
+            start_epoch = restored_state.get('epoch', 0)
+            loss_type_code = restored_state.get('loss_type_code', None)
+            console_print(f"Successfully resumed from epoch {start_epoch}", console=console)
+            return start_epoch, loss_type_code
+        else:
+            console_print("No checkpoint found. Starting training from scratch.", console=console)
+            return 0, None
+    except Exception as e:
+        console_print(f"Error resuming from checkpoint: {e}", console=console)
+        console_print("Starting training from scratch.", console=console)
         return 0, None
-    # except Exception as e:
-    #     console_print(f"Error resuming from checkpoint: {e}", console=console)
-    #     console_print("Starting training from scratch.", console=console)
-    #     return 0, None
 
 # Load and use a saved model
 def load_and_use_model(model, state, X_data, checkpoint_dir, step=None, loss_type_code=0, console=None):
