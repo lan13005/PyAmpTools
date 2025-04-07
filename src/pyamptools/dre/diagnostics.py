@@ -3,6 +3,90 @@ import matplotlib.pyplot as plt
 from jax import lax
 import os
 
+import matplotlib.pyplot as plt
+import os
+
+# TODO: Update to use median and percentiles
+def create_entropy_plot(entropy_stats, save_dir, filename="maf_entropy.png"):
+    """Create a plot of entropy statistics over training epochs."""
+    
+    if not entropy_stats:
+        return
+    
+    try:
+        epochs = entropy_stats['epoch']
+        medians = entropy_stats['median']
+        sigma1_lower_percentiles = entropy_stats['percentile_16']
+        sigma1_upper_percentiles = entropy_stats['percentile_84']
+        sigma2_lower_percentiles = entropy_stats['percentile_2.5']
+        sigma2_upper_percentiles = entropy_stats['percentile_97.5']
+        
+        plt.figure(figsize=(10, 6))
+        plt.plot(epochs, medians, linestyle='--', color='xkcd:sea blue', label='median')
+        plt.fill_between(epochs, sigma2_lower_percentiles, sigma2_upper_percentiles, color='xkcd:sea blue', alpha=0.2, label='±2 Sigma Percentiles')
+        plt.fill_between(epochs, sigma1_lower_percentiles, sigma1_upper_percentiles, color='xkcd:sea blue', alpha=0.3, label='±1 Sigma Percentiles')
+        
+        # plot maximum entropy line
+        plt.axhline(np.log(2), color='black', linestyle='--', label='Maximum Entropy = log(2)')
+        
+        # Replace horizontal lines with arrows and text annotations
+        x_min = min(epochs) - 0.5  # Position slightly to the left of the first epoch
+        plt.annotate('', xy=(x_min, 0.4), xytext=(x_min, 0.6), 
+                    color='xkcd:dark sea green', fontweight='bold',
+                    arrowprops=dict(arrowstyle='<->', color='xkcd:dark sea green', lw=2))
+        plt.text(x=x_min+0.02, y=0.5, s="Target Region", ha='left', va='center', fontsize=12, color='xkcd:dark sea green')
+                
+        # Too confident arrow and text (downward facing)
+        plt.annotate('', xy=(x_min, 0.0), xytext=(x_min, 0.2), 
+                    color='xkcd:red', fontweight='bold',
+                    arrowprops=dict(arrowstyle='->', color='xkcd:red', lw=2))
+        plt.text(x=x_min+0.02, y=0.15, s="Too Confident", ha='left', va='center', fontsize=12, color='xkcd:red')
+        
+        plt.ylim(0, 0.75)
+        plt.xlim(0)
+        plt.xticks(epochs)
+        plt.xlabel('Epoch', fontsize=12)
+        plt.ylabel('Entropy', fontsize=12)
+        plt.title('Classifier Predictive Entropy', fontsize=12)
+        plt.grid(True, alpha=0.3)
+        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')        
+        plt.tight_layout()
+        
+        plt.savefig(os.path.join(save_dir, filename))
+        plt.close()
+    except Exception as e:
+        print(f"Error creating entropy plot: {e}")
+
+def create_logdet_plot(logdet_stats, save_dir, filename="maf_log_determinant.png"):
+    """Create a plot of log determinant statistics over training epochs."""
+    if not logdet_stats:
+        return
+        
+    try:
+        epochs = logdet_stats['epoch']
+        medians = logdet_stats['median']
+        sigma1_lower_percentiles = logdet_stats['percentile_16']
+        sigma1_upper_percentiles = logdet_stats['percentile_84']
+        sigma2_lower_percentiles = logdet_stats['percentile_2.5']
+        sigma2_upper_percentiles = logdet_stats['percentile_97.5']
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(epochs, medians, linestyle='--', color='xkcd:sea blue', label='median')
+        plt.fill_between(epochs, sigma2_lower_percentiles, sigma2_upper_percentiles, color='xkcd:sea blue', alpha=0.2, label='±2 Sigma Percentiles')
+        plt.fill_between(epochs, sigma1_lower_percentiles, sigma1_upper_percentiles, color='xkcd:sea blue', alpha=0.3, label='±1 Sigma Percentiles')
+
+        plt.xticks(epochs)
+        plt.xlabel('Epoch', fontsize=12)
+        plt.ylabel('Log Determinant Jacobian', fontsize=12)
+        plt.title('MAF Log Determinant Statistics', fontsize=12)
+        plt.grid(True, alpha=0.3)
+        plt.legend()
+
+        plt.savefig(os.path.join(save_dir, filename))
+        plt.close()
+    except Exception as e:
+        print(f"Error creating logdet plot: {e}")
+
 def create_corner_plot(X1, X2, labels, feature_names, filename, checkpoint_dir):
     """
     Create a corner plot showing pairwise relationships between dimensions.
@@ -131,7 +215,7 @@ def plot_efficiency_by_variable(X_data, model_output, feature_names=None, nbins=
         plot_predicted: Whether to create additional plots for the predicted efficiency
         
     Returns:
-        list: Relative MAE for each feature (relative to the generated nominal efficiency)
+        Dictionary of 2D metrics for each feature pair (relative to the generated nominal efficiency)
     """
     
     # Validate metric types
@@ -165,7 +249,7 @@ def plot_efficiency_by_variable(X_data, model_output, feature_names=None, nbins=
     density_ratios = np.asarray(density_ratios).flatten()
     
     # Metric to plot on off-diagonal (correlation plots)
-    metrics = [] # list of average metrics for each feature, 1 dimensional
+    metrics_2d_dict = {} # dictionary of metrics for each feature
     
     # Pre-compute bins for each feature (more efficient)
     bins_list = []
@@ -347,9 +431,6 @@ def plot_efficiency_by_variable(X_data, model_output, feature_names=None, nbins=
                             # For relative, divide the absolute differences by reference values
                             metric = np.mean(np.abs(efficiencies[valid_bins] - gen_eff[valid_bins]) / gen_eff[valid_bins])
                 
-                if current_metric_type in ["standard", "relative"]:
-                    metrics.append(metric)
-                
                 # Set y-axis limit based on max of both efficiencies
                 max_y = max(np.max(gen_eff) * 1.2, np.max(efficiencies) * 1.2) if np.any(gen_eff) and np.any(efficiencies) else 1.0
             else:
@@ -434,6 +515,9 @@ def plot_efficiency_by_variable(X_data, model_output, feature_names=None, nbins=
                         vmin = 0
                         norm = None
                         title = 'pred. eff.'
+                        
+                    if current_metric_type in ["standard", "relative"]:
+                        metrics_2d_dict[f'{feature_names[i]}_{feature_names[j]}'] = metric_hist
                     
                     # Plot the appropriate histogram
                     if norm is not None:
@@ -467,11 +551,4 @@ def plot_efficiency_by_variable(X_data, model_output, feature_names=None, nbins=
             print(f"Efficiency plots saved to 'efficiency_plots{metric_suffix}.png'")
         plt.close()
     
-    # Calculate average (of averages) across features - only for standard/relative metrics
-    if metrics:
-        avg_metric = np.mean(metrics) if metrics else 0
-        metric_type_str = metric_type_labels[metric_type]
-        print(f"Average '{metric_type_str}' across all features: {avg_metric:.6f}")
-        print(f"Feature-wise '{metric_type_str}' metrics: {[f'{name}: {metric:.6f}' for name, metric in zip(feature_names, metrics)]}")
-    
-    return metrics
+    return metrics_2d_dict

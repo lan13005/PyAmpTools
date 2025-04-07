@@ -1,7 +1,6 @@
-import numpy as np
 import os
-os.environ["JAX_PLATFORMS"] = "cpu"
-os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=8"
+os.environ["JAX_PLATFORMS"] = ""
+os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=1"
 
 import jax
 from jax import random
@@ -11,10 +10,15 @@ import optax
 import numpy as np
 import pickle as pkl
 
+# Add this to check available devices
+print("JAX devices:", jax.devices())
+print("Number of devices:", jax.device_count())
+print("Default device:", jax.default_backend())
+
 from pyamptools.dre.classifier_train import DensityRatioEstimator, classifier_train_step, classifier_predict
 from pyamptools.dre.diagnostics import compute_reference_efficiency
 from rich.console import Console
-from pyamptools.dre.classifier_utils import save_checkpoint, try_resume_from_checkpoint
+from pyamptools.dre.classifier_utils import save_checkpoint, try_resume_from_checkpoint, calculate_entropy
 
 from pyamptools.dre.flow_arch import MAF
 from pyamptools.dre.flow_train import load_maf_model, fit_maf, save_maf_model, batch_transform_maf
@@ -25,8 +29,14 @@ metric_labels = {"standard": "MAE", "relative": "Rel. MAE"}
 
 console = Console()
 
+# NOTE:
+# 1. Batchnorm does not work with multi-device (even with 1 gpu) training atm. The update step is jit compiled (traced)
+#    and applies the model to get the loss. The model has batchnorm layers which are stateful. 
+#    Tracing is broken if state changes. Setting use_running_average=True in the batchnorm layer for now but I should fix it.
+
 ################################################################
 
+use_gpu = True
 feature_names = ["mMassX", "mCosHel", "mPhiHel", "mt", "mPhi"]
 seed = 42 # main rng seed
 n_test_samples = 2000000 # Used for Monte Carlo integration of 1D/2D proj
@@ -54,24 +64,33 @@ console.print(f"Created device mesh with shape: {mesh}")
 data_sharding_2d = jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec('data', None))
 data_sharding_1d = jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec('data'))
 
+_base_flow_batch_size = 512
+_base_flow_learning_rate = 0.0001
+_base_classifier_batch_size = 512
+_base_classifier_learning_rate = 0.0001
+
 ########################################################
 ############### Normalizing flow pretraining ###########
 ########################################################
 use_flow_pretraining = False
 flow_hidden_dims = [1024] # Hidden dimensions for flow networks
 flow_num_layers = 5           # Number of flow transformations
-flow_batch_size = 4096        
-flow_learning_rate = 0.0001   # From fDRE paper
-flow_num_epochs = 200         # Max epochs for flow training
+flow_num_epochs = 10          # Max epochs for flow training
 flow_patience = 20            # Early stopping patience for flow training
 flow_clip_norm = 1.0          # Prevent large gradients
 flow_adam_b1 = 0.9            # Adam beta1 parameter
 flow_adam_b2 = 0.999          # Adam beta2 parameter
 flow_adam_eps = 1e-8          # Adam epsilon parameter
-flow_warmup_steps = 1000      # Add warmup to stabilize initial training
+flow_warmup_steps = 1000      # NOT USED: Add warmup to stabilize initial training
 flow_weight_decay = 1e-6      # Add weight decay to stabilize
-flow_plot_diagnostic_frequency = 10  # save diagnostics plots for flow frequency (epochs)
-flow_n_samples_plotting = 5000  # Number of samples to use for flow diagnostic plots (triangular distribution plots)
+flow_plot_latent_frequency = 10  # save diagnostics plots for flow frequency (epochs)
+flow_diagnostic_batch_sample_percentage = 20  # Percentage of batches to sample for logging logdet and entropy statistics
+flow_n_samples_plotting = 50000  # Number of samples to use for flow diagnostic plots (triangular distribution plots)
+
+# Following linear scaling rule, larger batches better approx to true gradient allowing larger steps but inhibits stochasticity
+flow_batch_size_factor = 2
+flow_batch_size    = _base_flow_batch_size    * flow_batch_size_factor        
+flow_learning_rate = _base_flow_learning_rate * flow_batch_size_factor
 
 ########################################################
 ############### Classifier training ####################
@@ -80,15 +99,18 @@ metric_type = "standard"
 loss_type = "bce" # Options: "bce" (default), "mse", "mlc", or "sqrt"
 classifier_dims = (len(feature_names), 256, 256)
 classifier_dropout_rate = 0.2
-classifier_learning_rate = 0.0002 # From fDRE paper
 classifier_weight_decay = 0.0005  # From fDRE paper
 adaptive_gradient_reg_strength = 0.0001  # Strength of the gradient regularization
 adaptive_gradient_transition_sensitivity = 0.5  # Controls how quickly regularization decreases in high-gradient regions
-classifier_batch_size = 4096
 classifier_num_epochs = 20
 classifier_checkpoint_frequency = 10  # Save checkpoint every classifier_checkpoint_frequency epochs
 classifier_plot_diagnostics_frequency = 5  # save diagnostics plots every classifier_plot_diagnostics_frequency epochs
 classifier_plot_training_frequency = 1  # Update plots every iteration
+
+# See comment in flow section aboce
+classifier_batch_size_factor = 2
+classifier_batch_size = _base_classifier_batch_size * classifier_batch_size_factor
+classifier_learning_rate = _base_classifier_learning_rate * classifier_batch_size_factor
 
 loss_type_code = loss_type_map[loss_type]
 console.print(f"Classifier using loss function: {loss_type}")
@@ -217,7 +239,7 @@ else:
     X_acc_flow_plot = scaler.transform(X_acc_flow_plot)
     X_gen_flow_plot = scaler.transform(X_gen_flow_plot)
 
-    console.print("Training MAF for {flow_num_epochs} epochs...")
+    console.print(f"Training MAF for {flow_num_epochs} epochs...")
 
     maf_result = fit_maf(
         maf,
@@ -237,12 +259,13 @@ else:
         adam_b2=flow_adam_b2,
         adam_eps=flow_adam_eps,
         #### PLOTTING ####
-        plot_frequency=flow_plot_diagnostic_frequency,
+        plot_latent_frequency=flow_plot_latent_frequency,
+        diagnostic_batch_sample_percentage=flow_diagnostic_batch_sample_percentage,
         checkpoint_dir=checkpoint_dir,
         feature_names=feature_names,
         X_gen=X_gen_flow_plot,
         X_acc=X_acc_flow_plot,
-        use_gpu=False
+        use_gpu=use_gpu
     )
 
     maf = maf_result["maf"]
@@ -250,6 +273,7 @@ else:
     flow_losses = maf_result["losses"]
 
     # Save the trained flow model
+    console.print("Saving trained flow model...")
     save_maf_model({"maf": maf, "params": maf_params, "losses": flow_losses}, flow_save_path)
     
     print("Creating corner plot for latent space data...")
@@ -327,8 +351,16 @@ iterator = DataLoader(
 
 # NOTE: iteration has 3 possible return states:
 # 1. 'epoch_start' - designates start, not much to do
-# 2. 'epoch_end' - designates end, compute and print metrics, draw diagnostics
-# 3. batch - designates a batch, train step
+# 2. 'epoch_end' - designates end, compute and print metrics, draw diagnostics, will not return a batch
+# 3.  batch - designates a batch, train step
+entropy_stats = {
+    'median': [],
+    'percentile_2.5': [],
+    'percentile_16': [],
+    'percentile_84': [],
+    'percentile_97.5': [],
+    'epoch': []
+}
 for item in iterator:
     # 1. Check if this is the start of an epoch
     if 'epoch_start' in item:
@@ -375,10 +407,25 @@ for item in iterator:
             if len(test_probs) > n_test_samples: # remove any padding
                 test_probs = test_probs[:n_test_samples]
             
+            # Calculate prediction entropy
+            entropies = calculate_entropy(test_probs)
+            
+            # Create entropy statistics dictionary
+            entropy_stats['median'].append(float(np.median(entropies)))
+            entropy_stats['percentile_2.5'].append(float(np.percentile(entropies, 2.5)))
+            entropy_stats['percentile_16'].append(float(np.percentile(entropies, 16)))
+            entropy_stats['percentile_84'].append(float(np.percentile(entropies, 84)))
+            entropy_stats['percentile_97.5'].append(float(np.percentile(entropies, 97.5)))
+            entropy_stats['epoch'].append(epoch+1)
+            
+            # Plot entropy
+            from pyamptools.dre.diagnostics import create_entropy_plot
+            create_entropy_plot(entropy_stats, checkpoint_dir, f"classifier_entropy.png")
+            
             # Plot efficiency by variable
             from pyamptools.dre.diagnostics import plot_efficiency_by_variable
             console.print("Plotting efficiency comparison diagnostics...")
-            efficiency_metrics = plot_efficiency_by_variable(
+            metrics_2d_dict = plot_efficiency_by_variable(
                 X_test_raw, 
                 test_probs, 
                 feature_names=feature_names,

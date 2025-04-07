@@ -151,3 +151,26 @@ def load_and_use_model(model, state, X_data, checkpoint_dir, step=None, loss_typ
         operand=None
     )
     return preds
+
+def calculate_entropy(probabilities):
+    """
+    Calculate entropy of probability distributions.
+    
+    Args:
+        probabilities: Array of probability distributions or binary predictions.
+                       If binary predictions in range (0,1), will convert to [p, 1-p] form.
+        
+    Returns:
+        Array of entropy values with shape (batch_size,)
+    """
+    # Check if input is already a distribution or just a probability
+    if len(probabilities.shape) == 1 or probabilities.shape[1] == 1:
+        p = jnp.clip(probabilities.reshape(-1), 1e-10, 1.0 - 1e-10)
+        p_binary = jnp.stack([p, 1.0 - p], axis=-1)
+    else: # Already a distribution
+        p_binary = jnp.clip(probabilities, 1e-10, 1.0)
+    
+    # Calculate entropy
+    log_probs = jnp.log(p_binary)
+    entropy = -jnp.sum(p_binary * log_probs, axis=-1)
+    return entropy
