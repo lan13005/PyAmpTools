@@ -67,7 +67,7 @@ def worker_function(pyamptools_yaml, iftpwa_yaml, bin_idx, prior_scale, prior_di
     """Worker function to run a single MCMC chain"""
 
     worker_console = Console()
-    worker_console.print(f"Worker {chain_idx} starting for bin {bin_idx} (PID: {os.getpid()})", style="bold blue")
+    worker_console.print(f"Chain {chain_idx}: Starting on bin {bin_idx} (PID: {os.getpid()})", style="bold blue")
     
     # Set up manager object for this bin_idx
     worker_mcmc = MCMCManager(
@@ -86,7 +86,7 @@ def worker_function(pyamptools_yaml, iftpwa_yaml, bin_idx, prior_scale, prior_di
         verbose=False
     )
     
-    worker_console.print(f"Worker {chain_idx}: Starting MCMC sampling for bin {bin_idx}...", style="bold green")
+    worker_console.print(f"Chain {chain_idx}: Starting MCMC sampling for bin {bin_idx}...", style="bold green")
     rng_key = jax.random.PRNGKey(seed + chain_idx)
     
     nuts_kernel = NUTS(
