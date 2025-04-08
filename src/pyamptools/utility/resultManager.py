@@ -741,7 +741,7 @@ def query_default(df):
 def safe_query(df, query):
     return df.query(query) if not df.empty else pd.DataFrame()
     
-def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10)):
+def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10), file_type='png'):
     ift_gen_df = resultManager.gen_results[0]
     ift_gen_df = query_default(ift_gen_df)
     cols = ift_gen_df.columns
@@ -787,10 +787,10 @@ def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10)):
         axes[i, 0].set_ylabel("Fit Fraction", size=15)
 
     plt.tight_layout()
-    ofile = f"{resultManager.base_directory}/{default_plot_subdir}/gen_curves.png"
+    ofile = f"{resultManager.base_directory}/{default_plot_subdir}/gen_curves.{file_type}"
     save_and_close_fig(ofile, fig, axes, console=resultManager.console, overwrite=True)
     
-def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, figsize=(10, 10)):
+def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, figsize=(10, 10), file_type='png'):
     name = "binned intensity"
     resultManager.console.print(header_fmt.format(f"Plotting '{name}' plots..."))
     
@@ -871,7 +871,7 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
             axes[irow, 0].set_ylabel(ylabel, size=12)
             
         plt.tight_layout()
-        ofile = f"{resultManager.base_directory}/{default_plot_subdir}/intensity/bin{bin}_intensities.png"
+        ofile = f"{resultManager.base_directory}/{default_plot_subdir}/intensity/bin{bin}_intensities.{file_type}"
         save_and_close_fig(ofile, fig, axes, console=resultManager.console, overwrite=True, verbose=False)
         saved_files.append(ofile)
         plt.close()
@@ -881,8 +881,8 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
         resultManager.console.print(f"  - {file}")
     resultManager.console.print(f"\n")
 
-def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, figsize=(10, 10),
-                              mcmc_nsamples=500, mcmc_selection="thin"):
+def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, figsize=(10, 10), 
+                              mcmc_nsamples=500, mcmc_selection="thin", file_type='png'):
     
     """
     Plot ~posterior distribution of the complex plane, overlaying generated curves, MLE, MCMC, IFT results when possible
@@ -1048,7 +1048,7 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
             axes[i].axhline(0, color='black', linestyle='--', alpha=0.2, linewidth=1)
 
         plt.tight_layout()
-        ofile = f"{resultManager.base_directory}/{default_plot_subdir}/complex_plane/bin{bin}_complex_plane.png"
+        ofile = f"{resultManager.base_directory}/{default_plot_subdir}/complex_plane/bin{bin}_complex_plane.{file_type}"
         save_and_close_fig(ofile, fig, axes, console=resultManager.console, overwrite=True, verbose=False)
         saved_files.append(ofile)
         plt.close()
@@ -1058,7 +1058,7 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
         resultManager.console.print(f"  - {file}")
     resultManager.console.print(f"\n")
         
-def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin"):
+def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin", file_type='png'):
     """
     This is a money plot. Two plots stacked vertically (intensity on top, relative phases on bottom)
     
@@ -1262,13 +1262,13 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
 
         # Save each figure to its own PNG file
         plt.tight_layout()
-        ofile = f"{resultManager.base_directory}/{default_plot_subdir}/intensity_and_phases/intensity_phase_plot_{waveName}.png"
+        ofile = f"{resultManager.base_directory}/{default_plot_subdir}/intensity_and_phases/intensity_phase_plot_{waveName}.{file_type}"
         save_and_close_fig(ofile, fig, axes, console=resultManager.console, overwrite=True, verbose=True)
         plt.close()
         
     resultManager.console.print(f"\n")
     
-def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin", save_file=None):
+def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin", file_type='png'):
     
     """
     This is another money plot. All non-zero projected moments are plotted
@@ -1413,9 +1413,9 @@ def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin
         save_and_close_fig(ofile, fig, axis, console=resultManager.console, overwrite=True, verbose=True)
 
     for moment_name in resultManager.moment_latex_dict.keys():
-        plot_moment(moment_name, ofile=f"{resultManager.base_directory}/{default_plot_subdir}/moments/moment_{moment_name}.png")
+        plot_moment(moment_name, ofile=f"{resultManager.base_directory}/{default_plot_subdir}/moments/moment_{moment_name}.{file_type}")
     
-def montage_and_gif_select_plots(resultManager: ResultManager):
+def montage_and_gif_select_plots(resultManager: ResultManager, file_type='png'):
     
     resultManager.console.print(header_fmt.format(f"Montaging / GIFing all plots..."))
     
@@ -1426,12 +1426,12 @@ def montage_and_gif_select_plots(resultManager: ResultManager):
         output_directory = f"{base_directory}/{default_plot_subdir}/{subdir}"
         
         # Sort files by bin number
-        bin_files_path = f"{output_directory}/bin*.png"
+        bin_files_path = f"{output_directory}/bin*.{file_type}"
         bin_files = sorted(glob.glob(bin_files_path), 
                           key=lambda x: int(re.search(r'bin(\d+)', x).group(1)))
         if bin_files:
             files_str = " ".join(bin_files)            
-            montage_output = f"{output_directory}/montage_output.png"
+            montage_output = f"{output_directory}/montage_output.{file_type}"
             gif_output = f"{output_directory}/output.gif"
             resultManager.console.print(f"Create montage + gif of plots in '{output_directory}'")
             os.system(f"montage {files_str} -density 300 -geometry +10+10 {montage_output}")
@@ -1444,15 +1444,27 @@ def montage_and_gif_select_plots(resultManager: ResultManager):
         output_directory = f"{base_directory}/{default_plot_subdir}/{subdir}"
         files = [] # Montage in the same order as waveNames
         for wave in resultManager.waveNames:
-            files_path = f"{output_directory}/intensity_phase_plot_{wave}.png"
+            files_path = f"{output_directory}/intensity_phase_plot_{wave}.{file_type}"
             files.append(files_path)
         if files:
             files_str = " ".join(files)
-            montage_output = f"{base_directory}/{default_plot_subdir}/{subdir}/montage_output.png"
+            montage_output = f"{base_directory}/{default_plot_subdir}/{subdir}/montage_output.{file_type}"
             resultManager.console.print(f"Create montage of plots in '{base_directory}/{default_plot_subdir}/{subdir}'")
             os.system(f"montage {files_str} -density 300 -geometry +10+10 {montage_output}")
         else:
             resultManager.console.print(f"[bold yellow]No intensity phase plot files found in {output_directory}[/bold yellow]")
+            
+    subdirs = ["moments"]
+    for subdir in subdirs:
+        output_directory = f"{base_directory}/{default_plot_subdir}/{subdir}"
+        files = glob.glob(f"{output_directory}/moment_*.{file_type}")
+        files = [f.replace('(', '\(').replace(')', '\)') for f in files]
+        files = sorted(files)
+        if files:
+            files_str = " ".join(files)
+            montage_output = f"{output_directory}/montage_output.{file_type}"
+            resultManager.console.print(f"Create montage of plots in '{output_directory}'")
+            os.system(f"montage {files_str} -density 300 -geometry +10+10 {montage_output}")
     
     resultManager.console.print(f"\n")
     
