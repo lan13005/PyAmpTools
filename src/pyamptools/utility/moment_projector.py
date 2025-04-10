@@ -1,4 +1,3 @@
-
 import jax.numpy as jnp
 import numpy as np
 from pyamptools.utility.clebsch import clebsch_gordan
@@ -226,6 +225,7 @@ def precompute_cg_coefficients_by_LM(l_max, L_max=None):
 def compute_moments_refl(rho0, rho1, rho2, l_max=3, L_max=None, cg_coeffs=None):
     """
     Compute all three sets of moments (H0, H1, H2) from density matrix components with reflection symmetry.
+    Only computes moments for M >= 0 due to symmetry of these moments
     
     Args:
         rho0, rho1, rho2: Density matrix components from compute_spin_density_matrices_refl
@@ -236,15 +236,8 @@ def compute_moments_refl(rho0, rho1, rho2, l_max=3, L_max=None, cg_coeffs=None):
         
     Returns:
         JAX array of concatenated moments [H0, H1, H2] of complex64 dtype.
-        Each moment type has length sum(2*L+1 for L in range(L_max+1)).
-        Within each moment type, values are ordered using the index formula idx = L*L + L + M,
-        which maps the (L,M) pairs to a 1D array with indices:
-        - (L=0,M=0)  → 0
-        - (L=1,M=-1) → 1
-        - (L=1,M=0)  → 2
-        - (L=1,M=1)  → 3
-        - (L=2,M=-2) → 4
-        - etc.
+        Each moment type has length sum(L+1 for L in range(L_max+1)).
+        Within each moment type, values are ordered by (L,M) with M >= 0 only.
         
         According to the symmetry properties from the equations:
         - H0(L,M) should be purely real
@@ -258,14 +251,16 @@ def compute_moments_refl(rho0, rho1, rho2, l_max=3, L_max=None, cg_coeffs=None):
         cg_coeffs = precompute_cg_coefficients_by_LM(l_max, L_max)
     
     # Initialize moments arrays - one for each of H0, H1, H2
-    num_moments_per_type = sum(2 * L + 1 for L in range(L_max + 1))
+    # Only calculate for M >= 0
+    num_moments_per_type = sum(L + 1 for L in range(L_max + 1))
     H0 = jnp.zeros(num_moments_per_type, dtype=global_dtype)
     H1 = jnp.zeros(num_moments_per_type, dtype=global_dtype)
     H2 = jnp.zeros(num_moments_per_type, dtype=global_dtype)
     
-    # Loop through all moment indices (L,M)
+    # Loop through all moment indices (L,M) with M >= 0
+    moment_idx = 0
     for L in range(L_max + 1):
-        for M in range(-L, L + 1):
+        for M in range(0, L + 1):
             # Initialize accumulators for each type of moment
             h0_val = global_dtype(0.0)
             h1_val = global_dtype(0.0)
@@ -303,12 +298,11 @@ def compute_moments_refl(rho0, rho1, rho2, l_max=3, L_max=None, cg_coeffs=None):
                     h1_val += cg * epsilon * rho1_element 
                     h2_val += cg * epsilon * rho2_element # Note rho2 includes the i factor
             
-            # Set the computed moment values at specific indicies
-            #   This is a standard mapping formula for spherical harmonics to 1D array
-            idx = L * L + L + M
-            H0 = H0.at[idx].set(h0_val)
-            H1 = H1.at[idx].set(h1_val)
-            H2 = H2.at[idx].set(h2_val)
+            # Set the computed moment values at specific indices
+            H0 = H0.at[moment_idx].set(h0_val)
+            H1 = H1.at[moment_idx].set(h1_val)
+            H2 = H2.at[moment_idx].set(h2_val)
+            moment_idx += 1
     
     # Concatenate all moment types and return
     return jnp.concatenate([H0, H1, H2])
@@ -325,7 +319,8 @@ def flatten_moments(H):
         Flat array of real and imaginary parts with float32 dtype.
         The output is ordered as [Re(H0(0,0)), Im(H0(0,0)), Re(H0(1,0)), Im(H0(1,0)), ..., 
                                   Re(H1(0,0)), Im(H1(0,0)), ..., Re(H2(0,0)), Im(H2(0,0)), ...].
-        Each H0(L,M), H1(L,M), H2(L,M) value represents a moment with specific L and M quantum numbers.
+        Each H0(L,M), H1(L,M), H2(L,M) value represents a moment with specific L and M quantum numbers,
+        where M >= 0 only (due to spherical harmonics symmetry).
     """
     # Reshape to flatten in the correct order
     H_flat_complex = jnp.reshape(H, (-1,))
@@ -348,6 +343,7 @@ def flatten_moments(H):
 def project_to_moments_refl(flat_amplitudes, l_max=3, L_max=None, cg_coeffs=None):
     """
     Project from reflectivity-basis partial-wave amplitudes to moments.
+    Only computes moments for M >= 0 due to symmetry of these moments
     
     Args:
         flat_amplitudes: Flat JAX array of real and imaginary parts with float32 dtype
@@ -357,10 +353,10 @@ def project_to_moments_refl(flat_amplitudes, l_max=3, L_max=None, cg_coeffs=None
         cg_coeffs: Dictionary of precomputed Clebsch-Gordan coefficients
         
     Returns:
-        Flat array of moments [Re(H0(0,0)), Im(H0(0,0)), Re(H0(1,-1)), ...] with float32 dtype.
+        Flat array of moments [Re(H0(0,0)), Im(H0(0,0)), Re(H0(1,0)), ...] with float32 dtype.
         The output contains all three moment types (H0, H1, H2) concatenated, with real and
-        imaginary parts interleaved. Within each moment type, values are ordered by the 
-        index formula idx = L*L + L + M.
+        imaginary parts interleaved. Within each moment type, values are ordered by (L,M)
+        with M >= 0 only.
     """
     # Convert to Python ints
     l_max_int = int(l_max)
@@ -391,31 +387,6 @@ def project_to_moments_refl(flat_amplitudes, l_max=3, L_max=None, cg_coeffs=None
 ### BELOW THIS LINE IS FOR TESTING AND BENCHMARKING
 #####################################################################
 
-def _compute_gradient(flat_amplitudes, target_moments, l_max=3, L_max=None, cg_coeffs=None):
-    """
-    Compute gradient of MSE between projected and target moments.
-    
-    Args:
-        flat_amplitudes: Flat JAX array of real and imaginary parts of amplitudes
-        target_moments: Flat JAX array of target moments to match
-        l_max: Maximum orbital angular momentum
-        L_max: Maximum L value for moments
-        cg_coeffs: JAX array of precomputed coefficients
-        
-    Returns:
-        Gradient of MSE with respect to flat_amplitudes
-    """
-    # Convert to Python ints
-    l_max_int = int(l_max)
-    
-    if L_max is None:
-        L_max = 2 * l_max_int
-    L_max_int = int(L_max)
-    
-    # Use gradient function
-    return _grad_fn(flat_amplitudes, target_moments, l_max_int, L_max_int, cg_coeffs)
-
-
 def _verify_moment_symmetry(flat_moments, l_max):
     """
     Verify the symmetry properties of the computed moments.
@@ -428,7 +399,7 @@ def _verify_moment_symmetry(flat_moments, l_max):
         Dictionary with statistics about the moment symmetry properties
     """
     L_max = 2 * l_max
-    num_moments_per_type = sum(2 * L + 1 for L in range(L_max + 1))
+    num_moments_per_type = sum(L + 1 for L in range(L_max + 1))
     
     # Reshape the flat array to separate real and imaginary parts
     re_im_moments = flat_moments.reshape(-1, 2)  # Shape: [3*num_moments_per_type, 2]
@@ -455,7 +426,7 @@ def _verify_moment_symmetry(flat_moments, l_max):
     # Create L, M indices for easier reporting
     lm_indices = []
     for L in range(L_max + 1):
-        for M in range(-L, L + 1):
+        for M in range(0, L + 1):  # Only M >= 0
             lm_indices.append((L, M))
     
     # Find the largest violations
@@ -538,14 +509,16 @@ def _test_projection_and_gradient():
     
     # Correct calculation for the number of flat moments
     L_max = 2 * l_max
-    num_moments_per_type = sum(2 * L + 1 for L in range(L_max + 1))
+    num_moments_per_type = sum(L + 1 for L in range(L_max + 1))
     n_flat_moments = 2 * 3 * num_moments_per_type  # 2x for real/imag, 3x for H0,H1,H2
     
     console.rule()
     console.print(f"For the given l_max: {l_max}, there are:")
     console.print(f" - total_m_values: {total_m_values}")
     console.print(f" - n_flat_amplitudes: {n_flat_amplitudes}")
-    console.print(f" - n_flat_moments (raw # real/imag parts): {n_flat_moments}")
+    console.print(f" - n_moments_per_type: {num_moments_per_type}")
+    console.print(f" - moments_output (concat H0, H1, H2) + flat real/imag: {n_flat_moments}")
+    console.print(f"   - cycles real/imag faster than H0, H1, H2")
     console.rule()
     
     # Generate random amplitudes
@@ -571,15 +544,10 @@ def _test_projection_and_gradient():
     first_run_time = time.time() - start
     console.print(f"First run time (includes compilation): {first_run_time:.4f} seconds")
     
-    # Generate target moments with small noise
-    key = jax.random.PRNGKey(42)
-    
-    # Number of runs for timing
-    n_runs = 5
-    
     # Multiple runs for better timing
     projection_times = []
     avg_non_zero_moments = []
+    n_runs = 5
     for i in range(n_runs):
         start = time.time()
         moments = project_to_moments_refl(flat_amplitudes, l_max, cg_coeffs=cg_coeffs)
@@ -609,8 +577,8 @@ def _test_projection_and_gradient():
     ########### COMPARE TO BORIS'S CODE ##############
     ##################################################
 
-    # restructure moments array 
-    num_moments_per_type = sum  (2 * L + 1 for L in range(L_max + 1))
+    # restructure moments array
+    num_moments_per_type = sum(L + 1 for L in range(L_max + 1))
     num_moments_parts_per_type = num_moments_per_type * 2 # 2x for real/imag
     H0_re_im = moments[:num_moments_parts_per_type]
     H1_re_im = moments[num_moments_parts_per_type:2*num_moments_parts_per_type]
@@ -622,20 +590,18 @@ def _test_projection_and_gradient():
     H2 /= H0[0]
     H1 /= H0[0]
     H0 /= H0[0]
-    
     moments = np.array([H0, H1, H2])
     
     np.set_printoptions(suppress=True, precision=6)
-    
     moments_all_agree = True
     for boris_moment in boris_moments.values:
         i, L, M = boris_moment.qn.momentIndex, boris_moment.qn.L, boris_moment.qn.M
-        # moments array elements in order LM = (0,0), (1,-1), (1,0), (1,1), (2,-2), (2,-1), (2,0), (2,1), (2,2)
-        offset = sum(2 * l + 1 for l in range(L)) + L
+        offset = sum(L + 1 for L in range(L))
         moment = moments[i, offset + M]
         if abs(boris_moment.val - moment) > 1e-5:
             moments_all_agree = False
             print(f"H{i}_{L}_{M} = {boris_moment.val}, {moment}, {abs(boris_moment.val - moment)}")
+    
     if moments_all_agree:
         print("All moments between Boris's code and this code agree!")
 
@@ -646,8 +612,5 @@ if __name__ == "__main__":
     def _loss_fn(flat_amps, target_moments, l_max, L_max, cg_coeffs):
         proj_moments = project_to_moments_refl(flat_amps, l_max, L_max, cg_coeffs)
         return jnp.mean((proj_moments - target_moments)**2)
-
-    # Create gradient function
-    _grad_fn = jax.grad(_loss_fn, argnums=0)
     
     _test_projection_and_gradient()
