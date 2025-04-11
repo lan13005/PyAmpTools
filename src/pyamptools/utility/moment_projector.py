@@ -33,7 +33,7 @@ _jax_logger = JaxLogger(_logger)
 ### NOTE: Most computation uses complex64, increase if we want more precision at cost of performance
 
 @partial(jax.jit, static_argnames=['l_max'])
-def build_reflectivity_amplitudes(flat_amplitudes, l_max=3):
+def build_reflectivity_amplitudes(flat_amplitudes, mask=None, l_max=3):
     """
     Reshape flattened real-valued amplitude array into sturctured complex amplitude array
     
@@ -41,6 +41,9 @@ def build_reflectivity_amplitudes(flat_amplitudes, l_max=3):
         flat_amplitudes: Flat JAX array of real and imaginary parts with float32 dtype
                         [Re(T_0), Im(T_0), Re(T_1), Im(T_1), ...]
                         NOTE: Order is [m cycles fastest, then l, then epsilon, then k]
+        mask: JAX array of boolean or 0/1 values with same shape as flat_amplitudes
+              When multiplied with flat_amplitudes, it zeros out specific elements
+              without changing array dimensions, allowing JAX to optimize calculations
         l_max: Maximum orbital angular momentum (default: 3)
         
     Returns:
@@ -51,6 +54,10 @@ def build_reflectivity_amplitudes(flat_amplitudes, l_max=3):
         - n_epsilon_values = 2 (epsilon = +1/-1, indexed as 0/1)
         - n_k_values = 1 (refers to spin-non-flip/spin-flip, we assume one is dominant)
     """
+    
+    # Apply mask if provided
+    if mask is not None:
+        flat_amplitudes = flat_amplitudes * mask
     
     # NOTE: This setup is kind of wasteful since we create a large array dim shape [n_l_values, n_m_max, n_epsilon_values, n_k_values]
     #       If we care about lmax=2 then there are 3 l-values, and 5 m-projections resulting in [3, 5] array (ignoring epsilon and k)
@@ -69,6 +76,8 @@ def build_reflectivity_amplitudes(flat_amplitudes, l_max=3):
 
     complex_amplitudes = flat_amplitudes[::2] + 1j * flat_amplitudes[1::2]
     total_m = sum(2 * l + 1 for l in range(n_l_values))
+    
+    # If this happens you might have set up your l_max wrong, check arg passing order
     assert complex_amplitudes.shape[0] == total_m * n_eps * n_k_values, f"complex_amplitudes.shape[0] = {complex_amplitudes.shape[0]} != total_m * n_eps * n_k_values = {total_m * n_eps * n_k_values}"
 
     T = jnp.zeros((n_l_values, n_m_max, n_eps, n_k_values), dtype=global_dtype)
@@ -340,7 +349,7 @@ def flatten_moments(H):
     return flat_moments
 
 @partial(jax.jit, static_argnames=['l_max', 'L_max'])
-def project_to_moments_refl(flat_amplitudes, l_max=3, L_max=None, cg_coeffs=None):
+def project_to_moments_refl(flat_amplitudes, mask=None, l_max=3, L_max=None, cg_coeffs=None):
     """
     Project from reflectivity-basis partial-wave amplitudes to moments.
     Only computes moments for M >= 0 due to symmetry of these moments
@@ -348,6 +357,9 @@ def project_to_moments_refl(flat_amplitudes, l_max=3, L_max=None, cg_coeffs=None
     Args:
         flat_amplitudes: Flat JAX array of real and imaginary parts with float32 dtype
                         [Re(T_0), Im(T_0), Re(T_1), Im(T_1), ...]
+                        NOTE: Order is [m cycles fastest, then l, then epsilon, then k]
+        mask: JAX array of boolean values with float32 dtype that will zero out parameters (same shape as flat_amplitudes)
+                intended to be used to lock a reference wave to 0
         l_max: Maximum orbital angular momentum (default: 3)
         L_max: Maximum L value for moments (default: 2*l_max)
         cg_coeffs: Dictionary of precomputed Clebsch-Gordan coefficients
@@ -365,8 +377,14 @@ def project_to_moments_refl(flat_amplitudes, l_max=3, L_max=None, cg_coeffs=None
         L_max = 2 * l_max_int
     L_max_int = int(L_max)
     
+    # check if jnp bool mask if so convert to float32
+    if mask is None:
+        mask = jnp.ones_like(flat_amplitudes, dtype=jnp.float32)
+    if mask is not None and mask.dtype == jnp.bool_:
+        mask = mask.astype(jnp.float32)
+    
     # Build structured array of reflectivity-basis amplitudes
-    T = build_reflectivity_amplitudes(flat_amplitudes, l_max_int)
+    T = build_reflectivity_amplitudes(flat_amplitudes, mask, l_max_int)
     
     # Compute spin-density matrices
     rho0, rho1, rho2 = compute_spin_density_matrices_refl(T, l_max_int)
@@ -382,6 +400,20 @@ def project_to_moments_refl(flat_amplitudes, l_max=3, L_max=None, cg_coeffs=None
     flat_moments = flatten_moments(H)
     
     return flat_moments
+
+def get_moment_names(l_max):
+    """
+    Generate names for the moments based on the maximum l value.
+    """
+    l_max = int(l_max)
+    L_max = 2 * l_max
+    names = []
+    for i in range(3):
+        for L in range(L_max + 1):
+            for M in range(0, L + 1):
+                names.append(f"H{i}_{L}_{M}")
+    return names
+
 
 #####################################################################
 ### BELOW THIS LINE IS FOR TESTING AND BENCHMARKING
@@ -540,7 +572,7 @@ def _test_projection_and_gradient():
     # First test - project to moments
     console.print("\nTesting projection to moments (reflectivity basis)...")
     start = time.time()
-    moments = project_to_moments_refl(flat_amplitudes, l_max, cg_coeffs=cg_coeffs)
+    moments = project_to_moments_refl(flat_amplitudes, mask=None, l_max=l_max, L_max=L_max, cg_coeffs=cg_coeffs)
     first_run_time = time.time() - start
     console.print(f"First run time (includes compilation): {first_run_time:.4f} seconds")
     
@@ -550,7 +582,7 @@ def _test_projection_and_gradient():
     n_runs = 5
     for i in range(n_runs):
         start = time.time()
-        moments = project_to_moments_refl(flat_amplitudes, l_max, cg_coeffs=cg_coeffs)
+        moments = project_to_moments_refl(flat_amplitudes, mask=None, l_max=l_max, L_max=L_max, cg_coeffs=cg_coeffs)
         projection_times.append(time.time() - start)
         avg_non_zero_moments.append(jnp.sum(jnp.abs(moments) > 1e-6))
     
@@ -610,7 +642,7 @@ if __name__ == "__main__":
     # Define loss function with precomputed CG coefficients
     @partial(jax.jit, static_argnames=['l_max', 'L_max'])
     def _loss_fn(flat_amps, target_moments, l_max, L_max, cg_coeffs):
-        proj_moments = project_to_moments_refl(flat_amps, l_max, L_max, cg_coeffs)
+        proj_moments = project_to_moments_refl(flat_amps, mask=None, l_max=l_max, L_max=L_max, cg_coeffs=cg_coeffs)
         return jnp.mean((proj_moments - target_moments)**2)
     
     _test_projection_and_gradient()
