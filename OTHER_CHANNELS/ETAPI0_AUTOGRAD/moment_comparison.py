@@ -19,10 +19,10 @@ from numpyro.contrib.einstein import SVGD, RBFKernel
 from numpyro.optim import Adam
 from functools import partial
 
-#############################################################################################
-#### Calling svgd.init() takes a very long time likely since it is compiling the model
-#### I was hoping jax persistent cache would help but I cannot get it to work
-#############################################################################################
+# ############################################################################################
+# ### Calling svgd.init() takes a very long time likely since it is compiling the model
+# ### I was hoping jax persistent cache would help but I cannot get it to work
+# ############################################################################################
 # jax.config.update("jax_compilation_cache_dir", os.path.expanduser("/w/halld-scshelf2101/lng/WORK/PyAmpTools9/OTHER_CHANNELS/ETAPI0_AUTOGRAD/jax_cache"))
 # jax.config.update("jax_persistent_cache_min_entry_size_bytes", -1)
 # jax.config.update("jax_persistent_cache_min_compile_time_secs", 0)
@@ -40,7 +40,17 @@ tightness = 100 # controls how tight the stein fit is
 seed = 42
 l_max = 1
 n_eps = 2
+bandwidth_params = { # Decays kernel bandwidth by 1/e over this many iterations. i.e. e^-5 ~ 0.0067
+    'decay_iterations': num_iterations // 5, 
+    'initial_scale': 1.0, 
+    'min_scale': 0.0,
+}
+output_dir = f"/w/halld-scshelf2101/lng/WORK/PyAmpTools9/OTHER_CHANNELS/ETAPI0_AUTOGRAD/moment_inversion"
+n_samples = 100
 ######################################################
+
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
 
 # Seed both just in case
 np.random.seed(seed)
@@ -174,6 +184,7 @@ def model(target_moments):
     H2 = projected[2*n_moments:3*n_moments:2] + 1j*projected[2*n_moments+1:3*n_moments:2]
     calc_moments = jnp.array([H0, H1, H2])
     
+    # NOTE: numpyro expects log-probabilities so for Gaussian approximation we need to pass the argument which is chi-squared
     # Compare with observed moments (using squared error as likelihood)
     error = jnp.sum(jnp.abs(calc_moments - target_moments))
     numpyro.factor("likelihood", -error * tightness)
@@ -215,17 +226,31 @@ svgd_state = svgd.init(rng_key, target_moments=target_moments)
 compile_svgd_time = time.time() - start_compile_svgd
 console.print(f"  SVGD compilation time: {compile_svgd_time:.2f} seconds")
 
-def make_bandwidth_factor(t, num_iterations):
-    # bandwidth_factor must be a callable
-    return lambda num_particles: 0.5 ** (t / num_iterations)
+def make_bandwidth_factor(t, decay_iterations, initial_scale=1.0, min_scale=0.0):
+    """
+    Create a bandwidth factor function with customizable exponential decay.
+    This factor multiplies the median heuristic bandwidth in RBFKernel so should be O(1)
+    
+    Args:
+        t: Current iteration
+        decay_iterations: Number of iterations to decay initial_scale by 1/e
+        initial_scale: Initial bandwidth multiplier (larger promotes exploration)
+        min_scale: Minimum bandwidth multiplier (prevents bandwidth from becoming too small)
+    
+    Returns:
+        A callable that returns the bandwidth factor for current iteration
+    """
+    # NOTE: min_scale set to 0 since we aim for deep inversion of moments to partial wave amplitudes
+    decay = initial_scale * jnp.exp(-t / decay_iterations)
+    return lambda num_particles: jnp.maximum(decay, min_scale)
 @jax.jit
-def step(svgd_state, t, num_iterations, target_moments):
-    kernel.bandwidth_factor = make_bandwidth_factor(t, num_iterations)
+def step(svgd_state, t, num_iterations, target_moments, bandwidth_params):
+    kernel.bandwidth_factor = make_bandwidth_factor(t, **bandwidth_params)
     return svgd.update(svgd_state, target_moments=target_moments) # Update returns a tuple where next state is first element
 
 start_run_svgd = time.time()
 for t in trange(num_iterations):
-    svgd_state_output = step(svgd_state, t, num_iterations, target_moments)
+    svgd_state_output = step(svgd_state, t, num_iterations, target_moments, bandwidth_params)
     svgd_state = svgd_state_output[0]  # Extract the SteinVIState object
 params_dict = svgd.get_params(svgd_state)
 svgd_time = time.time() - start_run_svgd
@@ -256,7 +281,6 @@ if 'free_params_auto_loc' in params_dict:
     process_batch = jit(vmap(process_particle))
     recovered_moments = process_batch(inferred_amplitudes)
 
-         
     ###############################
     ## SAVE RESULTS IN DATAFRAME ##
     ###############################
@@ -378,6 +402,9 @@ ax.set_yticks(np.linspace(0, 1, 6), np.round(np.linspace(0, 1, 6), 3), size=14)
 ax.set_xlabel('Moment', size=20)
 
 plt.tight_layout()
+console.print(f"Saving moment comparison plot to {output_dir}/compare_moments.png")
+plt.savefig(os.path.join(output_dir, "compare_moments.png"), dpi=300)
+plt.close()
 
 ########################################################
 ######### PLOT AMPLITUDES COMPARISON (HISTOGRAM) ########
@@ -402,6 +429,9 @@ for i in np.arange(len(amps))[(nrows-1)*ncols:]:
     axes[i].set_xlabel('Amplitude', size=18)
     
 plt.tight_layout()
+console.print(f"Saving amplitude comparison plot to {output_dir}/compare_amplitudes.png")
+plt.savefig(os.path.join(output_dir, "compare_amplitudes.png"), dpi=300)
+plt.close()
 
 ########################################################
 ######### PLOT PHASE COMPARISON (HISTOGRAM) ############
@@ -427,3 +457,6 @@ for i in np.arange(len(amps))[(nrows-1)*ncols:]:
     axes[i].set_xlabel('Phase', size=18)
     
 plt.tight_layout()
+console.print(f"Saving phase comparison plot to {output_dir}/compare_phases.png")
+plt.savefig(os.path.join(output_dir, "compare_phases.png"), dpi=300)
+plt.close()
