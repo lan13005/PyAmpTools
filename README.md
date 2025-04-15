@@ -6,12 +6,12 @@ This repository contains Python bindings for [AmpTools](https://github.com/mashe
 Partial wave analysis of large datasets using non-parametric models using [NIFTy](https://github.com/NIFTy-PPL/NIFTy) for fast variational inference over million to billion parameter spaces.
 - For general information on information theory, see these [Notes](https://lan13005.github.io/Information-Theory/)
 
-## Automated Input/Output studies for partial wave analysis from all angles
+## Automated Input/Output studies for partial wave analysis from numerous angles
 - `iftpwa` prior model can act as a **generator** for complex amplitude models (smooth Gaussian processes + parametric models like a Breit-Wigner)
 - Inference from multiple angles using likelihoods provided by [JAX](https://jax.readthedocs.io/en/latest/index.html):
-  1. Maximum Likelihood Estimation (MLE) using [iminuit](https://iminuit.readthedocs.io/en/latest/index.html) or `scipy.optimize` (lbfgs, etc.)
-  2. MCMC (Hamiltonian Monte Carlo) using [NumPyro](https://num.pyro.ai/en/stable/index.html)
-  3. SVGD (Stein Variational Gradient Descent) for "inversion" of projected moments to amplitudes
+  - Maximum Likelihood Estimation (MLE) using [iminuit](https://iminuit.readthedocs.io/en/latest/index.html) or `scipy.optimize` (lbfgs, etc.)
+  - MCMC (Hamiltonian Monte Carlo) using [NumPyro](https://num.pyro.ai/en/stable/index.html)
+  - SVGD (Stein Variational Gradient Descent) using [NumPyro](https://num.pyro.ai/en/stable/index.html) for "inversion" of projected moments to amplitudes
 - Neural density ratio estimation (DRE) for amortized application of acceptance functions - trained using flax/optax
 - These core technologies increases the effectiveness and rate at which Input/Output studies can be performed
 
