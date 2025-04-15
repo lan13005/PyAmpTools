@@ -37,6 +37,8 @@ mp.set_start_method('spawn', force=True)
 #     perform worse on a simple Monte Carlo test (A800 GPU vs 1 CPU core). Perhaps the likelihood evaluations are already fast (for this test ~1ms)
 #     and we are paying for GPU overhead.
 #   - The current implementation runs NUTS sampler with a single chain per process and then aggregates the results
+#   - Whenever a full jax implementation for likelihood is created we can just do jax.pmap(worker_function)
+#     See: https://forum.pyro.ai/t/how-to-use-cores-across-nodes/3578/3
 ########################################################
 
 ########################################################

@@ -152,7 +152,7 @@ class ResultManager:
             self._hist_results = self.load_hist_results()
             
         if os.path.exists(self.moment_cache_location):
-            self.console.print(f"Loading cached data with projected moments from {self.moment_cache_location}")
+            self.console.print(f"Loading cached data with projected moments (and original amplitudes, etc) from {self.moment_cache_location}")
             with open(self.moment_cache_location, "rb") as f:
                 _results = pkl.load(f)
                 self._mle_results  = _results["mle"]  if "mle"  in _results else self.load_mle_results()
@@ -228,6 +228,7 @@ class ResultManager:
         if "mcmc" not in _results: _results["mcmc"] = self._mcmc_results
         if "ift" not in _results:  _results["ift"]  = self._ift_results
         if "gen" not in _results:  _results["gen"]  = self._gen_results
+        if "moment_inversion" not in _results:  _results["moment_inversion"]  = self._moment_inversion_results
         _results["moment_latex_dict"] = self.moment_latex_dict
         with open(self.moment_cache_location, "wb") as f:
             pkl.dump(_results, f)

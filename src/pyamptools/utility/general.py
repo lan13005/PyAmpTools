@@ -83,6 +83,8 @@ for e, refl in zip([-1, 1], refls):
                 prettyLabels[amp] = rf"${J}^{{{P}{C}}}[{spectroscopic_map[l]}_{{{sM}}}^{{{refl}}}]$"
                 channel_map[amp] = 'VectorPseudoscalar'
                 
+qn_to_amp = {tuple(v): k for k, v in converter.items()} # quantum number list to amplitude names
+                
 def identify_channel(wave_names: List[str]) -> str:
     """ Loops over wave_names and checks if all reaction channels (i.e. TwoPseudoscalar or VectorPseudoscalar) are the same """
     channels = []
