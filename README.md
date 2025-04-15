@@ -2,11 +2,12 @@
 
 This repository contains Python bindings for [AmpTools](https://github.com/mashephe/AmpTools) and interfaces with `iftpwa` for constructing non-parametric models for partial wave analysis under the numerical information field theory framework, [NIFTy](https://github.com/NIFTy-PPL/NIFTy). Additional hooks into jax + numpyro allows for rapid and automated exploration of the partial wave optimization landscape under Frequentist and Bayesian lenses.
 
-## Information Field Theory for Partial Wave Analysis (`iftpwa` companion repository)
-Partial wave analysis of large datasets using non-parametric models using [NIFTy](https://github.com/NIFTy-PPL/NIFTy) for fast variational inference over million to billion parameter spaces.
-- For general information on information theory, see these [Notes](https://lan13005.github.io/Information-Theory/)
+## Information Field Theory for Partial Wave Analysis
+- `iftpwa` companion repository (currently private under development)
+- Partial wave analysis of large datasets using non-parametric models using [NIFTy](https://github.com/NIFTy-PPL/NIFTy) for fast variational inference over million to billion parameter spaces.
+  - For general information on information theory, see these [Notes](https://lan13005.github.io/Information-Theory/)
 
-## Automated Input/Output studies for partial wave analysis from numerous angles
+## Automated Input/Output studies for partial wave analysis
 - `iftpwa` prior model can act as a **generator** for complex amplitude models (smooth Gaussian processes + parametric models like a Breit-Wigner)
 - Inference from multiple angles using likelihoods provided by [JAX](https://jax.readthedocs.io/en/latest/index.html):
   - Maximum Likelihood Estimation (MLE) using [iminuit](https://iminuit.readthedocs.io/en/latest/index.html) or `scipy.optimize` (lbfgs, etc.)
