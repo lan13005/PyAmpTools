@@ -1,19 +1,21 @@
-import jax.numpy as jnp
 import numpy as np
-from pyamptools.utility.clebsch import clebsch_gordan
 import time
 from functools import partial
 from rich.console import Console
 import logging
+
 import jax
+jax.config.update("jax_enable_x64", True)
+import jax.numpy as jnp
+from pyamptools.utility.clebsch import clebsch_gordan
 
 from pyamptools.utility.MomentCalculatorTwoPS import AmplitudeSet, AmplitudeValue, QnWaveIndex
-
 from iftpwa1.utilities.helpers import JaxLogger
 
 n_k_values = 1
 
-global_dtype = jnp.complex128
+gbl_ctype = jnp.complex128
+gbl_ftype = jnp.float64
 
 console = Console()
         
@@ -38,7 +40,7 @@ def build_reflectivity_amplitudes(flat_amplitudes, mask=None, l_max=3):
     Reshape flattened real-valued amplitude array into sturctured complex amplitude array
     
     Args:
-        flat_amplitudes: Flat JAX array of real and imaginary parts with float32 dtype
+        flat_amplitudes: Flat JAX array of real and imaginary parts with gbl_ftype dtype
                         [Re(T_0), Im(T_0), Re(T_1), Im(T_1), ...]
                         NOTE: Order is [m cycles fastest, then l, then epsilon, then k]
         mask: JAX array of boolean or 0/1 values with same shape as flat_amplitudes
@@ -47,7 +49,7 @@ def build_reflectivity_amplitudes(flat_amplitudes, mask=None, l_max=3):
         l_max: Maximum orbital angular momentum (default: 3)
         
     Returns:
-        Array of complex amplitudes [l]^{epsilon}_{m,k} with complex64 dtype.
+        Array of complex amplitudes [l]^{epsilon}_{m,k} with gbl_ctype dtype.
         Shape: [n_l_values, n_m_max, n_epsilon_values, n_k_values], where:
         - n_l_values = l_max + 1
         - n_m_max = 2 * l_max + 1 (m runs from -l to +l, offset by l_max in the array)
@@ -80,7 +82,7 @@ def build_reflectivity_amplitudes(flat_amplitudes, mask=None, l_max=3):
     # If this happens you might have set up your l_max wrong, check arg passing order
     assert complex_amplitudes.shape[0] == total_m * n_eps * n_k_values, f"complex_amplitudes.shape[0] = {complex_amplitudes.shape[0]} != total_m * n_eps * n_k_values = {total_m * n_eps * n_k_values}"
 
-    T = jnp.zeros((n_l_values, n_m_max, n_eps, n_k_values), dtype=global_dtype)
+    T = jnp.zeros((n_l_values, n_m_max, n_eps, n_k_values), dtype=gbl_ctype)
     flat_idx = 0
     
     # Ordering: k (slowest) -> epsilon -> l -> m (fastest)
@@ -103,13 +105,13 @@ def compute_spin_density_matrices_refl(T, l_max=3):
     NOTE: The factor of epsilon is not included in this function and will be absorbed into the moment projection
 
     Args:
-        T: Complex array of shape (l_max+1, 2*l_max+1, 2, n_k_values) with complex64 dtype
+        T: Complex array of shape (l_max+1, 2*l_max+1, 2, n_k_values) with gbl_ctype dtype
            where T[l, m, epsilon, k], with m offset by +l_max
         l_max: Maximum orbital angular momentum
 
     Returns:
         Tuple of (rho0, rho1, rho2), each of shape (2, l_max+1, l_max+1, 2*l_max+1, 2*l_max+1)
-        with complex64 dtype, where:
+        with gbl_ctype dtype, where:
         - First dimension (2): Epsilon values (+1/-1, indexed as 0/1)
         - Second dimension (l_max+1): l  index for first amplitude
         - Third dimension  (l_max+1): l' index for second amplitude
@@ -186,9 +188,9 @@ def compute_spin_density_matrices_refl(T, l_max=3):
         operand=None
     )
     
-    rho0 = jnp.array(rho0, dtype=global_dtype)
-    rho1 = jnp.array(rho1, dtype=global_dtype)
-    rho2 = jnp.array(rho2, dtype=global_dtype)
+    rho0 = jnp.array(rho0, dtype=gbl_ctype)
+    rho1 = jnp.array(rho1, dtype=gbl_ctype)
+    rho2 = jnp.array(rho2, dtype=gbl_ctype)
 
     return rho0, rho1, rho2
 
@@ -238,13 +240,13 @@ def compute_moments_refl(rho0, rho1, rho2, l_max=3, L_max=None, cg_coeffs=None):
     
     Args:
         rho0, rho1, rho2: Density matrix components from compute_spin_density_matrices_refl
-                         Each has shape (2, l_max+1, l_max+1, 2*l_max+1, 2*l_max+1) of complex64 dtype
+                         Each has shape (2, l_max+1, l_max+1, 2*l_max+1, 2*l_max+1) of gbl_ctype dtype
         l_max: Maximum l value
         L_max: Maximum L value (default: 2*l_max)
         cg_coeffs: Dictionary of precomputed Clebsch-Gordan coefficients
         
     Returns:
-        JAX array of concatenated moments [H0, H1, H2] of complex64 dtype.
+        JAX array of concatenated moments [H0, H1, H2] of gbl_ctype dtype.
         Each moment type has length sum(L+1 for L in range(L_max+1)).
         Within each moment type, values are ordered by (L,M) with M >= 0 only.
         
@@ -262,18 +264,18 @@ def compute_moments_refl(rho0, rho1, rho2, l_max=3, L_max=None, cg_coeffs=None):
     # Initialize moments arrays - one for each of H0, H1, H2
     # Only calculate for M >= 0
     num_moments_per_type = sum(L + 1 for L in range(L_max + 1))
-    H0 = jnp.zeros(num_moments_per_type, dtype=global_dtype)
-    H1 = jnp.zeros(num_moments_per_type, dtype=global_dtype)
-    H2 = jnp.zeros(num_moments_per_type, dtype=global_dtype)
+    H0 = jnp.zeros(num_moments_per_type, dtype=gbl_ctype)
+    H1 = jnp.zeros(num_moments_per_type, dtype=gbl_ctype)
+    H2 = jnp.zeros(num_moments_per_type, dtype=gbl_ctype)
     
     # Loop through all moment indices (L,M) with M >= 0
     moment_idx = 0
     for L in range(L_max + 1):
         for M in range(0, L + 1):
             # Initialize accumulators for each type of moment
-            h0_val = global_dtype(0.0)
-            h1_val = global_dtype(0.0)
-            h2_val = global_dtype(0.0)
+            h0_val = jnp.array(0.0, dtype=gbl_ctype)
+            h1_val = jnp.array(0.0, dtype=gbl_ctype)
+            h2_val = jnp.array(0.0, dtype=gbl_ctype)
             
             # Get the CG coefficients for this (L,M)
             entries = cg_coeffs[(L, M)]
@@ -319,13 +321,13 @@ def compute_moments_refl(rho0, rho1, rho2, l_max=3, L_max=None, cg_coeffs=None):
 @jax.jit
 def flatten_moments(H):
     """
-    Flatten the moments array into a 1D array of alternating real and imaginary parts.
+    Flatten complex moments into interleaved real and imaginary parts.
     
     Args:
-        H: Array of concatenated moments [H0, H1, H2] with complex64 dtype
+        H: Array of concatenated moments [H0, H1, H2] with gbl_ctype dtype
         
     Returns:
-        Flat array of real and imaginary parts with float32 dtype.
+        Flat array of real and imaginary parts with gbl_ftype dtype.
         The output is ordered as [Re(H0(0,0)), Im(H0(0,0)), Re(H0(1,0)), Im(H0(1,0)), ..., 
                                   Re(H1(0,0)), Im(H1(0,0)), ..., Re(H2(0,0)), Im(H2(0,0)), ...].
         Each H0(L,M), H1(L,M), H2(L,M) value represents a moment with specific L and M quantum numbers,
@@ -340,10 +342,10 @@ def flatten_moments(H):
     
     # Interleave using vectorized operations
     flat_size = 2 * H_flat_complex.shape[0]
-    flat_moments = jnp.zeros(flat_size, dtype=jnp.float32)
+    flat_moments = jnp.zeros(flat_size, dtype=gbl_ftype)
     
     # Set real and imaginary parts
-    flat_moments = flat_moments.at[::2].set(real_parts)
+    flat_moments = flat_moments.at[0::2].set(real_parts)
     flat_moments = flat_moments.at[1::2].set(imag_parts)
     
     return flat_moments
@@ -355,17 +357,17 @@ def project_to_moments_refl(flat_amplitudes, mask=None, l_max=3, L_max=None, cg_
     Only computes moments for M >= 0 due to symmetry of these moments
     
     Args:
-        flat_amplitudes: Flat JAX array of real and imaginary parts with float32 dtype
+        flat_amplitudes: Flat JAX array of real and imaginary parts with gbl_ftype dtype
                         [Re(T_0), Im(T_0), Re(T_1), Im(T_1), ...]
                         NOTE: Order is [m cycles fastest, then l, then epsilon, then k]
-        mask: JAX array of boolean values with float32 dtype that will zero out parameters (same shape as flat_amplitudes)
+        mask: JAX array of boolean values with gbl_ftype dtype that will zero out parameters (same shape as flat_amplitudes)
                 intended to be used to lock a reference wave to 0
         l_max: Maximum orbital angular momentum (default: 3)
         L_max: Maximum L value for moments (default: 2*l_max)
         cg_coeffs: Dictionary of precomputed Clebsch-Gordan coefficients
         
     Returns:
-        Flat array of moments [Re(H0(0,0)), Im(H0(0,0)), Re(H0(1,0)), ...] with float32 dtype.
+        Flat array of moments [Re(H0(0,0)), Im(H0(0,0)), Re(H0(1,0)), ...] with gbl_ftype dtype.
         The output contains all three moment types (H0, H1, H2) concatenated, with real and
         imaginary parts interleaved. Within each moment type, values are ordered by (L,M)
         with M >= 0 only.
@@ -379,9 +381,9 @@ def project_to_moments_refl(flat_amplitudes, mask=None, l_max=3, L_max=None, cg_
     
     # check if jnp bool mask if so convert to float32
     if mask is None:
-        mask = jnp.ones_like(flat_amplitudes, dtype=jnp.float32)
+        mask = jnp.ones_like(flat_amplitudes, dtype=gbl_ftype)
     if mask is not None and mask.dtype == jnp.bool_:
-        mask = mask.astype(jnp.float32)
+        mask = mask.astype(gbl_ftype)
     
     # Build structured array of reflectivity-basis amplitudes
     T = build_reflectivity_amplitudes(flat_amplitudes, mask, l_max_int)
@@ -411,7 +413,7 @@ def get_moment_names(l_max):
     for i in range(3):
         for L in range(L_max + 1):
             for M in range(0, L + 1):
-                names.append(f"H{i}_{L}_{M}")
+                names.append(f"H{i}({L},{M})")
     return names
 
 
@@ -489,7 +491,7 @@ def _verify_moment_symmetry(flat_moments, l_max):
     
     return results
 
-def _get_boris_moments(flat_amplitudes, l_max=3):
+def _get_boris_moments(flat_amplitudes, l_max=3, normalize=True):
     # Convert flat_amplitudes to AmplitudeValue objects expected by AmplitudeSet
     amplitude_values = []
     idx = 0
@@ -509,13 +511,13 @@ def _get_boris_moments(flat_amplitudes, l_max=3):
         
     boris_moments = amplitude_set.photoProdMomentSet(
         maxL=2*l_max,  # Max L for moments is twice the max l for amplitudes
-        normalize=True,
+        normalize=normalize,
         printMomentFormulas=False
     )
     
     for moment in boris_moments.values:
         i, L, M = moment.qn.momentIndex, moment.qn.L, moment.qn.M
-        moment_idx = f"H{i}_{L}_{M}"
+        moment_idx = f"H{i}({L},{M})"
         if abs(moment.val) > 1e-10:
             logging.debug(f"{moment_idx}: {moment.val}")
         
@@ -556,10 +558,10 @@ def _test_projection_and_gradient():
     # Generate random amplitudes
     np.random.seed(42)
     flat_amplitudes = np.random.normal(size=n_flat_amplitudes)
-    flat_amplitudes = jnp.array(flat_amplitudes, dtype=jnp.float32)
+    flat_amplitudes = jnp.array(flat_amplitudes, dtype=gbl_ftype)
     
     # Calculate moments using Boris's method
-    boris_moments = _get_boris_moments(flat_amplitudes, l_max)
+    boris_moments = _get_boris_moments(flat_amplitudes, l_max, normalize=True)
 
     # Precompute CG coefficients once
     console.print("Precomputing Clebsch-Gordan coefficients...")
@@ -632,7 +634,7 @@ def _test_projection_and_gradient():
         moment = moments[i, offset + M]
         if abs(boris_moment.val - moment) > 1e-5:
             moments_all_agree = False
-            print(f"H{i}_{L}_{M} = {boris_moment.val}, {moment}, {abs(boris_moment.val - moment)}")
+            print(f"H{i}({L},{M}) = {boris_moment.val}, {moment}, {abs(boris_moment.val - moment)}")
     
     if moments_all_agree:
         print("All moments between Boris's code and this code agree!")

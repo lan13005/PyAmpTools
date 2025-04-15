@@ -125,12 +125,15 @@ class MomentManagerVecPS(MomentManager):
         """
         0: normalize to H_0(0, 0)
         1: normalize to the intensity in the bin (acceptance corrected or not depends on your setting in the YAML file when the dataframe was created)
+        2: no normalization, keep raw moments
         """
         
         if normalization_scheme == 0:
             normalization = True
         elif normalization_scheme == 1:
             normalization = int(self.df.iloc[i]['intensity'].real)
+        elif normalization_scheme == 2:
+            normalization = False
         else:
             raise ValueError(f"Invalid normalization scheme: {normalization_scheme}")
         
@@ -172,7 +175,8 @@ class MomentManagerVecPS(MomentManager):
                 # table_dict[moment_str] = dict(self.coefficient_dict.copy())
                 if moment_str == "H0(0,0,0,0)":
                     if isinstance(normalization, bool):
-                        normalization = moment_val.real
+                        if normalization: normalization = moment_val.real
+                        else: normalization = 1
                     elif isinstance(normalization, (int, float)):
                         normalization = moment_val.real / normalization
                 moment_results[moment_str] = moment_val / normalization
@@ -245,6 +249,7 @@ class MomentManagerTwoPS(MomentManager):
         """
         0: normalize to H_0(0, 0)
         1: normalize to the intensity in the bin (acceptance corrected or not depends on your setting in the YAML file when the dataframe was created)
+        2: no normalization, keep raw moments
         """
         
         moment_results = {}
@@ -253,6 +258,8 @@ class MomentManagerTwoPS(MomentManager):
             normalization = True
         elif normalization_scheme == 1:
             normalization = int(self.df.iloc[i]['intensity'].real)
+        elif normalization_scheme == 2:
+            normalization = False
         else:
             raise ValueError(f"Invalid normalization scheme: {normalization_scheme}")
         

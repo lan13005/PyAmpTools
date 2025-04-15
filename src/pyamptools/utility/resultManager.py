@@ -43,6 +43,7 @@ ift_color_dict = {
 }
 gen_color = 'xkcd:green'
 mcmc_color = 'black'
+moment_inversion_color = 'xkcd:purple'
 
 ift_alpha = 0.35 # transparency of IFT fit results
 mle_jitter_scale = 0.1 # percent of the bin width the MLE results are jittered
@@ -70,10 +71,12 @@ class ResultManager:
         self._ift_results  = [pd.DataFrame(), pd.DataFrame()] # (fitted samples of amplitudes, fitted samples of resonance parameters)
         self._mcmc_results = pd.DataFrame()
         self._hist_results = pd.DataFrame()
+        self._moment_inversion_results = pd.DataFrame()
         
         self.yaml = yaml_file
         if isinstance(yaml_file, str):
             self.yaml = load_yaml(yaml_file)
+        self.ift_yaml = self.yaml['nifty']['yaml']
         self.base_directory = self.yaml['base_directory']
         self.waveNames = self.yaml['waveset'].split("_")
         self.phase_reference = self.yaml['phase_reference'].split("_")
@@ -120,7 +123,9 @@ class ResultManager:
             'mcmc': [],
             'ift_GENERATED': [],
             'ift_FITTED': [],
-            'hist': []
+            'hist': [],
+            'gen': [],
+            'moment_inversion': [],
         }
         
         # Identify incoherent sectors and create list of waves in each sector
@@ -154,6 +159,7 @@ class ResultManager:
                 self._mcmc_results = _results["mcmc"] if "mcmc" in _results else self.load_mcmc_results()
                 self._ift_results  = _results["ift"]  if "ift"  in _results else self.load_ift_results(source_type="FITTED")
                 self._gen_results  = _results["gen"]  if "gen"  in _results else self.load_ift_results(source_type="GENERATED")
+                self._moment_inversion_results = _results["moment_inversion"] if "moment_inversion" in _results else self.load_moment_inversion_results()
                 self.moment_latex_dict = _results["moment_latex_dict"] if "moment_latex_dict" in _results else None
             return
         else:
@@ -161,8 +167,9 @@ class ResultManager:
             self._mcmc_results = self.load_mcmc_results()
             self._ift_results = self.load_ift_results(source_type="FITTED")
             self._gen_results = self.load_ift_results(source_type="GENERATED")
+            self._moment_inversion_results = self.load_moment_inversion_results()
             
-    def attempt_project_moments(self, pool_size=1):
+    def attempt_project_moments(self, normalization_scheme=0, pool_size=1):
         
         self.console.print(f"User requested moments to be calculated")
         dfs_to_process = [
@@ -195,7 +202,7 @@ class ResultManager:
                     
                     # Normalize to the intensity in the bin [scheme=1] (acceptance corrected or not depends on your setting in the YAML file when the dataframe was created)
                     processed_df, moment_latex_dict = momentManager.process_and_return_df(
-                        normalization_scheme=1,
+                        normalization_scheme=normalization_scheme,
                         pool_size=pool_size, 
                         append=True
                     )                
@@ -244,6 +251,10 @@ class ResultManager:
     @property
     def hist_results(self) -> pd.DataFrame:
         return self._hist_results
+    
+    @property
+    def moment_inversion_results(self) -> pd.DataFrame:
+        return self._moment_inversion_results
     
     def load_hist_results(self, base_directory=None, alias=None):
         if base_directory is None:
@@ -580,6 +591,70 @@ class ResultManager:
         self.console.print(f"\n")
 
         return mcmc_results
+    
+    def load_moment_inversion_results(self, base_directory=None, alias=None):
+        """
+        Loads moment inversion results from a given base_directory
+        
+        Args:
+            base_directory: str, path to the base directory containing 'MOMENT_INVERSION' subdirectory.
+                If None, will load from self.base_directory specified in the yaml file.
+            alias: str, optional alias to identify these results. If None and base_directory
+                is the default, will use 'yaml' as the source name.
+                
+        Returns:
+            pd.DataFrame, moment inversion results
+        """
+        
+        if base_directory is None:
+            base_directory = self.base_directory
+        if not os.path.exists(base_directory):
+            raise FileNotFoundError(f"Base directory {base_directory} does not exist!")
+            
+        result_dir = f"{base_directory}/MOMENT_INVERSION"
+        self.console.print(header_fmt.format(f"Loading 'MOMENT_INVERSION' results from {result_dir}"))
+        
+        source_name = self._check_and_get_source_name(self._moment_inversion_results, 'moment_inversion', base_directory, alias)
+        if source_name is None:
+            return self._moment_inversion_results
+            
+        pkl_list = glob.glob(f"{result_dir}/*pkl")
+        if len(pkl_list) == 0:
+            self.console.print(f"[bold yellow]No 'MOMENT_INVERSION' results found in {result_dir}, return existing results with shape {self._moment_inversion_results.shape}\n[/bold yellow]")
+            return self._moment_inversion_results
+            
+        # Load the first pickle file found
+        moment_inversion_results = pd.DataFrame()
+        for inversion_file in pkl_list:
+            massBin = int(inversion_file.split("_mb")[1].split(".pkl")[0])
+            with open(inversion_file, 'rb') as f:
+                results = pkl.load(f)
+            _moment_inversion_results = results['prediction']
+            moment_inversion_results = pd.concat([moment_inversion_results, _moment_inversion_results])
+        moment_inversion_results = moment_inversion_results.sort_values(by='mass')
+        moment_inversion_results = moment_inversion_results.reset_index(drop=True)
+        
+        if len(moment_inversion_results) == 0:
+            self.console.print(f"[bold yellow]No 'MOMENT_INVERSION' results found in {result_dir}, return existing results with shape {self._moment_inversion_results.shape}\n[/bold yellow]")
+            return self._moment_inversion_results
+            
+        # rotate away reference waves
+        moment_inversion_results = self._rotate_away_reference_waves(moment_inversion_results)
+        moment_inversion_results['mass'] = np.round(moment_inversion_results['mass'], self.n_decimal_places)
+        
+        moment_inversion_results = self._add_source_to_dataframe(moment_inversion_results, 'moment_inversion', source_name)
+        if not self._moment_inversion_results.empty:
+            self.console.print(f"[bold green]Previous MOMENT_INVERSION results were loaded already, concatenating[/bold green]")
+            moment_inversion_results = pd.concat([self._moment_inversion_results, moment_inversion_results])
+        
+        # print diagnostics
+        self.console.print(f"[bold green]\nMOMENT_INVERSION Summary:[/bold green]")
+        self.console.print(f"columns: {list(moment_inversion_results.columns)}")
+        self.console.print(f"n_samples: {moment_inversion_results.shape[0] // self.n_mass_bins}")
+        self.console.print(f"shape: {moment_inversion_results.shape} ~ (n_samples * n_bins, columns)")
+        self.console.print(f"\n")
+        
+        return moment_inversion_results
     
     def _rotate_away_reference_waves(self, df):
         if not isinstance(df, pd.DataFrame):
@@ -937,9 +1012,13 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
             plt.close()
             continue
         
-        # share limits so we know some amplitudes are small
-        all_amps = np.array([[np.real(binned_mcmc_samples[f'{wave}_amp']), np.imag(binned_mcmc_samples[f'{wave}_amp'])] for wave in cols_to_plot])
-        max_lim = max(np.abs(all_amps.max()), np.abs(all_amps.min()))
+        # share limits so we know some amplitudes are small, better at identifying phase mismatches
+        max_lim = -np.inf
+        for _df in [binned_mcmc_samples, binned_mle_results, binned_gen_results, binned_ift_results]:
+            if not _df.empty:
+                all_amps = np.array([[np.real(_df[f'{wave}_amp']), np.imag(_df[f'{wave}_amp'])] for wave in cols_to_plot])
+                df_max_lim = max(np.abs(all_amps.max()), np.abs(all_amps.min()))
+                max_lim = max(max_lim, df_max_lim)
         bin_edges = np.linspace(-max_lim, max_lim, 100)
 
         for i, wave in enumerate(cols_to_plot):
@@ -1078,9 +1157,11 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
     mle_results  = query_default(resultManager.mle_results)
     gen_results  = query_default(resultManager.gen_results[0])
     ift_results  = query_default(resultManager.ift_results[0])
+    moment_inversion_results = query_default(resultManager.moment_inversion_results)
     
     # If everything is missing, nothing to do
-    if hist_results.empty and mcmc_results.empty and mle_results.empty and gen_results.empty and ift_results.empty:
+    if (hist_results.empty and mcmc_results.empty and mle_results.empty and 
+        gen_results.empty and ift_results.empty and moment_inversion_results.empty):
         resultManager.console.print(f"[bold yellow]No data available for binned intensity plots. Skipping.[/bold yellow]")
         return
 
@@ -1124,6 +1205,7 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
         mcmc_legend_line = None
         mle_bars = None
         ift_legend_lines = []
+        moment_inversion_line = None
         
         #### PLOT DATA HISTOGRAM
         # ax.step(mass_centers, nEvents[0], where='post', color='black', alpha=0.8)
@@ -1177,6 +1259,21 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
                         ift_line = ax.plot([], [], color=ift_color_dict[fit_type], linestyle='-', alpha=1.0, linewidth=1, label=fit_type)[0]
                         ift_legend_lines.append(ift_line)
         
+        #### PLOT MOMENT INVERSION INTENSITY
+        if not moment_inversion_results.empty:
+            for bin_idx in range(n_mass_bins):
+                mass = mass_centers[bin_idx]
+                binned_samples = moment_inversion_results.query('mass == @mass')
+                x_starts = np.full_like(binned_samples[waveName], mass - line_half_width)
+                x_ends   = np.full_like(binned_samples[waveName], mass + line_half_width)
+                ax.hlines(y=binned_samples[waveName],
+                        xmin=x_starts,
+                        xmax=x_ends,
+                        colors=moment_inversion_color,
+                        alpha=0.05,
+                        linewidth=1)
+            moment_inversion_line = ax.plot([], [], color=moment_inversion_color, alpha=0.7, linewidth=2, label="Moment Inv.")[0]
+        
         #### PLOT MLE FIT INTENSITY
         if not mle_results.empty:
             jitter_scale = mle_jitter_scale * resultManager.mass_bin_width
@@ -1190,6 +1287,7 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
         if error_bars is not None: handles.append(error_bars)
         if mcmc_legend_line is not None: handles.append(mcmc_legend_line)
         if mle_bars is not None: handles.append(mle_bars)
+        if moment_inversion_line is not None: handles.append(moment_inversion_line)
         handles += ift_legend_lines
         ax.legend(handles=handles, labelcolor="linecolor", handlelength=0.3, 
                  handletextpad=0.15, frameon=False, loc='upper right', prop={'size': 16})
@@ -1236,8 +1334,23 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
                 phase = np.angle(tmp[f"{waveName}_amp"], deg=True)
                 phase = np.unwrap(phase, period=360)
                 for offset in [-360, 0, 360]:
-                    phase_ax.plot(tmp['mass'], phase + offset, color=ift_color_dict["Signal"], linestyle='-', alpha=ift_alpha, linewidth=1)
+                    phase_ax.plot(tmp['mass'],  phase + offset, color=ift_color_dict["Signal"], linestyle='-', alpha=ift_alpha, linewidth=1)
                     phase_ax.plot(tmp['mass'], -phase + offset, color=ift_color_dict["Signal"], linestyle='-', alpha=ift_alpha, linewidth=1)
+            
+        #### PLOT MOMENT INVERSION PHASES
+        if not moment_inversion_results.empty and f"{waveName}_amp" in moment_inversion_results.columns:
+            for bin_idx in range(n_mass_bins):
+                mass = mass_centers[bin_idx]
+                binned_samples = moment_inversion_results.query('mass == @mass')
+                x_starts = np.full_like(binned_samples[waveName], mass - line_half_width)
+                x_ends   = np.full_like(binned_samples[waveName], mass + line_half_width)
+                phases = np.angle(binned_samples[f"{waveName}_amp"], deg=True)
+                phase_ax.hlines(y=phases,   
+                        xmin=x_starts, 
+                        xmax=x_ends, 
+                        colors=moment_inversion_color, 
+                        alpha=0.1, 
+                        linewidth=1)
             
         #### PLOT MLE PHASES
         if not mle_results.empty:
