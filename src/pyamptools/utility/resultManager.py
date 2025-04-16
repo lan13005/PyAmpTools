@@ -84,9 +84,9 @@ class ResultManager:
         max_mass = self.yaml['max_mass']
 
         self.n_mass_bins = self.yaml['n_mass_bins']
-        self.masses = np.linspace(min_mass, max_mass, self.n_mass_bins+1)
-        self.mass_centers = (self.masses[:-1] + self.masses[1:]) / 2
-        self.mass_bin_width = self.masses[1] - self.masses[0]
+        self.massBins = np.linspace(min_mass, max_mass, self.n_mass_bins+1)
+        self.masses = (self.massBins[:-1] + self.massBins[1:]) / 2
+        self.mass_bin_width = self.massBins[1] - self.massBins[0]
         
         self.n_t_bins = self.yaml['n_t_bins']
         self.ts = np.linspace(self.yaml['min_t'], self.yaml['max_t'], self.n_t_bins+1)
@@ -95,8 +95,8 @@ class ResultManager:
         
         # Round all floats in kinematic binning
         self.n_decimal_places = 5
+        self.massBins = np.round(self.massBins, self.n_decimal_places)
         self.masses = np.round(self.masses, self.n_decimal_places)
-        self.mass_centers = np.round(self.mass_centers, self.n_decimal_places)
         self.ts = np.round(self.ts, self.n_decimal_places)
         self.t_centers = np.round(self.t_centers, self.n_decimal_places)
         self.mass_bin_width = np.round(self.mass_bin_width, self.n_decimal_places)
@@ -144,7 +144,7 @@ class ResultManager:
         self.console.print(f"wave_names: {self.waveNames}")
         self.console.print(f"identified {len(self.sectors)} incoherent sectors: {self.sectors}")
         self.console.print(f"n_mass_bins: {self.n_mass_bins}")
-        self.console.print(f"mass_centers: {self.mass_centers}")
+        self.console.print(f"masses: {self.masses}")
         self.console.print(f"\n")
         
     def attempt_load_all(self):
@@ -274,7 +274,7 @@ class ResultManager:
         
         self.console.print(header_fmt.format(f"Loading 'HISTOGRAM' result from {result_dir}"))
         nEvents, nEvents_err = get_nEventsInBin(result_dir)
-        hist_df = {'mass': self.mass_centers, 'nEvents': nEvents, 'nEvents_err': nEvents_err}
+        hist_df = {'mass': self.masses, 'nEvents': nEvents, 'nEvents_err': nEvents_err}
         hist_df = pd.DataFrame(hist_df)
         
         self.console.print(f"[bold green]Total Events Histogram Summary:[/bold green]")
@@ -412,7 +412,7 @@ class ResultManager:
 
             return relative_phase, relative_phase_error
 
-        def load_from_pkl_list(pkl_list, mass_centers, waveNames):
+        def load_from_pkl_list(pkl_list, masses, waveNames):
             
             pkl_list = sorted(pkl_list, key=lambda x: int(binNum_regex.search(x).group(1)))
 
@@ -428,7 +428,7 @@ class ResultManager:
 
                 for i, data in enumerate(datas):
 
-                    results.setdefault("mass", []).append(mass_centers[bin_idx])
+                    results.setdefault("mass", []).append(masses[bin_idx])
                     results.setdefault("initial_likelihood", []).append(data["initial_likelihood"])
                     results.setdefault("likelihood", []).append(data["likelihood"])
                     results.setdefault("sample", []).append(i)
@@ -518,7 +518,7 @@ class ResultManager:
             self.console.print(f"[bold red]No 'MLE' results found in {result_dir}, return existing results with shape {self._mle_results.shape}\n[/bold red]")
             return self._mle_results
         
-        mle_results = load_from_pkl_list(pkl_list, self.mass_centers, self.waveNames)
+        mle_results = load_from_pkl_list(pkl_list, self.masses, self.waveNames)
         
         if mle_results.empty:
             self.console.print(f"[bold red]No 'MLE' results found in {result_dir}, return existing results with shape {self._mle_results.shape}\n[/bold red]")
@@ -698,7 +698,7 @@ class ResultManager:
         """Return a string representation of the ResultManager object."""
         repr_str = "\n********************************************************************\n"
         repr_str += f" Number of t-bins (centers): {len(self.t_centers)}: {np.array(self.t_centers)}\n"
-        repr_str += f" Number of mass-bins (centers): {len(self.mass_centers)}: {np.array(self.mass_centers)}\n"
+        repr_str += f" Number of mass-bins (centers): {len(self.masses)}: {np.array(self.masses)}\n"
         repr_str += f" Number of wave names: {len(self.waveNames)}: {self.waveNames}\n"
         repr_str += f" Access below dataframes as attributes [mle_results, mcmc_results, gen_results, hist_results, ift_results]\n"
         repr_str += "********************************************************************\n"
@@ -817,7 +817,7 @@ def query_default(df):
 def safe_query(df, query):
     return df.query(query) if not df.empty else pd.DataFrame()
     
-def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10), file_type='png'):
+def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10), file_type='pdf'):
     ift_gen_df = resultManager.gen_results[0]
     ift_gen_df = query_default(ift_gen_df)
     cols = ift_gen_df.columns
@@ -830,7 +830,7 @@ def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10), file_type='p
     resultManager.console.print(f"\n[bold blue]Plotting 'generated curves' plots...[/bold blue]")
     
     waveNames = resultManager.waveNames
-    mass_centers = resultManager.mass_centers
+    masses = resultManager.masses
         
     nrows, ncols = calculate_subplot_grid_size(len(waveNames))
 
@@ -839,16 +839,16 @@ def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10), file_type='p
         irow = i // ncols
         icol = i % ncols
         wave_fit_fraction = ift_gen_df[wave] / ift_gen_df['intensity']
-        axes[irow, icol].plot(mass_centers, wave_fit_fraction, color=ift_color_dict['Signal'], label="Signal")
+        axes[irow, icol].plot(masses, wave_fit_fraction, color=ift_color_dict['Signal'], label="Signal")
         for col in cols:
             col_parts = col.split("_")
             if wave in col and len(col_parts) > 1 and "amp" not in col_parts:
                 wave_fit_fraction = ift_gen_df[col] / ift_gen_df['intensity']
                 color = ift_color_dict['Bkgnd'] if "cf" in col_parts else ift_color_dict['Param']
                 label = 'Bkgnd' if "cf" in col_parts else 'Param.'
-                axes[irow, icol].plot(mass_centers, wave_fit_fraction, color=color, label=label)
+                axes[irow, icol].plot(masses, wave_fit_fraction, color=color, label=label)
         axes[irow, icol].set_ylim(0, 1.1) # fit fractions, include a bit of buffer
-        axes[irow, icol].set_xlim(mass_centers[0], mass_centers[-1])
+        axes[irow, icol].set_xlim(masses[0], masses[-1])
         axes[irow, icol].xaxis.set_major_locator(plt.MaxNLocator(5))
         axes[irow, icol].tick_params(axis='both', which='major', labelsize=13)
         axes[irow, icol].text(0.2, 0.975, prettyLabels[wave],
@@ -866,7 +866,7 @@ def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10), file_type='p
     ofile = f"{resultManager.base_directory}/{default_plot_subdir}/gen_curves.{file_type}"
     save_and_close_fig(ofile, fig, axes, console=resultManager.console, overwrite=True)
     
-def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, figsize=(10, 10), file_type='png'):
+def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, figsize=(10, 10), file_type='pdf'):
     name = "binned intensity"
     resultManager.console.print(header_fmt.format(f"Plotting '{name}' plots..."))
     
@@ -891,16 +891,16 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
         
         fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
         
-        mass_center = resultManager.mass_centers[bin]
-        binned_mcmc_samples = safe_query(default_mcmc_results, f'mass == {mass_center}')
-        binned_mle_results  = safe_query(default_mle_results,  f'mass == {mass_center}')
-        binned_gen_results  = safe_query(default_gen_results,  f'mass == {mass_center}')
-        binned_ift_results  = safe_query(default_ift_results,  f'mass == {mass_center}')
+        mass = resultManager.masses[bin]
+        binned_mcmc_samples = safe_query(default_mcmc_results, f'mass == {mass}')
+        binned_mle_results  = safe_query(default_mle_results,  f'mass == {mass}')
+        binned_gen_results  = safe_query(default_gen_results,  f'mass == {mass}')
+        binned_ift_results  = safe_query(default_ift_results,  f'mass == {mass}')
         
         # Skip bin if no data available for this mass bin
         if (binned_mcmc_samples.empty and binned_mle_results.empty and 
             binned_gen_results.empty and binned_ift_results.empty):
-            resultManager.console.print(f"[bold yellow]No data available for bin {bin} (mass {mass_center}). Skipping this bin.[/bold yellow]")
+            resultManager.console.print(f"[bold yellow]No data available for bin {bin} (mass {mass}). Skipping this bin.[/bold yellow]")
             plt.close()
             continue
         
@@ -930,7 +930,7 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
                 ax.axvline(binned_gen_results[col].values[0], color=gen_color, linestyle='dashdot', alpha=1.0, linewidth=2)
             
             #### PLOT NIFTY FIT RESULTS ####
-            mass_center = resultManager.mass_centers[bin]
+            mass = resultManager.masses[bin]
             if not binned_ift_results.empty and wave in binned_ift_results.columns:
                 mean = np.mean(binned_ift_results[wave].values) # mean over nifty samples
                 std  = np.std(binned_ift_results[wave].values)   # std over nifty samples
@@ -958,7 +958,7 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
     resultManager.console.print(f"\n")
 
 def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, figsize=(10, 10), 
-                              mcmc_nsamples=500, mcmc_selection="thin", file_type='png'):
+                              mcmc_nsamples=500, mcmc_selection="thin", file_type='pdf'):
     
     """
     Plot ~posterior distribution of the complex plane, overlaying generated curves, MLE, MCMC, IFT results when possible
@@ -1002,11 +1002,11 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
         fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
         axes = axes.flatten()
         
-        mass_center = resultManager.mass_centers[bin]
-        binned_mcmc_samples = safe_query(default_mcmc_results, f'mass == {mass_center}')
-        binned_mle_results  = safe_query(default_mle_results,  f'mass == {mass_center}')
-        binned_gen_results  = safe_query(default_gen_results,  f'mass == {mass_center}')
-        binned_ift_results  = safe_query(default_ift_results,  f'mass == {mass_center}')
+        mass = resultManager.masses[bin]
+        binned_mcmc_samples = safe_query(default_mcmc_results, f'mass == {mass}')
+        binned_mle_results  = safe_query(default_mle_results,  f'mass == {mass}')
+        binned_gen_results  = safe_query(default_gen_results,  f'mass == {mass}')
+        binned_ift_results  = safe_query(default_ift_results,  f'mass == {mass}')
         
         if binned_mcmc_samples.empty and binned_mle_results.empty and binned_gen_results.empty and binned_ift_results.empty:
             resultManager.console.print(f"[bold yellow]No data available for bin {bin} (mass {mass_center}). Skipping this bin.[/bold yellow]")
@@ -1138,7 +1138,7 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
         resultManager.console.print(f"  - {file}")
     resultManager.console.print(f"\n")
         
-def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin", file_type='png'):
+def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin", file_type='pdf'):
     """
     This is a money plot. Two plots stacked vertically (intensity on top, relative phases on bottom)
     
@@ -1168,8 +1168,8 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
 
     waveNames = resultManager.waveNames
     n_mass_bins = resultManager.n_mass_bins
+    massBins = resultManager.massBins
     masses = resultManager.masses
-    mass_centers = resultManager.mass_centers
     line_half_width = resultManager.mass_bin_width / 2
     
     nEvents, nEvents_err = None, None
@@ -1209,10 +1209,10 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
         moment_inversion_line = None
         
         #### PLOT DATA HISTOGRAM
-        # ax.step(mass_centers, nEvents[0], where='post', color='black', alpha=0.8)
+        # ax.step(masses, nEvents[0], where='post', color='black', alpha=0.8)
         if nEvents is not None and nEvents_err is not None:
-            data_line = hep.histplot((nEvents, masses), ax=ax, color='black', alpha=0.8)
-            error_bars = ax.errorbar(mass_centers, nEvents, yerr=nEvents_err, 
+            data_line = hep.histplot((nEvents, massBins), ax=ax, color='black', alpha=0.8)
+            error_bars = ax.errorbar(masses, nEvents, yerr=nEvents_err, 
                         color='black', alpha=0.8, fmt='o', markersize=2, capsize=3, label="Data")
         
         #### PLOT GENERATED CURVE
@@ -1230,7 +1230,7 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
         #### PLOT MCMC FIT INTENSITY
         if not samples_to_draw.empty:
             for bin_idx in range(n_mass_bins):
-                mass = mass_centers[bin_idx]
+                mass = masses[bin_idx]
                 binned_samples = samples_to_draw.query('mass == @mass')
                 x_starts = np.full_like(binned_samples[waveName], mass - line_half_width)
                 x_ends   = np.full_like(binned_samples[waveName], mass + line_half_width)
@@ -1263,7 +1263,7 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
         #### PLOT MOMENT INVERSION INTENSITY
         if not moment_inversion_results.empty:
             for bin_idx in range(n_mass_bins):
-                mass = mass_centers[bin_idx]
+                mass = masses[bin_idx]
                 binned_samples = moment_inversion_results.query('mass == @mass')
                 x_starts = np.full_like(binned_samples[waveName], mass - line_half_width)
                 x_ends   = np.full_like(binned_samples[waveName], mass + line_half_width)
@@ -1304,7 +1304,7 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
         #### PLOT MCMC PHASES
         if not samples_to_draw.empty:
             for bin_idx in range(n_mass_bins):
-                mass = mass_centers[bin_idx]
+                mass = masses[bin_idx]
                 binned_samples = samples_to_draw.query('mass == @mass')
                 x_starts = np.full_like(binned_samples[waveName], mass - line_half_width)
                 x_ends   = np.full_like(binned_samples[waveName], mass + line_half_width)
@@ -1341,7 +1341,7 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
         #### PLOT MOMENT INVERSION PHASES
         if not moment_inversion_results.empty and f"{waveName}_amp" in moment_inversion_results.columns:
             for bin_idx in range(n_mass_bins):
-                mass = mass_centers[bin_idx]
+                mass = masses[bin_idx]
                 binned_samples = moment_inversion_results.query('mass == @mass')
                 x_starts = np.full_like(binned_samples[waveName], mass - line_half_width)
                 x_ends   = np.full_like(binned_samples[waveName], mass + line_half_width)
@@ -1374,7 +1374,6 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
         wave_label2 = prettyLabels[reference_wave].strip("$")
         phase_ax.set_ylabel(f"$\phi_{{{wave_label1}}} - \phi_{{{wave_label2}}}$ [deg]", size=18)
 
-        # Save each figure to its own PNG file
         plt.tight_layout()
         ofile = f"{resultManager.base_directory}/{default_plot_subdir}/intensity_and_phases/intensity_phase_plot_{waveName}.{file_type}"
         save_and_close_fig(ofile, fig, axes, console=resultManager.console, overwrite=True, verbose=True)
@@ -1382,7 +1381,7 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
         
     resultManager.console.print(f"\n")
     
-def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin", file_type='png'):
+def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin", file_type='pdf'):
     
     """
     This is another money plot. All non-zero projected moments are plotted
@@ -1413,7 +1412,7 @@ def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin
         return
     
     n_mass_bins = resultManager.n_mass_bins
-    mass_centers = resultManager.mass_centers
+    masses = resultManager.masses
     line_half_width = resultManager.mass_bin_width / 2
     
     samples_to_draw = pd.DataFrame()
@@ -1473,7 +1472,7 @@ def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin
         #### PLOT MCMC FIT INTENSITY
         if not samples_to_draw.empty:
             for bin_idx in range(n_mass_bins):
-                mass = mass_centers[bin_idx]
+                mass = masses[bin_idx]
                 binned_samples = samples_to_draw.query('mass == @mass')
                 x_starts = np.full_like(binned_samples[moment_name], mass - line_half_width)
                 x_ends   = np.full_like(binned_samples[moment_name], mass + line_half_width)
@@ -1529,7 +1528,7 @@ def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin
     for moment_name in resultManager.moment_latex_dict.keys():
         plot_moment(moment_name, ofile=f"{resultManager.base_directory}/{default_plot_subdir}/moments/moment_{moment_name}.{file_type}")
     
-def montage_and_gif_select_plots(resultManager: ResultManager, file_type='png'):
+def montage_and_gif_select_plots(resultManager: ResultManager, file_type='pdf'):
     
     resultManager.console.print(header_fmt.format(f"Montaging / GIFing all plots..."))
     
@@ -1581,12 +1580,3 @@ def montage_and_gif_select_plots(resultManager: ResultManager, file_type='png'):
             os.system(f"montage {files_str} -density 300 -geometry +10+10 {montage_output}")
     
     resultManager.console.print(f"\n")
-    
-# resultManager = ResultManager("pyamptools_mc.yaml")
-
-# resultManager = ResultManager("/w/halld-scshelf2101/lng/WORK/PyAmpTools9/OTHER_CHANNELS/ETAPI0_AUTOGRAD/RESULTS_MC/GENERATED/main.yaml")
-
-# resultManager.attempt_load_all()
-# plot_binned_complex_plane(resultManager)
-# plot_binned_intensities(resultManager)
-# plot_overview_across_bins(resultManager)
