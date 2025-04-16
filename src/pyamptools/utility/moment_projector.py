@@ -403,9 +403,9 @@ def project_to_moments_refl(flat_amplitudes, mask=None, l_max=3, L_max=None, cg_
     
     return flat_moments
 
-def get_moment_names(l_max):
+def get_moment_name_order(l_max):
     """
-    Generate names for the moments based on the maximum l value.
+    Generate names for the moments (in expected order) based on the maximum l value.
     """
     l_max = int(l_max)
     L_max = 2 * l_max
@@ -416,9 +416,21 @@ def get_moment_names(l_max):
                 names.append(f"H{i}({L},{M})")
     return names
 
+def get_amplitude_name_order(l_max):
+    """
+    Generate names for the amplitudes (in expected order) based on the maximum l value.
+    """
+    from pyamptools.utility.general import qn_to_amp
+    l_max = int(l_max)
+    names = []
+    for refl in [-1, 1]:
+        for l in range(l_max + 1):
+            for m in range(-l, l + 1):
+                names.append(qn_to_amp[(refl, l, m)])
+    return names
 
 #####################################################################
-### BELOW THIS LINE IS FOR TESTING AND BENCHMARKING
+    ### BELOW THIS LINE IS FOR TESTING AND BENCHMARKING
 #####################################################################
 
 def _verify_moment_symmetry(flat_moments, l_max):
