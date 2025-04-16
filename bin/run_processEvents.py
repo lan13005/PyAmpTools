@@ -39,7 +39,7 @@ def extract_normint_ampvecs(args):
         #     normIntInterface = ati.normIntInterface(reaction.reactionName())
         #     normIntInterface.forceCacheUpdate(False)
 
-        ati.finalizeFit()
+        ati.finalizeFit(bSaveAmps=True)
 
 if __name__ == "__main__":
 

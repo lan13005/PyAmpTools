@@ -520,6 +520,9 @@ AmpToolsInterface::saveAmps(
 }
 
 // Write the ampvecs object to a root file
+// NOTE: This function crashes when using GPUs. I suspect it has to do with
+//       the fact that when using GPU, AmpTools will store the ampvecs in the
+//       GPUManager instead of AmpVecs. No time to solve this now
 void 
 AmpToolsInterface::saveAmpVecsToTree(
   AmpVecs& m_ampvec, 
@@ -528,9 +531,6 @@ AmpToolsInterface::saveAmpVecsToTree(
 
     report( DEBUG, kModule ) << "Saving copy of " << fname << " to " << fname+suffix+".root" << endl;
 
-    // Save as a hidden file. IDK if this is a good idea.
-    //   We would very like to post-process the root files and store them in a better
-    //   data structure that has better read speed
     TFile *outputFile = new TFile((fname+suffix+".root").c_str(), "RECREATE");
     TTree *outputTree = new TTree("kin", "kin");
 
@@ -572,7 +572,7 @@ AmpToolsInterface::saveAmpVecsToTree(
 
 
 void
-AmpToolsInterface::finalizeFit( const string& tag ){
+AmpToolsInterface::finalizeFit( const string& tag, bool bSaveAmps ){
 
   // ************************
   // save fit parameters
@@ -607,11 +607,13 @@ AmpToolsInterface::finalizeFit( const string& tag ){
   }
 
   // Do this after dumping normalization integrals since we need to force cache update first
-  string suffix("_amps");
-  std::vector<string> saved_files = {};
-  for (unsigned int irct = 0; irct < m_configurationInfo->reactionList().size(); irct++){
-    ReactionInfo* reaction = m_configurationInfo->reactionList()[irct];
-    saveAmps( reaction, saved_files, suffix );
+  if (bSaveAmps){
+    string suffix("_amps");
+    std::vector<string> saved_files = {};
+    for (unsigned int irct = 0; irct < m_configurationInfo->reactionList().size(); irct++){
+      ReactionInfo* reaction = m_configurationInfo->reactionList()[irct];
+      saveAmps( reaction, saved_files, suffix );
+    }
   }
 }
 
