@@ -257,6 +257,14 @@ class ResultManager:
     def moment_inversion_results(self) -> pd.DataFrame:
         return self._moment_inversion_results
     
+    def summarize(self):
+        self.console.print(f"Summary of loaded results:")
+        self.console.print(f"  resultManager.mle_results: {self.mle_results.shape}")
+        self.console.print(f"  resultManager.mcmc_results: {self.mcmc_results.shape}")
+        self.console.print(f"  resultManager.ift_results: {self.ift_results[0].shape}")
+        self.console.print(f"  resultManager.gen_results: {self.gen_results[0].shape}")
+        self.console.print(f"  resultManager.moment_inversion_results: {self.moment_inversion_results.shape}")
+    
     def load_hist_results(self, base_directory=None, alias=None):
         if base_directory is None:
             base_directory = self.base_directory
@@ -874,9 +882,10 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
     default_mle_results  = query_default(resultManager.mle_results)
     default_gen_results  = query_default(resultManager.gen_results[0])
     default_ift_results  = query_default(resultManager.ift_results[0])
+    default_moment_inversion_results = query_default(resultManager.moment_inversion_results)
     
     # If everything is missing, nothing to do
-    if default_mcmc_results.empty and default_mle_results.empty and default_gen_results.empty and default_ift_results.empty:
+    if default_mcmc_results.empty and default_mle_results.empty and default_gen_results.empty and default_ift_results.empty and default_moment_inversion_results.empty:
         resultManager.console.print(f"[bold yellow]No data available for binned intensity plots. Skipping.[/bold yellow]")
         return
     
@@ -896,10 +905,11 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
         binned_mle_results  = safe_query(default_mle_results,  f'mass == {mass}')
         binned_gen_results  = safe_query(default_gen_results,  f'mass == {mass}')
         binned_ift_results  = safe_query(default_ift_results,  f'mass == {mass}')
+        binned_moment_inversion_results = safe_query(default_moment_inversion_results, f'mass == {mass}')
         
         # Skip bin if no data available for this mass bin
         if (binned_mcmc_samples.empty and binned_mle_results.empty and 
-            binned_gen_results.empty and binned_ift_results.empty):
+            binned_gen_results.empty and binned_ift_results.empty and binned_moment_inversion_results.empty):
             resultManager.console.print(f"[bold yellow]No data available for bin {bin} (mass {mass}). Skipping this bin.[/bold yellow]")
             plt.close()
             continue
@@ -911,31 +921,48 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
             irow, icol = i // ncols, i % ncols
             ax = axes[irow, icol]
             
+            handles = []
+            
             #### PLOT MCMC RESULTS ####
             if not binned_mcmc_samples.empty and wave in binned_mcmc_samples.columns:
                 ax.hist(binned_mcmc_samples[f"{wave}"], bins=bins, alpha=1.0, color=mcmc_color)
+                mcmc_legend_line = ax.plot([], [], color=mcmc_color, alpha=0.7, linewidth=2, label="mcmc")[0]
+                handles.append(mcmc_legend_line)
             
             #### PLOT MLE RESULTS ####
             # TODO: after computing errors for intensities, use axvspan
             if not binned_mle_results.empty and wave in binned_mle_results.columns:
-                for irow in binned_mle_results.index: # for each random start MLE fit
-                    mean = binned_mle_results.loc[irow, wave]
-                    error = binned_mle_results.loc[irow, f"{wave}_err"]
+                for irow in range(len(binned_mle_results)): # for each random start MLE fit
+                    mean = binned_mle_results.iloc[irow][wave]
+                    error = binned_mle_results.iloc[irow][f"{wave}_err"]
                     ax.axvline(mean, color=mle_color, linestyle='--', alpha=0.5)
                     ax.axvspan(mean - error, mean + error, color=mle_color, alpha=0.01)
+                mle_bars = ax.plot([], [], label="mle", color=mle_color, alpha=1.0, markersize=2)[0]
+                handles.append(mle_bars)
             
             #### PLOT GENERATED RESULTS ####
             col = f"{wave}"
             if not binned_gen_results.empty and col in binned_gen_results.columns:
                 ax.axvline(binned_gen_results[col].values[0], color=gen_color, linestyle='dashdot', alpha=1.0, linewidth=2)
+                gen_line = ax.plot([], [], color=gen_color, linestyle='dashdot', alpha=1.0, linewidth=1, label="gen")[0]
+                handles.append(gen_line)
             
             #### PLOT NIFTY FIT RESULTS ####
             mass = resultManager.masses[bin]
             if not binned_ift_results.empty and wave in binned_ift_results.columns:
                 mean = np.mean(binned_ift_results[wave].values) # mean over nifty samples
-                std  = np.std(binned_ift_results[wave].values)   # std over nifty samples
+                std  = np.std(binned_ift_results[wave].values)  # std over nifty samples
                 ax.axvline(mean, color=ift_color_dict["Signal"], linestyle='--', alpha=1.0, linewidth=1)
                 ax.axvspan(mean - std, mean + std, color=ift_color_dict["Signal"], alpha=0.3)
+                ift_line = ax.plot([], [], color=ift_color_dict["Signal"], linestyle='--', alpha=1.0, linewidth=1, label="ift")[0]
+                handles.append(ift_line)
+            
+            #### PLOT MOMENT INVERSION RESULTS ####
+            if not binned_moment_inversion_results.empty and wave in binned_moment_inversion_results.columns:
+                for irow in range(len(binned_moment_inversion_results)):
+                    ax.axvline(binned_moment_inversion_results.iloc[irow][wave], color=moment_inversion_color, linestyle='-', alpha=0.1, linewidth=0.1)
+                moment_inversion_line = ax.plot([], [], color=moment_inversion_color, alpha=1.0, linewidth=1, label="mom inv")[0]
+                handles.append(moment_inversion_line)
 
         for ax, wave in zip(axes.flatten(), cols_to_plot):
             ax.set_title(prettyLabels[wave], size=14, color='red', fontweight='bold')
@@ -945,6 +972,8 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
         for irow in range(nrows):
             ylabel = "Samples"
             axes[irow, 0].set_ylabel(ylabel, size=12)
+            
+        axes[0, 0].legend(handles=handles, loc='upper right', prop={'size': 8})
             
         plt.tight_layout()
         ofile = f"{resultManager.base_directory}/{default_plot_subdir}/intensity/bin{bin}_intensities.{file_type}"
@@ -982,9 +1011,10 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
     default_mle_results  = query_default(resultManager.mle_results)
     default_gen_results  = query_default(resultManager.gen_results[0])
     default_ift_results  = query_default(resultManager.ift_results[0])
+    default_moment_inversion_results = query_default(resultManager.moment_inversion_results)
     
     # If everything is missing, nothing to do
-    if default_mcmc_results.empty and default_mle_results.empty and default_gen_results.empty and default_ift_results.empty:
+    if default_mcmc_results.empty and default_mle_results.empty and default_gen_results.empty and default_ift_results.empty and default_moment_inversion_results.empty:
         resultManager.console.print(f"[bold yellow]No data available for binned complex plane plots. Skipping.[/bold yellow]")
         return
 
@@ -1007,9 +1037,10 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
         binned_mle_results  = safe_query(default_mle_results,  f'mass == {mass}')
         binned_gen_results  = safe_query(default_gen_results,  f'mass == {mass}')
         binned_ift_results  = safe_query(default_ift_results,  f'mass == {mass}')
+        binned_moment_inversion_results = safe_query(default_moment_inversion_results, f'mass == {mass}')
         
-        if binned_mcmc_samples.empty and binned_mle_results.empty and binned_gen_results.empty and binned_ift_results.empty:
-            resultManager.console.print(f"[bold yellow]No data available for bin {bin} (mass {mass_center}). Skipping this bin.[/bold yellow]")
+        if binned_mcmc_samples.empty and binned_mle_results.empty and binned_gen_results.empty and binned_ift_results.empty and binned_moment_inversion_results.empty:
+            resultManager.console.print(f"[bold yellow]No data available for bin {bin} (mass {mass}). Skipping this bin.[/bold yellow]")
             plt.close()
             continue
         
@@ -1021,6 +1052,9 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
                 df_max_lim = max(np.abs(all_amps.max()), np.abs(all_amps.min()))
                 max_lim = max(max_lim, df_max_lim)
         bin_edges = np.linspace(-max_lim, max_lim, 100)
+
+        # Store handles for legend
+        handles = []
 
         for i, wave in enumerate(cols_to_plot):
             
@@ -1062,7 +1096,10 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
                     axes[i].set_xlabel("Real", size=12)
                     axes[i].set_ylabel("Imaginary", size=12)
                     axes[i].set_xlim(-max_lim, max_lim)
-                    axes[i].set_ylim(-max_lim, max_lim)
+                    axes[i].set_ylim(-max_lim, max_lim)                
+                if i==0:
+                    mcmc_legend_line = axes[i].plot([], [], color=mcmc_color, alpha=1.0, linewidth=2, label="mcmc")[0]
+                    handles.append(mcmc_legend_line)
                     
             #### PLOT MLE RESULTS ####
             if not binned_mle_results.empty and wave in binned_mle_results.columns:
@@ -1078,7 +1115,10 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
                     else:
                         part_angle = binned_mle_results.loc[irow, f'{wave}_err_angle'] * 180 / np.pi
                         ellipse = Ellipse(xy=(real_part, imag_part), width=2 * real_part_semimajor, height=2 * imag_part_semiminor, angle=part_angle, facecolor='none', edgecolor='xkcd:red', alpha=0.5)
-                        axes[i].add_patch(ellipse) 
+                        axes[i].add_patch(ellipse)                
+                if i==0:
+                    mle_legend_line = axes[i].plot([], [], color=mle_color, alpha=1.0, linewidth=2, label="mle")[0]
+                    handles.append(mle_legend_line)
             
             #### PLOT GENERATED RESULTS ####
             if not binned_gen_results.empty and wave in binned_gen_results.columns:
@@ -1088,6 +1128,23 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
                 else:
                     axes[i].axhline(np.imag(gen_amp), color=gen_color, linestyle='dashdot', alpha=1.0)
                     axes[i].axvline(np.real(gen_amp), color=gen_color, linestyle='dashdot', alpha=1.0)
+                if i==0:
+                    gen_legend_line = axes[i].plot([], [], color=gen_color, linestyle='dashdot', alpha=1.0, linewidth=2, label="gen")[0]
+                    handles.append(gen_legend_line)
+                   
+            #### PLOT MOMENT INVERSION RESULTS ####
+            if not binned_moment_inversion_results.empty and wave in binned_moment_inversion_results.columns:
+                if is_reference:
+                    for irow in range(len(binned_moment_inversion_results)):
+                        real_part = np.real(binned_moment_inversion_results.iloc[irow][f'{wave}_amp'])
+                        axes[i].axvline(real_part, color=moment_inversion_color, linestyle='-', alpha=0.1, linewidth=0.1)
+                else:
+                    real_part = np.real(binned_moment_inversion_results[f'{wave}_amp'])
+                    imag_part = np.imag(binned_moment_inversion_results[f'{wave}_amp'])
+                    axes[i].scatter(real_part, imag_part, color=moment_inversion_color, alpha=0.4, marker='o', s=2)                
+                if i==0:
+                    moment_inversion_legend_line = axes[i].plot([], [], color=moment_inversion_color, alpha=1.0, linewidth=2, label="mom inv")[0]
+                    handles.append(moment_inversion_legend_line)
                     
             #### PLOT NIFTY FIT RESULTS ####
             if not binned_ift_results.empty and wave in binned_ift_results.columns:
@@ -1116,6 +1173,9 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
                                          facecolor='none', edgecolor=ift_color_dict["Signal"], alpha=1.0, linewidth=2)
                         axes[i].add_patch(ellipse)
                     axes[i].scatter(real_part, imag_part, color=ift_color_dict["Signal"], alpha=0.4, marker='o', s=2)
+                if i==0:
+                    ift_legend_line = axes[i].plot([], [], color=ift_color_dict["Signal"], linestyle='-', alpha=1.0, linewidth=2, label="ift")[0]
+                    handles.append(ift_legend_line)
 
             # Instead of title we add a text in the top right corner
             axes[i].text(0.975, 0.975, prettyLabels[wave],
@@ -1126,6 +1186,8 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
             # Add cross hairs for (0, 0)
             axes[i].axvline(0, color='black', linestyle='--', alpha=0.2, linewidth=1)
             axes[i].axhline(0, color='black', linestyle='--', alpha=0.2, linewidth=1)
+
+        axes[0].legend(handles=handles, loc='upper left', prop={'size': 8})
 
         plt.tight_layout()
         ofile = f"{resultManager.base_directory}/{default_plot_subdir}/complex_plane/bin{bin}_complex_plane.{file_type}"
