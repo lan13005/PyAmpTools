@@ -8,6 +8,18 @@ from omegaconf import OmegaConf
 from pyamptools.split_mass import split_mass_t
 from pyamptools.utility.general import Timer, dump_yaml, load_yaml
 
+from rich.console import Console
+
+# Setup pyamptools environment here
+#   cannot setup inside split_mass.py nor general.py
+#   PyROOT maintains global state which will lead to conflicts
+from pyamptools import atiSetup
+import ROOT
+atiSetup.setup(globals(), use_fsroot=True)
+ROOT.ROOT.EnableImplicitMT()
+from pyamptools.utility.rdf_macros import loadMacros
+loadMacros()
+
 ############################################################################
 # This makes calls to pyamptools' split_mass function to divide the data
 # sources into separate mass bins and copies over the amptools configuration
@@ -18,24 +30,24 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Divide data into mass bins")
     parser.add_argument("yaml_name", type=str, default="conf/configuration.yaml", help="Path a configuration yaml file")
     parser.add_argument("-e", "--use_edges", action="store_true", help="Use mass_edges and t_edges from the yaml file. Else recompute")
-    parser.add_argument("-ns", "--split_pool_size", type=int, default=1, help="Number of parallel processes to split the data")
     parser.add_argument("-nh", "--hadd_pool_size", type=int, default=5, help="Number of parallel processes to merge the data")
     parser.add_argument("--nosplit", action="store_true", help="Skip the split_mass step")
     parser.add_argument("--nomerge", action="store_true", help="Skip the merge_bins step")
     args = parser.parse_args()
     yaml_name = args.yaml_name
     use_edges = args.use_edges
+    
+    console = Console()
 
-    split_pool_size = args.split_pool_size
     hadd_pool_size = args.hadd_pool_size
 
     cwd = os.getcwd()
     timer = Timer()
 
-    print("\n---------------------")
-    print(f"Running {__file__}")
-    print(f"  yaml location: {yaml_name}")
-    print("---------------------\n")
+    console.rule()
+    console.print(f"Running {__file__}")
+    console.print(f"  yaml location: {yaml_name}")
+    console.rule()
 
     yaml_file = load_yaml(yaml_name)
 
@@ -73,7 +85,7 @@ if __name__ == "__main__":
 
     if try_split_mass:
 
-        print("User requested data to be split into (mass, t) bins. Checking for pre-existing bins...")
+        console.print("User requested data to be split into (mass, t) bins. Checking for pre-existing bins...", style="bold yellow")
 
         check_for_preexisting = all([os.path.exists(f"bin_{i}") for i in range(n_mass_bins * n_t_bins)])
         
@@ -83,15 +95,15 @@ if __name__ == "__main__":
             delete_or_skip = input("Pre-existing bins found. Delete them? (y/n): ")
             if delete_or_skip.lower() == "y":
                 os.system("rm -rf bin_*")
-                print("  Deleted pre-existing bins")
+                console.print("  Deleted pre-existing bins", style="bold green")
             else:
                 run_split_and_cfg_ceate = False
                 ans_create_cfg = input("Create new cfg files? (y/n): ")
                 if ans_create_cfg.lower() == "y":
-                    print("  Will create new cfg files")
+                    console.print("  Will create new cfg files", style="bold green")
                     create_cfg = True
                 else:
-                    print("  Skipping split_mass")
+                    console.print("  Skipping split_mass", style="bold yellow")
 
         # Determine mass bin edges based on the first ftype source
         mass_edges = yaml_file["mass_edges"] if "mass_edges" in yaml_file and use_edges else None 
@@ -109,11 +121,11 @@ if __name__ == "__main__":
         if run_split_and_cfg_ceate:
             
             sharemc = False
-            print("No pre-existing bins found, running split_mass")
+            console.print("No pre-existing bins found, running split_mass", style="bold green")
             
             for ftype in ["data", "accmc", "genmc"]:
                 for pol in pols:
-                    print(f"Attempting to split {ftype}{pol}.root into mass bins")
+                    console.print(f"Attempting to split {ftype}{pol}.root into mass bins", style="bold yellow")
                     # AmpTools -f does not include polarization information. We can share all accmc and genmc datasets. Do so if accmc.root exists and acc{pol}.root does not exist 
                     if ftype in ["accmc", "genmc"]: # check to see if we can share the MC datasets
                         if not os.path.exists(f"{data_folder}/{ftype}{pol}.root"):
@@ -121,9 +133,9 @@ if __name__ == "__main__":
                                 raise FileNotFoundError(f"File {data_folder}/{ftype}{pol}.root does not exist! Nor does {data_folder}/{ftype}.root (unable to share MC across polarized datasets)")
                             sharemc = True
                             if mc_already_shared[ftype]:
-                                print("  * Already sharing MC datasets, will run split_mass again")
+                                console.print("  * Already sharing MC datasets, will run split_mass again", style="bold yellow")
                             else:
-                                print(f"  * {ftype}{pol}.root does not exist but {ftype}.root does. Will share {ftype}.root across all polarizations")
+                                console.print(f"  * {ftype}{pol}.root does not exist but {ftype}.root does. Will share {ftype}.root across all polarizations", style="bold yellow")
                     else:
                         if not os.path.exists(f"{data_folder}/{ftype}{pol}.root"):
                             raise FileNotFoundError(f"File {data_folder}/{ftype}{pol}.root does not exist!")
@@ -141,7 +153,6 @@ if __name__ == "__main__":
                         mass_edges, t_edges, nBar, nBar_err = split_mass_t(fname, oname, 
                                                     min_mass, max_mass, n_mass_bins, 
                                                     min_t, max_t, n_t_bins,
-                                                    split_pool_size=split_pool_size,
                                                     treeName="kin", mass_edges=mass_edges, t_edges=t_edges)
                         _pol = "shared" if sharemc else pol
                         nBars[f"{ftype}_{_pol}"] = nBar
@@ -155,12 +166,11 @@ if __name__ == "__main__":
                     mass_edges, t_edges, nBar, nBar_err = split_mass_t(f"{data_folder}/bkgnd{pol}.root", f"bkgnd{pol}", 
                                                         min_mass, max_mass, n_mass_bins, 
                                                         min_t, max_t, n_t_bins,
-                                                        split_pool_size=split_pool_size,
                                                         treeName="kin", mass_edges=mass_edges, t_edges=t_edges)
                     nBars[f"bkgnd_{pol}"] = nBar
                     nBar_errs[f"bkgnd_{pol}"] = nBar_err
                 else:
-                    print(f"No bkgnd{pol}.root found (not required), skipping")
+                    console.print(f"No bkgnd{pol}.root found (not required), skipping", style="bold yellow")
 
             # ###########################################
             # # RENAME AND COPY+MODIFY AMPTOOLS CFG FILES
@@ -170,7 +180,7 @@ if __name__ == "__main__":
             for j in range(n_t_bins):
                 for i in range(n_mass_bins):
                     k = j * n_mass_bins + i
-                    print(f"Perform final preparation for bin: {k}")
+                    console.print(f"Perform final preparation for bin: {k}", style="bold yellow")
                     os.system(f"mkdir -p bin_{k}")
                     os.system(f"cp -f {amptools_cfg} bin_{k}/bin_{k}.cfg")
                     with open(f"bin_{k}/metadata.txt", "w") as f:
@@ -181,7 +191,7 @@ if __name__ == "__main__":
                         if t_edges is not None:
                             f.write(f"t range: {t_edges[j]:.2f} - {t_edges[j + 1]:.2f} GeV^2\n")
                         nBar_ftype = {pair.split("_")[0]: 0 for pair in nBars.keys()} # keys ~ ftype_pol
-                        nBar_err_ftype = {pair.split("_")[0]: 0 for pair in nBars.keys()}
+                        nBar_var_ftype = {pair.split("_")[0]: 0 for pair in nBars.keys()} # variance
                         f.write("---------------------\n")
                         for ftype_pol in nBars:
                             ftype, pol = ftype_pol.split("_")
@@ -190,25 +200,25 @@ if __name__ == "__main__":
                             f.write(f"nBar {ftype} {pol}: {_nBars[i][j]} +/- {_nBar_errs[i][j]}\n")
                             if ftype in ["data", "bkgnd"]:
                                 nBar_ftype[ftype] += _nBars[i][j]
-                                nBar_err_ftype[ftype] += _nBar_errs[i][j]**2
+                                nBar_var_ftype[ftype] += _nBar_errs[i][j]**2
                             if ftype in ["accmc", "genmc"]:
                                 share_factor = (len(pols) if pol == "shared" else 1)
                                 nBar_ftype[ftype] += _nBars[i][j] * share_factor
-                                nBar_err_ftype[ftype] += (_nBar_errs[i][j] * share_factor)**2
+                                nBar_var_ftype[ftype] += (_nBar_errs[i][j] * share_factor)**2
                         f.write("---------------------\n")
                         for ftype in nBar_ftype:
-                            f.write(f"nBar {ftype}: {nBar_ftype[ftype]} +/- {nBar_err_ftype[ftype]**0.5}\n")
+                            f.write(f"nBar {ftype}: {nBar_ftype[ftype]} +/- {nBar_var_ftype[ftype]**0.5}\n")
                         f.write("---------------------\n")
                         if len(nBars) != 0:
                             if "bkgnd" in nBar_ftype: # if there is bkgnd we subtract it to get the signal
                                 signal = nBar_ftype['data'] - nBar_ftype['bkgnd']
-                                signal_err = (nBar_err_ftype['data'] + nBar_err_ftype['bkgnd'])**0.5
+                                signal_err = (nBar_var_ftype['data'] + nBar_var_ftype['bkgnd'])**0.5
                             else:
                                 signal = nBar_ftype['data']
-                                signal_err = nBar_err_ftype['data']
+                                signal_err = nBar_var_ftype['data']**0.5
                             f.write(f"nBar signal: {signal} +/- {signal_err}\n")
-                            eff = nBar_ftype['accmc'] / nBar_ftype['genmc']
-                            eff_err = eff * ((nBar_err_ftype['accmc']**0.5 / nBar_ftype['accmc'])**2 + (nBar_err_ftype['genmc']**0.5 / nBar_ftype['genmc'])**2)**0.5
+                            eff = nBar_ftype['accmc'] / nBar_ftype['genmc']                            
+                            eff_err = eff * ((nBar_var_ftype['accmc']**0.5 / nBar_ftype['accmc'])**2 + (nBar_var_ftype['genmc']**0.5 / nBar_ftype['genmc'])**2)**0.5
                             corr_signal = signal / eff
                             corr_signal_err = corr_signal * ((signal_err / signal)**2 + (eff_err / eff)**2)**0.5
                             f.write(f"efficiency (%): {eff*100:.3f} +/- {eff_err*100:.3f}\n")
@@ -262,7 +272,7 @@ if __name__ == "__main__":
             ans = input(f"\n{n_prexist} group folders already exist. Ovewrite? (y/n): ")
             if ans.lower() == "y":
                 os.system(f"rm -rf {output_directory}/group_*")
-                print("  Deleted pre-existing groups")
+                console.print("  Deleted pre-existing groups", style="bold green")
 
         if bins_per_group > 1 and ans == "y":
             bins = glob.glob(f"{output_directory}/bin_*")
@@ -270,7 +280,7 @@ if __name__ == "__main__":
             nBins = len(bins)
 
             nGroups = nBins // bins_per_group
-            print(f"Merging bins into {nGroups} groups of {bins_per_group}")
+            console.print(f"Merging bins into {nGroups} groups of {bins_per_group}", style="bold yellow")
 
             # Get base information by loading in the first bin
             bin_path = bins[0]
@@ -319,10 +329,10 @@ if __name__ == "__main__":
 
                     # update naming for sources
                     for source in sources:
-                        print()
+                        console.print(f"Merging {source} from {len(bin_group)} bins", style="bold yellow")
                         bin_sources = [f"{bin}/{source}" for bin in bin_group]
                         hadd_cmd = f"hadd {output_directory}/{group_name}/{source} {' '.join(bin_sources)}"
-                        print(hadd_cmd)
+                        console.print(hadd_cmd, style="bold yellow")
                         os.system(hadd_cmd+" > /dev/null")
                     
                     os.system(f"touch {output_directory}/{group_name}/seed_nifty.txt")
@@ -406,4 +416,4 @@ if __name__ == "__main__":
                     # clean up cfg files
                     os.system(f"rm -f {output_directory}/{group_name}/G*bin*.cfg")
 
-    print(f"\n{timer.read()[2]} elapsed\n")
+    console.print(f"\n{timer.read(return_str=False)[2]:0.2f} seconds elapsed\n", style="bold green")

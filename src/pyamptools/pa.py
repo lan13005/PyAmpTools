@@ -6,6 +6,8 @@ import subprocess
 import sys
 
 import argcomplete
+from rich.console import Console
+from rich.text import Text
 
 ##################################################################
 # pa = pyamptools...
@@ -14,48 +16,54 @@ import argcomplete
 # executable
 ##################################################################
 
+console = Console()
 
 def main():
     """Dispatch function that calls the appropriate script and passes remaining arguments to it"""
 
     # check if full path
     if "PYAMPTOOLS_HOME" not in os.environ:
-        print("PYAMPTOOLS_HOME environment variable not set. Please try to set it again using set_environment.sh")
+        console.print("PYAMPTOOLS_HOME environment variable not set. Please try to set it again using set_environment.sh", style="bold red")
         sys.exit(1)
     else:
         if not os.path.isabs(os.environ["PYAMPTOOLS_HOME"]):
-            print(f"PYAMPTOOLS_HOME environment variable is not an absolute path. PYAMPTOOLS_HOME={os.environ['PYAMPTOOLS_HOME']}")
+            console.print(f"PYAMPTOOLS_HOME environment variable is not an absolute path. PYAMPTOOLS_HOME={os.environ['PYAMPTOOLS_HOME']}", style="bold red")
             sys.exit(1)
         if not os.path.exists(os.environ["PYAMPTOOLS_HOME"]):
-            print(f"PYAMPTOOLS_HOME environment variable does not exist. PYAMPTOOLS_HOME={os.environ['PYAMPTOOLS_HOME']}")
+            console.print(f"PYAMPTOOLS_HOME environment variable does not exist. PYAMPTOOLS_HOME={os.environ['PYAMPTOOLS_HOME']}", style="bold red")
             sys.exit(1)
 
     PYAMPTOOLS_HOME = os.environ["PYAMPTOOLS_HOME"]
 
-    # print(f"PYAMPTOOLS_HOME: {PYAMPTOOLS_HOME}")
+    # Format descriptions with colored AmpTools tags
+    def format_description(desc):
+        if "[AmpTools]" in desc:
+            return desc.replace("[AmpTools]", "[yellow](AmpTools)[/yellow]")
+        return desc
 
     func_map = {
         # 'command' : (path, description)
         "nentries": (f"{PYAMPTOOLS_HOME}/bin/get_nentries.py", "Print number of entries in a list of ROOT files (* wildcard supported). Allows integration over a branch if provided."),
-        "fit": (f"{PYAMPTOOLS_HOME}/src/pyamptools/mle.py", "Perform a set of MLE fits given an amptools config file"),
-        "fitfrac": (f"{PYAMPTOOLS_HOME}/src/pyamptools/extract_ff.py", "Extract fit fractions from a given amptools FitResults file"),
-        "mcmc": (f"{PYAMPTOOLS_HOME}/src/pyamptools/mcmc.py", "Perform a MCMC fit given an amptools config file"),
-        "gen_amp": (f"{PYAMPTOOLS_HOME}/bin/gen_amp.py", "Generate data for a given configuration file"),
-        "gen_vec_ps": (f"{PYAMPTOOLS_HOME}/bin/gen_vec_ps.py", "Generate vector-pseduoscalar data for a given configuration file"),
+        "fit": (f"{PYAMPTOOLS_HOME}/src/pyamptools/mle.py", "[AmpTools] Perform a set of MLE fits given an amptools config file"),
+        "fitfrac": (f"{PYAMPTOOLS_HOME}/src/pyamptools/extract_ff.py", "[AmpTools] Extract fit fractions from a given amptools FitResults file"),
+        "gen_amp": (f"{PYAMPTOOLS_HOME}/bin/gen_amp.py", "[AmpTools] Generate data for a given configuration file"),
+        "gen_vec_ps": (f"{PYAMPTOOLS_HOME}/bin/gen_vec_ps.py", "[AmpTools] Generate vector-pseduoscalar data for a given configuration file"),
         "ift_pkl_summary": (f"{PYAMPTOOLS_HOME}/bin/ift_pkl_summary.py", "Summarize the contents of an IFT results pickle file"),
-        "dx_normint": (f"{PYAMPTOOLS_HOME}/bin/dx_normint.py", "Make diagnostic heatmaps for (norm)alizaton and (amp)litude integrals. Can tracks matrix elements over all mass bins"),
+        # "dx_normint": (f"{PYAMPTOOLS_HOME}/bin/dx_normint.py", "Make diagnostic heatmaps for (norm)alizaton and (amp)litude integrals. Can tracks matrix elements over all mass bins"),
         "calc_ps": (f"{PYAMPTOOLS_HOME}/bin/calc_ps.py", "[In Development] Calculate the phase space factor for IFT fits"),
     }
 
     analysis_map = {
         # 'command' : (path, description)
-        "run_cfgGen": (f"{PYAMPTOOLS_HOME}/bin/run_cfgGen.py", "Generate an AmpTools fit configuration file"),
+        "run_priorSim": (f"{PYAMPTOOLS_HOME}/bin/run_priorSim.py", "Draw sample from NIFTy prior, generate simulated data, and split into kinematic bins"),
+        "run_cfgGen": (f"{PYAMPTOOLS_HOME}/bin/run_cfgGen.py", "[AmpTools] Generate an AmpTools fit configuration file"),
         "run_divideData": (f"{PYAMPTOOLS_HOME}/bin/run_divideData.py", "Divide data into kinematic bins (separate folders)"),
-        "run_processEvents": (f"{PYAMPTOOLS_HOME}/bin/run_processEvents.py", "Process binned datasets to dump AmpTools' ampvecs data structure and normalization integrals into pkl files"),
-        "run_mle": (f"{PYAMPTOOLS_HOME}/bin/run_mle.py", "Run MLE fits over kinematic bins using AmpTools"),
-        "run_ift": (f"{PYAMPTOOLS_HOME}/bin/run_ift.py", "Run IFT fit over kinematic bins. MLE fits must be run first!"),
-        "run_momentPlotter": (f"{PYAMPTOOLS_HOME}/bin/run_momentPlotter.py", "After running IFT + MLE fits we can attempt to plot all the (projected) moments"),
-        "run_resultDump": (f"{PYAMPTOOLS_HOME}/bin/run_resultDump.py", "Dump IFT and AmpTools results to csv files + (projected) moments if possible"),
+        "run_processEvents": (f"{PYAMPTOOLS_HOME}/bin/run_processEvents.py", "[AmpTools] Process binned datasets to dump AmpTools' ampvecs data structure and normalization integrals into pkl files"),
+        "run_fit": (f"{PYAMPTOOLS_HOME}/bin/run_fit.py", "[AmpTools] Run MLE fits over kinematic bins using AmpTools"),
+        "run_mle": (f"{PYAMPTOOLS_HOME}/bin/run_mle.py", "Run MLE fits over kinematic bins using variety of optimizers (minuit, lbfgs, ...)"),
+        "run_mcmc": (f"{PYAMPTOOLS_HOME}/bin/run_mcmc.py", "Run MCMC fits over kinematic bins using numpyro NUTS sampler"),
+        "run_ift": (f"{PYAMPTOOLS_HOME}/bin/run_ift.py", "Run IFT fit over kinematic bins"),
+        "run_resultMan": (f"{PYAMPTOOLS_HOME}/bin/run_resultMan.py", "Run result manager commands"),
         "dash_ift_cmp": (f"{PYAMPTOOLS_HOME}/bin/dash_ift_cmp.py", "Compare multiple IFT fits (intensity and phase) using dash package"),
     }
 
@@ -66,25 +74,31 @@ def main():
     # Custom formatter class to improve help message formatting
     class HelpOnErrorParser(argparse.ArgumentParser):
         def error(self, message):
-            sys.stderr.write(f"Error: {message}\n")
+            console.print(f"Error: {message}", style="bold red")
             self.print_help()
             sys.exit(2)
 
+        def print_help(self, file=None):
+            help_text = self.format_help()
+            console.print(help_text)
+
         def format_help(self):
             help_message = super().format_help()
-            command_help = "\nCommands:\n"
+            command_help = "\n[bold green]Commands:[/bold green]\n"
             for command, (path, description) in func_map.items():
+                description = format_description(description)
                 command_help += f"  * {command:25} {description}\n"
-            command_help += "\n  ==== YAML based commands below (takes a single YAML file argument to configure setup) ====\n"
+            command_help += "\n  [bold green]==== YAML based commands below (takes a YAML file argument to configure setup) ====[/bold green]\n"
             for command, (path, description) in analysis_map.items():
+                description = format_description(description)
                 command_help += f"  * {command:25} {description}\n"
             return help_message + "\n" + command_help
 
         def format_files(self):
-            file_help = "Command file locations:\n"
+            file_help = "[bold green]Command file locations:[/bold green]\n"
             for command, (path, description) in func_map.items():
                 file_help += f"  * {command:25} {path}\n"
-            file_help += "\n  ==== YAML based command files ====\n"
+            file_help += "\n  [bold green]==== YAML based command files ====[/bold green]\n"
             for command, (path, description) in analysis_map.items():
                 file_help += f"  * {command:25} {path}\n"
             return file_help
@@ -101,7 +115,7 @@ def main():
     _args = parser.parse_args()
 
     if _args.files:
-        print(parser.format_files())
+        console.print(parser.format_files())
         sys.exit(0)
 
     if _args.command is None:
@@ -116,9 +130,9 @@ def main():
 
     # Call the script with additional arguments
     command = ["python"] + [cmd_path] + cmd_args
-    print("\n======================================================================================================")
-    print(f'Running command: {" ".join(command)}')
-    print("======================================================================================================\n")
+    console.rule()
+    console.print(f'Running command: {" ".join(command)}', style="bold blue")
+    console.rule()
     subprocess.run(command)
 
 

@@ -17,11 +17,14 @@ pd.options.mode.chained_assignment = None  # default='warn'
 
 console = Console()
 
-def get_nEventsInBin(base, acceptance_correct=True):
+def get_nEventsInBin(base_directory, acceptance_correct=True):
     """
     Load the expected number of events across all bins in a given directory. Searches metadata.txt files
     for the number of signal events (data-bkgnd). These values are calculated when the data divided using
     run_divideData + split_mass_t
+    
+    base_directory: str, path to the directory containing the bin_<bin_number> directories
+    acceptance_correct: bool, if True, use the corrected signal value, otherwise use the raw signal value
 
     Returns:
         np.array: array of nBar values for each bin. It is up to the user to reshape to match kinematic binnings
@@ -32,7 +35,7 @@ def get_nEventsInBin(base, acceptance_correct=True):
         signal_str = "nBar corrected signal"
     intrisic_spaces = signal_str.count(" ")
 
-    fs = glob.glob(f"{base}/bin_*/metadata.txt")
+    fs = glob.glob(f"{base_directory}/bin_*/metadata.txt")
     fs = sorted(fs, key=lambda x: int(re.search(r"bin_(\d+)", x).group(1)))
 
     values = []
@@ -121,7 +124,7 @@ def parse_fit_file(filename):
     
     return complex_amps, status_dict
 
-def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean=False):
+def loadAmptoolsIFTResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean=False, apply_mle_queries=True):
     
     """
     Loads the AmpTools and IFT results from the provided yaml file. Moments will be calculated if possible with multiprocessing.Pool with pool_size
@@ -131,7 +134,8 @@ def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean=False):
         pool_size (int): Number of processes to use by multiprocessing.Pool
         skip_moments (bool): If True, only load partial wave amplitudes and do not calculate moments
         clean (bool): If True, clean the output directory before running
-        
+        apply_mle_queries (bool): If True, apply MLE queries to the results, otherwise just load the results
+
     Returns:
         pd.DataFrame: AmpTools binned fit results
         pd.DataFrame: IFT binned fit results
@@ -149,10 +153,10 @@ def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean=False):
     # Store a cache of the results to avoid recalculating them, calculating moments is quite time consuming
     cache = f"{yaml['base_directory']}/.moment_cache.pkl"
     if clean and os.path.exists(cache):
-        console.print(f"[red]loadAllResultsFromYaml| Cache found at {cache} but user requested to start clean. Recalculating...[/red]\n")
+        console.print(f"[red]loadAmptoolsIFTResultsFromYaml| User requested to start clean, do not use any cached results. Recalculating...[/red]\n")
         os.remove(cache)
     elif os.path.exists(cache):
-        console.print(f"[green]loadAllResultsFromYaml| Loading cache from {cache}[/green]\n")
+        console.print(f"[green]loadAmptoolsIFTResultsFromYaml| Loading cache from {cache}[/green]\n")
         with open(cache, "rb") as f:
             cache = pkl.load(f)
         return cache
@@ -181,26 +185,38 @@ def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean=False):
     ###############################
     #### LOAD AMPTOOLS RESULTS
     ###############################
-    console.print("io| Attempting to load AmpTools results...")
+    console.print("\n\n********************************\nio| Attempting to load AmpTools results...\n********************************\n", style='bold green')
     loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=False)
     try:
         # hardcode check to False since hopefully if user calls this function they would want all fits
         #   across all randomizations and kinematic bins
-        amptools_df, (_, _, _) = loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=False)
+        amptools_df, (_, _, _) = loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=False, apply_mle_queries=apply_mle_queries)
     except Exception as e:
-        print(f"io| Error loading AmpTools results: {e}")
+        console.print(f"[red]io| Error loading AmpTools results: {e}[/red]")
+        
+    if isinstance(amptools_df, pd.DataFrame) and len(amptools_df) == 0:
+        amptools_df = None
+    if amptools_df is None:
+        console.print(f"\n[red]io| AmpTools results were not found in expected location! [/red]")
 
     ###############################
     #### LOAD NIFTY RESULTS
     ###############################
-    console.print("io| Attempting to load NIFTY results...")
+    console.print("\n\n********************************\nio| Attempting to load NIFTY results...\n********************************\n", style='bold green')
     try:
         ift_df, ift_res_df = loadIFTResultsFromYaml(yaml)
     except Exception as e:
-        console.print(f"io| Error loading NIFTY results: {e}")
+        console.print(f"\n[red]io| Error loading NIFTY results: {e}[/red]")
         
+    if isinstance(ift_df, pd.DataFrame) and len(ift_df) == 0:
+        ift_df = None
+    if ift_df is None:
+        console.print(f"\n[red]io| NIFTy results were not found in expected location! [/red]")
+    console.print(f"\n")
+
+    ## FINAL CHECK FOR BOTH DATAFRAMES
     if amptools_df is None and ift_df is None:
-        raise ValueError("io| No results from AmpTools binned fits nor IFT can be found! Terminating...")
+        raise ValueError("io| No results found for IFT nor AmpTools binned fits! Terminating as there is nothing to do...")
 
     ###########################################
     #### PROCESS THE AMPTOOLS AND IFT RESULTS
@@ -232,7 +248,7 @@ def loadAllResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean=False):
         latex_name_dict = latex_name_dict_amp if latex_name_dict_amp is not None else latex_name_dict_ift
         
     with open(cache, "wb") as f:
-        console.print(f"[green]loadAllResultsFromYaml| Dumping cache to {cache}[/green]")
+        console.print(f"[green]loadAmptoolsIFTResultsFromYaml| Dumping cache to {cache}[/green]")
         cache = (amptools_df, ift_df, ift_res_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict)
         pkl.dump(cache, f)
     
@@ -268,7 +284,20 @@ def loadIFTResultsFromYaml(yaml):
     with open(nifty_pkl, "rb") as f:
         resultData = pkl.load(f)
         
-    _result = reload_fields_and_components(resultData=resultData)
+    sums_dict = None
+    if "result_dump" in yaml and "coherent_sums" in yaml["result_dump"]:
+        sums_dict = yaml["result_dump"]["coherent_sums"]            
+        
+    return loadIFTResultsFromPkl(resultData, sums_dict)
+        
+def loadIFTResultsFromPkl(resultData, sums_dict=None):
+        
+    try:
+        _result = reload_fields_and_components(resultData=resultData)
+    except Exception as e:
+        console.print(f"[red]io| Error loading IFT results from pkl: '{e}'[/red]")
+        console.print(f"[red]io|   NOTE: This could be an error related to import order. If it is, try importing this function at the top of your script.[/red]")
+        raise e
 
     # signal_field_sample_values, amp_field, _res_amps_waves_tprime, _bkg_amps_waves_tprime, kinematic_mutliplier = _result
     signal_field_sample_values, amp_field, res_amps_waves_tprime, bkg_amps_waves_tprime, kinematic_mutliplier, \
@@ -344,23 +373,25 @@ def loadIFTResultsFromYaml(yaml):
     flat_intens_waves_tprime = {}
     amp_cols = [col for col in cols if col.endswith('_amp')]
     for tbin, tprime in enumerate(tprimes):
+        tmp = flat_amps_waves_tprime.query('tprime == @tprime')
         for col in amp_cols:
             wave = col.split('_')[0]
-            tmp = flat_amps_waves_tprime.query('tprime == @tprime')
             intens = calc_intens([wave], tbin, [tmp[col].values.reshape(nmb_samples, nmb_masses)])
             if f'{col.strip("_amp")}' not in flat_amps_waves_tprime:
                     flat_intens_waves_tprime[f'{col.strip("_amp")}'] = intens.flatten().real
             else:
                 flat_intens_waves_tprime[f'{col.strip("_amp")}'] = np.concatenate((flat_amps_waves_tprime[f'{col.strip("_amp")}'], intens.flatten().real))
+        all_values = [tmp[f"{wave_name}_amp"].values.reshape(nmb_samples, nmb_masses) for wave_name in wave_names]
+        _intens = calc_intens(wave_names, tbin, all_values)
+        flat_intens_waves_tprime['intensity'] = _intens.flatten().real
                     
     # Stage 3: Calculate intensity for user requested coherent sums defined in yaml["result_dump"]["coherent_sums"]
     # NOTE: There might be something wrong with calc_intens? Directly summing intensities across GP waves (i.e. Pm1+_Pp0+_Pp1+) gives very similar results as the coherent sum P+
     #       Even if we sum BW for a given resonance I dont think this should happen since each BW has a different phase
-    if "result_dump" in yaml and "coherent_sums" in yaml["result_dump"]:
-        console.print('\nio| Calculating intensities for user specified coherent sums...\n')
+    if isinstance(sums_dict, dict):
         coherent_waves = {}
         coherent_amps = {}
-        sums_dict = yaml["result_dump"]["coherent_sums"]
+        console.print('\nio| Calculating intensities for user specified coherent sums...\n')
         for k, vs in sums_dict.items():
             vs = vs.split("_")
             for tbin, tprime in enumerate(tprimes):
@@ -397,8 +428,8 @@ def loadIFTResultsFromYaml(yaml):
     intensity_samples_no_acc = np.array(resultData['expected_nmb_events_no_acc'], dtype=float) # ~ (nmb_samples, nmb_masses, nmb_tprimes)
     intensity_samples = intensity_samples.reshape(-1, 1)
     intensity_samples_no_acc = intensity_samples_no_acc.reshape(-1, 1)
-    ift_pwa_df['intensity'] = intensity_samples
-    ift_pwa_df['intensity_corr'] = intensity_samples_no_acc
+    ift_pwa_df['nBar'] = intensity_samples
+    ift_pwa_df['nBar_corrected'] = intensity_samples_no_acc
     
     # Extract (res)onance parameter samples, dump into independent DataFrame/csv
     #   This is only an array over samples, and is the same value for all masses and tprimes
@@ -413,7 +444,7 @@ def loadIFTResultsFromYaml(yaml):
     
     return ift_pwa_df, ift_res_df
 
-def loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=True):
+def loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=True, apply_mle_queries=True):
     """ 
     Helper function to load the amptools results from a yaml file 
     
@@ -422,8 +453,8 @@ def loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=True):
         ensure_one_fit_per_bin (bool):  Raise error if there are multiple fits results per kinematic bin. This flag is necessary to ensure `iftpwa_plot` program works as expected.
                                         If you are not using `iftpwa_plot` program, you can set this flag to False.
                                         NOTE: seems like we only need to implement t'-summed intensity section. ATM it seems like it would just sum over all fit results in a bin
+        apply_mle_queries (bool): If True, apply MLE queries to the results
 
-        
     Returns:
         pd.DataFrame: DataFrame of results
         tuple: (masses, tPrimeBins, bpg) where masses and tPrimeBins correspond to the bin centers
@@ -450,11 +481,16 @@ def loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=True):
     n_t_bins = yaml['n_t_bins']
     tPrimeBins = np.linspace(min_t, max_t, n_t_bins+1)
     tPrimes = 0.5 * (tPrimeBins[1:] + tPrimeBins[:-1])
+    
     # No support for multiple fits per bin, choose best
-    mle_query_1 = yaml['amptools'].get('mle_query_1', '')
-    mle_query_2 = yaml['amptools'].get('mle_query_2', '')
-    if mle_query_1 is None: mle_query_1 = ''
-    if mle_query_2 is None: mle_query_2 = ''
+    mle_query_1 = ''
+    mle_query_2 = ''
+    if apply_mle_queries:
+        mle_query_1 = yaml['amptools'].get('mle_query_1', '')
+        mle_query_2 = yaml['amptools'].get('mle_query_2', '')
+        if mle_query_1 is None: mle_query_1 = ''
+        if mle_query_2 is None: mle_query_2 = ''
+    
     n_randomizations = yaml['amptools']['n_randomizations']
     accCorrect = yaml['acceptance_correct']
     
@@ -549,8 +585,8 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
                     intensity_corr, intensity = float(intensity_corr), float(intensity)
                     if 'intensity' not in df: df['intensity'] = [intensity]
                     else: df['intensity'].append(intensity)
-                    if 'intensity_corr' not in df: df['intensity_corr'] = [intensity_corr]
-                    else: df['intensity_corr'].append(intensity_corr)
+                    if 'intensity_corrected' not in df: df['intensity_corrected'] = [intensity_corr]
+                    else: df['intensity_corrected'].append(intensity_corr)
                     
                     totalYield = intensity_corr if accCorrect else intensity
 
@@ -603,6 +639,10 @@ def loadAmpToolsResults(cfgfiles, masses, tPrimes, niters, mle_query_1, mle_quer
     df["ematrix"] = _ematrix
 
     df = pd.DataFrame(df)
+    
+    if len(df) == 0:
+        console.print(f"io| No AmpTools fits loaded! Returning empty DataFrame...", style="yellow")
+        return df
         
     # reorder columns so important ones are first
     cols = ["tprime", "mass", "nll", "iteration", "status", "ematrix"]

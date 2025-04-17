@@ -17,12 +17,14 @@ import yaml
 from IPython.display import Code
 from omegaconf import OmegaConf
 from omegaconf._utils import OmegaConfDumper, _ensure_container
+from rich.console import Console
 
+_general_console = Console()
 
 # ===================================================================================================
 # ===================================================================================================
 
-spectroscopic_map = {0: "S", 1: "P", 2: "D", 3: "F"}
+spectroscopic_map = {0: "S", 1: "P", 2: "D", 3: "F", 4: "G"}
 lmax = max(spectroscopic_map.keys())
 
 def zlm_amp_name(refl, l, m):
@@ -52,7 +54,7 @@ def vps_amp_name(refl, J, M, l):
     return f"{J}{spectroscopic_map[l]}{M_sign}{abs(M)}{_refl}"
 
 
-converter = {}  # i.e. {'Sp0+': [1, 0, 0]}
+converter = {}  # i.e. {'Sp0+': [1, 0, 0]} ~ [refl, l, m]
 channel_map = {}
 prettyLabels = {}  # i.e. {'Sp0+': '$S_{0}^{+}$'}
 example_zlm_names = []  # i.e. ['Sp0+', 'Pp1+', 'Dm2-']
@@ -81,14 +83,22 @@ for e, refl in zip([-1, 1], refls):
                 prettyLabels[amp] = rf"${J}^{{{P}{C}}}[{spectroscopic_map[l]}_{{{sM}}}^{{{refl}}}]$"
                 channel_map[amp] = 'VectorPseudoscalar'
                 
+qn_to_amp = {tuple(v): k for k, v in converter.items()} # quantum number list to amplitude names
+                
 def identify_channel(wave_names: List[str]) -> str:
     """ Loops over wave_names and checks if all reaction channels (i.e. TwoPseudoscalar or VectorPseudoscalar) are the same """
     channels = []
+    wave_names_is_list_like = hasattr(wave_names, "__iter__") and not isinstance(wave_names, str) # strings are list-like...
+    if not wave_names_is_list_like:
+        raise ValueError(f"wave_names must be an iterable like list or array, got {type(wave_names)}")
     for w in wave_names:
         channels.append(channel_map[w])
     if len(set(channels)) > 1:
         raise ValueError(f"io| wave_names appears to use multiple channels. This is not supported! wave_names = {wave_names}")
-    return channels[0]
+    channel = channels[0]
+    if channel not in ["TwoPseudoscalar", "VectorPseudoscalar"]:
+        raise ValueError(f"Unknown channel: {channel}")
+    return channel
 
 # If there is no prettyLabel version, just pass back the key
 class KeyReturningDict(dict):
@@ -98,6 +108,148 @@ prettyLabels = KeyReturningDict(prettyLabels)
 
 # ===================================================================================================
 # ===================================================================================================
+
+def execute_cmd(cmd_list, console=None):
+    if console is None:
+        console = _general_console
+    for cmd in cmd_list:
+        console.print(f"[bold yellow]Executing shell command:[/bold yellow] [bold blue]{cmd}[/bold blue]")
+        result = subprocess.run(cmd, shell=True)
+        if result.returncode != 0:
+            raise Exception(f"Command failed with return code {result.returncode}")
+        
+def console_print(msg, style="bold blue", console=None):
+    """Safe printing, if console not provided will default to a shared general console"""
+    if console is None:
+        console = _general_console
+    console.print(msg, style=style)
+
+def append_kinematics(
+    infile, 
+    output_location=None, 
+    treeName="kin",
+    console=None,
+    beam_angle=None,
+    ):
+    
+    """
+    Append kinematics to the input ROOT file, optionally perform binning into (mass, t) bins.
+    NOTE: THIS ONLY WORKS FOR ZLM AMPLITUDES!
+    
+    ######################################################################### 
+    # THESE MUST BE CALLED BEFORE RUNNING THIS FUNCTION. CANNOT IMPORT INSIDE
+    #   BECAUSE PYROOT MAINTAINS GLOBAL STATE WHICH WILL LEAD TO CONFLICTS
+    #########################################################################
+    atiSetup.setup(globals(), use_fsroot=True)
+    ROOT.ROOT.EnableImplicitMT()
+    from pyamptools.utility.rdf_macros import loadMacros
+    loadMacros()
+    #########################################################################
+    
+    Args:
+        infile (List[str], str): Input ROOT file(s)
+        output_location (str): output root file path. If None will overwrite the input file. Output has calculated kinematics included as branchs. 
+        treeName (str): Name of the TTree in the input ROOT file
+        console (rich.console.Console): Console object for printing
+        beam_angle (float, str): Beam angle in degrees or branch name in the tree the beam angles (deg) are stored in
+    
+    Returns:
+        df: ROOT.RDataFrame with kinematics appended, None if file already exists
+        KINEMATIC_QUANTITIES: Dictionary of kinematic quantities calculated by fsroot
+    """
+    
+    # Import here to ensure a clean ROOT environment for each call
+    import ROOT
+    import tempfile
+    import os
+    import shutil
+    
+    # # Setup environment
+    # atiSetup.setup(globals(), use_fsroot=True)
+    # ROOT.ROOT.EnableImplicitMT()
+    # from pyamptools.utility.rdf_macros import loadMacros
+    # loadMacros()
+
+    # Define kinematic quantities to calculate using FSROOT macros
+    # For etapi0: X1 = eta, X2 = pi0, RECOIL = recoil proton
+    # NOTE: append (m) to lower chance of name conflicts
+    KINEMATIC_QUANTITIES = {
+        "mMassX": "MASS(X1,X2)",
+        "mMassX1": "MASS(X1)",
+        "mMassX2": "MASS(X2)",
+        "mCosHel": "HELCOSTHETA(X1,X2,RECOIL)",
+        "mPhiHel": "HELPHI(X1,X2,RECOIL,GLUEXBEAM)",
+        "mt": "T(GLUEXTARGET,RECOIL)"
+    }
+    
+    if console is None:
+        from rich.console import Console
+        console = Console()
+    
+    if beam_angle is not None:
+        KINEMATIC_QUANTITIES["mPhi"] = f"BIGPHI({beam_angle},X1,X2,RECOIL,GLUEXBEAM)"
+    else:
+        console.print("beam_angle not set, will not calculate Phi (angle between production plane and beam polarization)", style="bold yellow")
+        
+    # Ensure infile is a list of strings
+    if isinstance(infile, str):
+        infile = [infile]  # Convert single string to list
+    if not isinstance(infile, list): # if not a list by now
+        raise ValueError(f"infile must be a list of strings or a single string, got {type(infile)}")
+    if output_location is None:
+        if len(infile) == 1:
+            output_location = infile[0]
+        else:
+            raise ValueError(f"output_location is None! Check caller.")
+    
+    # Load input file and get the tree
+    console.print(f"Processing {infile}", style="bold blue")
+    df = ROOT.RDataFrame(treeName, infile)
+    columns = df.GetColumnNames()
+    console.print(f"Available columns: {list(columns)}", style="bold blue")
+    
+    if "mMassX" in columns and "mt" in columns: # woo nothing to do
+        console.print(f"Expected kinematics already present in {infile}, loading...", style="bold yellow")
+        return df, KINEMATIC_QUANTITIES
+    else:
+        # Define particle four-vectors
+        particles = ["RECOIL", "X2", "X1"] # Particle order in AmpTools output tree
+        df = df.Define("GLUEXTARGET", "std::vector<float> p{0.0, 0.0, 0.0, 0.938272}; return p;")
+        df = df.Define("GLUEXBEAM",   "std::vector<float> p{{Px_Beam, Py_Beam, Pz_Beam, E_Beam}}; return p;")
+
+        # Assuming AmpTools formatted tree
+        for i, particle in enumerate(particles):
+            cmd = f"std::vector<float> p{{ Px_FinalState[{i}], Py_FinalState[{i}], Pz_FinalState[{i}], E_FinalState[{i}] }}; return p;"
+            df = df.Define(f"{particle}", cmd)
+        
+        # Define kinematic quantities
+        for name, function in KINEMATIC_QUANTITIES.items():
+            df = df.Define(name, function)
+
+        # Do not save the particle four-vectors
+        original_columns = list(columns)
+        kinematic_columns = list(KINEMATIC_QUANTITIES.keys())
+        columns_to_keep = original_columns + kinematic_columns
+            
+        if not isinstance(output_location, str):
+            raise ValueError(f"output_location must be a string/path, got {type(output_location)}")
+
+        # ROOT does not support writing to the same file we are reading from
+        #    Instead, snapshot to temp file then move to overwrite original
+        is_overwriting = output_location in infile # infile ~ List[str]
+        if is_overwriting:
+            temp_dir = tempfile.gettempdir()
+            temp_file = os.path.join(temp_dir, f"temp_{os.path.basename(output_location)}")            
+            df.Snapshot(treeName, temp_file, columns_to_keep)
+            df = None # close dataframe releasing input file
+            shutil.move(temp_file, output_location)
+            df = ROOT.RDataFrame(treeName, output_location)
+            console.print(f"Overwrote existing tree with augmented tree at {output_location}", style="bold green")
+        else:
+            df.Snapshot(treeName, output_location, columns_to_keep)
+            console.print(f"Created new augmented tree with all events at {output_location}", style="bold green")
+                
+        return df, KINEMATIC_QUANTITIES
 
 class Styler:
     def __init__(self):
@@ -187,7 +339,23 @@ def load_yaml(path_to_yaml, resolve=True):
                 changed = True
         if changed:
             print(f"Current pyamptools or iftpwa commit differs from hash in the yaml file. Updating...")
-            dump_yaml(yaml, path_to_yaml, resolve=False)
+            import filelock
+            import os
+            import time
+            import random
+            time.sleep(random.uniform(0.1, 0.5)) # random delay to reduce fighting
+            try:
+                lock_path = f"{path_to_yaml}.lock"
+                with filelock.FileLock(lock_path, timeout=30):
+                    current_yaml = OmegaConf.load(path_to_yaml) # re-read to ensure we are not overwriting changes
+                    current_yaml.pyamptools_commit_hash = pyamptools_commit_hash
+                    current_yaml.iftpwa_commit_hash = iftpwa_commit_hash
+                    dump_yaml(current_yaml, path_to_yaml, resolve=False)
+                    print(f"Successfully updated YAML file with new commit hashes")
+            except filelock.Timeout:
+                print(f"Could not acquire lock for {path_to_yaml} after 30 seconds. Continuing without updating.")
+            except Exception as e:
+                print(f"Error while trying to update YAML file: {e}. Continuing without updating.")
         
         yaml = OmegaConf.to_container(yaml, resolve=resolve)
         if "default_yaml" in yaml:
@@ -220,7 +388,7 @@ def get_yaml_dumper():
     return YamlDumper
 
 
-def dump_yaml(cfg, output_file_path, indent=4, resolve=False):
+def dump_yaml(cfg, output_file_path, indent=4, resolve=False, console=None):
     """
     Function enforcing flow style for lists
 
@@ -242,7 +410,11 @@ def dump_yaml(cfg, output_file_path, indent=4, resolve=False):
             raise ValueError("cfg could not be converted to OmegaConf object")
     _ensure_container(cfg)
     container = OmegaConf.to_container(cfg, resolve=resolve, enum_to_str=True)
-    print(f"Writing yaml file to: {output_file_path}")
+    
+    if console is None:
+        console = Console()
+    console.print(f"Writing yaml file to: {output_file_path}", style="bold blue")
+    
     with open(output_file_path, "w") as f:
         yaml.dump(  # type: ignore
             container,
@@ -254,22 +426,24 @@ def dump_yaml(cfg, output_file_path, indent=4, resolve=False):
             Dumper=get_yaml_dumper(),
         )
 
-
 class Timer:
     def __init__(self):
         """No reason not to start the timer upon creation right?"""
         self._start_time = time.time()
 
-    def read(self):
+    def read(self, return_str: bool = False):
         """Read the start time, stop time, and elapsed time."""
 
         read_time = time.time()
         elapsed_time = read_time - self._start_time
 
-        start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self._start_time))
-        read_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(read_time))
-        elapsed_time = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
-        return start_time, read_time, elapsed_time
+        if return_str:
+            start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self._start_time))
+            read_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(read_time))
+            elapsed_time = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
+            return start_time, read_time, elapsed_time
+        else:
+            return self._start_time, read_time, elapsed_time
 
 
 def get_gpu_status():
@@ -328,6 +502,7 @@ def get_gpu_status():
 
 
 def calculate_subplot_grid_size(length_of_list):
+    """Calculates rows and columns aiming to be as square as possible"""
     sqrt_length = math.sqrt(length_of_list)
     rows = math.floor(sqrt_length)
     columns = rows
@@ -584,3 +759,15 @@ def get_git_commit_hash_for_package(package_name):
     except Exception as e:
         print(e)
         return 'unknown, package must be installed in editable mode: `pip install -e .`'
+    
+def recursive_replace(d, old, new):
+    """
+    Recursively replace a string in a dictionary with another string
+    Useful to update yaml dictionaries
+    """
+    for k, v in d.items():
+        if isinstance(v, dict):
+            recursive_replace(v, old, new)
+        elif isinstance(v, str):
+            if old in v:
+                d[k] = v.replace(old, new)

@@ -280,7 +280,7 @@ public:
    *  written for a singele fit job.
    */
 
-  virtual void finalizeFit( const string& tag = "" );
+  virtual void finalizeFit( const string& tag = "", bool bSaveAmps = false );
 
 
   /** For manual calculations:  clear all events and calculations.
