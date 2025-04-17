@@ -10,6 +10,7 @@ This repository contains Python bindings for [AmpTools](https://github.com/mashe
 ## Automated Input/Output studies for partial wave analysis
 - `iftpwa` prior model can act as a **generator** for diverse and complex amplitude models (smooth Gaussian processes + parametric models like a Breit-Wigner, Flatte, etc.)
 - Inference from multiple angles using likelihoods provided by [JAX](https://jax.readthedocs.io/en/latest/index.html):
+  - Inference with `iftpwa` increases identifiability of smooth amplitudes in the presence of ambiguities + crossing solutions + instabilities
   - Maximum Likelihood Estimation (MLE) using [iminuit](https://iminuit.readthedocs.io/en/latest/index.html) or `scipy.optimize` (lbfgs, etc.)
   - MCMC (Hamiltonian Monte Carlo) using [NumPyro](https://num.pyro.ai/en/stable/index.html)
   - SVGD (Stein Variational Gradient Descent) using [NumPyro](https://num.pyro.ai/en/stable/index.html) for "inversion" of projected moments to amplitudes
