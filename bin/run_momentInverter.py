@@ -468,7 +468,7 @@ if __name__ == "__main__":
 
     ######################################################
     # Define and parse command line arguments
-    parser = argparse.ArgumentParser(description='Moment comparison and inversion using SVGD')
+    parser = argparse.ArgumentParser(description='Moment inversion using SVGD')
     parser.add_argument('yaml_file', type=str, help='YAML file for result manager')
     parser.add_argument('-mb', '--mass_bins', type=int, nargs='+', default=[], 
                         help='Mass bin(s) to use for moment inversion (default: run over all mass bin)')

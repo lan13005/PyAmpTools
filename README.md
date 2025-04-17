@@ -17,7 +17,8 @@ This repository contains Python bindings for [AmpTools](https://github.com/mashe
 - These core technologies can be used to increase the rate and effectiveness of Input/Output studies
 
 ## PyAmpTools Core
-Under the hood, it uses [PyROOT](https://root.cern/manual/python/) which uses cppyy. These bindings will hopefully simplify the interaction with the AmpTools library while also providing access to the python ecosystem. There are no known features of AmpTools that is not currently supported and both GPU and MPI is working. [FSRoot](https://github.com/remitche66/FSRoot) is also included as a submodule and can be integrated into analysis workflows.
+
+[AmpTools](https://github.com/mashephe/AmpTools) and [FSRoot](https://github.com/remitche66/FSRoot) are included as submodules. Python bindings are created using [PyROOT](https://root.cern/manual/python/) which uses [cppyy](https://cppyy.readthedocs.io/en/latest/index.html).
 
 Features:
 
