@@ -37,10 +37,10 @@ console = Console()
 # NOTE:
 # 1. H2 has another symmetry where I think the M=0 is 0 but more annoying to enforce at this point
 # 2. More particles does not always result in better results, perhaps more particles could require more iterations
-# 3. Always do not normalize moments, just spit out the raw moments and let the user normalize however they want
+# 3. Always do not normalize moments, just spit out the raw moments and let the user normalize however they want, easier optimization
 # 4. This code assumes a user has some results produced with some waveset then projected onto the moments. This code will
 #    attempt to invert the moments back to the same waveset. I think this code should handle the case where we
-#    allow unused waves to be non-zero also (untested)
+#    allow unused waves to be non-zero also (untested). Currently a mask is used to ignore unused waves
 
 # ############################################################################################
 # ### Calling svgd.init() takes a very long time likely since it is compiling the model
@@ -106,7 +106,7 @@ def make_bandwidth_factor(t, decay_iterations=1000, initial_scale=1.0, min_scale
 class ScheduledRBFKernel(RBFKernel):
     """
     RBFKernel that updates its bandwidth factor at each iteration
-    We do this to remove the fake repulsive uncertainty as we are looking for inversion
+    We do this to remove the fake repulsive uncertainty as we are looking for deep inversion
     """
     def __init__(self, schedule_function):
         super().__init__()
@@ -134,33 +134,59 @@ def process_particle(amp_array, mask, l_max, cg_coeffs):
 
 def process_mass_bin(config):
     
-    yaml_file = config['yaml_file']
-    mass_bin = config['mass_bin']
-    n_eps = config['n_eps']
-    step_size = config['step_size']
-    bandwidth_params = config['bandwidth_params']
-    num_particles = config['num_particles']
-    amplitude_scale = config['amplitude_scale']
-    tightness = config['tightness']
-    loss_exponent = config['loss_exponent']
-    num_iterations = config['num_iterations']
-    seed = config['seed']
-    output_dir = config['output_dir']
-    yaml_file = config['yaml_file']
-    iftpwa_yaml = config['ift_yaml']
-    waveNames = config['waveNames']
-    reference_waves = config['reference_waves']
-    masses = config['masses']
-    moments_df = config['moments_df']
-    l_max = config['l_max']
-    cg_coeffs = config['cg_coeffs']
+    """
+    This is the main function that is called to invert the moments in a bin-by-bin fashion.
+    See code head for more details on the input config dictionary.
+    """
+    
+    ######################################################
+    # MUST BE SUPPLIED IN CONFIG DICT
+    moments_df = config['moments_df'] # DataFrame containing the moments to be inverted
+    waveNames = config['waveNames'] # List of waves as the target basis for inversion
+    reference_waves = config['reference_waves'] # List of reference waves (imaginary parts will be zeroed out)
+
+    # GENERAL PARAMETERS (WITH DEFAULTS)
+    yaml_file = config.get('yaml_file', None)
+    iftpwa_yaml = config.get('ift_yaml', None)
+    mass_bin = config.get('mass_bin', 0)
+    masses = config.get('masses', [1.0])
+    output_dir = config.get('output_dir', 'moment_inversion_results')
+    seed = config.get('seed', 42)
+    
+    # AMPLITUDE PARAMETERS (WITH DEFAULTS)
+    n_eps = config.get('n_eps', 2)
+    
+    # SVGD PARAMETERS (WITH DEFAULTS)
+    step_size = config.get('step_size', 0.01)
+    num_iterations = config.get('num_iterations', 5000)
+    bandwidth_params = config.get('bandwidth_params', {'decay_iterations': 1000, 'initial_scale': 1.0, 'min_scale': 0.0})
+    num_particles = config.get('num_particles', 500)
+    amplitude_scale = config.get('amplitude_scale', 1.0)
+    tightness = config.get('tightness', 1000.0)
+    loss_exponent = config.get('loss_exponent', 2.0)
+    ######################################################
+    
+    #### BEGIN MOMENT INVERSION BIT ####
+    
+    # Identify the maximum L value based on the moment names
+    moment_cols = [c for c in moments_df.columns if c[0] == 'H']
+    L_max = max([int(c[3]) for c in moment_cols])
+    l_max = L_max // 2
+    
+    # Precompute CG coefficients (If this turns out to be slow we can move this outside the process_mass_bin function)
+    #   and precompute it once, passing it in as a config dict kwarg
+    console.print("Precomputing Clebsch-Gordan coefficients...")
+    start = time.time()
+    cg_coeffs = precompute_cg_coefficients_by_LM(l_max, 2*l_max)
+    cg_time = time.time() - start
+    console.print(f"CG precomputation time: {cg_time:.4f} seconds")
+    console.print(f"Number of CG coefficients: {len(cg_coeffs)}")    
 
     moment_names = get_moment_name_order(l_max) # Expected order for moment_inversion code [H0(0,0), ..., H1(0,0), ..., H2(0,0), ...]
     n_flat_amplitudes = 2 * sum((2*l + 1) for l in range(l_max + 1)) * n_eps
 
     channel = identify_channel(waveNames)
     assert channel == 'TwoPseudoscalar', "Only TwoPseudoscalar is supported ATM for moment inversion"
-    n_samples = moments_df['sample'].max() + 1 # zero indexed
     
     # Create a mask for non-existant partial waves
     mask = np.ones(n_flat_amplitudes)
@@ -184,9 +210,14 @@ def process_mass_bin(config):
     # H0/H1 are purely real, H2 is purely imaginary
     # The algorithm must see both real/imag parts to form complex moments holding zeros for the other part
     # We also have to track the symmetry enforced moments (real numbers) as our final comparison
+    if 'mass' not in moments_df.columns:
+        samples_in_bin = moments_df # (nsamples, alpha * n_moments)
+    else:
+        samples_in_bin = moments_df.query(f'mass == {masses[mass_bin]}') # (nsamples, alpha * n_moments)
+    n_samples = len(samples_in_bin)
+    assert n_samples > 0, f"No samples found for mass bin {mass_bin}"
     moment_samples = np.zeros((n_samples, len(moment_names)), dtype=np.complex128)
     sym_moment_samples = np.zeros((n_samples, len(moment_names)), dtype=np.float64)
-    samples_in_bin = moments_df.query(f'mass == {masses[mass_bin]}') # (nsamples, alpha * n_moments)
     for i, moment_name in enumerate(moment_names):
         if moment_name in samples_in_bin.columns:
             is_h2 = moment_name.startswith('H2')
@@ -243,7 +274,7 @@ def process_mass_bin(config):
     svgd = SVGD(model, optimizer, kernel, num_stein_particles=num_particles)
     rng_key = jax.random.PRNGKey(0)
 
-    console.print("\nCompiling SVGD model with moment distribution...")
+    console.print("\nCompiling prior model and initializing SVGD...")
     start_compile_svgd = time.time()
     svgd_state = svgd.init(rng_key, moment_samples=moment_samples, scale=amplitude_scale)
     compile_svgd_time = time.time() - start_compile_svgd
@@ -332,56 +363,61 @@ def process_mass_bin(config):
     ########################################################
     ######### SAVE RESULTS TO PICKLE ######################
     ########################################################
+    
+    # If the yaml files needed to create the PWA manager is available we will append the
+    #   intensities to the prediction dataframe with proper normalization
+    if yaml_file is not None and iftpwa_yaml is not None:
 
-    from iftpwa1.pwa.gluex.gluex_jax_manager import (
-        GluexJaxManager,
-    )
-    from pyamptools.utility.opt_utils import Objective
-    import logging
+        from iftpwa1.pwa.gluex.gluex_jax_manager import (
+            GluexJaxManager,
+        )
+        from pyamptools.utility.opt_utils import Objective
+        import logging
 
-    pwa_manager = GluexJaxManager(comm0=None, mpi_offset=1,
-                                yaml_file=yaml_file,
-                                resolved_secondary=iftpwa_yaml, prior_simulation=False, sum_returned_nlls=False,
-                                logging_level=logging.WARNING)
-    
-    waveNames = pwa_manager.waveNames
-    nPars = 2 * len(waveNames)
-    nmbMasses = len(pwa_manager.masses)
-    nmbTprimes = len(pwa_manager.tPrimes)
-    reference_waves = reference_waves
-    
-    obj = Objective(pwa_manager, 0, nPars, nmbMasses, nmbTprimes, reference_waves=reference_waves)
-    
-    # NOTE: For some reason I think iterrows type converts my mass from float to complex, reenforce it
-    intensity_dict = {}
-    for irow, row in pred_df.iterrows():
-        pwa_manager.set_bins(np.array([mass_bin]))
-        final_params = np.zeros(nPars)
-        for iw, waveName in enumerate(waveNames):
-            final_params[2*iw] = np.real(row[f'{waveName}_amp'])
-            # NOTE: If reference wave is not restricted to be real then this code needs to change
-            if waveName in reference_waves:
-                final_params[2*iw+1] = 0.0
-            else:
-                final_params[2*iw+1] = np.imag(row[f'{waveName}_amp'])
-            
-        # Call once to setup the objective function loading all normalization integrals
-        if irow == 0:
-            obj.objective(final_params)
-            
-        intensity, intensity_error = obj.intensity_and_error(final_params, None, waveNames, acceptance_correct=False)
-        intensity_dict.setdefault('intensity', []).append(intensity)
-        if intensity_error is not None:
-            intensity_dict.setdefault('intensity_err', []).append(intensity_error)
-        for waveName in waveNames:
-            intensity, intensity_error = obj.intensity_and_error(final_params, None, [waveName], acceptance_correct=False)
-            intensity_dict.setdefault(waveName, []).append(intensity)
-            if intensity_error is not None:
-                intensity_dict.setdefault(f"{waveName}_err", []).append(intensity_error)
+        pwa_manager = GluexJaxManager(comm0=None, mpi_offset=1,
+                                    yaml_file=yaml_file,
+                                    resolved_secondary=iftpwa_yaml, prior_simulation=False, sum_returned_nlls=False,
+                                    logging_level=logging.WARNING)
+        
+        waveNames = pwa_manager.waveNames
+        nPars = 2 * len(waveNames)
+        nmbMasses = len(pwa_manager.masses)
+        nmbTprimes = len(pwa_manager.tPrimes)
+        reference_waves = reference_waves
+        
+        obj = Objective(pwa_manager, 0, nPars, nmbMasses, nmbTprimes, reference_waves=reference_waves)
+        
+        # NOTE: For some reason I think iterrows type converts my mass from float to complex, reenforce it
+        intensity_dict = {}
+        for irow, row in pred_df.iterrows():
+            pwa_manager.set_bins(np.array([mass_bin]))
+            final_params = np.zeros(nPars)
+            for iw, waveName in enumerate(waveNames):
+                final_params[2*iw] = np.real(row[f'{waveName}_amp'])
+                # NOTE: If reference wave is not restricted to be real then this code needs to change
+                if waveName in reference_waves:
+                    final_params[2*iw+1] = 0.0
+                else:
+                    final_params[2*iw+1] = np.imag(row[f'{waveName}_amp'])
                 
-    intensity_df = pd.DataFrame(intensity_dict)
+            # Call once to setup the objective function loading all normalization integrals
+            if irow == 0:
+                obj.objective(final_params)
+                
+            intensity, intensity_error = obj.intensity_and_error(final_params, None, waveNames, acceptance_correct=False)
+            intensity_dict.setdefault('intensity', []).append(intensity)
+            if intensity_error is not None:
+                intensity_dict.setdefault('intensity_err', []).append(intensity_error)
+            for waveName in waveNames:
+                intensity, intensity_error = obj.intensity_and_error(final_params, None, [waveName], acceptance_correct=False)
+                intensity_dict.setdefault(waveName, []).append(intensity)
+                if intensity_error is not None:
+                    intensity_dict.setdefault(f"{waveName}_err", []).append(intensity_error)
+                    
+        intensity_df = pd.DataFrame(intensity_dict)
 
-    pred_df = pd.concat([pred_df, intensity_df], axis=1)
+        pred_df = pd.concat([pred_df, intensity_df], axis=1)
+        # end config file check
 
     results = {
         'prediction': pred_df,
@@ -391,7 +427,7 @@ def process_mass_bin(config):
             'tightness': tightness,
             'loss_exponent': loss_exponent,
             'l_max': l_max,
-            'seed': seed, 
+            'seed': seed,
             'bandwidth_params': bandwidth_params,
             'amplitude_scale': amplitude_scale,
         }
@@ -470,28 +506,39 @@ if __name__ == "__main__":
     ######################################################
     # Set parameters from parsed arguments
     ######################################################
+    
+    def from_yaml_else_argparse(yaml_dict, args, key):
+        if yaml_dict is not None and 'moment_inversion' in yaml_dict and key in yaml_dict['moment_inversion']:
+            return yaml_dict['moment_inversion'][key]
+        else:
+            return getattr(args, key) # args is a namespace
+    
     yaml_file = args.yaml_file
     yaml_dict = load_yaml(yaml_file)
-    source = args.source
-    amplitude_scale = args.amplitude_scale
-    num_particles = args.num_particles
-    num_iterations = args.num_iterations
-    tightness = args.tightness
-    loss_exponent = args.loss_exponent
-    seed = args.seed
+    num_processes = from_yaml_else_argparse(yaml_dict, args, 'num_processes')
+    source = from_yaml_else_argparse(yaml_dict, args, 'source')
+    amplitude_scale = from_yaml_else_argparse(yaml_dict, args, 'amplitude_scale')
+    num_particles = from_yaml_else_argparse(yaml_dict, args, 'num_particles')
+    num_iterations = from_yaml_else_argparse(yaml_dict, args, 'num_iterations')
+    tightness = from_yaml_else_argparse(yaml_dict, args, 'tightness')
+    loss_exponent = from_yaml_else_argparse(yaml_dict, args, 'loss_exponent')
+    seed = from_yaml_else_argparse(yaml_dict, args, 'seed')
     n_eps = 2
+    decay_iterations = from_yaml_else_argparse(yaml_dict, args, 'decay_iterations')
+    if isinstance(decay_iterations, str) and decay_iterations.lower() == 'none': # yaml file None -> 'None' str not None type
+        decay_iterations = None
     bandwidth_params = {
-        'decay_iterations': args.decay_iterations if args.decay_iterations is not None else num_iterations // 5,
-        'initial_scale': args.initial_scale,
-        'min_scale': args.min_scale,
+        'decay_iterations': decay_iterations if decay_iterations is not None else num_iterations // 5,
+        'initial_scale': from_yaml_else_argparse(yaml_dict, args, 'initial_scale'),
+        'min_scale': from_yaml_else_argparse(yaml_dict, args, 'min_scale'),
     }
-    mass_bins = args.mass_bins
+    mass_bins = from_yaml_else_argparse(yaml_dict, args, 'mass_bins')
     if len(mass_bins) == 0:
         mass_bins = list(range(yaml_dict['n_mass_bins']))
-    step_size = args.step_size
+    step_size = from_yaml_else_argparse(yaml_dict, args, 'step_size')
     console.print(f"Number of devices used: {jax.device_count()}")
 
-    output_dir = args.output_dir
+    output_dir = from_yaml_else_argparse(yaml_dict, args, 'output_dir')
     if output_dir == '':
         output_dir = os.path.join(yaml_dict['base_directory'], 'MOMENT_INVERSION')
     if not os.path.exists(output_dir):
@@ -528,25 +575,12 @@ if __name__ == "__main__":
     if len(moments_df) == 0:
         raise ValueError(f"No moments found for source {source}")
     
-    # Identify the maximum L value based on the moment names
-    moment_cols = [c for c in moments_df.columns if c[0] == 'H']
-    L_max = max([int(c[3]) for c in moment_cols])
-    l_max = L_max // 2
-    
-    # Precompute CG coefficients once
-    console.print("Precomputing Clebsch-Gordan coefficients...")
-    start = time.time()
-    cg_coeffs = precompute_cg_coefficients_by_LM(l_max, 2*l_max)
-    cg_time = time.time() - start
-    console.print(f"CG precomputation time: {cg_time:.4f} seconds")
-    console.print(f"Number of CG coefficients: {len(cg_coeffs)}")
-    
     multiprocessing.set_start_method('spawn')
         
     # Process mass bins in parallel
     console.rule()
     console.print(f"Processing {len(mass_bins)} mass bins: {mass_bins}")
-    num_processes = min(args.num_processes, len(mass_bins))
+    num_processes = min(num_processes, len(mass_bins))
     console.print(f"Using {num_processes} processes")
     console.rule()
     
@@ -567,9 +601,7 @@ if __name__ == "__main__":
         'waveNames': waveNames,
         'reference_waves': reference_waves,
         'masses': masses,
-        'moments_df': moments_df,
-        'l_max': l_max,
-        'cg_coeffs': cg_coeffs}
+        'moments_df': moments_df}
         for mb in mass_bins
     ]
     
