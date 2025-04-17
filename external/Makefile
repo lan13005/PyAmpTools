@@ -42,10 +42,15 @@ mpi: | run_default
 
 gpu: | run_default
 # gpu: distribute_makefiles
-	@echo " === Running 'make gpu' in the target directory... ==="
-	@cd AmpTools/AmpTools; make GPU=1
-	@cd AmpTools/AmpPlotter; make
-	@cd AMPTOOLS_AMPS_DATAIO; make GPU=1
+	@if [ -z "$$CUDA_INSTALL_PATH" ]; then \
+		echo " === ERROR: CUDA_INSTALL_PATH is not set. GPU build skipped. ===" ; \
+		echo " === Please set CUDA_INSTALL_PATH to your CUDA installation directory. ===" ; \
+	else \
+		echo " === Running 'make gpu' in the target directory... ===" ; \
+		cd AmpTools/AmpTools; make GPU=1 ; \
+		cd AmpTools/AmpPlotter; make ; \
+		cd AMPTOOLS_AMPS_DATAIO; make GPU=1 ; \
+	fi
 
 mpigpu: gpu mpi
 	@echo " === Running 'make mpigpu' in the target directory... ==="
