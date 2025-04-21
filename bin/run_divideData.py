@@ -58,7 +58,7 @@ if __name__ == "__main__":
     max_t = yaml_file["max_t"]
     n_t_bins = yaml_file["n_t_bins"]
     base_directory = yaml_file["base_directory"]
-    output_directory = yaml_file["amptools"]["output_directory"]
+    output_directory = f"{base_directory}/BINNED_DATA"
     bins_per_group = yaml_file["amptools"]["bins_per_group"] if "bins_per_group" in yaml_file["amptools"] else 1
     constrain_grouped_production = yaml_file["amptools"]["constrain_grouped_production"] if "constrain_grouped_production" in yaml_file["amptools"] else False
     merge_grouped_trees = yaml_file["amptools"]["merge_grouped_trees"] if "merge_grouped_trees" in yaml_file["amptools"] else True

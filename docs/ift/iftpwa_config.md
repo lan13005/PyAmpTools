@@ -48,7 +48,7 @@ This amplitude description is for a single real/imaginary component of a particu
 
 We almost always would like to compare the IFT results to a set of maximum likelihood fits obtained using `AmpTools` so we need to perform two types of fits. A set of Maximum Likelihood (MLE) fits is performed using `AmpTools` and an Information Field Theory (IFT) fit is performed using `iftpwa`. Each has its own configuration file to specify the initial state. `PyAmpTools` will be the main driver of both these fits and has a YAML key that points to the `iftpwa` configuration file. Likewise, the `iftpwa` configuration file has a field that points to the `PyAmpTools` configuration file as it uses it to construct a `pwa_manager` object that calculates likelihoods.
 
-There are two configuration files that one needs to manage.  We call them `pyamptools.yaml` and `iftpwa.yaml` but they can be anything. 
+There are two configuration files that one needs to manage.  We call them `main.yaml` and `iftpwa.yaml` but they can be anything. 
 - `PyAmpTools` uses a configuration file to define the reaction, dataset locations, partial waves used, and kinematic binning
 - `iftpwa` uses a configuration file but in this case to declare its IFT model, how to modify its likelihood (bootstrap, resampling, ...), and how to perform the IFT optimization.
 
@@ -79,7 +79,7 @@ bkgnd135.root # (optional) background MC datasets for each polarization
 ```
 
 ```yaml
-# EXAMPLE: pyamptools.yaml
+# EXAMPLE: main.yaml
 defaults_location: null # [Ignore] feature not yet implemented
 base_directory: /MY/WORKING/DIRECTORY # Dump ALL results relative to this directory
 data_folder: /MY/DATA/FOLDER # Path to the data, accmc, bkgnd, genmc datasets
@@ -110,7 +110,7 @@ add_amp_factor: '' # (string) Add an amplitude factor to every amplitude. For ex
 append_to_decay: '' # (string) append this string to the decay amplitude, i.e. 'omega3pi' can be appended to Vec_ps_refl amplitude definition
 append_to_cfg: '' # (string) dump contents to the bottom of the AmpTools configuration file
 amptools: # Configure AmpTools
-    output_directory: ${base_directory}/AmpToolsFits # (string) directory to dump AmpTools results into
+    output_directory: ${base_directory}/DATA_SOURCES # (string) directory to dump AmpTools results into
     search_format: group # (string) calculate fit fractions for the AmpTools results for the grouped data bins ('group') or every data bins ('bin')
     n_randomizations: 10 # (int) number of random initialization fits to perform
     mle_query_1: status == 0 & ematrix == 3 # (string) query 1 to filter only minuit converged and positive definite error matrices
@@ -167,7 +167,7 @@ GENERAL:
 # pwa_manager for GlueX takes in another configuration file that defines the partial waves used and the kinematic binning: (mass, t)
 #   This maintains consistency between iftpwa results and results from a set of maximum likelihood fits obtained using AmpTools
 PWA_MANAGER:
-    yaml_file: /PATH/TO/PYAMPTools/YAML/FILE/pyamptools.yaml
+    yaml_file: /PATH/TO/MAIN/YAML/FILE/main.yaml
 
 ##########################################
 # NOTE: DEFAULTS ARE DECENT STARTING POINT

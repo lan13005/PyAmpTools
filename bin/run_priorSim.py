@@ -1,16 +1,5 @@
-import os
 import argparse
 from rich.console import Console
-from pyamptools.utility.general import load_yaml, dump_yaml, calculate_subplot_grid_size, identify_channel, converter, execute_cmd
-from pyamptools.utility.cfg_gen_utils import generate_amptools_cfg, amptools_zlm_ampName, amptools_vps_ampName
-import numpy as np
-import pickle as pkl
-import numpy as np
-import pandas as pd
-from iftpwa1.utilities.helpers import load_callable_from_module, reload_fields_and_components
-from omegaconf import DictConfig
-from pyamptools.utility.resultManager import ResultManager, plot_gen_curves
-import tempfile
 
 # TODO:
 # - currently only one polarization is supported with 100% pol mag
@@ -18,7 +7,7 @@ import tempfile
 subidr = "GENERATED"
 console = Console()
 
-def simulate_from_prior(main_yaml_path, iftpwa_yaml_path, base_directory, channel, verbose=True):
+def simulate_from_prior(main_yaml_path, base_directory, data_folder, channel, verbose=True):
     
     if channel == "TwoPseudoscalar":
         simulator = "gen_amp"
@@ -28,7 +17,7 @@ def simulate_from_prior(main_yaml_path, iftpwa_yaml_path, base_directory, channe
         raise ValueError(f"Unsupported channel: {channel}")
     
     stage1_dir = f"{base_directory}/GENERATED/prior_sim_unnormalized"
-    stage2_dir = f"{base_directory}/GENERATED/DATA_SOURCES"
+    stage2_dir = data_folder
     
     # Ask iftpwa for a sample from the prior distribution (does not consider normalization - which is why need to rerun later)
     cmd_list = []
@@ -80,6 +69,14 @@ def sim_to_amptools_cfg(resultFile, yamlFile, output_file):
         yamlFile (str): Path to the yaml file
         output_file (str): Path to dump the output AmpTools configuration file to
     """
+    
+    from pyamptools.utility.cfg_gen_utils import generate_amptools_cfg, amptools_zlm_ampName, amptools_vps_ampName
+    import pickle as pkl
+    import numpy as np
+    import pandas as pd
+    from iftpwa1.utilities.helpers import load_callable_from_module, reload_fields_and_components
+    from omegaconf import DictConfig
+    import tempfile
     
     # NOTE: For some reason we have to include all 4 terms of the Zlm amplitude whether or not P_gamma is less than 1 or equal to 1
     #       Unsure why this is the case. When P_gamma = 1, half the terms drop off.
@@ -283,15 +280,22 @@ def sim_to_amptools_cfg(resultFile, yamlFile, output_file):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Draw sample from NIFTy prior, create amptools cfg file, generate data using {simulator}, and split data into kinematic bins")
+    parser = argparse.ArgumentParser(description="Draw sample from NIFTy prior, create amptools cfg file, generate data using gen_amp/gen_vec_ps, and split data into kinematic bins")
     parser.add_argument("yaml_file", type=str, help="Path to yaml file")
     parser.add_argument("-emin", "--min_ebeam", type=float, default=8.2, help="Minimum photon beam energy (default: %(default)s)")
     parser.add_argument("-emax", "--max_ebeam", type=float, default=8.8, help="Maximum photon beam energy (default: %(default)s)")
-    parser.add_argument("-t", "--t_slope", type=float, default=-1, help="Slope of t distribution, reserved -1 to calculate from min_t and max_t (default: %(default)s)")
+    parser.add_argument("-t", "--t_slope", type=float, default=-1, help="Slope of t distribution, reserved -1 to calculate from min_t and max_t by maximing probability mass(default: %(default)s)")
     parser.add_argument("-nd", "--n_data", type=int, default=100000, help="Number of data events to generate (default: %(default)s)")
     parser.add_argument("-np", "--n_phasespace", type=int, default=500000, help="Number of phase space events to generate (default: %(default)s)")
     parser.add_argument("-s", "--seed", type=int, default=42, help="Random seed (default: %(default)s)")
     args = parser.parse_args()
+    
+    import os
+    os.environ["JAX_PLATFORMS"] = "cpu"
+    import sys
+    from pyamptools.utility.general import load_yaml, dump_yaml, identify_channel, converter, execute_cmd
+    from pyamptools.utility.resultManager import ResultManager, plot_gen_curves
+    import numpy as np
 
     str_yaml_file = args.yaml_file
     min_ebeam = args.min_ebeam
@@ -299,6 +303,10 @@ if __name__ == "__main__":
     n_data = args.n_data
     n_phasespace = args.n_phasespace
     seed = args.seed
+    
+    if not os.path.exists(str_yaml_file):
+        console.print(f"YAML file does not exist: {str_yaml_file}", style="bold red")
+        sys.exit(1)
     
     yaml_file = load_yaml(str_yaml_file)
     base_directory = yaml_file["base_directory"]
@@ -360,19 +368,21 @@ if __name__ == "__main__":
         iftpwa_yaml["IFT_MODEL"]["scale"] = 'auto'
         console.print("Updated 'scale' in iftpwa yaml file to 'auto' to auto-scale amplitudes for downstream fitting", style="bold green")
         yaml_file["nifty"]["yaml"] = iftpwa_yaml_path
-        yaml_file["data_folder"] = f"{base_directory}/GENERATED/DATA_SOURCES"
-        console.print(f"Updated 'data_folder' in main yaml file to {base_directory}/GENERATED/DATA_SOURCES\n", style="bold green")
+        data_folder = yaml_file["data_folder"]
+        if not os.path.exists(data_folder):
+            os.makedirs(data_folder)
+        console.print(f"Dumping simulated data into yaml.data_folder: {data_folder}", style="bold blue")
         
         console.rule()
         console.print("NOTE: These YAML files contains properly updated file paths. "
-                      "Since the simulations have been generated, data split into kinematic bins (see AmpToolsFits folder), you are ready to run fits with this yaml pair. "
+                      "Since the simulations have been generated (stored in DATA_SOURCES folder), data split into kinematic bins, you are ready to run fits with this yaml pair. "
                       "User supplied YAML files have not been modified.", style="bold yellow")
         dump_yaml(iftpwa_yaml, iftpwa_yaml_path, console=console)
         dump_yaml(yaml_file, main_yaml_path, console=console)
         console.rule()
         
         # Run the prior simulation, drawing a sample from NIFTy prior, use {simulator} to generate data, split data into kinematic bins
-        simulate_from_prior(main_yaml_path, iftpwa_yaml_path, base_directory, channel)
+        simulate_from_prior(main_yaml_path, base_directory, data_folder, channel)
 
         # Draw a plot of the generated partial waves
         resultManager = ResultManager(yaml_file)

@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+os.environ["JAX_PLATFORMS"] = "cpu"
 import subprocess
 
 from pyamptools.utility.general import Timer, dump_yaml, load_yaml
@@ -9,7 +10,7 @@ from pyamptools.utility.general import Timer, dump_yaml, load_yaml
 # This file wraps a call to iftpwa's execution script iftpwa takes an input 
 # yaml file. pyamptools also orchestrates several operations into a yaml file
 # This script synchronizes the two yaml files by loading the iftpwa yaml file
-# and updating it with values from the pyamptools yaml file.
+# and updating it with values from the main yaml file.
 # The whole chain will then operate under the same operating conditions
 ############################################################################
 
@@ -86,7 +87,7 @@ if __name__ == "__main__":
     additional_args = args.additional_args
     
     if '-v' in args.additional_args or '--verbose' in args.additional_args:
-        raise ValueError("verbose flag has to be before positional argument! Example pa run_ift -v pyamptools.yaml")
+        raise ValueError("verbose flag has to be before positional argument! Example pa run_ift -v main.yaml")
 
     logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING, format='%(asctime)s| %(message)s', datefmt='%H:%M:%S')
     logger = logging.getLogger(__name__)

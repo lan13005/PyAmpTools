@@ -1,3 +1,5 @@
+import os
+os.environ["JAX_PLATFORMS"] = "cpu"
 from pyamptools.utility.general import load_yaml, calculate_subplot_grid_size, prettyLabels, identify_channel # TODO: must be loaded before loadIFTResultsFromPkl, IDKY yet
 from pyamptools.utility.MomentUtilities import MomentManagerTwoPS, MomentManagerVecPS
 from pyamptools.utility.IO import loadIFTResultsFromPkl
@@ -10,7 +12,6 @@ from typing import Tuple
 import matplotlib.pyplot as plt
 from rich.console import Console
 import re
-import os
 import tqdm
 from matplotlib.patches import Ellipse
 import matplotlib.patheffects as path_effects
@@ -275,7 +276,7 @@ class ResultManager:
         if source_name is None:
             return self._hist_results
         
-        result_dir = f"{base_directory}/AmpToolsFits"
+        result_dir = f"{base_directory}/BINNED_DATA"
         if not os.path.exists(result_dir):
             self.console.print(f"[bold red]No 'histogram' results found in {result_dir}, return existing results with shape {self._hist_results.shape}\n[/bold red]")
             return self._hist_results

@@ -1,10 +1,11 @@
+import os
+os.environ["JAX_PLATFORMS"] = "cpu"
 from pyamptools.utility.general import load_yaml, Timer
 import numpy as np
 import sys
 import pickle as pkl
 from iminuit import Minuit
 import argparse
-import os
 from tqdm import tqdm
 from multiprocessing import Pool
 from pyamptools.utility.opt_utils import Objective
@@ -57,8 +58,8 @@ def run_single_bin_fits(
     def run_single_random_fit(initial_guess):
         """Single fit in a single bin"""
                 
-        reference_waves = pyamptools_yaml["phase_reference"].split("_")
-        acceptance_correct = pyamptools_yaml["acceptance_correct"]
+        reference_waves = main_yaml["phase_reference"].split("_")
+        acceptance_correct = main_yaml["acceptance_correct"]
         obj = Objective(pwa_manager, bin_idx, nPars, nmbMasses, nmbTprimes, reference_waves=reference_waves)
         
         initial_likelihood = obj.objective(initial_guess).item()
@@ -247,18 +248,18 @@ if __name__ == "__main__":
     dump_to_stdout = args.stdout
     
     #### LOAD YAML FILES ####
-    pyamptools_yaml = load_yaml(args.yaml_file)
-    iftpwa_yaml = pyamptools_yaml["nifty"]["yaml"]
+    main_yaml = load_yaml(args.yaml_file)
+    iftpwa_yaml = main_yaml["nifty"]["yaml"]
     iftpwa_yaml = load_yaml(iftpwa_yaml)
     if not iftpwa_yaml:
         raise ValueError("iftpwa YAML file is required")
-    if not pyamptools_yaml:
+    if not main_yaml:
         raise ValueError("PyAmpTools YAML file is required")
-    waveNames = pyamptools_yaml["waveset"].split("_")
-    nmbMasses = pyamptools_yaml["n_mass_bins"]
-    nmbTprimes = pyamptools_yaml["n_t_bins"]
+    waveNames = main_yaml["waveset"].split("_")
+    nmbMasses = main_yaml["n_mass_bins"]
+    nmbTprimes = main_yaml["n_t_bins"]
     nPars = 2 * len(waveNames)
-    reference_waves = pyamptools_yaml["phase_reference"].split("_")
+    reference_waves = main_yaml["phase_reference"].split("_")
     
     if args.print_wave_names:
         console.print(f"Wave names: {waveNames}", style="bold")
@@ -268,7 +269,7 @@ if __name__ == "__main__":
     bins_to_process = args.bins
     if bins_to_process is None:
         bins_to_process = np.arange(nmbMasses * nmbTprimes)
-    output_folder = os.path.join(pyamptools_yaml["base_directory"], "MLE")
+    output_folder = os.path.join(main_yaml["base_directory"], "MLE")
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     else:
@@ -279,7 +280,7 @@ if __name__ == "__main__":
         GluexJaxManager,
     )
     pwa_manager = GluexJaxManager(comm0=None, mpi_offset=1,
-                                yaml_file=pyamptools_yaml,
+                                yaml_file=main_yaml,
                                 resolved_secondary=iftpwa_yaml, prior_simulation=False, sum_returned_nlls=False, 
                                 logging_level=logging.WARNING)
 

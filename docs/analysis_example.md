@@ -12,7 +12,7 @@ This workflow goes from:
 set -e # Exit on error
 set -o pipefail # Exit on error in pipeline
 
-yaml=/LOCATION/TO/PYAMPTOOLS.YML
+yaml=/LOCATION/TO/MAIN.YML
 base_directory=$(grep "base_directory:" $yaml | awk '{print $2}') # grabs the base directory from the yaml file
 
 echo "yaml: $yaml"
@@ -30,7 +30,7 @@ pa run_processEvents $yaml # Creates a data file (a representation of AmpVecs ob
 
 pa run_ift -v $yaml # Perform IFTPWA fit. If we wish to perform a hyperparameter search we can add the `--hyperopt` flag
 rm -rf $base_directory/NiftyFits/plots # clean up plots from previous runs
-# Draw diagnostic plots for the final fit results. Inside the output directory (see PyAmpTools YAML field: nifty.output_directory) is a diagnostics folder which draws the fit results on each global iteration
+# Draw diagnostic plots for the final fit results. Inside the output directory (see Main YAML field: nifty.output_directory) is a diagnostics folder which draws the fit results on each global iteration
 iftPwaPlot \
     --fitResult $base_directory/NiftyFits/niftypwa_fit.pkl \
     --plotFolder $base_directory/NiftyFits/plots \
