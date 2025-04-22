@@ -356,7 +356,7 @@ if __name__ == "__main__":
         description="Generate a Dash app comparing IFT PWA results (intensity and phases)",
         formatter_class=argparse.RawTextHelpFormatter,
     )
-    parser.add_argument("yaml_file", type=str, help=(
+    parser.add_argument("main_yaml", type=str, help=(
         "The YAML file should (some optional) define the following keys:\n\n"
         "    - models: (required, dict) A dictionary mapping model names to IFT PWA result folders.\n"
         "    - t: (required, float) compare a specific t-bin\n"
@@ -390,10 +390,10 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    yaml_file = args.yaml_file
+    main_yaml = args.main_yaml
 
-    config = OmegaConf.load(yaml_file)
-    dash_cfg = config["dash"]
+    main_dict = load_yaml(main_yaml)
+    dash_cfg = main_dict["dash"]
     if "models" not in dash_cfg:
         raise ValueError("models must be specified in the YAML file")
     if "t" not in dash_cfg:

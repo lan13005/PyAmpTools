@@ -2,7 +2,7 @@ import argparse
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("yaml_file", type=str)
+    parser.add_argument("main_yaml", type=str)
     parser.add_argument("-npi", "--no_plot_intensities", action="store_true", help="Do not plot posterior distribution of amplitude intensities")
     parser.add_argument("-npc", "--no_plot_complex_plane", action="store_true", help="Do not plot posterior distribution in complex plane")
     parser.add_argument("-npo", "--no_plot_overview", action="store_true", help="Do not plot overview across bins (intensity and phases)")
@@ -20,7 +20,7 @@ if __name__ == "__main__":
         plot_binned_complex_plane
     )
         
-    resultManager = ResultManager(args.yaml_file)
+    resultManager = ResultManager(args.main_yaml)
     resultManager.attempt_load_all()
     resultManager.attempt_project_moments()
     

@@ -58,8 +58,8 @@ def run_single_bin_fits(
     def run_single_random_fit(initial_guess):
         """Single fit in a single bin"""
                 
-        reference_waves = main_yaml["phase_reference"].split("_")
-        acceptance_correct = main_yaml["acceptance_correct"]
+        reference_waves = main_dict["phase_reference"].split("_")
+        acceptance_correct = main_dict["acceptance_correct"]
         obj = Objective(pwa_manager, bin_idx, nPars, nmbMasses, nmbTprimes, reference_waves=reference_waves)
         
         initial_likelihood = obj.objective(initial_guess).item()
@@ -211,7 +211,7 @@ class OptimizerHelpFormatter(argparse.ArgumentParser):
 
 if __name__ == "__main__":
     parser = OptimizerHelpFormatter(description="Run optimization fits using various methods.")
-    parser.add_argument("yaml_file", type=str,
+    parser.add_argument("main_yaml", type=str,
                        help="Path to PyAmpTools YAML configuration file")
     parser.add_argument("-b", "--bins", type=int, nargs="+",
                        help=f"List of bin indicies to process (default: all bins)")
@@ -248,18 +248,17 @@ if __name__ == "__main__":
     dump_to_stdout = args.stdout
     
     #### LOAD YAML FILES ####
-    main_yaml = load_yaml(args.yaml_file)
-    iftpwa_yaml = main_yaml["nifty"]["yaml"]
-    iftpwa_yaml = load_yaml(iftpwa_yaml)
-    if not iftpwa_yaml:
+    main_dict = load_yaml(args.main_yaml)
+    iftpwa_dict = main_dict["nifty"]["yaml"] # DictConfig ~ Dict-like object
+    if not iftpwa_dict:
         raise ValueError("iftpwa YAML file is required")
-    if not main_yaml:
-        raise ValueError("PyAmpTools YAML file is required")
-    waveNames = main_yaml["waveset"].split("_")
-    nmbMasses = main_yaml["n_mass_bins"]
-    nmbTprimes = main_yaml["n_t_bins"]
+    if not main_dict:
+        raise ValueError("Main YAML file is required")
+    waveNames = main_dict["waveset"].split("_")
+    nmbMasses = main_dict["n_mass_bins"]
+    nmbTprimes = main_dict["n_t_bins"]
     nPars = 2 * len(waveNames)
-    reference_waves = main_yaml["phase_reference"].split("_")
+    reference_waves = main_dict["phase_reference"].split("_")
     
     if args.print_wave_names:
         console.print(f"Wave names: {waveNames}", style="bold")
@@ -269,7 +268,7 @@ if __name__ == "__main__":
     bins_to_process = args.bins
     if bins_to_process is None:
         bins_to_process = np.arange(nmbMasses * nmbTprimes)
-    output_folder = os.path.join(main_yaml["base_directory"], "MLE")
+    output_folder = os.path.join(main_dict["base_directory"], "MLE")
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     else:
@@ -280,8 +279,8 @@ if __name__ == "__main__":
         GluexJaxManager,
     )
     pwa_manager = GluexJaxManager(comm0=None, mpi_offset=1,
-                                yaml_file=main_yaml,
-                                resolved_secondary=iftpwa_yaml, prior_simulation=False, sum_returned_nlls=False, 
+                                yaml_file=main_dict,
+                                resolved_secondary=iftpwa_dict, prior_simulation=False, sum_returned_nlls=False, 
                                 logging_level=logging.WARNING)
 
     ##### CREATE JOB ASSIGNMENTS #####
@@ -295,6 +294,10 @@ if __name__ == "__main__":
     total_jobs = len(job_assignments)
     console.print(f"Total jobs: {total_jobs}\n  Distributed across {max_concurrent} processes", style="bold")
     
+    # copy input yaml_file to output_folder for reproducibility
+    os.system(f"cp {args.main_yaml} {output_folder}/{os.path.basename(args.main_yaml)}")
+    console.print(f"Copied {args.main_yaml} to {output_folder}/{os.path.basename(args.main_yaml)}", style="bold blue")
+        
     ##### RUN JOBS IN PARALLEL #####
     timer = Timer()
     with Pool(processes=max_concurrent) as pool:

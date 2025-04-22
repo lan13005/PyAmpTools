@@ -54,10 +54,10 @@ default_plot_subdir = "PLOTS"
 
 class ResultManager:
     
-    def __init__(self, yaml_file, silence=False):
+    def __init__(self, main_yaml, silence=False):
         """
         Args:
-            yaml_file [str, Dict]: path to the yaml file or already loaded as a dictionary
+            main_yaml [str, Dict]: path to the main yaml file or already loaded as a dictionary
             verbose [bool]: whether to print verbose output to console
         """
         
@@ -74,23 +74,23 @@ class ResultManager:
         self._hist_results = pd.DataFrame()
         self._moment_inversion_results = pd.DataFrame()
         
-        self.yaml = yaml_file
-        if isinstance(yaml_file, str):
-            self.yaml = load_yaml(yaml_file)
-        self.ift_yaml = self.yaml['nifty']['yaml']
-        self.base_directory = self.yaml['base_directory']
-        self.waveNames = self.yaml['waveset'].split("_")
-        self.phase_reference = self.yaml['phase_reference'].split("_")
-        min_mass = self.yaml['min_mass']
-        max_mass = self.yaml['max_mass']
+        self.main_dict = main_yaml
+        if isinstance(main_yaml, str):
+            self.main_dict = load_yaml(main_yaml)
+        self.ift_dict = self.main_dict['nifty']['yaml']
+        self.base_directory = self.main_dict['base_directory']
+        self.waveNames = self.main_dict['waveset'].split("_")
+        self.phase_reference = self.main_dict['phase_reference'].split("_")
+        min_mass = self.main_dict['min_mass']
+        max_mass = self.main_dict['max_mass']
 
-        self.n_mass_bins = self.yaml['n_mass_bins']
+        self.n_mass_bins = self.main_dict['n_mass_bins']
         self.massBins = np.linspace(min_mass, max_mass, self.n_mass_bins+1)
         self.masses = (self.massBins[:-1] + self.massBins[1:]) / 2
         self.mass_bin_width = self.massBins[1] - self.massBins[0]
         
-        self.n_t_bins = self.yaml['n_t_bins']
-        self.ts = np.linspace(self.yaml['min_t'], self.yaml['max_t'], self.n_t_bins+1)
+        self.n_t_bins = self.main_dict['n_t_bins']
+        self.ts = np.linspace(self.main_dict['min_t'], self.main_dict['max_t'], self.n_t_bins+1)
         self.t_centers = (self.ts[:-1] + self.ts[1:]) / 2
         self.t_bin_width = self.ts[1] - self.ts[0]
         
@@ -111,9 +111,9 @@ class ResultManager:
         self.moment_cache_location = f"{self.base_directory}/projected_moments_cache.pkl"
         
         # TODO: fix bins per group
-        self.bpg = self.yaml['amptools']['bins_per_group']
+        self.bpg = self.main_dict['amptools']['bins_per_group']
         
-        n_t_bins = self.yaml['n_t_bins']
+        n_t_bins = self.main_dict['n_t_bins']
         if n_t_bins != 1:
             self.console.print(f"[bold yellow]warning: Default plotting scripts will not work with more than 1 t-bin. Data loading should be fine[/bold yellow]")
         
@@ -141,7 +141,7 @@ class ResultManager:
             self.sectors[wave[-1]].append(f"{wave}_amp")
         
         self.console.print(f"\n")
-        self.console.print(header_fmt.format(f"Parsing yaml_file with these expected settings:"))
+        self.console.print(header_fmt.format(f"Parsing main_yaml with these expected settings:"))
         self.console.print(f"wave_names: {self.waveNames}")
         self.console.print(f"identified {len(self.sectors)} incoherent sectors: {self.sectors}")
         self.console.print(f"n_mass_bins: {self.n_mass_bins}")
@@ -317,7 +317,7 @@ class ResultManager:
         if source_type not in ["GENERATED", "FITTED"]:
             raise ValueError(f"Source type {source_type} not supported. Must be one of: [GENERATED, FITTED]")
         
-        subdir = "GENERATED" if source_type == "GENERATED" else "NiftyFits"
+        subdir = "GENERATED" if source_type == "GENERATED" else "NIFTY"
         result_dir = f"{base_directory}/{subdir}"
         self.console.print(header_fmt.format(f"Loading '{source_type}' results from {result_dir}"))
         

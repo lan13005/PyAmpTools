@@ -146,7 +146,7 @@ def process_mass_bin(config):
     reference_waves = config['reference_waves'] # List of reference waves (imaginary parts will be zeroed out)
 
     # GENERAL PARAMETERS (WITH DEFAULTS)
-    yaml_file = config.get('yaml_file', None)
+    main_file = config.get('main_file', None)
     iftpwa_yaml = config.get('ift_yaml', None)
     mass_bin = config.get('mass_bin', 0)
     masses = config.get('masses', [1.0])
@@ -366,7 +366,7 @@ def process_mass_bin(config):
     
     # If the yaml files needed to create the PWA manager is available we will append the
     #   intensities to the prediction dataframe with proper normalization
-    if yaml_file is not None and iftpwa_yaml is not None:
+    if main_file is not None and iftpwa_yaml is not None:
 
         from iftpwa1.pwa.gluex.gluex_jax_manager import (
             GluexJaxManager,
@@ -375,7 +375,7 @@ def process_mass_bin(config):
         import logging
 
         pwa_manager = GluexJaxManager(comm0=None, mpi_offset=1,
-                                    yaml_file=yaml_file,
+                                    yaml_file=main_file,
                                     resolved_secondary=iftpwa_yaml, prior_simulation=False, sum_returned_nlls=False,
                                     logging_level=logging.WARNING)
         
@@ -469,11 +469,11 @@ if __name__ == "__main__":
     ######################################################
     # Define and parse command line arguments
     parser = argparse.ArgumentParser(description='Moment inversion using SVGD')
-    parser.add_argument('yaml_file', type=str, help='YAML file for result manager')
+    parser.add_argument('main_file', type=str, help='main YAML file for result manager')
     parser.add_argument('-mb', '--mass_bins', type=int, nargs='+', default=[], 
                         help='Mass bin(s) to use for moment inversion (default: run over all mass bin)')
     parser.add_argument('-src', '--source', default='mcmc', choices=['mle', 'mcmc', 'ift', 'gen'], 
-                        help='Source of moments (from resultManager) to use for moment inversion (default: mcmc)')
+                        help='Source of moments (from resultManager) to use for moment inversion, will override each other if run multiple(default: mcmc)')
     
     parser.add_argument('-as', '--amplitude_scale', type=float, default=1.0, 
                         help='Scale factor for the amplitudes, all start N(0,1) (default: 1.0)')
@@ -497,7 +497,7 @@ if __name__ == "__main__":
     parser.add_argument('-pr', '--num_processes', type=int, default=1,
                         help='Number of processes to use for parallel processing (default: 1)')
     parser.add_argument('-o', '--output_dir', type=str, default='', 
-                        help="Output directory for results (defaults to yaml_file['base_directory'])")
+                        help="Output directory for results (defaults to main_file['base_directory'])")
     parser.add_argument('-s', '--seed', type=int, default=43, 
                         help='Random seed for reproducibility (default: 43)')
 
@@ -513,36 +513,39 @@ if __name__ == "__main__":
         else:
             return getattr(args, key) # args is a namespace
     
-    yaml_file = args.yaml_file
-    yaml_dict = load_yaml(yaml_file)
-    num_processes = from_yaml_else_argparse(yaml_dict, args, 'num_processes')
-    source = from_yaml_else_argparse(yaml_dict, args, 'source')
-    amplitude_scale = from_yaml_else_argparse(yaml_dict, args, 'amplitude_scale')
-    num_particles = from_yaml_else_argparse(yaml_dict, args, 'num_particles')
-    num_iterations = from_yaml_else_argparse(yaml_dict, args, 'num_iterations')
-    tightness = from_yaml_else_argparse(yaml_dict, args, 'tightness')
-    loss_exponent = from_yaml_else_argparse(yaml_dict, args, 'loss_exponent')
-    seed = from_yaml_else_argparse(yaml_dict, args, 'seed')
+    main_file = args.main_file
+    main_dict = load_yaml(main_file)
+    num_processes = from_yaml_else_argparse(main_dict, args, 'num_processes')
+    source = from_yaml_else_argparse(main_dict, args, 'source')
+    amplitude_scale = from_yaml_else_argparse(main_dict, args, 'amplitude_scale')
+    num_particles = from_yaml_else_argparse(main_dict, args, 'num_particles')
+    num_iterations = from_yaml_else_argparse(main_dict, args, 'num_iterations')
+    tightness = from_yaml_else_argparse(main_dict, args, 'tightness')
+    loss_exponent = from_yaml_else_argparse(main_dict, args, 'loss_exponent')
+    seed = from_yaml_else_argparse(main_dict, args, 'seed')
     n_eps = 2
-    decay_iterations = from_yaml_else_argparse(yaml_dict, args, 'decay_iterations')
+    decay_iterations = from_yaml_else_argparse(main_dict, args, 'decay_iterations')
     if isinstance(decay_iterations, str) and decay_iterations.lower() == 'none': # yaml file None -> 'None' str not None type
         decay_iterations = None
     bandwidth_params = {
         'decay_iterations': decay_iterations if decay_iterations is not None else num_iterations // 5,
-        'initial_scale': from_yaml_else_argparse(yaml_dict, args, 'initial_scale'),
-        'min_scale': from_yaml_else_argparse(yaml_dict, args, 'min_scale'),
+        'initial_scale': from_yaml_else_argparse(main_dict, args, 'initial_scale'),
+        'min_scale': from_yaml_else_argparse(main_dict, args, 'min_scale'),
     }
-    mass_bins = from_yaml_else_argparse(yaml_dict, args, 'mass_bins')
+    mass_bins = from_yaml_else_argparse(main_dict, args, 'mass_bins')
     if len(mass_bins) == 0:
-        mass_bins = list(range(yaml_dict['n_mass_bins']))
-    step_size = from_yaml_else_argparse(yaml_dict, args, 'step_size')
+        mass_bins = list(range(main_dict['n_mass_bins']))
+    step_size = from_yaml_else_argparse(main_dict, args, 'step_size')
     console.print(f"Number of devices used: {jax.device_count()}")
 
-    output_dir = from_yaml_else_argparse(yaml_dict, args, 'output_dir')
+    output_dir = from_yaml_else_argparse(main_dict, args, 'output_dir')
     if output_dir == '':
-        output_dir = os.path.join(yaml_dict['base_directory'], 'MOMENT_INVERSION')
+        output_dir = os.path.join(main_dict['base_directory'], 'MOMENT_INVERSION')
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
+        
+    os.system(f"cp {args.main_file} {output_dir}/{os.path.basename(args.main_file)}")
+    console.print(f"Copied {args.main_file} to {output_dir}/{os.path.basename(args.main_file)}", style="bold blue")
 
     # Seed both just in case
     np.random.seed(seed)
@@ -551,7 +554,7 @@ if __name__ == "__main__":
     
    # TODO: Allow user to specify which dataset then check existence crash if moments not found
     #       For MLE we use only point estimates since no uncertainties
-    resultManager = ResultManager(yaml_file)
+    resultManager = ResultManager(main_dict)
     resultManager.attempt_load_all()
     resultManager.attempt_project_moments() # safe call since it checks for existence before processing
     masses = resultManager.masses
@@ -585,7 +588,7 @@ if __name__ == "__main__":
     console.rule()
     
     configs = [
-        {'yaml_file': yaml_file,
+        {'main_file': main_file,
         'mass_bin': mb,
         'n_eps': n_eps,
         'step_size': step_size,
@@ -611,7 +614,7 @@ if __name__ == "__main__":
         pool.join()
         
     with open(os.path.join(output_dir, 'run_conditions.txt'), 'w') as f:
-        f.write(f"yaml_file: {os.path.realpath(yaml_file)}\n")
+        f.write(f"main_file: {os.path.realpath(main_file)}\n")
         f.write(f"waveNames: {waveNames}\n")
         f.write(f"reference_waves: {reference_waves}\n")
         f.write(f"source: {source}\n")

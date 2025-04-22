@@ -62,7 +62,7 @@ use_phase_param = 'tan' # 'tan' = tan half angle form AND 'vonmises' = Von Mises
 console = Console()
 
 # Define a worker function that will run a single MCMC chain
-def worker_function(main_yaml, iftpwa_yaml, bin_idx, prior_scale, prior_dist, n_samples, n_warmup, 
+def worker_function(main_dict, iftpwa_dict, bin_idx, prior_scale, prior_dist, n_samples, n_warmup, 
                    chain_idx, seed, output_file, cop, wave_prior_scales, target_accept_prob, max_tree_depth, 
                    step_size, adapt_step_size, dense_mass, adapt_mass_matrix, enforce_positive_reference, 
                    mass_centers, t_centers, use_progress_bar):
@@ -73,7 +73,7 @@ def worker_function(main_yaml, iftpwa_yaml, bin_idx, prior_scale, prior_dist, n_
     
     # Set up manager object for this bin_idx
     worker_mcmc = MCMCManager(
-        main_yaml, iftpwa_yaml, bin_idx,
+        main_dict, iftpwa_dict, bin_idx,
         prior_scale=prior_scale, prior_dist=prior_dist,
         n_chains=1, n_samples=n_samples, n_warmup=n_warmup,
         resume_path=None, cop=cop,
@@ -152,13 +152,13 @@ def worker_function(main_yaml, iftpwa_yaml, bin_idx, prior_scale, prior_dist, n_
 
 class MCMCManager:
     
-    def __init__(self, main_yaml, iftpwa_yaml, bin_idx, prior_scale=100.0, prior_dist='laplace', n_chains=20, n_samples=2000, n_warmup=1000, 
+    def __init__(self, main_dict, iftpwa_dict, bin_idx, prior_scale=100.0, prior_dist='laplace', n_chains=20, n_samples=2000, n_warmup=1000, 
                  resume_path=None, cop="cartesian", wave_prior_scales=None, target_accept_prob=0.85, max_tree_depth=12, 
                  step_size=0.1, adapt_step_size=True, dense_mass=True, adapt_mass_matrix=True, enforce_positive_reference=False, verbose=True):
 
         # GENERAL PARAMETERS
-        self.main_yaml = main_yaml
-        self.iftpwa_yaml = iftpwa_yaml
+        self.main_dict = main_dict
+        self.iftpwa_dict = iftpwa_dict
         self.bin_idx = bin_idx
         self.resume_path = resume_path
         self.cop = cop
@@ -166,17 +166,17 @@ class MCMCManager:
         self.verbose = verbose
         
         # EXTRACTED PARAMETERS FROM YAML
-        self.waveNames = self.main_yaml["waveset"].split("_")
-        self.nmbMasses = self.main_yaml["n_mass_bins"]
-        self.nmbTprimes = self.main_yaml["n_t_bins"]
+        self.waveNames = self.main_dict["waveset"].split("_")
+        self.nmbMasses = self.main_dict["n_mass_bins"]
+        self.nmbTprimes = self.main_dict["n_t_bins"]
         self.nPars = 2 * len(self.waveNames)
-        self.masses = np.linspace(self.main_yaml["min_mass"], self.main_yaml["max_mass"], self.nmbMasses+1)
+        self.masses = np.linspace(self.main_dict["min_mass"], self.main_dict["max_mass"], self.nmbMasses+1)
         self.mass_centers = np.round(self.masses[:-1] + np.diff(self.masses) / 2, 5)
-        self.ts = np.linspace(self.main_yaml["min_t"], self.main_yaml["max_t"], self.nmbTprimes+1)
+        self.ts = np.linspace(self.main_dict["min_t"], self.main_dict["max_t"], self.nmbTprimes+1)
         self.t_centers = np.round(self.ts[:-1] + np.diff(self.ts) / 2, 5)
         
         # REFERENCE WAVES
-        self.reference_waves = self.main_yaml["phase_reference"].split("_")
+        self.reference_waves = self.main_dict["phase_reference"].split("_")
         self.ref_indices = None
         self.channel = None
         self.refl_sectors = None
@@ -438,7 +438,7 @@ class MCMCManager:
                 output_file = os.path.join(temp_dir, f"bin_{bin_idx}_chain_{chain_idx}.pkl")
                 output_files.append(output_file)
                 task = (
-                    self.main_yaml, self.iftpwa_yaml, bin_idx,
+                    self.main_dict, self.iftpwa_dict, bin_idx,
                     self.prior_scale, self.prior_dist, self.n_samples, self.n_warmup,
                     chain_idx, args.seed, output_file, self.cop, self.wave_prior_scales,
                     self.target_accept_prob, self.max_tree_depth, self.step_size,
@@ -680,8 +680,8 @@ class MCMCManager:
         from iftpwa1.pwa.gluex.gluex_jax_manager import GluexJaxManager
 
         self.pwa_manager = GluexJaxManager(comm0=None, mpi_offset=1,
-                                    yaml_file=self.main_yaml,
-                                    resolved_secondary=self.iftpwa_yaml, prior_simulation=False, sum_returned_nlls=False, logging_level=logging.WARNING)
+                                    yaml_file=self.main_dict,
+                                    resolved_secondary=self.iftpwa_dict, prior_simulation=False, sum_returned_nlls=False, logging_level=logging.WARNING)
         self.pwa_manager.prepare_nll()
         self.set_bin(self.bin_idx)
 
@@ -959,7 +959,7 @@ class TempMCMC:
 
 if __name__ == "__main__":
     parser = OptimizerHelpFormatter(description="Run MCMC fits using numpyro. [bold yellow]Lots of MCMC args accept list of values. Outer product of hyperparameters is automatically performed.[/bold yellow]")
-    parser.add_argument("yaml_file", type=str,
+    parser.add_argument("main_yaml", type=str,
                        help="Path to main YAML configuration file")    
     parser.add_argument("-b", "--bins", type=int, nargs="+", default=None,
                        help="List of bin indices to process (default: all bins)")
@@ -1012,14 +1012,18 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    main_yaml = load_yaml(args.yaml_file)
-    iftpwa_yaml = main_yaml["nifty"]["yaml"]
-    iftpwa_yaml = load_yaml(iftpwa_yaml)
+    main_dict = load_yaml(args.main_yaml)
+    iftpwa_dict = main_dict["nifty"]["yaml"] # DictConfig ~ Dict-like object
+    output_folder = os.path.join(main_dict["base_directory"], "MCMC")
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    else:
+        raise ValueError(f"Output folder {output_folder} already exists! Please provide a different path or remove the folder.")
     
-    if not iftpwa_yaml:
+    if not iftpwa_dict:
         console.print("iftpwa YAML file is required", style="bold red")
         sys.exit(1)
-    if not main_yaml:
+    if not main_dict:
         console.print("main YAML file is required", style="bold red")
         sys.exit(1)
     
@@ -1036,7 +1040,6 @@ if __name__ == "__main__":
         """Run MCMC with specific parameters and save to output folder"""
         if not isinstance(name, str) or name == "":
             raise ValueError("name should be a non-empty string")
-        output_folder = os.path.join(main_yaml["base_directory"], "MCMC")
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
         if os.path.exists(os.path.join(output_folder, name)):
@@ -1045,7 +1048,7 @@ if __name__ == "__main__":
         
         # Initialize MCMC Manager
         mcmc_manager = MCMCManager(
-            main_yaml, iftpwa_yaml, 0, 
+            main_dict, iftpwa_dict, 0, 
             prior_scale=prior_scale, prior_dist=prior_dist,
             n_chains=nchains, n_samples=nsamples, n_warmup=nwarmup, 
             resume_path=args.resume, cop=args.coordinate_system, 
@@ -1152,6 +1155,10 @@ if __name__ == "__main__":
     
     # Run MCMC for each parameter combination
     timer = Timer()
+    
+    # copy input main_yaml to output_folder for reproducibility
+    os.system(f"cp {args.main_yaml} {output_folder}/{os.path.basename(args.main_yaml)}")
+    console.print(f"Copied {args.main_yaml} to {output_folder}/{os.path.basename(args.main_yaml)}", style="bold blue")
     
     for i, (name, combo) in enumerate(zip(names, param_combinations)):
         console.print(f"Running configuration {i+1}/{len(param_combinations)}: {name}", style="bold blue")
