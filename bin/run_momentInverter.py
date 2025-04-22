@@ -470,77 +470,82 @@ if __name__ == "__main__":
     # Define and parse command line arguments
     parser = argparse.ArgumentParser(description='Moment inversion using SVGD')
     parser.add_argument('main_file', type=str, help='main YAML file for result manager')
-    parser.add_argument('-mb', '--mass_bins', type=int, nargs='+', default=[], 
+    parser.add_argument('-b', '--bins', type=int, nargs='+', default=None, 
                         help='Mass bin(s) to use for moment inversion (default: run over all mass bin)')
-    parser.add_argument('-src', '--source', default='mcmc', choices=['mle', 'mcmc', 'ift', 'gen'], 
+    parser.add_argument('-src', '--source', default='mcmc', default=None, 
                         help='Source of moments (from resultManager) to use for moment inversion, will override each other if run multiple(default: mcmc)')
     
-    parser.add_argument('-as', '--amplitude_scale', type=float, default=1.0, 
-                        help='Scale factor for the amplitudes, all start N(0,1) (default: 1.0)')
-    parser.add_argument('-np', '--num_particles', type=int, default=500, 
-                        help='Number of Stein particles for SVGD (default: 500)')
-    parser.add_argument('-ni', '--num_iterations', type=int, default=1000, 
-                        help='Number of SVGD iterations (default: 5000)')
-    parser.add_argument('-t', '--tightness', type=float, default=1000, 
-                        help='Controls how tight the Stein fit is (default: 5000)')
-    parser.add_argument('-le', '--loss_exponent', type=int, default=2, 
-                        help='Exponent to use for the likelihood (default: 2 = MSE)')
+    parser.add_argument('-as', '--amplitude_scale', type=float, default=None, 
+                        help='Scale factor for the amplitudes, all start N(0,1)')
+    parser.add_argument('-np', '--num_particles', type=int, default=None, 
+                        help='Number of Stein particles for SVGD')
+    parser.add_argument('-ni', '--num_iterations', type=int, default=None, 
+                        help='Number of SVGD iterations')
+    parser.add_argument('-t', '--tightness', type=float, default=None, 
+                        help='Controls how tight the Stein fit is')
+    parser.add_argument('-le', '--loss_exponent', type=int, default=None, 
+                        help='Exponent to use for the likelihood')
     parser.add_argument('-di', '--decay_iterations', type=int, default=None, 
                         help='Kernel bandwidth decay iterations (default: num_iterations//5)')
-    parser.add_argument('-is', '--initial_scale', type=float, default=1.0, 
-                        help='Initial kernel bandwidth scale (default: 1.0)')
-    parser.add_argument('-ms', '--min_scale', type=float, default=0.0, 
-                        help='Minimum kernel bandwidth scale (default: 0.0)')
-    parser.add_argument('-ss', '--step_size', type=float, default=0.01, 
-                        help='Adam step size (default: 0.01)')
+    parser.add_argument('-is', '--initial_scale', type=float, default=None, 
+                        help='Initial kernel bandwidth scale')
+    parser.add_argument('-ms', '--min_scale', type=float, default=None, 
+                        help='Minimum kernel bandwidth scale')
+    parser.add_argument('-ss', '--step_size', type=float, default=None, 
+                        help='Adam step size')
     
-    parser.add_argument('-pr', '--n_processes', type=int, default=1,
-                        help='Number of processes to use for parallel processing (default: 1)')
-    parser.add_argument('-o', '--output_dir', type=str, default='', 
-                        help="Output directory for results (defaults to main_file['base_directory'])")
-    parser.add_argument('-s', '--seed', type=int, default=43, 
-                        help='Random seed for reproducibility (default: 43)')
+    parser.add_argument('-pr', '--n_processes', type=int, default=None,
+                        help='Number of processes to use for parallel processing')
+    parser.add_argument('-s', '--seed', type=int, default=None, 
+                        help='Random seed for reproducibility')
 
     args = parser.parse_args()
+
+    main_file = args.main_file
+    main_dict = load_yaml(main_file)
 
     ######################################################
     # Set parameters from parsed arguments
     ######################################################
+
+    def fyea(dict_value, arg_value): # from yaml else argparse
+        return dict_value if arg_value is None else arg_value
     
-    def from_yaml_else_argparse(yaml_dict, args, key):
-        if yaml_dict is not None and 'moment_inversion' in yaml_dict and key in yaml_dict['moment_inversion']:
-            return yaml_dict['moment_inversion'][key]
-        else:
-            return getattr(args, key) # args is a namespace
-    
-    main_file = args.main_file
-    main_dict = load_yaml(main_file)
-    n_processes = from_yaml_else_argparse(main_dict, args, 'n_processes')
-    source = from_yaml_else_argparse(main_dict, args, 'source')
-    amplitude_scale = from_yaml_else_argparse(main_dict, args, 'amplitude_scale')
-    num_particles = from_yaml_else_argparse(main_dict, args, 'num_particles')
-    num_iterations = from_yaml_else_argparse(main_dict, args, 'num_iterations')
-    tightness = from_yaml_else_argparse(main_dict, args, 'tightness')
-    loss_exponent = from_yaml_else_argparse(main_dict, args, 'loss_exponent')
-    seed = from_yaml_else_argparse(main_dict, args, 'seed')
     n_eps = 2
-    decay_iterations = from_yaml_else_argparse(main_dict, args, 'decay_iterations')
-    if isinstance(decay_iterations, str) and decay_iterations.lower() == 'none': # yaml file None -> 'None' str not None type
-        decay_iterations = None
+    bins = fyea(main_dict['moment_inversion']['bins'], args.bins)
+    seed = fyea(main_dict['moment_inversion']['seed'], args.seed)
+    n_processes = fyea(main_dict['moment_inversion']['n_processes'], args.n_processes)
+    source = fyea(main_dict['moment_inversion']['source'], args.source)
+    amplitude_scale = fyea(main_dict['moment_inversion']['amplitude_scale'], args.amplitude_scale)
+    num_particles = fyea(main_dict['moment_inversion']['num_particles'], args.num_particles)
+    num_iterations = fyea(main_dict['moment_inversion']['num_iterations'], args.num_iterations)
+    tightness = fyea(main_dict['moment_inversion']['tightness'], args.tightness)
+    loss_exponent = fyea(main_dict['moment_inversion']['loss_exponent'], args.loss_exponent)
+    decay_iterations = fyea(main_dict['moment_inversion']['decay_iterations'], args.decay_iterations)
+    initial_scale = fyea(main_dict['moment_inversion']['initial_scale'], args.initial_scale)
+    min_scale = fyea(main_dict['moment_inversion']['min_scale'], args.min_scale)
+    step_size = fyea(main_dict['moment_inversion']['step_size'], args.step_size)
+    
+    if source not in ['mcmc', 'mle', 'ift', 'gen']:
+        raise ValueError(f"Invalid source to load moments from: {source}")
+
+    if not isinstance(decay_iterations, int):
+        console.print(f"decay_iterations is not an integer: {type(decay_iterations)}, using num_iterations // 5", style="bold yellow")
+        decay_iterations = num_iterations // 5
+        
     bandwidth_params = {
-        'decay_iterations': decay_iterations if decay_iterations is not None else num_iterations // 5,
-        'initial_scale': from_yaml_else_argparse(main_dict, args, 'initial_scale'),
-        'min_scale': from_yaml_else_argparse(main_dict, args, 'min_scale'),
+        'decay_iterations': decay_iterations,
+        'initial_scale': initial_scale,
+        'min_scale': min_scale,
     }
-    mass_bins = from_yaml_else_argparse(main_dict, args, 'mass_bins')
-    if len(mass_bins) == 0:
-        mass_bins = list(range(main_dict['n_mass_bins']))
-    step_size = from_yaml_else_argparse(main_dict, args, 'step_size')
+    
+    if not isinstance(bins, list) or len(bins) == 0:
+        console.print(f"bins was not a list or is empty: {bins}, processing all bins", style="bold yellow")
+        bins = list(range(main_dict['n_mass_bins']))
+        
     console.print(f"Number of devices used: {jax.device_count()}")
 
-    output_dir = from_yaml_else_argparse(main_dict, args, 'output_dir')
-    if output_dir == '':
-        output_dir = os.path.join(main_dict['base_directory'], 'MOMENT_INVERSION')
+    output_dir = os.path.join(main_dict['base_directory'], 'MOMENT_INVERSION')
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
         

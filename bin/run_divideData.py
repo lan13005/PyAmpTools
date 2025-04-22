@@ -59,12 +59,12 @@ if __name__ == "__main__":
     n_t_bins = main_dict["n_t_bins"]
     base_directory = main_dict["base_directory"]
     output_directory = f"{base_directory}/BINNED_DATA"
-    bins_per_group = main_dict["amptools"]["bins_per_group"] if "bins_per_group" in main_dict["amptools"] else 1
-    constrain_grouped_production = main_dict["amptools"]["constrain_grouped_production"] if "constrain_grouped_production" in main_dict["amptools"] else False
-    merge_grouped_trees = main_dict["amptools"]["merge_grouped_trees"] if "merge_grouped_trees" in main_dict["amptools"] else True
+    bins_per_group = main_dict["bins_per_group"] if "bins_per_group" in main_dict else 1
+    constrain_grouped_production = main_dict["constrain_grouped_production"] if "constrain_grouped_production" in main_dict else False
+    merge_grouped_trees = main_dict["merge_grouped_trees"] if "merge_grouped_trees" in main_dict else True
     data_folder = main_dict["data_folder"]
     pols = main_dict["polarizations"]
-    prepare_for_nifty = bool(main_dict["amptools"]["prepare_for_nifty"])
+    prepare_for_nifty = bool(main_dict["prepare_for_nifty"])
     amptools_cfg = f"{base_directory}/amptools.cfg"
 
     os.system(f"mkdir -p {output_directory}")

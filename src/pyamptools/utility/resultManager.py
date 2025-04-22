@@ -111,7 +111,7 @@ class ResultManager:
         self.moment_cache_location = f"{self.base_directory}/projected_moments_cache.pkl"
         
         # TODO: fix bins per group
-        self.bpg = self.main_dict['amptools']['bins_per_group']
+        self.bpg = self.main_dict['bins_per_group']
         
         n_t_bins = self.main_dict['n_t_bins']
         if n_t_bins != 1:

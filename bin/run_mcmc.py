@@ -958,55 +958,48 @@ class TempMCMC:
         console.print(table)
 
 if __name__ == "__main__":
-    parser = OptimizerHelpFormatter(description="Run MCMC fits using numpyro. [bold yellow]Lots of MCMC args accept list of values. Outer product of hyperparameters is automatically performed.[/bold yellow]")
+    parser = OptimizerHelpFormatter(description="Run MCMC fits using numpyro.")
     parser.add_argument("main_yaml", type=str,
                        help="Path to main YAML configuration file")    
     parser.add_argument("-b", "--bins", type=int, nargs="+", default=None,
-                       help="List of bin indices to process (default: all bins)")
-    parser.add_argument("-np", "--n_processes", type=int, default=-1,
-                       help="Maximum number of parallel processes to use (default: main_yaml['n_processes'])")
+                       help="List of bin indices to process")
+    parser.add_argument("-np", "--n_processes", type=int, default=None,
+                       help="Maximum number of parallel processes to use")
 
     #### MCMC ARGS ####
-    # Everything in this section accepts a list of values!
-    # A hyperparameter grid search is performed on the outer product of these lists
-    #   This can be very expensive but its power to the people
-    parser.add_argument("-ps", "--prior_scale", type=float, nargs="+", default=[1000.0],
-                       help="Prior scale for the magnitude of the complex amplitudes (default: %(default)s)")
+    parser.add_argument("-ps", "--prior_scale", type=float, default=None,
+                       help="Prior scale for the magnitude of the complex amplitudes")
     # NOTE: Block usage of horseshoe prior using 'choice' argument, bad performance and limited testing
-    parser.add_argument("-pd", "--prior_dist", type=str, choices=['laplace', 'gaussian'], nargs="+", default=['gaussian'], 
-                       help="Prior distribution for the complex amplitudes (default: %(default)s)")
-    parser.add_argument("-nc", "--nchains", type=int, nargs="+", default=[6],
-                       help="Number of chains to use for numpyro MCMC (default: %(default)s)")
-    parser.add_argument("-ns", "--nsamples", type=int, nargs="+", default=[1000],
-                       help="Number of samples to draw per chain (default: %(default)s)")
-    parser.add_argument("-nw", "--nwarmup", type=int, nargs="+", default=[500],
-                       help="Number of warmup samples to draw (default: %(default)s)")
-    parser.add_argument("-ta", "--target_accept_prob", type=float, nargs="+", default=[0.80],
-                       help="Target acceptance probability for NUTS sampler (default: %(default)s)")
-    parser.add_argument("-mtd", "--max_tree_depth", type=int, nargs="+", default=[12],
-                       help="Maximum tree depth for NUTS sampler (default: %(default)s)")
-    parser.add_argument("-ss", "--step_size", type=float, nargs="+", default=[0.1],
-                       help="Initial step size for NUTS sampler (default: %(default)s for cartesian)")
-    parser.add_argument("--adapt_step_size", type=str, nargs="+", choices=["True", "False"], default=["True"],
-                       help="Enable/disable step size adaptation (default: %(default)s)")
-    parser.add_argument("--dense_mass", type=str, nargs="+", choices=["True", "False"], default=["True"],
-                       help="Enable/disable dense mass matrix adaptation (default: %(default)s)")
-    parser.add_argument("--adapt_mass_matrix", type=str, nargs="+", choices=["True", "False"], default=["True"],
-                       help="Enable/disable mass matrix adaptation (default: %(default)s)")
+    parser.add_argument("-pd", "--prior_dist", type=str, choices=['laplace', 'gaussian'], default=None, 
+                       help="Prior distribution for the complex amplitudes")
+    parser.add_argument("-nc", "--nchains", type=int, default=None,
+                       help="Number of chains to use for numpyro MCMC")
+    parser.add_argument("-ns", "--nsamples", type=int, default=None,
+                       help="Number of samples to draw per chain")
+    parser.add_argument("-nw", "--nwarmup", type=int, default=None,
+                       help="Number of warmup samples to draw")
+    parser.add_argument("-ta", "--target_accept_prob", type=float, default=None,
+                       help="Target acceptance probability for NUTS sampler")
+    parser.add_argument("-mtd", "--max_tree_depth", type=int, default=None,
+                       help="Maximum tree depth for NUTS sampler")
+    parser.add_argument("-ss", "--step_size", type=float, default=None,
+                       help="Initial step size for NUTS sampler")
+    parser.add_argument("--adapt_step_size", action="store_true", default=None,
+                       help="Enable step size adaptation")
+    parser.add_argument("--dense_mass", action="store_true", default=None,
+                       help="Enable dense mass matrix adaptation")
+    parser.add_argument("--adapt_mass_matrix", action="store_true", default=None,
+                       help="Enable mass matrix adaptation")
+    parser.add_argument("--seed", type=int, default=None,
+                       help="Random seed")
     
-    #### SAVE/RESUME ARGS ####
-    parser.add_argument("-r", "--resume", type=str, default=None,
-                       help="Path to saved MCMC state to resume from, warmup will be skipped")
-    
-    #### HELPFUL ARGS ####
+    #### COMMAND LINE ARGS (MOSTLY SHOULD NOT BE USED) ####
     parser.add_argument("--print_wave_names", action="store_true",
                        help="Print wave names")
-    parser.add_argument("--seed", type=int, default=42,
-                       help="Random seed (default: %(default)s)")
-    parser.add_argument("-cop", "--coordinate_system", type=str, choices=["cartesian", "polar"], default="cartesian",
-                       help="Coordinate system to use for the complex amplitudes (default: %(default)s)")
+    parser.add_argument("-cop", "--coordinate_system", type=str, default='cartesian',
+                       help="Coordinate system to use for the complex amplitudes")
     parser.add_argument("--enforce_positive_reference", action="store_true",
-                       help="Force the real part of reference waves to be strictly positive (default: allow negative values)")
+                       help="Force the real part of reference waves to be strictly positive")
     parser.add_argument("--use_progress_bar", action="store_true",
                        help="Use progress bar to track MCMC progress (warning: messy printing when used with multiple processes)")
     
@@ -1018,7 +1011,7 @@ if __name__ == "__main__":
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     else:
-        raise ValueError(f"Output folder {output_folder} already exists! Please provide a different path or remove the folder.")
+        console.print(f"Output folder {output_folder} already exists. Files may be overwritten.", style="bold yellow")
     
     if not iftpwa_dict:
         console.print("iftpwa YAML file is required", style="bold red")
@@ -1026,6 +1019,28 @@ if __name__ == "__main__":
     if not main_dict:
         console.print("main YAML file is required", style="bold red")
         sys.exit(1)
+        
+    #### PARSE ARGS ####
+    def fyea(dict_value, arg_value): # from yaml else argparse
+        return dict_value if arg_value is None else arg_value
+
+    seed = fyea(main_dict["mcmc"]["seed"], args.seed)
+    n_processes = fyea(main_dict["mcmc"]["n_processes"], args.n_processes)
+    prior_scale = fyea(main_dict["mcmc"]["prior_scale"], args.prior_scale)
+    prior_dist = fyea(main_dict["mcmc"]["prior_dist"], args.prior_dist)
+    nchains = fyea(main_dict["mcmc"]["nchains"], args.nchains)
+    nwarmup = fyea(main_dict["mcmc"]["nwarmup"], args.nwarmup)
+    nsamples = fyea(main_dict["mcmc"]["nsamples"], args.nsamples)
+    target_accept_prob = fyea(main_dict["mcmc"]["target_accept_prob"], args.target_accept_prob)
+    max_tree_depth = fyea(main_dict["mcmc"]["max_tree_depth"], args.max_tree_depth)
+    step_size = fyea(main_dict["mcmc"]["step_size"], args.step_size)
+    adapt_step_size = fyea(main_dict["mcmc"]["adapt_step_size"], args.adapt_step_size)
+    dense_mass = fyea(main_dict["mcmc"]["dense_mass"], args.dense_mass)
+    adapt_mass_matrix = fyea(main_dict["mcmc"]["adapt_mass_matrix"], args.adapt_mass_matrix)
+    
+    bins = fyea(main_dict["mcmc"]["bins"], args.bins)
+    if bins is None:
+        bins = np.arange(mcmc_manager.nmbMasses * mcmc_manager.nmbTprimes)
     
     # TODO: Properly implement wave_prior_scales somewhere. Since its a dict we might have to put it into YAML file?
     wave_prior_scales = None
@@ -1034,24 +1049,17 @@ if __name__ == "__main__":
     #     "Dp2+": 150,
     # }
     
-    def run_mcmc_on_output_folder(name, prior_scale, prior_dist, nchains, nsamples, nwarmup, 
-                                 target_accept_prob, max_tree_depth, step_size, adapt_step_size, 
-                                 dense_mass, adapt_mass_matrix):
+    def run_mcmc_on_output_folder():
         """Run MCMC with specific parameters and save to output folder"""
-        if not isinstance(name, str) or name == "":
-            raise ValueError("name should be a non-empty string")
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
-        if os.path.exists(os.path.join(output_folder, name)):
-            console.print(f"Output folder {name} already exists! Skipping this configuration.", style="bold yellow")
-            return
         
         # Initialize MCMC Manager
         mcmc_manager = MCMCManager(
             main_dict, iftpwa_dict, 0, 
             prior_scale=prior_scale, prior_dist=prior_dist,
             n_chains=nchains, n_samples=nsamples, n_warmup=nwarmup, 
-            resume_path=args.resume, cop=args.coordinate_system, 
+            resume_path=resume_path, cop=args.coordinate_system, 
             wave_prior_scales=wave_prior_scales,
             target_accept_prob=target_accept_prob,
             max_tree_depth=max_tree_depth,
@@ -1063,7 +1071,6 @@ if __name__ == "__main__":
         )
         
         console.print(f"\n\n***************************************************", style="bold")
-        console.print(f"Configuration: {name}", style="bold blue")
         console.print(f"Using {mcmc_manager.n_chains} chains with {mcmc_manager.n_samples} samples per chain with {mcmc_manager.n_warmup} warmup samples", style="bold")
         console.print(f"Prior: {mcmc_manager.prior_dist} with scale {mcmc_manager.prior_scale}", style="bold")
         console.print(f"NUTS: Target accept prob: {mcmc_manager.target_accept_prob}", style="bold")
@@ -1080,98 +1087,31 @@ if __name__ == "__main__":
         
         #### RUN MCMC ####
         timer = Timer()
-                
-        # If bins is None, use all bins
-        if args.bins is None:
-            bins = np.arange(mcmc_manager.nmbMasses * mcmc_manager.nmbTprimes)
-        else:
-            bins = args.bins
         
         # Run MCMC in parallel
         start_time = timer.read(return_str=False)[1]
-        n_processes = args.n_processes
-        if n_processes < 1:
-            n_processes = main_dict["n_processes"]
         final_result_dicts = mcmc_manager.run_mcmc_parallel(bins=bins, n_processes=n_processes, use_progress_bar=args.use_progress_bar)
         end_time = timer.read(return_str=False)[1]
         mcmc_run_time = end_time - start_time
         mcmc_it_per_second = (nsamples + nwarmup) * nchains * len(bins) / mcmc_run_time
         
-        ofile = f"{output_folder}/{name}_samples.pkl"
+        ofile = f"{output_folder}/mcmc_samples.pkl"
         with open(ofile, "wb") as f:
             pkl.dump(final_result_dicts, f)
-        if name != "mcmc": # always symlink the latest run 
-            target = os.path.join(output_folder, "mcmc_samples.pkl")
-            console.print(f"Attempting to symlink {ofile} to {target} (the target for default plotting scripts)", style="bold blue")            
-            if os.path.exists(target):
-                if os.path.islink(target):
-                    console.print(f"  Warning: {target} already exists and is a symlink! Overwriting this link with new run", style="bold yellow")
-                    os.remove(target)
-                else:
-                    console.print(f"  Warning: {target} already exists and is not a symlink! Unable to link over it", style="bold yellow")
-            os.symlink(ofile, target)
 
-        console.print(f"Configuration {name} completed", style="bold green")
         console.print(f"Total time elapsed:  {timer.read(return_str=False)[2]:0.2f} seconds", style="bold")
         console.print(f"    MCMC run time: {mcmc_run_time:0.2f} seconds", style="bold")
         console.print(f"    MCMC samples per second: {mcmc_it_per_second:0.1f}", style="bold")
+        # end of run_mcmc_on_output_folder
     
-    # Convert string boolean arguments to actual booleans
-    adapt_step_size_values = [val == "True" for val in args.adapt_step_size]
-    dense_mass_values = [val == "True" for val in args.dense_mass]
-    adapt_mass_matrix_values = [val == "True" for val in args.adapt_mass_matrix]
-    
-    # Create all combinations of parameters
-    param_combinations = list(product(
-        args.prior_scale,
-        args.prior_dist,
-        args.nchains,
-        args.nsamples,
-        args.nwarmup,
-        args.target_accept_prob,
-        args.max_tree_depth,
-        args.step_size,
-        adapt_step_size_values,
-        dense_mass_values,
-        adapt_mass_matrix_values
-    ))
-    
-    console.print(f"\nUser requested {len(param_combinations)} hyperparameter combinations to test", style="bold blue")
-    
-    # Create output folder names based on parameter combinations
-    names = []
-    for combo in param_combinations:
-        prior_scale, prior_dist, nchains, nsamples, nwarmup, target_accept, max_tree_depth, step_size, adapt_step_size, dense_mass, adapt_mass_matrix = combo        
-        name = f"ps{prior_scale}_pd{prior_dist}"
-        name += f"_nc{nchains}_ns{nsamples}_nw{nwarmup}"
-        name += f"_ta{target_accept}_mtd{max_tree_depth}_ss{step_size}"
-
-        # Add boolean parameters only if they're False (assume True is default)
-        if not adapt_step_size:
-            name += "_noAS"
-        if not dense_mass:
-            name += "_noDM"
-        if not adapt_mass_matrix:
-            name += "_noAM"
-            
-        names.append(name)
-    
-    # Run MCMC for each parameter combination
+    # Run MCMC with the single set of parameters
     timer = Timer()
     
     # copy input main_yaml to output_folder for reproducibility
     os.system(f"cp {args.main_yaml} {output_folder}/{os.path.basename(args.main_yaml)}")
     console.print(f"Copied {args.main_yaml} to {output_folder}/{os.path.basename(args.main_yaml)}", style="bold blue")
     
-    for i, (name, combo) in enumerate(zip(names, param_combinations)):
-        console.print(f"Running configuration {i+1}/{len(param_combinations)}: {name}", style="bold blue")
-        prior_scale, prior_dist, nchains, nsamples, nwarmup, target_accept, max_tree_depth, step_size, adapt_step_size, dense_mass, adapt_mass_matrix = combo
-        
-        run_mcmc_on_output_folder(
-            name, prior_scale, prior_dist, nchains, nsamples, nwarmup,
-            target_accept, max_tree_depth, step_size, adapt_step_size,
-            dense_mass, adapt_mass_matrix
-        )
+    run_mcmc_on_output_folder()
     
-    console.print(f"All configurations completed in {timer.read(return_str=False)[2]:0.2f} seconds", style="bold green")
+    console.print(f"MCMC completed in {timer.read(return_str=False)[2]:0.2f} seconds", style="bold green")
     sys.exit(0)

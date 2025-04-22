@@ -215,41 +215,33 @@ if __name__ == "__main__":
                        help="Path to PyAmpTools YAML configuration file")
     parser.add_argument("-b", "--bins", type=int, nargs="+",
                        help=f"List of bin indicies to process (default: all bins)")
-    parser.add_argument("--n_processes", type=int, default=-1,
-                        help="Number of processes to run in parallel (default: main_yaml['n_processes'])")
+    parser.add_argument("--n_processes", type=int, default=None,
+                        help="Number of processes to run in parallel")
     
     ##### OPTIMIZATION METHOD ARGS #####
     # NOTE: L-BFGS-B is found to be very fast but Minuit appears to be more robust so set as default
     #       Boris Grube - COMPASS uses LBFGS for their binned fits but minuit for their mass dependent fits due to L-BFGS-B performing worse
     parser.add_argument("--method", type=str, 
-                       choices=['minuit-numeric', 'minuit-analytic', 'L-BFGS-B', 'trust-ncg', 'trust-krylov'], 
-                       default='minuit-analytic',
-                       help="Optimization method to use (default: %(default)s)")
+                       choices=['minuit-numeric', 'minuit-analytic', 'L-BFGS-B'], # , 'trust-ncg', 'trust-krylov'], 
+                       default=None,
+                       help="Optimization method to use")
     
     ##### RANDOM INITIALIZATION ARGS #####
-    parser.add_argument("--n_random_intializations", type=int, default=20,
-                        help="Number of random initializations to perform (default: %(default)s)")
-    parser.add_argument("--scale", type=float, default=50,
-                        help="Randomly sample real/imag parts of the amplitude on [-scale, scale] (default: %(default)s)")
-    parser.add_argument("--seed", type=int, default=42,
-                        help="Seed for main random number generator (default: %(default)s)")
+    parser.add_argument("--n_random_intializations", type=int, default=None,
+                        help="Number of random initializations to perform")
+    parser.add_argument("--scale", type=float, default=None,
+                        help="Randomly sample real/imag parts of the amplitude on [-scale, scale]")
+    parser.add_argument("--seed", type=int, default=None,
+                        help="Seed for main random number generator")
     
     #### HELPFUL ARGS ####
     parser.add_argument("--print_wave_names", action="store_true",
                        help="Print wave names without running any fits")
     parser.add_argument("--stdout", action="store_true",
                        help="Print output to stdout instead of dumping to a log file")
-    #### PARSE ARGS ####
-    args = parser.parse_args()
-    np.random.seed(args.seed)
-    scale = args.scale
-    n_iterations = args.n_random_intializations
-    dump_to_stdout = args.stdout
     
-    n_processes = args.n_processes
-    if n_processes < 1:
-        n_processes = main_dict["n_processes"]
-        
+    args = parser.parse_args()
+    
     #### LOAD YAML FILES ####
     main_dict = load_yaml(args.main_yaml)
     iftpwa_dict = main_dict["nifty"]["yaml"] # DictConfig ~ Dict-like object
@@ -263,13 +255,24 @@ if __name__ == "__main__":
     nPars = 2 * len(waveNames)
     reference_waves = main_dict["phase_reference"].split("_")
     
+    #### EXIT IF ONLY PRINTING WAVE NAMES
     if args.print_wave_names:
         console.print(f"Wave names: {waveNames}", style="bold")
         sys.exit(0)
+    
+    #### PARSE ARGS ####
+    seed = main_dict["mle"]["seed"] if args.seed is None else args.seed
+    scale = main_dict["mle"]["scale"] if args.scale is None else args.scale
+    n_iterations = main_dict["mle"]["n_random_intializations"] if args.n_random_intializations is None else args.n_random_intializations
+    dump_to_stdout = main_dict["mle"]["stdout"] if args.stdout is None else args.stdout
+    n_processes = main_dict["n_processes"] if args.n_processes < 1 else args.n_processes
+    bins_to_process = main_dict["mle"]["bins"] if args.bins is None else args.bins
+    
+    np.random.seed(seed)
 
     ##### LOAD DEFAULTS IF NONE PROVIDED #####
-    bins_to_process = args.bins
-    if bins_to_process is None:
+    if not isinstance(bins_to_process, int) or bins_to_process < 1 or bins_to_process > nmbMasses * nmbTprimes:
+        console.print(f"invalid bins_to_process: {bins_to_process}, setting to run over all bins", style="bold yellow")
         bins_to_process = np.arange(nmbMasses * nmbTprimes)
     output_folder = os.path.join(main_dict["base_directory"], "MLE")
     if not os.path.exists(output_folder):
@@ -287,7 +290,6 @@ if __name__ == "__main__":
                                 logging_level=logging.WARNING)
 
     ##### CREATE JOB ASSIGNMENTS #####
-    max_concurrent = min(n_processes, len(bins_to_process))
     job_assignments = {}
     job_counter = 0
     bin_seeds = np.random.randint(0, 1000000, len(bins_to_process))
@@ -295,7 +297,7 @@ if __name__ == "__main__":
         job_assignments[job_counter] = (bin_idx, bin_seeds[bin_idx])
         job_counter += 1
     total_jobs = len(job_assignments)
-    console.print(f"Total jobs: {total_jobs}\n  Distributed across {max_concurrent} processes", style="bold")
+    console.print(f"Total jobs: {total_jobs}\n  Distributed across {n_processes} processes", style="bold")
     
     # copy input yaml_file to output_folder for reproducibility
     os.system(f"cp {args.main_yaml} {output_folder}/{os.path.basename(args.main_yaml)}")
@@ -303,7 +305,7 @@ if __name__ == "__main__":
         
     ##### RUN JOBS IN PARALLEL #####
     timer = Timer()
-    with Pool(processes=max_concurrent) as pool:
+    with Pool(processes=n_processes) as pool:
         job_args = [(pwa_manager, bin_idx, bin_seed, n_iterations, scale, args.method) for job_idx, (bin_idx, bin_seed) in job_assignments.items()]
         # Distribute work across processes
         with tqdm(total=total_jobs, desc="Processing jobs", unit="job") as pbar:

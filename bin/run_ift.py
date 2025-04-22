@@ -17,9 +17,6 @@ from pyamptools.utility.general import Timer, dump_yaml, load_yaml
 # TODO: For more complicated formattings we might have to make a pythonic system
 #       that uses {} to denote variable search paths. ATM we variable interpolate
 #       each part separated by /
-mappings = {
-    "GENERAL.outputFolder": "SRC.nifty.output_directory",
-}
 
 def get_value_from_src(main_dict, key_path):
     """
@@ -102,19 +99,19 @@ if __name__ == "__main__":
         raise FileNotFoundError(f"YAML file {main_yaml} not found")
 
     main_dict = load_yaml(main_yaml)
+    main_dest = main_dict["NIFTY"]["PWA_MANAGER"]["yaml"]
     
     if main_dict['nifty']['yaml'] is None:
         logger.info("No NIFTy yaml file specified. Exiting...")
-        
-    output_directory = main_dict['nifty']['output_directory']
-    main_dest = main_dict["NIFTY"]["PWA_MANAGER"]["yaml"]
+        exit(1)
     
+    output_directory = os.path.join(main_dict['base_directory'], "NIFTY")
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)
+
     iftpwa_yaml = main_dict['NIFTY']
     iftpwa_dest = f"{output_directory}/iftpwa.yaml"
-
     dump_yaml(iftpwa_yaml, iftpwa_dest)
-    if output_directory is not None and not os.path.exists(output_directory):
-        os.makedirs(output_directory)
     logger.info(f"Copying {main_yaml} to {main_dest}")
     os.system(f"cp {main_yaml} {main_dest}")
 
