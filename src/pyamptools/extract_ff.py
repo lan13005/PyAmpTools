@@ -27,7 +27,7 @@ def extract_ff(results, outfileName="", fmt=".5f", test_regex=False, no_phases=F
                 - '.*(.)$~>\\1': Captures last character and replaces full match
                 - '.*reaction_(000|045|090|135)::(Pos|Neg)(?:Im|Re)::': Removes matched pattern,
                   allowing grouping over polarizations and mirrored sums
-        main_dict (str): YAML file name. Allows program to load YAML state, i.e. for getting user requested coherent sums
+        main_dict (Dict): main yaml dictionary. Allows program to load YAML state, i.e. for getting user requested coherent sums
     """
 
     def write_ff(amp, intensity, error, intensity_corr, error_corr, only=None):

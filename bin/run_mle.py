@@ -215,8 +215,8 @@ if __name__ == "__main__":
                        help="Path to PyAmpTools YAML configuration file")
     parser.add_argument("-b", "--bins", type=int, nargs="+",
                        help=f"List of bin indicies to process (default: all bins)")
-    parser.add_argument("--nprocesses", type=int, default=8,
-                        help="Number of processes to run in parallel (default: %(default)s)")
+    parser.add_argument("--n_processes", type=int, default=-1,
+                        help="Number of processes to run in parallel (default: main_yaml['n_processes'])")
     
     ##### OPTIMIZATION METHOD ARGS #####
     # NOTE: L-BFGS-B is found to be very fast but Minuit appears to be more robust so set as default
@@ -244,9 +244,12 @@ if __name__ == "__main__":
     np.random.seed(args.seed)
     scale = args.scale
     n_iterations = args.n_random_intializations
-    nprocesses = args.nprocesses
     dump_to_stdout = args.stdout
     
+    n_processes = args.n_processes
+    if n_processes < 1:
+        n_processes = main_dict["n_processes"]
+        
     #### LOAD YAML FILES ####
     main_dict = load_yaml(args.main_yaml)
     iftpwa_dict = main_dict["nifty"]["yaml"] # DictConfig ~ Dict-like object
@@ -284,7 +287,7 @@ if __name__ == "__main__":
                                 logging_level=logging.WARNING)
 
     ##### CREATE JOB ASSIGNMENTS #####
-    max_concurrent = min(nprocesses, len(bins_to_process))
+    max_concurrent = min(n_processes, len(bins_to_process))
     job_assignments = {}
     job_counter = 0
     bin_seeds = np.random.randint(0, 1000000, len(bins_to_process))

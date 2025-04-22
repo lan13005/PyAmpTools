@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Restructure normalization integrals')
     parser.add_argument('main_yaml', type=str, help='main yaml file')
-    parser.add_argument('-n', '--ncores', type=int, default=1, help='number of cores to use')
+    parser.add_argument('-np', '--n_processes', type=int, default=-1, help='number of processes to use')
     parser.add_argument('-ia', '--include_accmc', action='store_true', help='include accmc in ampvec root file')
     parser.add_argument('-ig', '--include_genmc', action='store_true', help='include genmc in ampvec root file')
     parser.add_argument('-v', '--verbose', action='store_true', help='verbose output')
@@ -54,6 +54,10 @@ if __name__ == "__main__":
     main_yaml = args.main_yaml
     main_dict = load_yaml(main_yaml)
     verbose = args.verbose
+
+    n_processes = args.n_processes
+    if n_processes < 1:
+        n_processes = main_dict["n_processes"]
 
     output_directory = main_dict["amptools"]["output_directory"]
     search_fmt = f"{output_directory}/bin_[]/bin_*.cfg"
@@ -70,10 +74,10 @@ if __name__ == "__main__":
     # ############################################################################
     # STEP 1) Ask AmpTools to dump ampvecs and normint to a ROOT file and a text file respectively
     _verbose = False # instead of CLI verbose. There is not much useful information dumped by AmpTools in this process so hard code a False
-    if args.ncores > 1:
-        print(f"\nProcessing {len(cfgfiles)} config files using {args.ncores} processes...\n")
+    if n_processes > 1:
+        print(f"\nProcessing {len(cfgfiles)} config files using {n_processes} processes...\n")
         pool_args = [(cfgfile, _verbose) for cfgfile in cfgfiles]
-        with Pool(args.ncores) as p:
+        with Pool(n_processes) as p:
             p.map(extract_normint_ampvecs, pool_args)
     else:
         print(f"\nProcessing {len(cfgfiles)} config files...\n")

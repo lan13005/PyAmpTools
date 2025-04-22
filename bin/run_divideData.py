@@ -30,7 +30,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Divide data into mass bins")
     parser.add_argument("main_yaml", type=str, default="conf/configuration.yaml", help="Path to the main yaml file")
     parser.add_argument("-e", "--use_edges", action="store_true", help="Use mass_edges and t_edges from the yaml file. Else recompute")
-    parser.add_argument("-nh", "--hadd_pool_size", type=int, default=5, help="Number of parallel processes to merge the data")
+    parser.add_argument("-np", "--n_processes", type=int, default=-1, help="Number of parallel processes to merge (hadd) the data")
     parser.add_argument("--nosplit", action="store_true", help="Skip the split_mass step")
     parser.add_argument("--nomerge", action="store_true", help="Skip the merge_bins step")
     args = parser.parse_args()
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     
     console = Console()
 
-    hadd_pool_size = args.hadd_pool_size
+    n_processes = args.n_processes
 
     cwd = os.getcwd()
     timer = Timer()
@@ -337,7 +337,7 @@ if __name__ == "__main__":
                     
                     os.system(f"touch {output_directory}/{group_name}/seed_nifty.txt")
 
-                with Pool(hadd_pool_size) as p:
+                with Pool(n_processes) as p:
                     p.map(merge_trees, range(nGroups))
 
             # Merge some bins into groups on user request keeping bins distinct

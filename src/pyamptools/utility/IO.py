@@ -124,14 +124,14 @@ def parse_fit_file(filename):
     
     return complex_amps, status_dict
 
-def loadAmptoolsIFTResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean=False, apply_mle_queries=True):
+def loadAmptoolsIFTResultsFromYaml(main_yaml, n_processes=-1, skip_moments=False, clean=False, apply_mle_queries=True):
     
     """
     Loads the AmpTools and IFT results from the provided yaml file. Moments will be calculated if possible with multiprocessing.Pool with pool_size
     
     Args:
-        yaml (OmegaConf): OmegaConf object (dict-like) for PyAmpTools (not iftpwa)
-        pool_size (int): Number of processes to use by multiprocessing.Pool
+        main_yaml (Dict, str): main yaml dict or path to yaml file
+        n_processes (int): Number of processes to use by multiprocessing.Pool
         skip_moments (bool): If True, only load partial wave amplitudes and do not calculate moments
         clean (bool): If True, clean the output directory before running
         apply_mle_queries (bool): If True, apply MLE queries to the results, otherwise just load the results
@@ -147,11 +147,12 @@ def loadAmptoolsIFTResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean
     """
     
     # Be nice and accept a string path to a yaml file in case user didnt read docs
-    if isinstance(yaml, str):
-        yaml = OmegaConf.load(yaml)
+    main_dict = main_yaml
+    if isinstance(main_yaml, str):
+        main_dict = load_yaml(main_yaml)
     
     # Store a cache of the results to avoid recalculating them, calculating moments is quite time consuming
-    cache = f"{yaml['base_directory']}/.moment_cache.pkl"
+    cache = f"{main_dict['base_directory']}/.moment_cache.pkl"
     if clean and os.path.exists(cache):
         console.print(f"[red]loadAmptoolsIFTResultsFromYaml| User requested to start clean, do not use any cached results. Recalculating...[/red]\n")
         os.remove(cache)
@@ -168,29 +169,32 @@ def loadAmptoolsIFTResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean
     ###########################################
     #### LOAD ADDITIONAL INFORMATION FROM YAML
     ###########################################
-    wave_names = yaml['waveset'].split('_')
-    min_mass = yaml['min_mass']
-    max_mass = yaml['max_mass']
-    n_mass_bins = yaml['n_mass_bins']
-    min_t = yaml['min_t']
-    max_t = yaml['max_t']
-    n_t_bins = yaml['n_t_bins']
+    wave_names = main_dict['waveset'].split('_')
+    min_mass = main_dict['min_mass']
+    max_mass = main_dict['max_mass']
+    n_mass_bins = main_dict['n_mass_bins']
+    min_t = main_dict['min_t']
+    max_t = main_dict['max_t']
+    n_t_bins = main_dict['n_t_bins']
     masses = np.linspace(min_mass, max_mass, n_mass_bins+1)
     tPrimeBins = np.linspace(min_t, max_t, n_t_bins+1)
     masses = 0.5 * (masses[:-1] + masses[1:])
     tPrimeBins = 0.5 * (tPrimeBins[:-1] + tPrimeBins[1:])
-    bpg = yaml['amptools']['bins_per_group']
+    bpg = main_dict['amptools']['bins_per_group']
     channel = identify_channel(wave_names)
+    
+    if n_processes < 1:
+        n_processes = main_dict['n_processes']
 
     ###############################
     #### LOAD AMPTOOLS RESULTS
     ###############################
     console.print("\n\n********************************\nio| Attempting to load AmpTools results...\n********************************\n", style='bold green')
-    loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=False)
+    loadAmpToolsResultsFromYaml(main_dict, ensure_one_fit_per_bin=False)
     try:
         # hardcode check to False since hopefully if user calls this function they would want all fits
         #   across all randomizations and kinematic bins
-        amptools_df, (_, _, _) = loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=False, apply_mle_queries=apply_mle_queries)
+        amptools_df, (_, _, _) = loadAmpToolsResultsFromYaml(main_dict, ensure_one_fit_per_bin=False, apply_mle_queries=apply_mle_queries)
     except Exception as e:
         console.print(f"[red]io| Error loading AmpTools results: {e}[/red]")
         
@@ -204,7 +208,7 @@ def loadAmptoolsIFTResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean
     ###############################
     console.print("\n\n********************************\nio| Attempting to load NIFTY results...\n********************************\n", style='bold green')
     try:
-        ift_df, ift_res_df = loadIFTResultsFromYaml(yaml)
+        ift_df, ift_res_df = loadIFTResultsFromYaml(main_dict)
     except Exception as e:
         console.print(f"\n[red]io| Error loading NIFTY results: {e}[/red]")
         
@@ -232,14 +236,14 @@ def loadAmptoolsIFTResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean
                 amptools_manager = MomentManagerVecPS(amptools_df, wave_names)
             # for col in amptools_df.columns:
             #     print(f"{col} {amptools_df[col].dtype}")
-            amptools_df, latex_name_dict_amp = amptools_manager.process_and_return_df(normalization_scheme=1, pool_size=pool_size, append=True)
+            amptools_df, latex_name_dict_amp = amptools_manager.process_and_return_df(normalization_scheme=1, pool_size=n_processes, append=True)
 
         if ift_df is not None:
             if channel == "TwoPseudoscalar":
                 ift_manager = MomentManagerTwoPS(ift_df, wave_names)
             elif channel == "VectorPseudoscalar":
                 ift_manager = MomentManagerVecPS(ift_df, wave_names)
-            ift_df, latex_name_dict_ift = ift_manager.process_and_return_df(normalization_scheme=1, pool_size=pool_size, append=True)
+            ift_df, latex_name_dict_ift = ift_manager.process_and_return_df(normalization_scheme=1, pool_size=n_processes, append=True)
         
         if latex_name_dict_amp is not None and latex_name_dict_ift is not None and latex_name_dict_amp != latex_name_dict_ift:
             raise ValueError("IFT and AmpTools moment dictionaries do not match but is expected to!")
@@ -254,39 +258,38 @@ def loadAmptoolsIFTResultsFromYaml(yaml, pool_size=10, skip_moments=False, clean
     
     return amptools_df, ift_df, ift_res_df, wave_names, masses, tPrimeBins, bpg, latex_name_dict
 
-def loadIFTResultsFromYaml(yaml):
+def loadIFTResultsFromYaml(main_yaml):
     
     """
     Loads the NIFTY results from the provided yaml file
     NOTE: This only loads the IFT coherent sums in each partial wave. Complex amplitudes of each component still needs to be coded up here
     
     Args:
-        yaml (OmegaConf): OmegaConf object (dict-like) for PyAmpTools (not iftpwa)
+        main_yaml (Dict, str): main yaml dict or path to yaml file
         
     Returns:
         pd.DataFrame: DataFrame of results
     """
 
     # Be nice and accept a string path to a yaml file in case user didnt read docs
-    if isinstance(yaml, str):
-        yaml = OmegaConf.load(yaml)
-    
-    yaml_secondary = yaml['nifty']['yaml']
-    yaml_secondary = OmegaConf.load(yaml_secondary)
+    main_dict = main_yaml
+    if isinstance(main_yaml, str):
+        main_dict = load_yaml(main_yaml)
+    iftpwa_dict = main_dict['nifty']['yaml']
     
     try: 
-        yaml_secondary['GENERAL']['outputFolder']
+        iftpwa_dict['GENERAL']['outputFolder']
     except MissingMandatoryValue:
-        outputFolder = yaml['nifty']['output_directory']
-        yaml_secondary['GENERAL']['outputFolder'] = outputFolder
-    nifty_pkl = yaml_secondary['GENERAL']['fitResultPath']
+        outputFolder = main_dict['nifty']['output_directory']
+        iftpwa_dict['GENERAL']['outputFolder'] = outputFolder
+    nifty_pkl = iftpwa_dict['GENERAL']['fitResultPath']
 
     with open(nifty_pkl, "rb") as f:
         resultData = pkl.load(f)
         
     sums_dict = None
-    if "result_dump" in yaml and "coherent_sums" in yaml["result_dump"]:
-        sums_dict = yaml["result_dump"]["coherent_sums"]            
+    if "result_dump" in main_dict and "coherent_sums" in main_dict["result_dump"]:
+        sums_dict = main_dict["result_dump"]["coherent_sums"]            
         
     return loadIFTResultsFromPkl(resultData, sums_dict)
         
@@ -444,12 +447,12 @@ def loadIFTResultsFromPkl(resultData, sums_dict=None):
     
     return ift_pwa_df, ift_res_df
 
-def loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=True, apply_mle_queries=True):
+def loadAmpToolsResultsFromYaml(main_yaml, ensure_one_fit_per_bin=True, apply_mle_queries=True):
     """ 
     Helper function to load the amptools results from a yaml file 
     
     Args:
-        yaml (OmegaConf): OmegaConf object (dict-like) for PyAmpTools (not iftpwa)
+        main_yaml (Dict, str): main yaml dict or path to yaml file
         ensure_one_fit_per_bin (bool):  Raise error if there are multiple fits results per kinematic bin. This flag is necessary to ensure `iftpwa_plot` program works as expected.
                                         If you are not using `iftpwa_plot` program, you can set this flag to False.
                                         NOTE: seems like we only need to implement t'-summed intensity section. ATM it seems like it would just sum over all fit results in a bin
@@ -461,24 +464,25 @@ def loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=True, apply_mle_que
     """
     
     # Be nice and accept a string path to a yaml file in case user didnt read docs
-    if isinstance(yaml, str):
-        yaml = OmegaConf.load(yaml)
+    main_dict = main_yaml
+    if isinstance(main_yaml, str):
+        main_dict = load_yaml(main_yaml)
     
-    search_format = yaml['amptools']['search_format'] if yaml['amptools']['bins_per_group'] > 1 else 'bin'
-    pattern = yaml['amptools']['output_directory']+f'/{search_format}_*/bin_[].cfg'
+    search_format = main_dict['amptools']['search_format'] if main_dict['amptools']['bins_per_group'] > 1 else 'bin'
+    pattern = main_dict['amptools']['output_directory']+f'/{search_format}_*/bin_[].cfg'
     console.print(f"io| Searching for amptools files using this pattern: {pattern}")
     cfgfiles = glob_sort_captured(pattern)
-    min_mass = yaml['min_mass']
-    max_mass = yaml['max_mass']
-    if yaml['n_mass_bins'] % yaml['amptools']['bins_per_group'] != 0:
+    min_mass = main_dict['min_mass']
+    max_mass = main_dict['max_mass']
+    if main_dict['n_mass_bins'] % main_dict['amptools']['bins_per_group'] != 0:
         raise ValueError("n_mass_bins must be divisible by amptools.bins_per_group")
-    bpg = yaml['amptools']['bins_per_group']
-    n_mass_bins = int(yaml['n_mass_bins'] / bpg)
+    bpg = main_dict['amptools']['bins_per_group']
+    n_mass_bins = int(main_dict['n_mass_bins'] / bpg)
     massBins = np.linspace(min_mass, max_mass, n_mass_bins+1)
     masses = 0.5 * (massBins[1:] + massBins[:-1])
-    min_t = yaml['min_t']
-    max_t = yaml['max_t']
-    n_t_bins = yaml['n_t_bins']
+    min_t = main_dict['min_t']
+    max_t = main_dict['max_t']
+    n_t_bins = main_dict['n_t_bins']
     tPrimeBins = np.linspace(min_t, max_t, n_t_bins+1)
     tPrimes = 0.5 * (tPrimeBins[1:] + tPrimeBins[:-1])
     
@@ -486,15 +490,15 @@ def loadAmpToolsResultsFromYaml(yaml, ensure_one_fit_per_bin=True, apply_mle_que
     mle_query_1 = ''
     mle_query_2 = ''
     if apply_mle_queries:
-        mle_query_1 = yaml['amptools'].get('mle_query_1', '')
-        mle_query_2 = yaml['amptools'].get('mle_query_2', '')
+        mle_query_1 = main_dict['amptools'].get('mle_query_1', '')
+        mle_query_2 = main_dict['amptools'].get('mle_query_2', '')
         if mle_query_1 is None: mle_query_1 = ''
         if mle_query_2 is None: mle_query_2 = ''
     
-    n_randomizations = yaml['amptools']['n_randomizations']
-    accCorrect = yaml['acceptance_correct']
+    n_randomizations = main_dict['amptools']['n_randomizations']
+    accCorrect = main_dict['acceptance_correct']
     
-    if bpg > 1 and not yaml['amptools']['merge_grouped_trees']:
+    if bpg > 1 and not main_dict['amptools']['merge_grouped_trees']:
         # The error is that the checks in parse_fit_file will fail
         raise ValueError("Currently we must merge grouped trees if YAML key amptools.bins_per_group > 1. Please set amptools.merge_grouped_trees=True")
     

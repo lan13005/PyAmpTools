@@ -165,7 +165,7 @@ def generate_trace(args):
     return traces
 
 
-def generate_figure_with_multiprocessing(models, t, acceptance_correct, cache_loc, ntasks):
+def generate_figure_with_multiprocessing(models, t, acceptance_correct, cache_loc, n_processes):
     """
     Generate the plotly figure using multiprocessing to generate the plot traces
     """
@@ -271,7 +271,7 @@ def generate_figure_with_multiprocessing(models, t, acceptance_correct, cache_lo
                 tasks.append((phase_pair, sample, color_map, group, False))
 
         # Use multiprocessing to generate traces
-        with Pool(ntasks) as pool:
+        with Pool(n_processes) as pool:
             trace_groups = pool.map(generate_trace, tasks)
 
         # Add traces to the figure
@@ -362,7 +362,7 @@ if __name__ == "__main__":
         "    - t: (required, float) compare a specific t-bin\n"
         "    - no_browser (optional, bool): Do not open the browser, just dumo the results.\n"
         "    - cache_loc (optional, str): Path to the cache file for storing intermediate results (default: '.dash_ift_cache.pkl').\n"
-        "    - ntasks (optional, int): Number of tasks to use for drawing plotly traces(default: 4).\n"
+        "    - n_processes (optional, int): Number of processes to use for drawing plotly traces(default: 4).\n"
         "    - acceptance_correct (optional, bool): Whether to apply acceptance correction (default: True).\n"
         "    - html_dump (optional, str): Name of the output HTML file (default: 'dash_iftpwa.html').\n"
         "    - html_dump_static (optional, str): Name of the output HTML file (default: 'dash_iftpwa.html').\n"
@@ -380,7 +380,7 @@ if __name__ == "__main__":
         "        t: 1.0\n"
         "        cache_loc: /path/to/cache.pkl\n"
         "        no_browser: false\n"
-        "        ntasks: 4\n"
+        "        n_processes: 4\n"
         "        acceptance_correct: true\n"
         "        html_dump_static: /path/to/dash_iftpwa.html\n"
         "        html_dump: /path/to/dash_iftpwa.html\n"
@@ -391,8 +391,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     main_yaml = args.main_yaml
-
     main_dict = load_yaml(main_yaml)
+    
     dash_cfg = main_dict["dash"]
     if "models" not in dash_cfg:
         raise ValueError("models must be specified in the YAML file")
@@ -416,7 +416,7 @@ if __name__ == "__main__":
     t = dash_cfg["t"] if "t" in dash_cfg else None
     cache_loc = dash_cfg["cache_loc"] if "cache_loc" in dash_cfg else ".dash_ift_cache.pkl"
     no_browser = dash_cfg["no_browser"] if "no_browser" in dash_cfg else False
-    ntasks = dash_cfg["ntasks"] if "ntasks" in dash_cfg else 4
+    n_processes = dash_cfg["n_processes"] if "n_processes" in dash_cfg else 4
     acceptance_correct = dash_cfg["acceptance_correct"] if "acceptance_correct" in dash_cfg else True
     html_dump_static = dash_cfg["html_dump_static"] if "html_dump_static" in dash_cfg else None
     html_dump = dash_cfg["html_dump"] if "html_dump" in dash_cfg else "dash_iftpwa.html"
@@ -430,10 +430,10 @@ if __name__ == "__main__":
     for model_name, model_info in models.items():
         print(f"    - {model_name}: {model_info['path']} (scale: {model_info['scale']})")
     print(f"-> Writing/reading Cache location: {cache_loc}")
-    print(f"-> Number of tasks for drawing: {ntasks}\n")
+    print(f"-> Number of processs for drawing: {n_processes}\n")
 
     start_time = time.time()
-    fig = generate_figure_with_multiprocessing(models, t, acceptance_correct, cache_loc, ntasks)
+    fig = generate_figure_with_multiprocessing(models, t, acceptance_correct, cache_loc, n_processes)
 
     buffer = io.StringIO()
     

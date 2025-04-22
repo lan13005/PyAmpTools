@@ -170,7 +170,7 @@ class ResultManager:
             self._gen_results = self.load_ift_results(source_type="GENERATED")
             self._moment_inversion_results = self.load_moment_inversion_results()
             
-    def attempt_project_moments(self, normalization_scheme=0, pool_size=1):
+    def attempt_project_moments(self, normalization_scheme=0, pool_size=-1):
         
         self.console.print(f"User requested moments to be calculated")
         dfs_to_process = [
@@ -179,6 +179,10 @@ class ResultManager:
             ("ift",  self._ift_results[0]),
             ("gen",  self._gen_results[0])
         ]
+        
+        # Load pool size from yaml file if not usable number
+        if pool_size < 1:
+            pool_size = self.main_dict['n_processes']
         
         _results = {}
         # Project dataframe of partial wave amplitudes into moment basis

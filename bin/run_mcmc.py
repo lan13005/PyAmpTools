@@ -411,7 +411,7 @@ class MCMCManager:
             
         return model
     
-    def run_mcmc_parallel(self, bins=None, nprocesses=None, use_progress_bar=False):
+    def run_mcmc_parallel(self, bins=None, n_processes=-1, use_progress_bar=False):
         """Run MCMC in parallel using multiple processes"""
 
         if self.model is None:
@@ -419,14 +419,14 @@ class MCMCManager:
             sys.exit(1)
         
         # Determine number of processes to use
-        if nprocesses is None:
-            nprocesses = min(mp.cpu_count(), len(bins) * self.n_chains)
+        if n_processes < 1:
+            n_processes = min(mp.cpu_count(), len(bins) * self.n_chains)
         else:
-            nprocesses = min(nprocesses, len(bins) * self.n_chains)
+            n_processes = min(n_processes, len(bins) * self.n_chains)
         
         temp_dir = tempfile.mkdtemp()
         if self.verbose:
-            console.print(f"Running MCMC with {nprocesses} parallel processes", style="bold")
+            console.print(f"Running MCMC with {n_processes} parallel processes", style="bold")
             console.print(f"Processing {len(bins)} bins with {self.n_chains} chains each", style="bold")
             console.print(f"Created temporary directory for results: {temp_dir}", style="bold")
         
@@ -452,7 +452,7 @@ class MCMCManager:
             console.print(f"Starting worker processes...", style="bold")
         
         # Use context manager and exceptions to ensure proper cleanup of resources
-        with mp.get_context('spawn').Pool(processes=nprocesses) as pool:
+        with mp.get_context('spawn').Pool(processes=n_processes) as pool:
             try:
                 pool.starmap(worker_function, tasks)
                 # ensure all processes are done before proceeding
@@ -963,8 +963,8 @@ if __name__ == "__main__":
                        help="Path to main YAML configuration file")    
     parser.add_argument("-b", "--bins", type=int, nargs="+", default=None,
                        help="List of bin indices to process (default: all bins)")
-    parser.add_argument("-np", "--nprocesses", type=int, default=None,
-                       help="Maximum number of parallel processes to use (default: min(CPU count, bins*chains))")
+    parser.add_argument("-np", "--n_processes", type=int, default=-1,
+                       help="Maximum number of parallel processes to use (default: main_yaml['n_processes'])")
 
     #### MCMC ARGS ####
     # Everything in this section accepts a list of values!
@@ -1089,7 +1089,10 @@ if __name__ == "__main__":
         
         # Run MCMC in parallel
         start_time = timer.read(return_str=False)[1]
-        final_result_dicts = mcmc_manager.run_mcmc_parallel(bins=bins, nprocesses=args.nprocesses, use_progress_bar=args.use_progress_bar)
+        n_processes = args.n_processes
+        if n_processes < 1:
+            n_processes = main_dict["n_processes"]
+        final_result_dicts = mcmc_manager.run_mcmc_parallel(bins=bins, n_processes=n_processes, use_progress_bar=args.use_progress_bar)
         end_time = timer.read(return_str=False)[1]
         mcmc_run_time = end_time - start_time
         mcmc_it_per_second = (nsamples + nwarmup) * nchains * len(bins) / mcmc_run_time

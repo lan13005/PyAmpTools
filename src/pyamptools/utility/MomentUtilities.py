@@ -83,7 +83,7 @@ class MomentManagerVecPS(MomentManager):
         self.J_array = np.arange(0, self.max_J + 1)
         self.M_array = np.arange(0, self.max_M + 1)  # like Lambda, -m ∝ +m moments
 
-    def process_and_return_df(self, normalization_scheme=0, pool_size=4, append=True, batch_size=100):
+    def process_and_return_df(self, normalization_scheme=0, pool_size=1, append=True, batch_size=100):
     
         if len(self.df) == 0:
             return pd.DataFrame(), {}
@@ -202,7 +202,7 @@ class MomentManagerTwoPS(MomentManager):
         
         print(f"MomentManagerTwoPS| Calculating moments assuming a {self.channel} system with max J = {self.max_J}")
 
-    def process_and_return_df(self, normalization_scheme=0, pool_size=4, append=True, batch_size=100):
+    def process_and_return_df(self, normalization_scheme=0, pool_size=1, append=True, batch_size=100):
         
         if len(self.df) == 0:
             return pd.DataFrame(), {}

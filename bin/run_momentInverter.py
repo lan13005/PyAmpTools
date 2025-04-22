@@ -494,7 +494,7 @@ if __name__ == "__main__":
     parser.add_argument('-ss', '--step_size', type=float, default=0.01, 
                         help='Adam step size (default: 0.01)')
     
-    parser.add_argument('-pr', '--num_processes', type=int, default=1,
+    parser.add_argument('-pr', '--n_processes', type=int, default=1,
                         help='Number of processes to use for parallel processing (default: 1)')
     parser.add_argument('-o', '--output_dir', type=str, default='', 
                         help="Output directory for results (defaults to main_file['base_directory'])")
@@ -515,7 +515,7 @@ if __name__ == "__main__":
     
     main_file = args.main_file
     main_dict = load_yaml(main_file)
-    num_processes = from_yaml_else_argparse(main_dict, args, 'num_processes')
+    n_processes = from_yaml_else_argparse(main_dict, args, 'n_processes')
     source = from_yaml_else_argparse(main_dict, args, 'source')
     amplitude_scale = from_yaml_else_argparse(main_dict, args, 'amplitude_scale')
     num_particles = from_yaml_else_argparse(main_dict, args, 'num_particles')
@@ -583,8 +583,8 @@ if __name__ == "__main__":
     # Process mass bins in parallel
     console.rule()
     console.print(f"Processing {len(mass_bins)} mass bins: {mass_bins}")
-    num_processes = min(num_processes, len(mass_bins))
-    console.print(f"Using {num_processes} processes")
+    n_processes = min(n_processes, len(mass_bins))
+    console.print(f"Using {n_processes} processes")
     console.rule()
     
     configs = [
@@ -608,7 +608,7 @@ if __name__ == "__main__":
         for mb in mass_bins
     ]
     
-    with Pool(processes=num_processes) as pool:
+    with Pool(processes=n_processes) as pool:
         results = pool.map(process_mass_bin, configs)
         pool.close()
         pool.join()
