@@ -73,11 +73,12 @@ class ResultManager:
         self._mcmc_results = pd.DataFrame()
         self._hist_results = pd.DataFrame()
         self._moment_inversion_results = pd.DataFrame()
+        self._reloaded_normalization_scheme = None # if reloading from cache, this variable will store used normalization scheme
         
         self.main_dict = main_yaml
         if isinstance(main_yaml, str):
             self.main_dict = load_yaml(main_yaml)
-        self.ift_dict = self.main_dict['nifty']['yaml']
+        self.iftpwa_dict = self.main_dict['nifty']['yaml']
         self.base_directory = self.main_dict['base_directory']
         self.waveNames = self.main_dict['waveset'].split("_")
         self.phase_reference = self.main_dict['phase_reference'].split("_")
@@ -149,19 +150,34 @@ class ResultManager:
         self.console.print(f"\n")
         
     def attempt_load_all(self):
+        
         if self._hist_results.empty:
             self._hist_results = self.load_hist_results()
             
         if os.path.exists(self.moment_cache_location):
-            self.console.print(f"Loading cached data with projected moments (and original amplitudes, etc) from {self.moment_cache_location}")
+            self.console.print(f"\nLoading cached data with projected moments (and original amplitudes, etc) from {self.moment_cache_location}\n", style="bold dark_orange")
             with open(self.moment_cache_location, "rb") as f:
                 _results = pkl.load(f)
-                self._mle_results  = _results["mle"]  if "mle"  in _results else self.load_mle_results()
-                self._mcmc_results = _results["mcmc"] if "mcmc" in _results else self.load_mcmc_results()
-                self._ift_results  = _results["ift"]  if "ift"  in _results else self.load_ift_results(source_type="FITTED")
-                self._gen_results  = _results["gen"]  if "gen"  in _results else self.load_ift_results(source_type="GENERATED")
-                self._moment_inversion_results = _results["moment_inversion"] if "moment_inversion" in _results else self.load_moment_inversion_results()
-                self.moment_latex_dict = _results["moment_latex_dict"] if "moment_latex_dict" in _results else None
+                
+                self._reloaded_normalization_scheme = _results["normalization_scheme"]
+                
+                if "mle"  in _results and not _results["mle"].empty: self._mle_results  = _results["mle"]
+                else: self._mle_results  = self.load_mle_results()
+                    
+                if "mcmc" in _results and not _results["mcmc"].empty: self._mcmc_results = _results["mcmc"]
+                else: self._mcmc_results = self.load_mcmc_results()
+                    
+                if "ift"  in _results and not _results["ift"][0].empty: self._ift_results  = _results["ift"]
+                else: self._ift_results  = self.load_ift_results(source_type="FITTED")
+                    
+                if "gen"  in _results and not _results["gen"][0].empty: self._gen_results  = _results["gen"]
+                else: self._gen_results  = self.load_ift_results(source_type="GENERATED")
+                
+                if "moment_inversion" in _results and not _results["moment_inversion"].empty: self._moment_inversion_results = _results["moment_inversion"]
+                else: self._moment_inversion_results = self.load_moment_inversion_results()
+                
+                if "moment_latex_dict" in _results: self.moment_latex_dict = _results["moment_latex_dict"]
+                else: self.moment_latex_dict = None
             return
         else:
             self._mle_results  = self.load_mle_results()
@@ -235,6 +251,7 @@ class ResultManager:
         if "gen" not in _results:  _results["gen"]  = self._gen_results
         if "moment_inversion" not in _results:  _results["moment_inversion"]  = self._moment_inversion_results
         _results["moment_latex_dict"] = self.moment_latex_dict
+        _results["normalization_scheme"] = normalization_scheme
         with open(self.moment_cache_location, "wb") as f:
             pkl.dump(_results, f)
 
@@ -640,7 +657,6 @@ class ResultManager:
         # Load the first pickle file found
         moment_inversion_results = pd.DataFrame()
         for inversion_file in pkl_list:
-            massBin = int(inversion_file.split("_mb")[1].split(".pkl")[0])
             with open(inversion_file, 'rb') as f:
                 results = pkl.load(f)
             _moment_inversion_results = results['prediction']
@@ -911,7 +927,7 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
         binned_gen_results  = safe_query(default_gen_results,  f'mass == {mass}')
         binned_ift_results  = safe_query(default_ift_results,  f'mass == {mass}')
         binned_moment_inversion_results = safe_query(default_moment_inversion_results, f'mass == {mass}')
-        
+
         # Skip bin if no data available for this mass bin
         if (binned_mcmc_samples.empty and binned_mle_results.empty and 
             binned_gen_results.empty and binned_ift_results.empty and binned_moment_inversion_results.empty):
@@ -1241,15 +1257,17 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
     
     nEvents, nEvents_err = None, None
     if not hist_results.empty:
-        nEvents = hist_results['nEvents'].values    
+        nEvents = hist_results['nEvents'].values
         nEvents_err = hist_results['nEvents_err'].values
 
     samples_to_draw = pd.DataFrame()
     if not mcmc_results.empty:
+        resultManager.console.print(f"subsampling mcmc results with '{mcmc_selection}' selection\n", style="bold yellow")
         if mcmc_selection == "random":
             samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.sample(n=mcmc_nsamples_per_bin, replace=False)).reset_index(drop=True)
         elif mcmc_selection == "thin":
             step_size = mcmc_results['sample'].unique().size // mcmc_nsamples_per_bin
+            if step_size == 0: step_size = 1 # requested more samples than available
             samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.iloc[::step_size]).reset_index(drop=True)
         elif mcmc_selection == "last":
             samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.iloc[-mcmc_nsamples_per_bin:]).reset_index(drop=True)
@@ -1488,6 +1506,7 @@ def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin
             samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.sample(n=mcmc_nsamples_per_bin, replace=False)).reset_index(drop=True)
         elif mcmc_selection == "thin":
             step_size = mcmc_results['sample'].unique().size // mcmc_nsamples_per_bin
+            if step_size == 0: step_size = 1 # requested more samples than available
             samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.iloc[::step_size]).reset_index(drop=True)
         elif mcmc_selection == "last":
             samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.iloc[-mcmc_nsamples_per_bin:]).reset_index(drop=True)
@@ -1521,7 +1540,8 @@ def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin
                 if np.allclose(moment_value, 0, atol=1e-6):
                     moment_is_zero = True
             if moment_is_zero:
-                resultManager.console.print(f"[bold yellow]Moment '{moment_name}' is zero in DataFrame'{df_name}', skipping.[/bold yellow]")
+                # If moment is zero in one dataframe then skip this plot. Presumably we should just compare approaches with the same initial model?
+                resultManager.console.print(f"[bold yellow]Moment '{moment_name}' is zero in DataFrame '{df_name}', skipping.[/bold yellow]")
                 plt.close()
                 return
         

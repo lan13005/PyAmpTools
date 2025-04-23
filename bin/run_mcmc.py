@@ -85,6 +85,7 @@ def worker_function(main_dict, iftpwa_dict, bin_idx, prior_scale, prior_dist, n_
         dense_mass=dense_mass,
         adapt_mass_matrix=adapt_mass_matrix,
         enforce_positive_reference=enforce_positive_reference,
+        seed=seed,
         verbose=False
     )
     
@@ -154,7 +155,7 @@ class MCMCManager:
     
     def __init__(self, main_dict, iftpwa_dict, bin_idx, prior_scale=100.0, prior_dist='laplace', n_chains=20, n_samples=2000, n_warmup=1000, 
                  resume_path=None, cop="cartesian", wave_prior_scales=None, target_accept_prob=0.85, max_tree_depth=12, 
-                 step_size=0.1, adapt_step_size=True, dense_mass=True, adapt_mass_matrix=True, enforce_positive_reference=False, verbose=True):
+                 step_size=0.1, adapt_step_size=True, dense_mass=True, adapt_mass_matrix=True, enforce_positive_reference=False, seed=42, verbose=True):
 
         # GENERAL PARAMETERS
         self.main_dict = main_dict
@@ -164,6 +165,7 @@ class MCMCManager:
         self.cop = cop
         self.enforce_positive_reference = enforce_positive_reference
         self.verbose = verbose
+        self.seed = seed
         
         # EXTRACTED PARAMETERS FROM YAML
         self.waveNames = self.main_dict["waveset"].split("_")
@@ -440,7 +442,7 @@ class MCMCManager:
                 task = (
                     self.main_dict, self.iftpwa_dict, bin_idx,
                     self.prior_scale, self.prior_dist, self.n_samples, self.n_warmup,
-                    chain_idx, args.seed, output_file, self.cop, self.wave_prior_scales,
+                    chain_idx, self.seed, output_file, self.cop, self.wave_prior_scales,
                     self.target_accept_prob, self.max_tree_depth, self.step_size,
                     self.adapt_step_size, self.dense_mass, self.adapt_mass_matrix,
                     self.enforce_positive_reference, self.mass_centers, self.t_centers,
@@ -990,7 +992,7 @@ if __name__ == "__main__":
                        help="Enable dense mass matrix adaptation")
     parser.add_argument("--adapt_mass_matrix", action="store_true", default=None,
                        help="Enable mass matrix adaptation")
-    parser.add_argument("--seed", type=int, default=None,
+    parser.add_argument("-s", "--seed", type=int, default=None,
                        help="Random seed")
     
     #### COMMAND LINE ARGS (MOSTLY SHOULD NOT BE USED) ####
@@ -1011,7 +1013,7 @@ if __name__ == "__main__":
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     else:
-        console.print(f"Output folder {output_folder} already exists. Files may be overwritten.", style="bold yellow")
+        raise ValueError(f"Output folder {output_folder} already exists! Please provide a different path or remove the folder.")
     
     if not iftpwa_dict:
         console.print("iftpwa YAML file is required", style="bold red")
@@ -1021,26 +1023,29 @@ if __name__ == "__main__":
         sys.exit(1)
         
     #### PARSE ARGS ####
-    def fyea(dict_value, arg_value): # from yaml else argparse
-        return dict_value if arg_value is None else arg_value
-
-    seed = fyea(main_dict["mcmc"]["seed"], args.seed)
-    n_processes = fyea(main_dict["mcmc"]["n_processes"], args.n_processes)
-    prior_scale = fyea(main_dict["mcmc"]["prior_scale"], args.prior_scale)
-    prior_dist = fyea(main_dict["mcmc"]["prior_dist"], args.prior_dist)
-    nchains = fyea(main_dict["mcmc"]["nchains"], args.nchains)
-    nwarmup = fyea(main_dict["mcmc"]["nwarmup"], args.nwarmup)
-    nsamples = fyea(main_dict["mcmc"]["nsamples"], args.nsamples)
-    target_accept_prob = fyea(main_dict["mcmc"]["target_accept_prob"], args.target_accept_prob)
-    max_tree_depth = fyea(main_dict["mcmc"]["max_tree_depth"], args.max_tree_depth)
-    step_size = fyea(main_dict["mcmc"]["step_size"], args.step_size)
-    adapt_step_size = fyea(main_dict["mcmc"]["adapt_step_size"], args.adapt_step_size)
-    dense_mass = fyea(main_dict["mcmc"]["dense_mass"], args.dense_mass)
-    adapt_mass_matrix = fyea(main_dict["mcmc"]["adapt_mass_matrix"], args.adapt_mass_matrix)
+    from pyamptools.utility.general import fyea
+    seed = fyea(main_dict["mcmc"], "seed", args.seed)
+    n_processes = fyea(main_dict["mcmc"], "n_processes", args.n_processes)
+    prior_scale = fyea(main_dict["mcmc"], "prior_scale", args.prior_scale)
+    prior_dist = fyea(main_dict["mcmc"], "prior_dist", args.prior_dist)
+    nchains = fyea(main_dict["mcmc"], "nchains", args.nchains)
+    nwarmup = fyea(main_dict["mcmc"], "nwarmup", args.nwarmup)
+    nsamples = fyea(main_dict["mcmc"], "nsamples", args.nsamples)
+    target_accept_prob = fyea(main_dict["mcmc"], "target_accept_prob", args.target_accept_prob)
+    max_tree_depth = fyea(main_dict["mcmc"], "max_tree_depth", args.max_tree_depth)
+    step_size = fyea(main_dict["mcmc"], "step_size", args.step_size)
+    adapt_step_size = fyea(main_dict["mcmc"], "adapt_step_size", args.adapt_step_size)
+    dense_mass = fyea(main_dict["mcmc"], "dense_mass", args.dense_mass)
+    adapt_mass_matrix = fyea(main_dict["mcmc"], "adapt_mass_matrix", args.adapt_mass_matrix)
     
-    bins = fyea(main_dict["mcmc"]["bins"], args.bins)
+    bins = fyea(main_dict["mcmc"], "bins", args.bins)
     if bins is None:
-        bins = np.arange(mcmc_manager.nmbMasses * mcmc_manager.nmbTprimes)
+        bins = np.arange(main_dict["n_mass_bins"] * main_dict["n_t_bins"])
+    if len(bins) != len(set(bins)):
+        console.print("Warning: user requested repeated bins, ignoring repeated bins", style="bold yellow")
+        bins = sorted(list(set(bins)))
+
+    resume_path = None # TODO: I think this is mostly set up already?
     
     # TODO: Properly implement wave_prior_scales somewhere. Since its a dict we might have to put it into YAML file?
     wave_prior_scales = None
@@ -1067,7 +1072,9 @@ if __name__ == "__main__":
             adapt_step_size=adapt_step_size,
             dense_mass=dense_mass,
             adapt_mass_matrix=adapt_mass_matrix,
-            enforce_positive_reference=args.enforce_positive_reference
+            enforce_positive_reference=args.enforce_positive_reference,
+            seed=seed,
+            verbose=False
         )
         
         console.print(f"\n\n***************************************************", style="bold")

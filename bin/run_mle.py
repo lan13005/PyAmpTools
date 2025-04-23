@@ -148,7 +148,7 @@ def run_single_bin_fits(
     final_result_dicts = []
     for iteration_idx in range(n_iterations):
         np.random.seed(seed_list[iteration_idx])
-        initial_guess = scale * np.random.randn(nPars)
+        initial_guess = scale * np.random.uniform(-1, 1, nPars)
         initial_guess_dict = {} 
         for iw, wave in enumerate(waveNames):
             if wave in reference_waves:
@@ -215,23 +215,23 @@ if __name__ == "__main__":
                        help="Path to PyAmpTools YAML configuration file")
     parser.add_argument("-b", "--bins", type=int, nargs="+",
                        help=f"List of bin indicies to process (default: all bins)")
-    parser.add_argument("--n_processes", type=int, default=None,
+    parser.add_argument("-np", "--n_processes", type=int, default=None,
                         help="Number of processes to run in parallel")
     
     ##### OPTIMIZATION METHOD ARGS #####
     # NOTE: L-BFGS-B is found to be very fast but Minuit appears to be more robust so set as default
-    #       Boris Grube - COMPASS uses LBFGS for their binned fits but minuit for their mass dependent fits due to L-BFGS-B performing worse
-    parser.add_argument("--method", type=str, 
+    #       COMPASS uses LBFGS for their binned fits but minuit for their mass dependent fits due to L-BFGS-B performing worse
+    parser.add_argument("-m", "--method", type=str, 
                        choices=['minuit-numeric', 'minuit-analytic', 'L-BFGS-B'], # , 'trust-ncg', 'trust-krylov'], 
                        default=None,
                        help="Optimization method to use")
     
     ##### RANDOM INITIALIZATION ARGS #####
-    parser.add_argument("--n_random_intializations", type=int, default=None,
+    parser.add_argument("-n", "--n_random_intializations", type=int, default=None,
                         help="Number of random initializations to perform")
-    parser.add_argument("--scale", type=float, default=None,
-                        help="Randomly sample real/imag parts of the amplitude on [-scale, scale]")
-    parser.add_argument("--seed", type=int, default=None,
+    parser.add_argument("-sc", "--scale", type=float, default=None,
+                        help="Uniformly sample starting real/imag parts of the amplitude on [-scale, scale]")
+    parser.add_argument("-s", "--seed", type=int, default=None,
                         help="Seed for main random number generator")
     
     #### HELPFUL ARGS ####
@@ -261,19 +261,25 @@ if __name__ == "__main__":
         sys.exit(0)
     
     #### PARSE ARGS ####
-    seed = main_dict["mle"]["seed"] if args.seed is None else args.seed
-    scale = main_dict["mle"]["scale"] if args.scale is None else args.scale
-    n_iterations = main_dict["mle"]["n_random_intializations"] if args.n_random_intializations is None else args.n_random_intializations
-    dump_to_stdout = main_dict["mle"]["stdout"] if args.stdout is None else args.stdout
-    n_processes = main_dict["n_processes"] if args.n_processes < 1 else args.n_processes
-    bins_to_process = main_dict["mle"]["bins"] if args.bins is None else args.bins
+    from pyamptools.utility.general import fyea
+    seed = fyea(main_dict["mle"], "seed", args.seed)
+    scale = fyea(main_dict["mle"], "scale", args.scale)
+    n_iterations = fyea(main_dict["mle"], "n_random_intializations", args.n_random_intializations)
+    n_processes = fyea(main_dict, "n_processes", args.n_processes)
+    method = fyea(main_dict["mle"], "method", args.method)
+    bins = fyea(main_dict["mle"], "bins", args.bins)
+    dump_to_stdout = args.stdout
     
     np.random.seed(seed)
 
     ##### LOAD DEFAULTS IF NONE PROVIDED #####
-    if not isinstance(bins_to_process, int) or bins_to_process < 1 or bins_to_process > nmbMasses * nmbTprimes:
-        console.print(f"invalid bins_to_process: {bins_to_process}, setting to run over all bins", style="bold yellow")
-        bins_to_process = np.arange(nmbMasses * nmbTprimes)
+    bins = fyea(main_dict["mle"], "bins", args.bins)
+    if bins is None:
+        bins = np.arange(nmbMasses * nmbTprimes)
+    if len(bins) != len(set(bins)):
+        console.print("Warning: user requested repeated bins, ignoring repeated bins", style="bold yellow")
+        bins = sorted(list(set(bins)))  
+    
     output_folder = os.path.join(main_dict["base_directory"], "MLE")
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
@@ -292,8 +298,8 @@ if __name__ == "__main__":
     ##### CREATE JOB ASSIGNMENTS #####
     job_assignments = {}
     job_counter = 0
-    bin_seeds = np.random.randint(0, 1000000, len(bins_to_process))
-    for bin_idx in bins_to_process:
+    bin_seeds = np.random.randint(0, 100000000, len(bins))
+    for bin_idx in bins:
         job_assignments[job_counter] = (bin_idx, bin_seeds[bin_idx])
         job_counter += 1
     total_jobs = len(job_assignments)
@@ -306,7 +312,7 @@ if __name__ == "__main__":
     ##### RUN JOBS IN PARALLEL #####
     timer = Timer()
     with Pool(processes=n_processes) as pool:
-        job_args = [(pwa_manager, bin_idx, bin_seed, n_iterations, scale, args.method) for job_idx, (bin_idx, bin_seed) in job_assignments.items()]
+        job_args = [(pwa_manager, bin_idx, bin_seed, n_iterations, scale, method) for job_idx, (bin_idx, bin_seed) in job_assignments.items()]
         # Distribute work across processes
         with tqdm(total=total_jobs, desc="Processing jobs", unit="job") as pbar:
             for _ in pool.imap_unordered(run_single_bin_fits, job_args):

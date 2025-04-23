@@ -122,7 +122,6 @@ class ScheduledRBFKernel(RBFKernel):
 def process_particle(amp_array, mask, l_max, cg_coeffs):
     """
     Apply mask to ensure reference waves are properly zeroed (Perhaps I should use this as a check)
-    Normalize moments by H0_0_0
     """
     amp_array = amp_array * mask
     proj = project_to_moments_refl(amp_array, mask=mask, l_max=l_max, cg_coeffs=cg_coeffs)
@@ -146,24 +145,24 @@ def process_mass_bin(config):
     reference_waves = config['reference_waves'] # List of reference waves (imaginary parts will be zeroed out)
 
     # GENERAL PARAMETERS (WITH DEFAULTS)
-    main_file = config.get('main_file', None)
-    iftpwa_yaml = config.get('ift_yaml', None)
-    mass_bin = config.get('mass_bin', 0)
-    masses = config.get('masses', [1.0])
-    output_dir = config.get('output_dir', 'moment_inversion_results')
-    seed = config.get('seed', 42)
+    main_file = config['main_file']
+    iftpwa_dict = config['iftpwa_dict']
+    mass_bin = config['mass_bin']
+    masses = config['masses']
+    output_dir = config['output_dir']
+    seed = config['seed']
     
     # AMPLITUDE PARAMETERS (WITH DEFAULTS)
-    n_eps = config.get('n_eps', 2)
+    n_eps = config['n_eps']
     
     # SVGD PARAMETERS (WITH DEFAULTS)
-    step_size = config.get('step_size', 0.01)
-    num_iterations = config.get('num_iterations', 5000)
-    bandwidth_params = config.get('bandwidth_params', {'decay_iterations': 1000, 'initial_scale': 1.0, 'min_scale': 0.0})
-    num_particles = config.get('num_particles', 500)
-    amplitude_scale = config.get('amplitude_scale', 1.0)
-    tightness = config.get('tightness', 1000.0)
-    loss_exponent = config.get('loss_exponent', 2.0)
+    step_size = config['step_size']
+    num_iterations = config['num_iterations']
+    bandwidth_params = config['bandwidth_params']
+    num_particles = config['num_particles']
+    amplitude_scale = config['amplitude_scale']
+    tightness = config['tightness']
+    loss_exponent = config['loss_exponent']
     ######################################################
     
     #### BEGIN MOMENT INVERSION BIT ####
@@ -189,21 +188,21 @@ def process_mass_bin(config):
     assert channel == 'TwoPseudoscalar', "Only TwoPseudoscalar is supported ATM for moment inversion"
     
     # Create a mask for non-existant partial waves
-    mask = np.ones(n_flat_amplitudes)
-    ref_wave_idxs = [waveNames.index(ref) for ref in reference_waves]
+    amplitude_names = get_amplitude_name_order(l_max) # all the expected amplitudes in order given l_max
+    mask = np.ones(len(amplitude_names)*2)
+    ref_wave_idxs = [amplitude_names.index(ref) for ref in reference_waves]
     assert len(ref_wave_idxs) == len(reference_waves), f"Reference waves {reference_waves} not found in {waveNames}"
     assert len(ref_wave_idxs) == 2, f"Requires two reference waves (code expects both reflectivities), found {len(ref_wave_idxs)}"
     for ref_wave_idx in ref_wave_idxs:
         mask[2*ref_wave_idx+1] = 0.0 # Zero out imaginary part of reference waves
 
     # Ensure all waves used in yaml file are a subset of the expected amplitudes then zero unused waves
-    amplitude_names = get_amplitude_name_order(l_max) # all the expected amplitudes in order given l_max
     assert all(wave in amplitude_names for wave in waveNames), f"Wave names {waveNames} not found in {amplitude_names}"
     missing_waves = set(amplitude_names) - set(waveNames)
     missing_wave_idxs = np.array([amplitude_names.index(wave) for wave in missing_waves])
     if len(missing_wave_idxs) > 0:
         mask[2*missing_wave_idxs  ] = 0.0
-        mask[2*missing_wave_idxs+1] = 0.0 
+        mask[2*missing_wave_idxs+1] = 0.0
 
     # NOTE:
     # Reorder moments in the mcmc_results DataFrame to be in the expected order
@@ -366,7 +365,7 @@ def process_mass_bin(config):
     
     # If the yaml files needed to create the PWA manager is available we will append the
     #   intensities to the prediction dataframe with proper normalization
-    if main_file is not None and iftpwa_yaml is not None:
+    if main_file is not None and iftpwa_dict is not None:
 
         from iftpwa1.pwa.gluex.gluex_jax_manager import (
             GluexJaxManager,
@@ -376,7 +375,7 @@ def process_mass_bin(config):
 
         pwa_manager = GluexJaxManager(comm0=None, mpi_offset=1,
                                     yaml_file=main_file,
-                                    resolved_secondary=iftpwa_yaml, prior_simulation=False, sum_returned_nlls=False,
+                                    resolved_secondary=iftpwa_dict, prior_simulation=False, sum_returned_nlls=False,
                                     logging_level=logging.WARNING)
         
         waveNames = pwa_manager.waveNames
@@ -472,7 +471,7 @@ if __name__ == "__main__":
     parser.add_argument('main_file', type=str, help='main YAML file for result manager')
     parser.add_argument('-b', '--bins', type=int, nargs='+', default=None, 
                         help='Mass bin(s) to use for moment inversion (default: run over all mass bin)')
-    parser.add_argument('-src', '--source', default='mcmc', default=None, 
+    parser.add_argument('-src', '--source', default=None, 
                         help='Source of moments (from resultManager) to use for moment inversion, will override each other if run multiple(default: mcmc)')
     
     parser.add_argument('-as', '--amplitude_scale', type=float, default=None, 
@@ -507,24 +506,20 @@ if __name__ == "__main__":
     ######################################################
     # Set parameters from parsed arguments
     ######################################################
-
-    def fyea(dict_value, arg_value): # from yaml else argparse
-        return dict_value if arg_value is None else arg_value
-    
-    n_eps = 2
-    bins = fyea(main_dict['moment_inversion']['bins'], args.bins)
-    seed = fyea(main_dict['moment_inversion']['seed'], args.seed)
-    n_processes = fyea(main_dict['moment_inversion']['n_processes'], args.n_processes)
-    source = fyea(main_dict['moment_inversion']['source'], args.source)
-    amplitude_scale = fyea(main_dict['moment_inversion']['amplitude_scale'], args.amplitude_scale)
-    num_particles = fyea(main_dict['moment_inversion']['num_particles'], args.num_particles)
-    num_iterations = fyea(main_dict['moment_inversion']['num_iterations'], args.num_iterations)
-    tightness = fyea(main_dict['moment_inversion']['tightness'], args.tightness)
-    loss_exponent = fyea(main_dict['moment_inversion']['loss_exponent'], args.loss_exponent)
-    decay_iterations = fyea(main_dict['moment_inversion']['decay_iterations'], args.decay_iterations)
-    initial_scale = fyea(main_dict['moment_inversion']['initial_scale'], args.initial_scale)
-    min_scale = fyea(main_dict['moment_inversion']['min_scale'], args.min_scale)
-    step_size = fyea(main_dict['moment_inversion']['step_size'], args.step_size)
+    from pyamptools.utility.general import fyea
+    n_eps = 2 # lock to 2 reflectivity sectors
+    seed = fyea(main_dict['moment_inversion'], 'seed', args.seed)
+    n_processes = fyea(main_dict['moment_inversion'], 'n_processes', args.n_processes)
+    source = fyea(main_dict['moment_inversion'], 'source', args.source)
+    amplitude_scale = fyea(main_dict['moment_inversion'], 'amplitude_scale', args.amplitude_scale)
+    num_particles = fyea(main_dict['moment_inversion'], 'num_particles', args.num_particles)
+    num_iterations = fyea(main_dict['moment_inversion'], 'num_iterations', args.num_iterations)
+    tightness = fyea(main_dict['moment_inversion'], 'tightness', args.tightness)
+    loss_exponent = fyea(main_dict['moment_inversion'], 'loss_exponent', args.loss_exponent)
+    decay_iterations = fyea(main_dict['moment_inversion'], 'decay_iterations', args.decay_iterations)
+    initial_scale = fyea(main_dict['moment_inversion'], 'initial_scale', args.initial_scale)
+    min_scale = fyea(main_dict['moment_inversion'], 'min_scale', args.min_scale)
+    step_size = fyea(main_dict['moment_inversion'], 'step_size', args.step_size)
     
     if source not in ['mcmc', 'mle', 'ift', 'gen']:
         raise ValueError(f"Invalid source to load moments from: {source}")
@@ -538,10 +533,13 @@ if __name__ == "__main__":
         'initial_scale': initial_scale,
         'min_scale': min_scale,
     }
-    
-    if not isinstance(bins, list) or len(bins) == 0:
-        console.print(f"bins was not a list or is empty: {bins}, processing all bins", style="bold yellow")
-        bins = list(range(main_dict['n_mass_bins']))
+
+    bins = fyea(main_dict["moment_inversion"], "bins", args.bins)
+    if bins is None:
+        bins = np.arange(main_dict['n_mass_bins'] * main_dict['n_t_bins'])
+    if len(bins) != len(set(bins)):
+        console.print("Warning: user requested repeated bins, ignoring repeated bins", style="bold yellow")
+        bins = sorted(list(set(bins)))
         
     console.print(f"Number of devices used: {jax.device_count()}")
 
@@ -561,12 +559,17 @@ if __name__ == "__main__":
     #       For MLE we use only point estimates since no uncertainties
     resultManager = ResultManager(main_dict)
     resultManager.attempt_load_all()
-    resultManager.attempt_project_moments() # safe call since it checks for existence before processing
+    if resultManager._reloaded_normalization_scheme != 2:
+        console.print(f"Removing cached moments since this script requires raw moments (H0(0,0) not normalized to 1 nor total intensity)", style="bold yellow")
+        console.print(f"   rm {resultManager.moment_cache_location}", style="bold yellow")
+        os.system(f"rm {resultManager.moment_cache_location}") 
+        resultManager.attempt_project_moments(normalization_scheme=2) # safe call since it checks for existence before processing
     masses = resultManager.masses
     waveNames = resultManager.waveNames
     reference_waves = resultManager.phase_reference
-    iftpwa_yaml = resultManager.ift_yaml
+    iftpwa_dict = resultManager.iftpwa_dict
     
+    console.rule()
     if source == 'mcmc':
         console.print(f'\nInverting moments from [bold green]MCMC[/bold green] results')
         moments_df = resultManager.mcmc_results
@@ -583,18 +586,20 @@ if __name__ == "__main__":
     if len(moments_df) == 0:
         raise ValueError(f"No moments found for source {source}")
     
-    multiprocessing.set_start_method('spawn')
-        
+    if amplitude_scale is None:
+        amp_cols = [c for c in moments_df.columns if c.endswith('_amp')]
+        amplitude_scale = np.max(np.abs(moments_df[amp_cols].values))
+        console.print(f"No amplitude scale provided, using max(amp_cols): {amplitude_scale}\n", style="bold yellow")
+    
     # Process mass bins in parallel
-    console.rule()
-    console.print(f"Processing {len(mass_bins)} mass bins: {mass_bins}")
-    n_processes = min(n_processes, len(mass_bins))
+    console.print(f"Processing {len(bins)} mass bins: {bins}")
+    n_processes = min(n_processes, len(bins))
     console.print(f"Using {n_processes} processes")
     console.rule()
     
     configs = [
         {'main_file': main_file,
-        'mass_bin': mb,
+        'mass_bin': bin_idx,
         'n_eps': n_eps,
         'step_size': step_size,
         'bandwidth_params': bandwidth_params,
@@ -605,17 +610,17 @@ if __name__ == "__main__":
         'num_iterations': num_iterations,
         'seed': seed,
         'output_dir': output_dir,
-        'ift_yaml': iftpwa_yaml,
+        'iftpwa_dict': iftpwa_dict,
         'waveNames': waveNames,
         'reference_waves': reference_waves,
         'masses': masses,
         'moments_df': moments_df}
-        for mb in mass_bins
+        for bin_idx in bins
     ]
     
-    with Pool(processes=n_processes) as pool:
+    with multiprocessing.get_context('spawn').Pool(processes=n_processes) as pool:
         results = pool.map(process_mass_bin, configs)
-        pool.close()
+        pool.close() # context manager should already close and join but I still get a leaked semaphore error
         pool.join()
         
     with open(os.path.join(output_dir, 'run_conditions.txt'), 'w') as f:
@@ -633,4 +638,4 @@ if __name__ == "__main__":
         f.write(f"step_size: {step_size}\n")
         f.write(f"seed: {seed}\n")
         
-    console.print(f"Completed processing all {len(mass_bins)} mass bins")
+    console.print(f"Completed processing all {len(bins)} mass bins")
