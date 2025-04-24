@@ -64,7 +64,7 @@ if __name__ == "__main__":
     merge_grouped_trees = main_dict["merge_grouped_trees"] if "merge_grouped_trees" in main_dict else True
     data_folder = main_dict["data_folder"]
     pols = main_dict["polarizations"]
-    prepare_for_nifty = bool(main_dict["prepare_for_nifty"])
+    prepare_for_nifty = True
     amptools_cfg = f"{base_directory}/amptools.cfg"
 
     os.system(f"mkdir -p {output_directory}")
@@ -92,7 +92,7 @@ if __name__ == "__main__":
         run_split_and_cfg_ceate = True
         create_cfg = False
         if check_for_preexisting:
-            delete_or_skip = input("Pre-existing bins found. Delete them? (y/n): ")
+            delete_or_skip = input(f"Pre-existing bins found at {output_directory}. Delete them? (y/n): ")
             if delete_or_skip.lower() == "y":
                 os.system("rm -rf bin_*")
                 console.print("  Deleted pre-existing bins", style="bold green")
@@ -253,11 +253,10 @@ if __name__ == "__main__":
 
             # Read amptools.cfg and append the t-range and mass-range to a metadata section using omegaconf
             os.chdir(cwd)
-            output_yaml = OmegaConf.load(yaml_name)
             nBars = {key: nBars[key].tolist() for key in nBars}
             nBar_errs = {key: nBar_errs[key].tolist() for key in nBar_errs}
-            output_yaml.update({"mass_edges": mass_edges, "t_edges": t_edges, "nBars": nBars, "nBar_errs": nBar_errs, "share_mc": mc_already_shared})
-            dump_yaml(output_yaml, yaml_name)
+            main_dict.update({"share_mc": mc_already_shared})
+            dump_yaml(main_dict, main_yaml)
 
     if try_merge_bins:
 

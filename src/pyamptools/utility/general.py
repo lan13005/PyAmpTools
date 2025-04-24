@@ -398,6 +398,8 @@ def dump_yaml(cfg, output_file_path, indent=4, resolve=False, console=None):
         Indentation (how many spaces per level), by default 4
     resolve : bool, optional
         Resolve variables (intepolation) in cfg before dumping, by default False
+    console : Console, optional
+        Rich console for output, by default None
     """
     if not isinstance(cfg, OmegaConf):
         try:
@@ -412,7 +414,7 @@ def dump_yaml(cfg, output_file_path, indent=4, resolve=False, console=None):
     console.print(f"Writing yaml file to: {output_file_path}", style="bold blue")
     
     # Make sure parent directory exists
-    if not os.path.exists(output_file_path):
+    if not os.path.exists(os.path.dirname(output_file_path)) and os.path.dirname(output_file_path):
         os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
     
     with open(output_file_path, "w") as f:

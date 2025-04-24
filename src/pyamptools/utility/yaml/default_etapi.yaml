@@ -1,0 +1,209 @@
+defaults_location: null
+base_directory: /w/halld-scshelf2101/lng/WORK/PyAmpTools9/TUTORIAL/RESULTS/ # base directory for all results
+data_folder: ${base_directory}/DATA_SOURCES # folder for data sources that will be binned
+n_processes: 4 # global number of processes to generally use
+polarizations:
+    '000': 1.0 # polarization magnitude in each orientation
+waveset: Sp0+_Sp0-_Dp2+_Dp2- # underscore separated list of waves to use
+phase_reference: Sp0+_Sp0- # reference wave in each reflectivity sector
+reaction: Beam Proton Pi0 Eta # amptools reaction scheme
+daughters: # Daughter masses
+    Pi0: 0.135
+    Eta: 0.548
+min_mass: 1.04 # minimum mass to consider
+max_mass: 1.72 # maximum mass to consider
+n_mass_bins: 17 # number of mass bins to use
+min_t: 0.0 # minimum t to consider
+max_t: 1.0 # maximum t to consider
+n_t_bins: 1 # number of t bins to use
+acceptance_correct: true # whether to apply acceptance corrections
+datareader: ROOTDataReader # data reader to use
+coordinate_system: cartesian # ['cartesian', 'polar'], dont use polar
+bins_per_group: 1 # create group dirs grouping bins allowing nifty to handle finer bins
+merge_grouped_trees: true # remerge the trees in each group
+constrain_grouped_production: false # if not remerging, we can choose to constrain amplitudes in each group to be the same
+real_waves: '' # same form as waveset, define which waves are purely real
+fixed_waves: '' # same form as waveset, define which waves are fixed
+add_amp_factor: '' # Add an amplitude factor to every amplitude. For example, OmegaDalitz 0.1212 0.0257 0.0 0.0 will create a factor for the dalitz decay of the omega
+append_to_decay: '' # append this string to the decay amplitude, i.e. 'omega3pi' can be appended to Vec_ps_refl amplitude definition
+append_to_cfg: '' # append this string to the AmpTools configuration file
+mle:
+    seed: 42 # rng seed
+    scale: 100 # production coenfficients sampled uniformly from [-scale, scale]
+    n_random_intializations: 20 # number of random initializations to perform
+    method: minuit-analytic # ['minuit-numeric', 'minuit-analytic', 'L-BFGS-B']
+    stdout: false # dump to stdout instead of log file
+    bins: null # list of bin indices to process, null = all bins
+regularization: # Affects Likelihood manager directly (only use with MLE fits)
+    apply_regularization: false # whether to apply regularization or not
+    method: 'none' # ['none', 'lasso', 'ridge', 'elasticnet']
+    lambdas: 0.0 # regularization strength for all partial waves
+    en_alpha: 0.0 # (e)lastic (n)et -> 0=Lasso, 1=Ridge, 0<x<1 favors one side
+mcmc:
+    seed: 42 # rng seed
+    bins: null # process all bins if null, otherwise list of bin indices
+    n_processes: ${n_processes} # number of processes to distribute work over
+    prior_scale: 1000.0 # prior scale for the magnitude of the complex amplitudes, very wide
+    prior_dist: gaussian # ['laplace', 'gaussian'] distribution for Real/Imag parts of amplitudes
+    nchains: 6 # NUTS number of chains to use
+    nwarmup: 500 # NUTS number of warmup samples to use when adapting
+    nsamples: 1000 # NUTS number of samples to draw
+    target_accept_prob: 0.80 # NUTS target acceptance probability
+    max_tree_depth: 12 # NUTS step max depth to search
+    step_size: 0.1 # NUTS step size
+    adapt_step_size: true # NUTS step size adaptation
+    dense_mass: false # NUTS dense mass matrix models correlations better
+    adapt_mass_matrix: false # NUTS mass matrix adaptation
+moment_inversion:
+    seed: 42 # rng seed
+    n_processes: ${n_processes} # SVGD: number of processes
+    bins: null # list of bin indices to process, null -> all bins
+    source: mle # source of moments to invert from ResultManager, [mle, mcmc, ift, gen]
+    amplitude_scale: 1.0 # real/imag part of amplitudes start N(0, amplitude_scale)
+    num_particles: 500 # SVGD: number of particles
+    num_iterations: 100 # SVGD: number of optimization steps to take
+    tightness: 1000 # SVGD: scale factor for loss function
+    loss_exponent: 2 # SVGD: loss exponent, 1=L1, 2=L2 loss function
+    decay_iterations: null # SVGD: steps to decay kernel by 1/e, null -> num_iterations//5
+    initial_scale: 1.0 # SVGD: initial kernel bandwidth scale
+    min_scale: 0.0 # SVGD: minimum kernel bandwidth scale
+    step_size: 0.01 # SVGD: step size for Adam optimizer
+result_dump:
+    coherent_sums: null # Dict[coherentSumName: UnderscoreSeparatedListOfWaves]
+nifty:
+    yaml: ${NIFTY} # Dictionary for config file used by iftpwa
+    force_load_normint: false # force loading normalization integrals (used for prior simulation)
+    mpi_processes: ${n_processes} # number of mpi processes to use
+NIFTY:
+    GENERAL:
+        pwa_manager: GLUEX 
+        seed: 5 # Seed for iftpwa RNG
+        verbosityLevel: 1
+        outputFolder: ${base_directory}/NIFTY # Expected location for nifty results
+        fitResultPath: ${NIFTY.GENERAL.outputFolder}/niftypwa_fit.pkl # iftpwa fit results pkl file
+        maxNIFTyJobs: 1 # Lock to 1, change nifty.mpi_processes to distribute work
+        initial_position_std: 0.1 # Prior model std, see NIFTY/optimize_kl.py for more details (is the default)
+        default_yaml: null
+    PWA_MANAGER:
+        yaml: ${NIFTY.GENERAL.outputFolder}/main.yaml # main yaml file, this file
+    IFT_MODEL:
+        scale: auto # overall scale factor for amplitude
+        nCalcScale: 500 # number of samples used to estimate IFT_MODEL.scale
+        positiveScale: half_normal # distribution for scale factor (half_normal, sqrt_exp)
+        useLogNormalPriorSlope: false # use log normal prior for the slope of the power spectra instead of normal
+        useGammaFlex: false # use Gamma distribution for the flexibility of the power spectra
+        useLaplaceScale: false # should be same as setting positiveScale = sqrt_exp
+        useGammaAsp: false # use Gamma distribution for the asperity of the power spectra
+        loglogavgslope: [-4.0, 0.1] # [mean, std] of the power spectrum slope (log-log scale) for mass axis
+        flexibility: null # [mean, std] of the flexibility of the power spectra for mass axis
+        asperity: null # [mean, std] of the asperity of the power spectra for mass axis
+        stdOffset: [1.0, 0.001] # [mean, std] of the STD of the amplitude offset
+        dofdexStye: real_imag # (real_imag, single_dofdex) allows fields to share the same power spectrum model
+        custom_model_path: null # (YAML reference) defined below. Set null if you do not want to use any parametric models
+        modelName: constructed
+        res2bkg: 1.0 # globally scale ALL parametric/resonance contributions before adding to bkgnd to form the signal
+        bkg2res: 1.0 # globally scale ALL bkgnd contributions before adding to parametric/resonance to form the signal
+        tPrimeFalloff: 0 # preweight t distribution. Legacy
+        estimateRatios: false # use the user-provided dataset ratios. Unused by GlueX
+        perTprimeScaling: true # scale each t bin separately
+        altTprimeNorm: no_norm # (peak_norm, no_norm, kin_norm) normalize scheme of phase space multiplier for each t-bin
+        noInterpScipy: false # use scipy.interpolate.interp1d cubic interpolation instead of nifty.interp linear interpolation to align phase space multiplier bins
+        phaseSpaceMultiplier: null # Path to a pickled file containing phase space factors, generated by `pa calc_ps`
+        s0: null # energy scale factor
+        productionFactor: GLUEX # Production factor scheme, depends on beam energy and target mass
+        ####### BELOW ARE ONLY USED IF USING MULTIPLE DATASETS #######
+        ratio_fluct: null
+        ratio_fluc_std: null
+        ratio_slope: null
+        ratio_stdSlope: null
+        ratio_slopeTprime: null
+        ratio_stdSlopeTprime: null
+        ratio_std_offset: null
+        ratio_std_std_offset: null
+    PARAMETRIC_MODEL:
+        smoothScales: false # uses a correlated field to smooth the t-dependence of the parameteric models
+        parameter_priors: # Define prior distributions for the free parameters 
+            # see iftpwa/src/utilities/nifty.py for available priors but most parameters should be positive so log-normal is typical
+            m_a2_1320: UnnamedLogNormalOperator(sigma=0.0006, mean=1.3182)
+            w_a2_1320: UnnamedLogNormalOperator(sigma=0.0055, mean=0.1111)
+        # (name) of resonance, (fun)ction name, (preScale) this component, request no correlated field (no_bkg)
+        #   (paras) parameter priors, (static_paras) static parameters needed by (fun)
+        #   and waves this component couples to
+        resonances: [{a2_1320: {name: $a_2(1320)$, fun: breitwigner_dyn, preScale: 0.6,
+                    no_bkg: false, paras: {mass: m_a2_1320, width: w_a2_1320}, static_paras: {
+                        spin: 2, mass1: 0.548, mass2: 0.135}, waves: [Dm1-, Dp0-, Dp1-,
+                        Dp0+, Dp1+, Dp2+]}}]
+    OPTIMIZATION:
+        # Posterior samples. We actually get 2x nSamples in the end due to 'antithetic' sampling
+        nSamples: [[2, 0], [4, 5], [3, 10], 25] # [[nI1, nS1], ...] -> run nI1 iterations with nS1 samples then nI2 with nS2, ...
+        nIterGlobal: 1 # number of global iterations to run NIFTy optimize_kl. ~25-50 is pretty deep already
+        nMultiStart: 1 # number of multiple restarts to perform (each only a fixed single global iteration) that optimizes multiStartObjective
+        multiStartObjective: minimize|energy # pipe separated direction|quantity to select best starting condition
+        algoOptKL: LBFGS # algorithm for KL minimization
+        nIterMaxOptKL: [[1, 50], 50] # [[nI1, nMax1], ...] -> run nI1 iterations with nMax1 KL steps, then nI2 with nMax2
+        deltaEKL: 0.001 # increase convergence counter if change in KL energy is below this value
+        convergenceLvlKL: 2 # convergence counter must reach this value to be considered converged
+        nIterMaxSamples: 1000 # iteration limit for sampling
+        deltaESamples: 0.1 # convergence threshold for sampling
+        convergenceLvlSampling: 2 # convergence counter threshold for sampling
+        algoOptGeoVI: Newton # algorithm for GeoVI
+        nIterMaxGeoVI: 50 # iteration limit for GeoVI
+        deltaEGeoVI: 0.001 # convergence threshold for GeoVI
+        convergenceLvlGeoVI: 2 # convergence counter threshold for GeoVI
+        resume: true # resume previous fit or overwrite
+        niftyCache: ${NIFTY.GENERAL.outputFolder}
+        overwriteCache: true # overwrite cache if it exists
+        sanityChecks: false # run sanity checks on the fit
+        constants: [tamps_mass_dir_loglogavgslope] # names of latent space variables that should be fixed
+    LIKELIHOOD: # ADVANCED (Can ignore)
+        approximation: false # approximate the likelihood with Gaussian
+        metric_type: normal # type of metric to use for the likelihood (normal, studentt)
+        learn_metric: false # can learn metric but not recommended
+        learn_metric_sigma: 1.0 
+        subSampleProb: 1.0 # subsample the data to speed up likelihood calculation
+        initialSubSampleProb: 1.0 # scale the initial signal field by this factor
+        subSampleApproxIndep: false # legacy, unused
+        nKeepMetric: 1 # global iterations at nKeepMetric intervals will not approximate the likelihood
+        theta_studentt: null # theta parameter for student-t distribution
+        bootstrap: false # bootstrap the data to introduce more stochasticity
+        external_approximation: null # path to an external pickle file, null if not used
+        dropout_prob: 0.0 # dropout probability for each kinematic bin, adds stochasticity
+        rotate_phase: null # null or bool
+        clip_latent: 0 # float [0, 1] fractional scaling of latent space between (-clip_latent, clip_latent) prevent large updates
+    HYPERPARAMETER_SCANS:  # Run scans by passing --hyperopt to `pa run_ift`
+        # Scans are performed by [Optuna](https://github.com/optuna/optuna). 
+        #   - iftpwa naturally tracks the KL energy and the intensity of all individual amplitude components. 
+        #   - if a ground truth is provided, the mean squared error or chi-squared (if number of samples > 1) are also calculated. 
+        # Above metrics are all available to be optimized against. 
+        # These metrics take the form `{amplitude_field_name}_{"fit", resonance_name, "bkg"}_{"intens", "chi2"}`. 
+        #   - A list of tracked metrics can be dumped at the end of a iftpwa fit if `verbosityLevel` > 0 if you are unsure
+        # Aggregated stats for `chi2` metric is also calculated: `{min, -2sigma, -1sigma, median, 1sigma, 2sigma, max}` if available
+        # Fields within this yaml can be referenced following a field path that is period delimited. 
+        # An Optuna `suggest` command and associated args must also be passed. Field values must be a 
+        # string that is then `eval`'d by `python` to construct `args` and `kwargs`. 
+        #   - For example, `NIFTY.OPTIMIZATION.nSamples.1|suggest_int: "2, 10, step=2"` would modify the 
+        #     `nSamples` sub-field within the `OPTIMIZATION` field of `NIFTY` field so that Optuna makes integer 
+        #     suggestions on list index element 1. The suggestions are integers between 2 and 10 in steps of 2. 
+        #   - See Optuna docs for available `suggest` commands.
+        n_trials: 10 # number of trials for the hyperparamter scan
+        objective: minimize|energy # direction|objective see multiStartObjective
+        sampler: RandomSampler # see https://optuna.readthedocs.io/en/stable/reference/samplers/index.html
+amptools: # DEPRECATED
+    output_directory: ${base_directory}/BINNED_DATA # Expected location for amptools results
+    search_format: group
+    n_randomizations: ${n_processes}
+    bins_per_group: ${bins_per_group}
+    merge_grouped_trees: ${merge_grouped_trees}
+    mle_query_1: status == 0 & ematrix == 3
+    mle_query_2: delta_nll==0
+    constrain_grouped_production: ${constrain_grouped_production}
+    regex_merge: --regex_merge '.*::.*::'
+    n_processes: ${n_processes}
+    skip_plotting_mle: true
+pyamptools_commit_hash: 489345652d2ccda0cf973298453426cd4a1df58a
+iftpwa_commit_hash: ab748dc794e9041639eeafdd8d7e76f8cf81bcb2
+share_mc:
+    data: false
+    bkgnd: false
+    accmc: false
+    genmc: false

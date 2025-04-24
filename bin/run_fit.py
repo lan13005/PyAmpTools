@@ -28,7 +28,7 @@ class MLE:
         self.output_directory = main_dict["amptools"]["output_directory"]
         self.n_randomizations = main_dict["amptools"]["n_randomizations"]
         self.ff_args = main_dict["amptools"]["regex_merge"]
-        self.prepare_for_nifty = bool(main_dict["amptools"]["prepare_for_nifty"])
+        self.prepare_for_nifty = True
         self.devs = None
         self.dump = dump
         self.main_yaml = main_yaml
