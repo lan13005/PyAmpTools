@@ -1,28 +1,22 @@
 # PyAmpTools
 
-Quantum Chromodynamics in the low energy regime is poorly understood. Gluon rich systems, like hybrid mesons, are predicted by theory but experimental idenficiation of these states have been difficult. The light meson spectrum contains many overlapping states that require partial wave (amplitude) analysis to disentangle. [AmpTools](https://github.com/mashephe/AmpTools) is a library written in c++ that facilitates performing unbinned maximum likelihood fits of experimental data to a coherent sum of amplitudes.
+Quantum Chromodynamics in the low energy regime is poorly understood. Gluon rich systems, like hybrid mesons, are predicted by theory but experimental idenficiation of these states have been difficult. The light meson spectrum contains many overlapping states that require partial wave (amplitude) analysis to disentangle. This repository contains a collection of tools to perform partial wave analysis from Maximum Likelihood Estimation (MLE) to Markov Chain Monte Carlo (MCMC) to Information Field Theory (IFT) using likelihoods and gradients provided by [JAX](https://github.com/google/jax).
 
-This repository contains Python bindings for AmpTools. Under the hood, it uses [PyROOT](https://root.cern/manual/python/) which uses cppyy. These bindings will hopefully simplify the interaction with the AmpTools library while also providing access to the python ecosystem. [FSRoot](https://github.com/remitche66/FSRoot) is also included as a submodule and can be integrated into analysis workflows.
+Additionally, this repository contains Python bindings for [AmpTools](https://github.com/mashephe/AmpTools) which is a library written in c++ that facilitates performing unbinned maximum likelihood fits of experimental data to a coherent sum of amplitudes. Under the hood, it uses [PyROOT](https://root.cern/manual/python/) which uses cppyy. These bindings will hopefully simplify the interaction with the AmpTools library while also providing access to the python ecosystem. [FSRoot](https://github.com/remitche66/FSRoot) is also included as a submodule and can be integrated into analysis workflows.
 
 ---
 
 # Usage / Design
 
-AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in `external` directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in `external/AMPTOOLS_AMPS_DATAIO`. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of `gen_amp`, a program to produce simulations with AmpTools, is provided in `external/AMPTOOLS_GENERATORS`. This distribution system will unfortunately lag behind the sources from `halld_sim` and `AmpTools` repos.
+`pa` is an **executable** that dispatches various functions to perform various tasks related to optimization and provides easy access to specific AmpTools functionality like generating simulations from `gen_amp` and `gen_vec_ps`, fitting, and extracting fit fractions.
 
-`pa` is an **executable** that dispatches various functions for: maximimum likelihood fitting (`fit`), extracting fit fractions from MLE fit results (`fitfrac`), and Markov chain Monte Carlo (`mcmc`), and simulation generation (`gen_amp`, `gen_vec_ps`). Example usage:
-
-```
+```shell
 pa -h # for usage
-pa -f # pa is a simple dispatch system, this command shows the file locations of each command
-pa fit my_amptools.cfg # to run MLE fit
-pa mcmc -h # for usage of mcmc
-pa fitfrac amptools_results.fit # extract fit fractions
-pa gen_amp my_amptools.cfg # to generate simulations
+pa -f # for dispatched file locations
 ```
 
-Additional files in the `scripts` folder are provided that perform `amptools` configuration file generation and plotting of the MLE fit results. These scripts are reaction dependent, therefore should be used as references to build upon. Utility functions are located in the `utility` folder.
-    
+AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in `external` directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in `external/AMPTOOLS_AMPS_DATAIO`. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of `gen_amp`, a program to produce simulations with AmpTools, is provided in `external/AMPTOOLS_GENERATORS`. This distribution system will unfortunately lag behind the sources from `halld_sim`, `AmpTools`, and `FSRoot`.
+
 ---
 
 # Installation
@@ -59,8 +53,6 @@ apptainer exec --contain --writable-tmpfs \
 
 # INSIDE THE CONTAINER:
 source /etc/bash.bashrc
-
-pa -h # to see usage of pa
 ```
 
 ```{note}

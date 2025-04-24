@@ -16,33 +16,30 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
-  <!-- 
-    this give us a css class that will be invisible only if js is disabled 
-  -->
-  <noscript>
-    <style>
-      .pst-js-only { display: none !important; }
-
-    </style>
-  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=a3416100" />
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
     <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css?v=be8a1c11" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
   
-  <!-- So that users can add custom icons -->
-  <script src="_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
     <script src="_static/documentation_options.js?v=9eb32ce0"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
@@ -65,10 +62,9 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'intro';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Potential Build Errors" href="additional_info.html" />
+    <link rel="next" title="Introduction" href="optimization.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -84,8 +80,19 @@
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <dialog id="pst-search-dialog">
-    
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
 <form class="bd-search d-flex align-items-center"
       action="search.html"
       method="get">
@@ -93,6 +100,7 @@
   <input type="search"
          class="form-control"
          name="q"
+         id="search-input"
          placeholder="Search this book..."
          aria-label="Search this book..."
          autocomplete="off"
@@ -100,8 +108,8 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form>
-  </dialog>
+</form></div>
+  </div>
 
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
@@ -119,8 +127,7 @@
       
         
       
-      <dialog id="pst-primary-sidebar-modal"></dialog>
-      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+      <div class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -150,11 +157,15 @@
 </a></div>
         <div class="sidebar-primary-item">
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
- <i class="fa-solid fa-magnifying-glass"></i>
- <span class="search-button__default-text">Search</span>
- <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-</button></div>
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         
@@ -165,25 +176,14 @@
                 </a>
             </li>
         </ul>
-        <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="additional_info.html">Potential Build Errors</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="demos/libraryLoading.html">Loading Libraries</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="demos/fitting.html">Fitting</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="demos/mle.html">Maximum Likelihood Estimation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="demos/mcmc.html">Markov Chain Monte Carlo</a></li>
-
-</ul>
-</details></li>
-<li class="toctree-l1"><a class="reference internal" href="demos/extract_ff.html">Extracting Fit Fractions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="demos/plotgen.html">Plotting Fit Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimization.html">Introduction</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="ift/iftpwa_intro.html">iftpwa - Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ift/iftpwa_config.html">iftpwa - Default Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ift/iftpwa_cf.html">iftpwa - Correlated Field Model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ift/iftpwa_tips.html">iftpwa - Tips</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Analysis Chain Example</span></p>
@@ -191,6 +191,13 @@
 <li class="toctree-l1"><a class="reference internal" href="analysis_example.html">Analysis Chain Script</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demos/analysis_chain.html">Analysis Chain Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery.html">Analysis Chain Gallery</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="demos/libraryLoading.html">Loading Libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demos/mle.html">Maximum Likelihood Estimation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demos/extract_ff.html">Extracting Fit Fractions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demos/plotgen.html">Plotting Fit Results</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">FSROOT Related Tutorials</span></p>
 <ul class="nav bd-sidenav">
@@ -353,16 +360,24 @@
 
 
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button>
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
 
 
-<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-</button>
+  </button>
+`);
+</script>
 <button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
 </button>
@@ -415,23 +430,18 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="pyamptools">
 <h1>PyAmpTools<a class="headerlink" href="#pyamptools" title="Link to this heading">#</a></h1>
-<p>Quantum Chromodynamics in the low energy regime is poorly understood. Gluon rich systems, like hybrid mesons, are predicted by theory but experimental idenficiation of these states have been difficult. The light meson spectrum contains many overlapping states that require partial wave (amplitude) analysis to disentangle. <a class="reference external" href="https://github.com/mashephe/AmpTools">AmpTools</a> is a library written in c++ that facilitates performing unbinned maximum likelihood fits of experimental data to a coherent sum of amplitudes.</p>
-<p>This repository contains Python bindings for AmpTools. Under the hood, it uses <a class="reference external" href="https://root.cern/manual/python/">PyROOT</a> which uses cppyy. These bindings will hopefully simplify the interaction with the AmpTools library while also providing access to the python ecosystem. <a class="reference external" href="https://github.com/remitche66/FSRoot">FSRoot</a> is also included as a submodule and can be integrated into analysis workflows.</p>
+<p>Quantum Chromodynamics in the low energy regime is poorly understood. Gluon rich systems, like hybrid mesons, are predicted by theory but experimental idenficiation of these states have been difficult. The light meson spectrum contains many overlapping states that require partial wave (amplitude) analysis to disentangle. This repository contains a collection of tools to perform partial wave analysis from Maximum Likelihood Estimation (MLE) to Markov Chain Monte Carlo (MCMC) to Information Field Theory (IFT) using likelihoods and gradients provided by <a class="reference external" href="https://github.com/google/jax">JAX</a>.</p>
+<p>Additionally, this repository contains Python bindings for <a class="reference external" href="https://github.com/mashephe/AmpTools">AmpTools</a> which is a library written in c++ that facilitates performing unbinned maximum likelihood fits of experimental data to a coherent sum of amplitudes. Under the hood, it uses <a class="reference external" href="https://root.cern/manual/python/">PyROOT</a> which uses cppyy. These bindings will hopefully simplify the interaction with the AmpTools library while also providing access to the python ecosystem. <a class="reference external" href="https://github.com/remitche66/FSRoot">FSRoot</a> is also included as a submodule and can be integrated into analysis workflows.</p>
 </section>
 <hr class="docutils" />
 <section class="tex2jax_ignore mathjax_ignore" id="usage-design">
 <h1>Usage / Design<a class="headerlink" href="#usage-design" title="Link to this heading">#</a></h1>
-<p>AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in <code class="docutils literal notranslate"><span class="pre">external</span></code> directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_AMPS_DATAIO</span></code>. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code>, a program to produce simulations with AmpTools, is provided in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_GENERATORS</span></code>. This distribution system will unfortunately lag behind the sources from <code class="docutils literal notranslate"><span class="pre">halld_sim</span></code> and <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code> repos.</p>
-<p><code class="docutils literal notranslate"><span class="pre">pa</span></code> is an <strong>executable</strong> that dispatches various functions for: maximimum likelihood fitting (<code class="docutils literal notranslate"><span class="pre">fit</span></code>), extracting fit fractions from MLE fit results (<code class="docutils literal notranslate"><span class="pre">fitfrac</span></code>), and Markov chain Monte Carlo (<code class="docutils literal notranslate"><span class="pre">mcmc</span></code>), and simulation generation (<code class="docutils literal notranslate"><span class="pre">gen_amp</span></code>, <code class="docutils literal notranslate"><span class="pre">gen_vec_ps</span></code>). Example usage:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pa</span> <span class="o">-</span><span class="n">h</span> <span class="c1"># for usage</span>
-<span class="n">pa</span> <span class="o">-</span><span class="n">f</span> <span class="c1"># pa is a simple dispatch system, this command shows the file locations of each command</span>
-<span class="n">pa</span> <span class="n">fit</span> <span class="n">my_amptools</span><span class="o">.</span><span class="n">cfg</span> <span class="c1"># to run MLE fit</span>
-<span class="n">pa</span> <span class="n">mcmc</span> <span class="o">-</span><span class="n">h</span> <span class="c1"># for usage of mcmc</span>
-<span class="n">pa</span> <span class="n">fitfrac</span> <span class="n">amptools_results</span><span class="o">.</span><span class="n">fit</span> <span class="c1"># extract fit fractions</span>
-<span class="n">pa</span> <span class="n">gen_amp</span> <span class="n">my_amptools</span><span class="o">.</span><span class="n">cfg</span> <span class="c1"># to generate simulations</span>
+<p><code class="docutils literal notranslate"><span class="pre">pa</span></code> is an <strong>executable</strong> that dispatches various functions to perform various tasks related to optimization and provides easy access to specific AmpTools functionality like generating simulations from <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code> and <code class="docutils literal notranslate"><span class="pre">gen_vec_ps</span></code>, fitting, and extracting fit fractions.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pa<span class="w"> </span>-h<span class="w"> </span><span class="c1"># for usage</span>
+pa<span class="w"> </span>-f<span class="w"> </span><span class="c1"># for dispatched file locations</span>
 </pre></div>
 </div>
-<p>Additional files in the <code class="docutils literal notranslate"><span class="pre">scripts</span></code> folder are provided that perform <code class="docutils literal notranslate"><span class="pre">amptools</span></code> configuration file generation and plotting of the MLE fit results. These scripts are reaction dependent, therefore should be used as references to build upon. Utility functions are located in the <code class="docutils literal notranslate"><span class="pre">utility</span></code> folder.</p>
+<p>AmpTools and FSRoot are included as git submodules. Modified source files and makefiles are included in <code class="docutils literal notranslate"><span class="pre">external</span></code> directory to build a set of shared libraries that can then be imported into PyROOT.  Amplitude definitions and Data I/O are located in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_AMPS_DATAIO</span></code>. Additional amplitudes and data readers can be directly added to the folder and then re-maked. A variation of <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code>, a program to produce simulations with AmpTools, is provided in <code class="docutils literal notranslate"><span class="pre">external/AMPTOOLS_GENERATORS</span></code>. This distribution system will unfortunately lag behind the sources from <code class="docutils literal notranslate"><span class="pre">halld_sim</span></code>, <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code>, and <code class="docutils literal notranslate"><span class="pre">FSRoot</span></code>.</p>
 </section>
 <hr class="docutils" />
 <section class="tex2jax_ignore mathjax_ignore" id="installation">
@@ -467,8 +477,6 @@ apptainer<span class="w"> </span><span class="nb">exec</span><span class="w"> </
 
 <span class="c1"># INSIDE THE CONTAINER:</span>
 <span class="nb">source</span><span class="w"> </span>/etc/bash.bashrc
-
-pa<span class="w"> </span>-h<span class="w"> </span><span class="c1"># to see usage of pa</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -556,11 +564,11 @@ pytest<span class="w"> </span>-k<span class="w"> </span><span class="o">[</span>
                   
 <div class="prev-next-area">
     <a class="right-next"
-       href="additional_info.html"
+       href="optimization.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Potential Build Errors</p>
+        <p class="prev-next-title">Introduction</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -571,8 +579,7 @@ pytest<span class="w"> </span>-k<span class="w"> </span><span class="o">[</span>
             
             
               
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
-                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
   <div class="sidebar-secondary-item">
@@ -619,13 +626,6 @@ By Lawrence Ng
   <div class="footer-item">
     
 
-  <p class="copyright">
-    
-      © Copyright 2023.
-      <br/>
-    
-  </p>
-
   </div>
   
   <div class="footer-item">
@@ -645,8 +645,8 @@ By Lawrence Ng
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
 
   <footer class="bd-footer">
   </footer>

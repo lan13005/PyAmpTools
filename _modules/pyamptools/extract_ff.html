@@ -15,33 +15,30 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
-  <!-- 
-    this give us a css class that will be invisible only if js is disabled 
-  -->
-  <noscript>
-    <style>
-      .pst-js-only { display: none !important; }
-
-    </style>
-  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
     <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css?v=be8a1c11" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
-  <!-- So that users can add custom icons -->
-  <script src="../../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
     <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
@@ -64,7 +61,6 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -80,8 +76,19 @@
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <dialog id="pst-search-dialog">
-    
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
 <form class="bd-search d-flex align-items-center"
       action="../../search.html"
       method="get">
@@ -89,6 +96,7 @@
   <input type="search"
          class="form-control"
          name="q"
+         id="search-input"
          placeholder="Search this book..."
          aria-label="Search this book..."
          autocomplete="off"
@@ -96,8 +104,8 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form>
-  </dialog>
+</form></div>
+  </div>
 
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
@@ -115,8 +123,7 @@
       
         
       
-      <dialog id="pst-primary-sidebar-modal"></dialog>
-      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+      <div class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -146,11 +153,15 @@
 </a></div>
         <div class="sidebar-primary-item">
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
- <i class="fa-solid fa-magnifying-glass"></i>
- <span class="search-button__default-text">Search</span>
- <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-</button></div>
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         
@@ -161,25 +172,14 @@
                 </a>
             </li>
         </ul>
-        <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../../additional_info.html">Potential Build Errors</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../../demos/libraryLoading.html">Loading Libraries</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../demos/fitting.html">Fitting</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../demos/mle.html">Maximum Likelihood Estimation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../demos/mcmc.html">Markov Chain Monte Carlo</a></li>
-
-</ul>
-</details></li>
-<li class="toctree-l1"><a class="reference internal" href="../../demos/extract_ff.html">Extracting Fit Fractions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../demos/plotgen.html">Plotting Fit Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization.html">Introduction</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../ift/iftpwa_intro.html">iftpwa - Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../ift/iftpwa_config.html">iftpwa - Default Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ift/iftpwa_cf.html">iftpwa - Correlated Field Model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../ift/iftpwa_tips.html">iftpwa - Tips</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Analysis Chain Example</span></p>
@@ -187,6 +187,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../../analysis_example.html">Analysis Chain Script</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../demos/analysis_chain.html">Analysis Chain Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../gallery.html">Analysis Chain Gallery</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../demos/libraryLoading.html">Loading Libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demos/mle.html">Maximum Likelihood Estimation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demos/extract_ff.html">Extracting Fit Fractions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demos/plotgen.html">Plotting Fit Results</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">FSROOT Related Tutorials</span></p>
 <ul class="nav bd-sidenav">
@@ -301,16 +308,24 @@
 
 
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button>
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
 
 
-<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-</button>
+  </button>
+`);
+</script>
 
 </div></div>
       
@@ -339,16 +354,16 @@
   <h1>Source code for pyamptools.extract_ff</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
-<span class="kn">import</span> <span class="nn">argparse</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">from</span> <span class="nn">pyamptools.utility.general</span> <span class="kn">import</span> <span class="n">load_yaml</span>
-<span class="kn">from</span> <span class="nn">omegaconf.dictconfig</span> <span class="kn">import</span> <span class="n">DictConfig</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyamptools.utility.general</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_yaml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">omegaconf.dictconfig</span><span class="w"> </span><span class="kn">import</span> <span class="n">DictConfig</span>
 
 <div class="viewcode-block" id="extract_ff">
 <a class="viewcode-back" href="../../api/extract_ff.html#pyamptools.extract_ff.extract_ff">[docs]</a>
-<span class="k">def</span> <span class="nf">extract_ff</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">outfileName</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;.5f&quot;</span><span class="p">,</span> <span class="n">test_regex</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">no_phases</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">regex_merge</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yaml_file</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_ff</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">outfileName</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;.5f&quot;</span><span class="p">,</span> <span class="n">test_regex</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">no_phases</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">regex_merge</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">main_dict</span><span class="o">=</span><span class="p">{}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Extract fit fractions and phase differences between pairs of waves from a FitResults object.</span>
 
@@ -368,10 +383,10 @@
 <span class="sd">                - &#39;.*(.)$~&gt;\\1&#39;: Captures last character and replaces full match</span>
 <span class="sd">                - &#39;.*reaction_(000|045|090|135)::(Pos|Neg)(?:Im|Re)::&#39;: Removes matched pattern,</span>
 <span class="sd">                  allowing grouping over polarizations and mirrored sums</span>
-<span class="sd">        yaml_file (str): YAML file name. Allows program to load YAML state, i.e. for getting user requested coherent sums</span>
+<span class="sd">        main_dict (Dict): main yaml dictionary. Allows program to load YAML state, i.e. for getting user requested coherent sums</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">write_ff</span><span class="p">(</span><span class="n">amp</span><span class="p">,</span> <span class="n">intensity</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">intensity_corr</span><span class="p">,</span> <span class="n">error_corr</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_ff</span><span class="p">(</span><span class="n">amp</span><span class="p">,</span> <span class="n">intensity</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">intensity_corr</span><span class="p">,</span> <span class="n">error_corr</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">only</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FIT FRACTION </span><span class="si">{</span><span class="n">amp</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">intensity_corr</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">total_intensity_corr</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="s2">|</span><span class="si">{</span><span class="n">intensity</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">total_intensity</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="s2"> +- </span><span class="si">{</span><span class="n">error_corr</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">total_intensity_corr</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="s2">|</span><span class="si">{</span><span class="n">error</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">total_intensity</span><span class="si">:{</span><span class="n">fmt</span><span class="si">}}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">only</span> <span class="o">==</span> <span class="s2">&quot;acc&quot;</span><span class="p">:</span>
@@ -447,9 +462,9 @@
                     <span class="n">write_ff</span><span class="p">(</span><span class="n">merged_amp</span><span class="p">,</span> <span class="n">intensity</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">intensity_corr</span><span class="p">,</span> <span class="n">error_corr</span><span class="p">,</span> <span class="n">only</span><span class="p">)</span>
             <span class="n">merged</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
     
-    <span class="c1">########## CHECK IF results_dump.coherent_sums is in yaml_file ##########</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">yaml_file</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">DictConfig</span><span class="p">))</span> <span class="ow">and</span> <span class="s2">&quot;result_dump&quot;</span> <span class="ow">in</span> <span class="n">yaml_file</span> <span class="ow">and</span> <span class="s2">&quot;coherent_sums&quot;</span> <span class="ow">in</span> <span class="n">yaml_file</span><span class="p">[</span><span class="s2">&quot;result_dump&quot;</span><span class="p">]:</span>
-        <span class="n">coherent_sums</span> <span class="o">=</span> <span class="n">yaml_file</span><span class="p">[</span><span class="s2">&quot;result_dump&quot;</span><span class="p">][</span><span class="s2">&quot;coherent_sums&quot;</span><span class="p">]</span>
+    <span class="c1">########## CHECK IF results_dump.coherent_sums is in main_dict ##########</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">main_dict</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">DictConfig</span><span class="p">))</span> <span class="ow">and</span> <span class="s2">&quot;result_dump&quot;</span> <span class="ow">in</span> <span class="n">main_dict</span> <span class="ow">and</span> <span class="s2">&quot;coherent_sums&quot;</span> <span class="ow">in</span> <span class="n">main_dict</span><span class="p">[</span><span class="s2">&quot;result_dump&quot;</span><span class="p">]:</span>
+        <span class="n">coherent_sums</span> <span class="o">=</span> <span class="n">main_dict</span><span class="p">[</span><span class="s2">&quot;result_dump&quot;</span><span class="p">][</span><span class="s2">&quot;coherent_sums&quot;</span><span class="p">]</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Merging Amplitude Groups based on user request in YAML field `result_dump.coherent_sums`&quot;</span><span class="p">)</span>
         <span class="n">merged</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">vs</span> <span class="ow">in</span> <span class="n">coherent_sums</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -462,6 +477,7 @@
                         <span class="n">merged</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">amp</span><span class="p">]</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">merged</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">amp</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">merged</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">intensity</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">intensity</span><span class="p">(</span><span class="n">merged</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="kc">False</span><span class="p">)</span>
             <span class="n">intensity_corr</span><span class="p">,</span> <span class="n">error_corr</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">intensity</span><span class="p">(</span><span class="n">merged</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="kc">True</span><span class="p">)</span>
             <span class="n">write_ff</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">intensity</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">intensity_corr</span><span class="p">,</span> <span class="n">error_corr</span><span class="p">,</span> <span class="n">only</span><span class="p">)</span>
@@ -485,7 +501,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_cli_extract_ff</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_cli_extract_ff</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Command line interface for extracting fit fractions from an amptools fit results&quot;&quot;&quot;</span>
 
     <span class="c1">############## PARSE COMMANDLINE ARGUMENTS ##############</span>
@@ -497,11 +513,11 @@
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--no_phases&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Do not dump phase differences&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--only&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Only dump fit fractions for [&#39;acc&#39;, &#39;noacc&#39;]&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--regex_merge&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Merge amplitudes: Regex pair (pattern, replace) separated by ~&gt;&quot;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--yaml_file&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;YAML file name&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--main_yaml&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;YAML file name&quot;</span><span class="p">)</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
 
     <span class="c1">################### LOAD LIBRARIES ##################</span>
-    <span class="kn">from</span> <span class="nn">pyamptools</span> <span class="kn">import</span> <span class="n">atiSetup</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pyamptools</span><span class="w"> </span><span class="kn">import</span> <span class="n">atiSetup</span>
 
     <span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span>
 
@@ -512,9 +528,10 @@
     <span class="n">regex_merge</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">regex_merge</span>
     <span class="n">no_phases</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">no_phases</span>
     <span class="n">only</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">only</span>
-    <span class="n">yaml_file</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">yaml_file</span>
-    <span class="k">if</span> <span class="n">yaml_file</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
-        <span class="n">yaml_file</span> <span class="o">=</span> <span class="n">load_yaml</span><span class="p">(</span><span class="n">yaml_file</span><span class="p">)</span>
+    <span class="n">main_yaml</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">main_yaml</span>
+    <span class="n">main_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">main_yaml</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">main_dict</span> <span class="o">=</span> <span class="n">load_yaml</span><span class="p">(</span><span class="n">main_yaml</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fitFile</span><span class="p">),</span> <span class="s2">&quot;Fit Results file does not exist at specified path&quot;</span>
 
     <span class="c1">############## LOAD FIT RESULTS OBJECT ##############</span>
@@ -524,7 +541,7 @@
         <span class="n">exit</span><span class="p">()</span>
 
     <span class="c1">############## EXTRACT FIT FRACTIONS ##############</span>
-    <span class="n">extract_ff</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">outfileName</span><span class="p">,</span> <span class="n">fmt</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">test_regex</span><span class="p">,</span> <span class="n">no_phases</span><span class="p">,</span> <span class="n">only</span><span class="p">,</span> <span class="n">regex_merge</span><span class="p">,</span> <span class="n">yaml_file</span><span class="p">)</span>
+    <span class="n">extract_ff</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">outfileName</span><span class="p">,</span> <span class="n">fmt</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">test_regex</span><span class="p">,</span> <span class="n">no_phases</span><span class="p">,</span> <span class="n">only</span><span class="p">,</span> <span class="n">regex_merge</span><span class="p">,</span> <span class="n">main_dict</span><span class="p">)</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">_cli_extract_ff</span><span class="p">()</span>
@@ -564,13 +581,6 @@ By Lawrence Ng
   <div class="footer-item">
     
 
-  <p class="copyright">
-    
-      © Copyright 2023.
-      <br/>
-    
-  </p>
-
   </div>
   
   <div class="footer-item">
@@ -590,8 +600,8 @@ By Lawrence Ng
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
 
   <footer class="bd-footer">
   </footer>
