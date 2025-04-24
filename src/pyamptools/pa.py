@@ -16,7 +16,7 @@ from rich.text import Text
 # executable
 ##################################################################
 
-console = Console()
+console = Console(width=120)
 
 def main():
     """Dispatch function that calls the appropriate script and passes remaining arguments to it"""
@@ -43,7 +43,7 @@ def main():
 
     func_map = {
         # 'command' : (path, description)
-        "nentries": (f"{PYAMPTOOLS_HOME}/bin/get_nentries.py", "Print number of entries in a list of ROOT files (* wildcard supported). Allows integration over a branch if provided."),
+        "nentries": (f"{PYAMPTOOLS_HOME}/bin/get_nentries.py", "Print entries in List[ROOT files] (* wildcard), flag for branch integration"),
         "fit": (f"{PYAMPTOOLS_HOME}/src/pyamptools/mle.py", "[AmpTools] Perform a set of MLE fits given an amptools config file"),
         "fitfrac": (f"{PYAMPTOOLS_HOME}/src/pyamptools/extract_ff.py", "[AmpTools] Extract fit fractions from a given amptools FitResults file"),
         "gen_amp": (f"{PYAMPTOOLS_HOME}/bin/gen_amp.py", "[AmpTools] Generate data for a given configuration file"),
@@ -58,13 +58,13 @@ def main():
         "run_priorSim": (f"{PYAMPTOOLS_HOME}/bin/run_priorSim.py", "Draw sample from NIFTy prior, generate simulated data, and split into kinematic bins"),
         "run_cfgGen": (f"{PYAMPTOOLS_HOME}/bin/run_cfgGen.py", "[AmpTools] Generate an AmpTools fit configuration file"),
         "run_divideData": (f"{PYAMPTOOLS_HOME}/bin/run_divideData.py", "Divide data into kinematic bins (separate folders)"),
-        "run_processEvents": (f"{PYAMPTOOLS_HOME}/bin/run_processEvents.py", "[AmpTools] Process binned datasets to dump AmpTools' ampvecs data structure and normalization integrals into pkl files"),
+        "run_processEvents": (f"{PYAMPTOOLS_HOME}/bin/run_processEvents.py", "[AmpTools] Process bins: dump AmpVecs + NormInts to pkl files"),
         "run_fit": (f"{PYAMPTOOLS_HOME}/bin/run_fit.py", "[AmpTools] Run MLE fits over kinematic bins using AmpTools"),
         "run_mle": (f"{PYAMPTOOLS_HOME}/bin/run_mle.py", "Run MLE fits over kinematic bins using variety of optimizers (minuit, lbfgs, ...)"),
         "run_mcmc": (f"{PYAMPTOOLS_HOME}/bin/run_mcmc.py", "Run MCMC fits over kinematic bins using numpyro NUTS sampler"),
         "run_ift": (f"{PYAMPTOOLS_HOME}/bin/run_ift.py", "Run IFT fit over kinematic bins"),
         "run_momentInverter": (f"{PYAMPTOOLS_HOME}/bin/run_momentInverter.py", "Run moment inverter"),
-        "run_resultMan": (f"{PYAMPTOOLS_HOME}/bin/run_resultMan.py", "Run result manager commands"),
+        "run_resultMan": (f"{PYAMPTOOLS_HOME}/bin/run_resultMan.py", "Run result manager commands, make all default plots"),
         "dash_ift_cmp": (f"{PYAMPTOOLS_HOME}/bin/dash_ift_cmp.py", "Compare multiple IFT fits (intensity and phase) using dash package"),
     }
 
@@ -104,7 +104,7 @@ def main():
                 file_help += f"  * {command:25} {path}\n"
             return file_help
 
-    parser = HelpOnErrorParser(description="Dispatch pyamptools commands. Select a command from the Commands section below. Remaning arguments will be passed to the selected command.")
+    parser = HelpOnErrorParser(description="Dispatch pyamptools commands. Select a command from the Commands section below. Remaining arguments will be passed to the selected command.")
     parser.add_argument("-f", "--files", action="store_true", help="show command file locations and exit ")
     parser.add_argument("command", nargs="?", choices=choices, help=argparse.SUPPRESS)
     parser.add_argument("command_args", nargs=argparse.REMAINDER, help=argparse.SUPPRESS)
