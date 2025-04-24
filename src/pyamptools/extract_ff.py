@@ -7,7 +7,7 @@ import sys
 from pyamptools.utility.general import load_yaml
 from omegaconf.dictconfig import DictConfig
 
-def extract_ff(results, outfileName="", fmt=".5f", test_regex=False, no_phases=False, only=None, regex_merge=None, main_dict=''):
+def extract_ff(results, outfileName="", fmt=".5f", test_regex=False, no_phases=False, only=None, regex_merge=None, main_dict={}):
     """
     Extract fit fractions and phase differences between pairs of waves from a FitResults object.
 
@@ -172,6 +172,7 @@ def _cli_extract_ff():
     no_phases = args.no_phases
     only = args.only
     main_yaml = args.main_yaml
+    main_dict = {}
     if main_yaml != "":
         main_dict = load_yaml(main_yaml)
     assert os.path.isfile(fitFile), "Fit Results file does not exist at specified path"

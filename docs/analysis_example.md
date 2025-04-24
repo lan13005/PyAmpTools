@@ -26,18 +26,18 @@ pa run_processEvents $yaml # Creates a data file (a representation of AmpVecs ob
 
 # Ideally we would like to be able to do some prior predictive checks to see what our unoptimized model looks like
 # Unfortunately we have to `pa run_ift` before `iftPwaPriorPredict` since expanded yaml doesnt exist yet. This should be be fixed in the future.
-# Example call: iftPwaPriorPredict --iftpwa_config $base_directory/NiftyFits/.nifty_expanded.yaml --plotFolder $base_directory/NiftyFits/prior_predictive
+# Example call: iftPwaPriorPredict --iftpwa_config $base_directory/NIFTY/.nifty_expanded.yaml --plotFolder $base_directory/NIFTY/prior_predictive
 
 pa run_ift -v $yaml # Perform IFTPWA fit. If we wish to perform a hyperparameter search we can add the `--hyperopt` flag
-rm -rf $base_directory/NiftyFits/plots # clean up plots from previous runs
+rm -rf $base_directory/NIFTY/plots # clean up plots from previous runs
 # Draw diagnostic plots for the final fit results. Inside the output directory (see Main YAML field: nifty.output_directory) is a diagnostics folder which draws the fit results on each global iteration
 iftPwaPlot \
-    --fitResult $base_directory/NiftyFits/niftypwa_fit.pkl \
-    --plotFolder $base_directory/NiftyFits/plots \
+    --fitResult $base_directory/NIFTY/niftypwa_fit.pkl \
+    --plotFolder $base_directory/NIFTY/plots \
     --n_prior_samples 1000 \
-    --massIndepFit $base_directory/NiftyFits/.nifty_expanded.yaml
+    --massIndepFit $base_directory/NIFTY/.nifty_expanded.yaml
 # Draws some convergence plots to see global iteration dependence of resonance parameters, distributions, etc
-plotConvergence --inputFolder $base_directory/NiftyFits/fit_parameter_history --plotFolder $base_directory/NiftyFits/convergence_plots
-pa run_momentPlotter $yaml -n 10 # make a subdirectory at NiftyFits/plots/moments overlaying projected moments from nifty and amptools fits
+plotConvergence --inputFolder $base_directory/NIFTY/fit_parameter_history --plotFolder $base_directory/NIFTY/convergence_plots
+pa run_momentPlotter $yaml -n 10 # make a subdirectory at NIFTY/plots/moments overlaying projected moments from nifty and amptools fits
 pa run_resultDump $yaml -n 10 # dump all results to csv files (if possible, it will calculate the moments also)
 ```

@@ -3,6 +3,7 @@
 
 title: PyAmpTools
 author: Lawrence Ng
+copyright: 2025
 
 sphinx:
   extra_extensions:
@@ -23,7 +24,7 @@ execute:
   timeout: 1000
   exclude_patterns:
     - demos/generation.ipynb
-    # - demos/analysis_chain.ipynb
+    - demos/analysis_chain.ipynb
 
 # Define the name of the latex output file for PDF builds
 latex:

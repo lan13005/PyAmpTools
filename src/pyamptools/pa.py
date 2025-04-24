@@ -55,6 +55,7 @@ def main():
 
     analysis_map = {
         # 'command' : (path, description)
+        "from_default": (f"{PYAMPTOOLS_HOME}/bin/from_default.py", "Copy default yaml to a given location"),
         "run_priorSim": (f"{PYAMPTOOLS_HOME}/bin/run_priorSim.py", "Draw sample from NIFTy prior, generate simulated data, and split into kinematic bins"),
         "run_cfgGen": (f"{PYAMPTOOLS_HOME}/bin/run_cfgGen.py", "[AmpTools] Generate an AmpTools fit configuration file"),
         "run_divideData": (f"{PYAMPTOOLS_HOME}/bin/run_divideData.py", "Divide data into kinematic bins (separate folders)"),
