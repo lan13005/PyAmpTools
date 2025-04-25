@@ -355,6 +355,12 @@ def load_yaml(path_to_yaml, resolve=True):
             print(f"Could not acquire lock for {path_to_yaml} after 30 seconds. Continuing without updating.")
         except Exception as e:
             print(f"Error while trying to update YAML file: {e}. Continuing without updating.")
+        finally: # always attempt cleanup
+            if os.path.exists(lock_path):
+                try:
+                    os.remove(lock_path)
+                except Exception as e:
+                    print(f"Warning: Failed to remove lock file {lock_path}: {e}")
     
     yaml = OmegaConf.to_container(yaml, resolve=resolve)
     if "default_yaml" in yaml:
