@@ -7,16 +7,12 @@ parts:
   - caption: Optimization
     chapters:
       - file: optimization
+      - file: demos/analysis_chain
   - caption: Information Field Theory
     chapters:
       - file: ift/iftpwa_intro
       - file: ift/iftpwa_cf
       - file: ift/iftpwa_tips
-  - caption: Analysis Chain Example
-    chapters:
-      - file: analysis_example
-      - file: demos/analysis_chain
-      - file: gallery
   - caption: AmpTools Related Tutorials
     chapters:
       - file: demos/libraryLoading

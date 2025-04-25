@@ -46,7 +46,7 @@ gen_color = 'xkcd:green'
 mcmc_color = 'black'
 moment_inversion_color = 'xkcd:purple'
 
-ift_alpha = 0.35 # transparency of IFT fit results
+ift_alpha = 0.45 # transparency of IFT fit results
 mle_jitter_scale = 0.1 # percent of the bin width the MLE results are jittered
 
 # All plots are stored in this directory within the `base_directory` key in the YAML file

@@ -253,10 +253,11 @@ if __name__ == "__main__":
 
             # Read amptools.cfg and append the t-range and mass-range to a metadata section using omegaconf
             os.chdir(cwd)
+            output_dict = load_yaml(main_yaml, resolve=False) # do not resolve when updating
             nBars = {key: nBars[key].tolist() for key in nBars}
             nBar_errs = {key: nBar_errs[key].tolist() for key in nBar_errs}
-            main_dict.update({"share_mc": mc_already_shared})
-            dump_yaml(main_dict, main_yaml)
+            output_dict.update({"share_mc": mc_already_shared})
+            dump_yaml(output_dict, main_yaml)
 
     if try_merge_bins:
 

@@ -3,7 +3,7 @@
 
 title: PyAmpTools
 author: Lawrence Ng
-copyright: 2025
+copyright: '2025'
 
 sphinx:
   extra_extensions:
@@ -21,10 +21,9 @@ autosummary_imported_members: True
 # See https://jupyterbook.org/content/execute.html
 execute:
   execute_notebooks: force
-  timeout: 1000
-  exclude_patterns:
-    - demos/generation.ipynb
-    - demos/analysis_chain.ipynb
+  timeout: 2000
+  # exclude_patterns:
+    # - demos/analysis_chain.ipynb
 
 # Define the name of the latex output file for PDF builds
 latex:
