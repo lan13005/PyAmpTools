@@ -133,14 +133,14 @@ def restructure_files(
     
     return reactions, nGens, nAccs, nterms, terms, ampIntss, normIntss
 
-def restructure_normints(yaml_file, verbose=False):
+def restructure_normints(main_dict, verbose=False):
 
     ############################################
-    base_directory = yaml_file["base_directory"]
-    output_directory = yaml_file["amptools"]["output_directory"]
-    nmbReactions = len(yaml_file["polarizations"])
-    nmbMasses = yaml_file["n_mass_bins"]
-    nmbTprimes = yaml_file["n_t_bins"]
+    base_directory = main_dict["base_directory"]
+    output_directory = main_dict["amptools"]["output_directory"]
+    nmbReactions = len(main_dict["polarizations"])
+    nmbMasses = main_dict["n_mass_bins"]
+    nmbTprimes = main_dict["n_t_bins"]
     oshape = (nmbReactions, nmbMasses, nmbTprimes)
 
     #### Alternatively, you can manually set stuff #####
@@ -206,11 +206,11 @@ def restructure_normints(yaml_file, verbose=False):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Restructure normalization integrals')
-    parser.add_argument('yaml', type=str, help='yaml file with paths')
+    parser.add_argument('main_yaml', type=str, help='main yaml file')
     parser.add_argument('--verbose', action='store_true', help='print verbose output')
 
     args = parser.parse_args()
-    yaml = args.yaml
-    yaml_file = OmegaConf.load(yaml)
+    main_yaml = args.main_yaml
+    main_dict = load_yaml(main_yaml)
 
-    restructure_normints(yaml_file, verbose=True)
+    restructure_normints(main_dict, verbose=True)

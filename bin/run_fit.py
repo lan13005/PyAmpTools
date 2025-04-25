@@ -18,20 +18,20 @@ pyamptools_ff_cmd = "pa fitfrac"
 seed_file = "seed_nifty.txt"
 
 class MLE:
-    def __init__(self, yaml_file, dump='', yaml_name=''):
+    def __init__(self, main_dict, dump='', main_yaml=''):
         """
         Args:
-            yaml_file (dict): Configuration file
+            main_dict (dict): Configuration file
         """
 
         print("\n\n>>>>>>>>>>>>> ConfigLoader >>>>>>>>>>>>>>>")
-        self.output_directory = yaml_file["amptools"]["output_directory"]
-        self.n_randomizations = yaml_file["amptools"]["n_randomizations"]
-        self.ff_args = yaml_file["amptools"]["regex_merge"]
-        self.prepare_for_nifty = bool(yaml_file["amptools"]["prepare_for_nifty"])
+        self.output_directory = main_dict["amptools"]["output_directory"]
+        self.n_randomizations = main_dict["amptools"]["n_randomizations"]
+        self.ff_args = main_dict["amptools"]["regex_merge"]
+        self.prepare_for_nifty = True
         self.devs = None
         self.dump = dump
-        self.yaml_name = yaml_name
+        self.main_yaml = main_yaml
         print("<<<<<<<<<<<<<< ConfigLoader <<<<<<<<<<<<<<\n\n")
 
     def set_devs(self, devs):
@@ -69,7 +69,7 @@ class MLE:
         # Extract ff for best iteration
         ###############################
 
-        cmd = f"{pyamptools_ff_cmd} {base_fname}.fit --outputfileName intensities_bin{binNum}.txt {self.ff_args} --yaml_file {self.yaml_name}"
+        cmd = f"{pyamptools_ff_cmd} {base_fname}.fit --outputfileName intensities_bin{binNum}.txt {self.ff_args} --main_yaml {self.main_yaml}"
         if self.dump == 'null':
             cmd += " > /dev/null"
         elif self.dump != '':
@@ -81,7 +81,7 @@ class MLE:
 
         # Extract ff for all iterations
         for i in range(self.n_randomizations):
-            cmd = f"{pyamptools_ff_cmd} {base_fname}_{i}.fit --outputfileName intensities_bin{binNum}_{i}.txt {self.ff_args} --yaml_file {self.yaml_name}"
+            cmd = f"{pyamptools_ff_cmd} {base_fname}_{i}.fit --outputfileName intensities_bin{binNum}_{i}.txt {self.ff_args} --main_yaml {self.main_yaml}"
             if self.dump == 'null':
                 cmd += " > /dev/null"
             elif self.dump != '':
@@ -118,11 +118,11 @@ def cleanup(directories):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Perform maximum likelihood fits (using AmpTools) on all cfg files")
-    parser.add_argument("yaml_name", type=str, default="conf/configuration.yaml", help="Path a configuration yaml file")
+    parser.add_argument("main_yaml", type=str, default="conf/configuration.yaml", help="Path to the main yaml file")
     parser.add_argument("-d", type=str, default='null', help="Dump log files for each bin to this directory path. If empty str will dump to stdout")
     parser.add_argument("--clean", action="store_true", help="Cleanup all fit files, fitfrac files, and reaction files")
     args = parser.parse_args()
-    yaml_name = args.yaml_name
+    main_yaml = args.main_yaml
     dump = args.d
     
     timer = Timer()
@@ -130,32 +130,32 @@ if __name__ == "__main__":
 
     print("\n---------------------")
     print(f"Running {__file__}")
-    print(f"  yaml location: {yaml_name}")
+    print(f"  yaml location: {main_yaml}")
     print(f"  dump logs to folder: {os.path.join(cwd, dump)}")
     print("---------------------\n")
 
-    yaml_file = load_yaml(yaml_name)
+    main_dict = load_yaml(main_yaml)
     
     if args.clean:
-        print(f"run_mle| Cleaning all fit files, fitfrac files, and reaction files in {yaml_file['base_directory']}")
+        print(f"run_mle| Cleaning all fit files, fitfrac files, and reaction files in {main_dict['base_directory']}")
         subdirs = ['.']
-        for root, dirs, files in os.walk(yaml_file["base_directory"]):
+        for root, dirs, files in os.walk(main_dict["base_directory"]):
             for dir in dirs:
                 subdirs.append(os.path.join(root, dir))    
         cleanup(subdirs)
 
-    mle = MLE(yaml_file, dump=dump, yaml_name=yaml_name)
+    mle = MLE(main_dict, dump=dump, main_yaml=main_yaml)
 
     output_directory = mle.output_directory
     n_randomizations = mle.n_randomizations
-    bins_per_group = yaml_file['amptools']["bins_per_group"]
+    bins_per_group = main_dict['amptools']["bins_per_group"]
     bins_per_group = 1 if bins_per_group < 1 or bins_per_group is None else bins_per_group
-    nBins = yaml_file["n_mass_bins"] * yaml_file["n_t_bins"]
+    nBins = main_dict["n_mass_bins"] * main_dict["n_t_bins"]
     if nBins % bins_per_group != 0:
         raise Exception("run_mle| Number of bins is not divisible by bins_per_group!")
     nGroups = nBins // bins_per_group
 
-    search_format = yaml_file["amptools"]["search_format"]
+    search_format = main_dict["amptools"]["search_format"]
     if search_format not in ["bin", "group"]:
         raise Exception("run_mle| search_format must be either 'bin' or 'group'")
     if search_format == "group" and bins_per_group == 1:
@@ -182,7 +182,7 @@ if __name__ == "__main__":
             cfgfiles.append(cfgfile)
             print(f"  {cfgfile}")
 
-    n_processes = min(len(cfgfiles), yaml_file["amptools"]["n_processes"])
+    n_processes = min(len(cfgfiles), main_dict["amptools"]["n_processes"])
 
     # Get number of gpu devices amptools sees
     USE_MPI, USE_GPU, RANK_MPI = atiSetup.setup(globals())

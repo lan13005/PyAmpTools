@@ -16,7 +16,7 @@ def load_root(fname, treename):
         data = f[treename].arrays(library="np")
         return data
 
-def restructure_amps(yaml_file, treename="kin", include_accmc=True, include_genmc=True):
+def restructure_amps(main_dict, treename="kin", include_accmc=True, include_genmc=True):
     
     ####################################################################
     # After finalizeFit from an amptoolsinterface call a set of root
@@ -29,12 +29,12 @@ def restructure_amps(yaml_file, treename="kin", include_accmc=True, include_genm
     # stop indices for each (reaction, mass, t) bin so we can reload them
     ####################################################################
 
-    base_directory = yaml_file["base_directory"]
-    output_directory = yaml_file["amptools"]["output_directory"]
-    nmbMasses = yaml_file["n_mass_bins"]
-    nmbTprimes = yaml_file["n_t_bins"]
-    reactions = yaml_file["polarizations"] # i.e. "000", "045", "090", "135"
-    share_mc = yaml_file["share_mc"]
+    base_directory = main_dict["base_directory"]
+    output_directory = main_dict["amptools"]["output_directory"]
+    nmbMasses = main_dict["n_mass_bins"]
+    nmbTprimes = main_dict["n_t_bins"]
+    reactions = main_dict["polarizations"] # i.e. "000", "045", "090", "135"
+    share_mc = main_dict["share_mc"]
     reactionNames = [f"reaction_{reaction}" for reaction in reactions] # i.e. "reaction_000", "reaction_045", "reaction_090", "reaction_135"
     nmbReactions = len(reactions)
 
@@ -170,16 +170,16 @@ def restructure_amps(yaml_file, treename="kin", include_accmc=True, include_genm
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Restructure normalization integrals')
-    parser.add_argument('yaml', type=str, help='yaml file with paths')
+    parser.add_argument('main_yaml', type=str, help='main yaml file')
     parser.add_argument('-ia', '--include_accmc', action='store_true', help='include accmc')
     parser.add_argument('-ig', '--include_genmc', action='store_true', help='include genmc')
     parser.add_argument('-t', '--treename', type=str, default='kin', help='name of the tree in the root file')
 
     args = parser.parse_args()
-    yaml = args.yaml
-    yaml_file = OmegaConf.load(yaml)
+    main_yaml = args.main_yaml
+    main_dict = load_yaml(main_yaml)
 
     include_accmc = args.include_accmc
     include_genmc = args.include_genmc
 
-    restructure_amps(yaml_file, args.treename, include_accmc, include_genmc)
+    restructure_amps(main_dict, args.treename, include_accmc, include_genmc)

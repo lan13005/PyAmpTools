@@ -28,43 +28,43 @@ loadMacros()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Divide data into mass bins")
-    parser.add_argument("yaml_name", type=str, default="conf/configuration.yaml", help="Path a configuration yaml file")
+    parser.add_argument("main_yaml", type=str, default="conf/configuration.yaml", help="Path to the main yaml file")
     parser.add_argument("-e", "--use_edges", action="store_true", help="Use mass_edges and t_edges from the yaml file. Else recompute")
-    parser.add_argument("-nh", "--hadd_pool_size", type=int, default=5, help="Number of parallel processes to merge the data")
+    parser.add_argument("-np", "--n_processes", type=int, default=-1, help="Number of parallel processes to merge (hadd) the data")
     parser.add_argument("--nosplit", action="store_true", help="Skip the split_mass step")
     parser.add_argument("--nomerge", action="store_true", help="Skip the merge_bins step")
     args = parser.parse_args()
-    yaml_name = args.yaml_name
+    main_yaml = args.main_yaml
     use_edges = args.use_edges
     
     console = Console()
 
-    hadd_pool_size = args.hadd_pool_size
+    n_processes = args.n_processes
 
     cwd = os.getcwd()
     timer = Timer()
 
     console.rule()
     console.print(f"Running {__file__}")
-    console.print(f"  yaml location: {yaml_name}")
+    console.print(f"  yaml location: {main_yaml}")
     console.rule()
 
-    yaml_file = load_yaml(yaml_name)
+    main_dict = load_yaml(main_yaml)
 
-    min_mass = yaml_file["min_mass"]
-    max_mass = yaml_file["max_mass"]
-    n_mass_bins = yaml_file["n_mass_bins"]
-    min_t = yaml_file["min_t"]
-    max_t = yaml_file["max_t"]
-    n_t_bins = yaml_file["n_t_bins"]
-    base_directory = yaml_file["base_directory"]
-    output_directory = yaml_file["amptools"]["output_directory"]
-    bins_per_group = yaml_file["amptools"]["bins_per_group"] if "bins_per_group" in yaml_file["amptools"] else 1
-    constrain_grouped_production = yaml_file["amptools"]["constrain_grouped_production"] if "constrain_grouped_production" in yaml_file["amptools"] else False
-    merge_grouped_trees = yaml_file["amptools"]["merge_grouped_trees"] if "merge_grouped_trees" in yaml_file["amptools"] else True
-    data_folder = yaml_file["data_folder"]
-    pols = yaml_file["polarizations"]
-    prepare_for_nifty = bool(yaml_file["amptools"]["prepare_for_nifty"])
+    min_mass = main_dict["min_mass"]
+    max_mass = main_dict["max_mass"]
+    n_mass_bins = main_dict["n_mass_bins"]
+    min_t = main_dict["min_t"]
+    max_t = main_dict["max_t"]
+    n_t_bins = main_dict["n_t_bins"]
+    base_directory = main_dict["base_directory"]
+    output_directory = f"{base_directory}/BINNED_DATA"
+    bins_per_group = main_dict["bins_per_group"] if "bins_per_group" in main_dict else 1
+    constrain_grouped_production = main_dict["constrain_grouped_production"] if "constrain_grouped_production" in main_dict else False
+    merge_grouped_trees = main_dict["merge_grouped_trees"] if "merge_grouped_trees" in main_dict else True
+    data_folder = main_dict["data_folder"]
+    pols = main_dict["polarizations"]
+    prepare_for_nifty = True
     amptools_cfg = f"{base_directory}/amptools.cfg"
 
     os.system(f"mkdir -p {output_directory}")
@@ -92,7 +92,7 @@ if __name__ == "__main__":
         run_split_and_cfg_ceate = True
         create_cfg = False
         if check_for_preexisting:
-            delete_or_skip = input("Pre-existing bins found. Delete them? (y/n): ")
+            delete_or_skip = input(f"Pre-existing bins found at {output_directory}. Delete them? (y/n): ")
             if delete_or_skip.lower() == "y":
                 os.system("rm -rf bin_*")
                 console.print("  Deleted pre-existing bins", style="bold green")
@@ -106,17 +106,17 @@ if __name__ == "__main__":
                     console.print("  Skipping split_mass", style="bold yellow")
 
         # Determine mass bin edges based on the first ftype source
-        mass_edges = yaml_file["mass_edges"] if "mass_edges" in yaml_file and use_edges else None 
-        t_edges = yaml_file["t_edges"] if "t_edges" in yaml_file and use_edges else None
+        mass_edges = main_dict["mass_edges"] if "mass_edges" in main_dict and use_edges else None 
+        t_edges = main_dict["t_edges"] if "t_edges" in main_dict and use_edges else None
         nBars = {}
         nBar_errs = {}
-        if "nBars" in yaml_file:
-            nBars = yaml_file["nBars"]
+        if "nBars" in main_dict:
+            nBars = main_dict["nBars"]
             nBars = {key: np.array(nBars[key]) for key in nBars}
-        if "nBar_errs" in yaml_file:
-            nBar_errs = yaml_file["nBar_errs"]
+        if "nBar_errs" in main_dict:
+            nBar_errs = main_dict["nBar_errs"]
             nBar_errs = {key: np.array(nBar_errs[key]) for key in nBar_errs}
-        mc_already_shared = {"data": False, "bkgnd": False, "accmc": False, "genmc": False} # if "mc_already_shared" not in yaml_file else yaml_file["mc_already_shared"]
+        mc_already_shared = {"data": False, "bkgnd": False, "accmc": False, "genmc": False} # if "mc_already_shared" not in main_dict else main_dict["mc_already_shared"]
 
         if run_split_and_cfg_ceate:
             
@@ -253,11 +253,11 @@ if __name__ == "__main__":
 
             # Read amptools.cfg and append the t-range and mass-range to a metadata section using omegaconf
             os.chdir(cwd)
-            output_yaml = OmegaConf.load(yaml_name)
+            output_dict = load_yaml(main_yaml, resolve=False) # do not resolve when updating
             nBars = {key: nBars[key].tolist() for key in nBars}
             nBar_errs = {key: nBar_errs[key].tolist() for key in nBar_errs}
-            output_yaml.update({"mass_edges": mass_edges, "t_edges": t_edges, "nBars": nBars, "nBar_errs": nBar_errs, "share_mc": mc_already_shared})
-            dump_yaml(output_yaml, yaml_name)
+            output_dict.update({"share_mc": mc_already_shared})
+            dump_yaml(output_dict, main_yaml)
 
     if try_merge_bins:
 
@@ -337,7 +337,7 @@ if __name__ == "__main__":
                     
                     os.system(f"touch {output_directory}/{group_name}/seed_nifty.txt")
 
-                with Pool(hadd_pool_size) as p:
+                with Pool(n_processes) as p:
                     p.map(merge_trees, range(nGroups))
 
             # Merge some bins into groups on user request keeping bins distinct

@@ -39,23 +39,27 @@ def extract_normint_ampvecs(args):
         #     normIntInterface = ati.normIntInterface(reaction.reactionName())
         #     normIntInterface.forceCacheUpdate(False)
 
-        ati.finalizeFit(bSaveAmps=True)
+        ati.finalizeFit("", True) # use positonal args not kwargs
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Restructure normalization integrals')
-    parser.add_argument('yaml', type=str, help='yaml file with paths')
-    parser.add_argument('-n', '--ncores', type=int, default=1, help='number of cores to use')
+    parser.add_argument('main_yaml', type=str, help='main yaml file')
+    parser.add_argument('-np', '--n_processes', type=int, default=-1, help='number of processes to use')
     parser.add_argument('-ia', '--include_accmc', action='store_true', help='include accmc in ampvec root file')
     parser.add_argument('-ig', '--include_genmc', action='store_true', help='include genmc in ampvec root file')
     parser.add_argument('-v', '--verbose', action='store_true', help='verbose output')
 
     args = parser.parse_args()
-    yaml = args.yaml
-    yaml_file = load_yaml(yaml)
+    main_yaml = args.main_yaml
+    main_dict = load_yaml(main_yaml)
     verbose = args.verbose
 
-    output_directory = yaml_file["amptools"]["output_directory"]
+    n_processes = args.n_processes
+    if n_processes < 1:
+        n_processes = main_dict["n_processes"]
+
+    output_directory = main_dict["amptools"]["output_directory"]
     search_fmt = f"{output_directory}/bin_[]/bin_*.cfg"
     cfgfiles = glob_sort_captured(search_fmt)
 
@@ -70,10 +74,10 @@ if __name__ == "__main__":
     # ############################################################################
     # STEP 1) Ask AmpTools to dump ampvecs and normint to a ROOT file and a text file respectively
     _verbose = False # instead of CLI verbose. There is not much useful information dumped by AmpTools in this process so hard code a False
-    if args.ncores > 1:
-        print(f"\nProcessing {len(cfgfiles)} config files using {args.ncores} processes...\n")
+    if n_processes > 1:
+        print(f"\nProcessing {len(cfgfiles)} config files using {n_processes} processes...\n")
         pool_args = [(cfgfile, _verbose) for cfgfile in cfgfiles]
-        with Pool(args.ncores) as p:
+        with Pool(n_processes) as p:
             p.map(extract_normint_ampvecs, pool_args)
     else:
         print(f"\nProcessing {len(cfgfiles)} config files...\n")
@@ -85,8 +89,8 @@ if __name__ == "__main__":
     # STEP 2) Restructure ampvecs and normints into arrays and save to pkl files
     print("\nRestructuring processed files into arrays and saving to pkl files")
     print("  This step cannot use multiple processes...")
-    restructured_amps = restructure_amps(yaml_file, treename="kin", include_accmc=args.include_accmc, include_genmc=args.include_genmc)
-    restructued_normints = restructure_normints(yaml_file, verbose=verbose)
+    restructured_amps = restructure_amps(main_dict, treename="kin", include_accmc=args.include_accmc, include_genmc=args.include_genmc)
+    restructued_normints = restructure_normints(main_dict, verbose=verbose)
     print(f"\nElapsed time: {time() - start_time:.2f} seconds\n")
 
 # intensityManager = ati.intensityManager(reactions[0].reactionName())

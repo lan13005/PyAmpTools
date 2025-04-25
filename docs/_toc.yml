@@ -4,37 +4,22 @@
 format: jb-book
 root: intro
 parts:
-  - chapters:
-    - file: additional_info
-  - caption: AmpTools Related Tutorials
+  - caption: Optimization
     chapters:
-      - file: demos/libraryLoading
-#      - file: demos/generation
-      - file: demos/fitting
-        sections:
-          - file: demos/mle
-          - file: demos/mcmc
-      - file: demos/extract_ff
-      - file: demos/plotgen
+      - file: optimization
+      - file: demos/analysis_chain
   - caption: Information Field Theory
     chapters:
       - file: ift/iftpwa_intro
-      - file: ift/iftpwa_config
+      - file: ift/iftpwa_cf
       - file: ift/iftpwa_tips
-  - caption: Analysis Chain Example
+  - caption: AmpTools Related Tutorials
     chapters:
-      - file: analysis_example
-      - file: demos/analysis_chain
-      - file: gallery
+      - file: demos/libraryLoading
+      - file: demos/mle
+      - file: demos/extract_ff
+      - file: demos/plotgen
   - caption: FSROOT Related Tutorials
     chapters:
       - file: demos/fsroot_intro
       - file: demos/fsroot_advanced
-  # - caption: API
-  #   chapters:
-  #     - file: api/atiSetup
-  #     - file: api/mle
-  #     - file: api/mcmc
-  #     - file: api/loadParameters
-  #     - file: api/plotgen
-  #     - file: api/extract_ff

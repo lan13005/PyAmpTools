@@ -1,16 +1,14 @@
 import argparse
 import logging
 import os
+os.environ["JAX_PLATFORMS"] = "cpu"
 import subprocess
 
 from pyamptools.utility.general import Timer, dump_yaml, load_yaml
 
 ############################################################################
 # This file wraps a call to iftpwa's execution script iftpwa takes an input 
-# yaml file. pyamptools also orchestrates several operations into a yaml file
-# This script synchronizes the two yaml files by loading the iftpwa yaml file
-# and updating it with values from the pyamptools yaml file.
-# The whole chain will then operate under the same operating conditions
+# yaml file
 ############################################################################
 
 # Keys: are the keys in the Destination yaml file
@@ -19,17 +17,14 @@ from pyamptools.utility.general import Timer, dump_yaml, load_yaml
 # TODO: For more complicated formattings we might have to make a pythonic system
 #       that uses {} to denote variable search paths. ATM we variable interpolate
 #       each part separated by /
-mappings = {
-    "GENERAL.outputFolder": "SRC.nifty.output_directory",
-}
 
-def get_value_from_src(src_yaml, key_path):
+def get_value_from_src(main_dict, key_path):
     """
     Load value from the source (SRC) yaml file following a period separated key path
     
     Args:
-        src_yaml (dict): Source dictionary (YAML file)
-        key_path (str): Key path in the src_yaml, period separated
+        main_dict (dict): Source dictionary (YAML file)
+        key_path (str): Key path in the main_dict, period separated
         
     Returns:
         value: The value in the source yaml file
@@ -40,8 +35,8 @@ def get_value_from_src(src_yaml, key_path):
     key_path = key_path.split(".")
     n_steps = len(key_path)
     assert key_path[0] == "SRC"
-    assert key_path[1] in src_yaml, f"Key {key_path[1]} not found in the source yaml file"
-    value = src_yaml[key_path[1]]
+    assert key_path[1] in main_dict, f"Key {key_path[1]} not found in the source yaml file"
+    value = main_dict[key_path[1]]
     for i in range(2, n_steps):
         assert key_path[i] in value, f"Key {key_path[i]} not found in the source yaml file"
         value = value[key_path[i]]
@@ -78,15 +73,15 @@ if __name__ == "__main__":
         exit(0)
 
     parser = argparse.ArgumentParser(description="Perform IFT fit over all cfg files")
-    parser.add_argument("yaml_name", type=str, default="conf/configuration.yaml", help="Path a configuration yaml file")
+    parser.add_argument("main_yaml", type=str, default="conf/configuration.yaml", help="Path to the main yaml file")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     parser.add_argument("additional_args", nargs=argparse.REMAINDER, help=argparse.SUPPRESS)
     args = parser.parse_args()
-    yaml_name = args.yaml_name
+    main_yaml = args.main_yaml
     additional_args = args.additional_args
     
     if '-v' in args.additional_args or '--verbose' in args.additional_args:
-        raise ValueError("verbose flag has to be before positional argument! Example pa run_ift -v pyamptools.yaml")
+        raise ValueError("verbose flag has to be before positional argument! Example pa run_ift -v main.yaml")
 
     logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING, format='%(asctime)s| %(message)s', datefmt='%H:%M:%S')
     logger = logging.getLogger(__name__)
@@ -94,50 +89,33 @@ if __name__ == "__main__":
     print()
     logger.info("---------------------")
     logger.info(f"Running {__file__}")
-    logger.info(f"  yaml location: {yaml_name}")
+    logger.info(f"  yaml location: {main_yaml}")
     logger.info("---------------------\n")
 
     timer = Timer()
     cwd = os.getcwd()
 
-    if not os.path.exists(yaml_name):
-        raise FileNotFoundError(f"YAML file {yaml_name} not found")
+    if not os.path.exists(main_yaml):
+        raise FileNotFoundError(f"YAML file {main_yaml} not found")
 
-    src_yaml = load_yaml(yaml_name)
+    main_dict = load_yaml(main_yaml)
+    main_dest = main_dict["NIFTY"]["PWA_MANAGER"]["yaml"]
     
-    if src_yaml['nifty']['yaml'] is None:
+    if main_dict['nifty']['yaml'] is None:
         logger.info("No NIFTy yaml file specified. Exiting...")
-        
-    dest_name = src_yaml['nifty']['yaml']
-    synchronize = src_yaml['nifty']['synchronize']
-    output_directory = src_yaml['nifty']['output_directory']
-    dest_yaml = load_yaml(dest_name, resolve=False)
-
-    if synchronize:
-        print()
-        logger.info("------------------ SYNCHRONIZING YAML FILES ------------------")
-        logger.info(f"Base YAML file used for IFTPWA: {dest_name}")
-        logger.info(f"    will be synchronized with values found in your provided yaml file: {yaml_name}")
-        for dest_keys, src_keys in mappings.items():
-            dest_keys = dest_keys.split(".")
-            src_keys = src_keys.split("/")
-            src_keys = [get_value_from_src(src_yaml, key_path) for key_path in src_keys]
-            if len(src_keys) == 1:
-                src_keys = src_keys[0]
-            else:
-                src_keys = "/".join(src_keys)
-            set_nested_value_inplace(dest_yaml, dest_keys, src_keys, verbose=True)
-        logger.info("--------------------------------------------------------------\n")
-    else:
-        logger.info(f"Base YAML file used for IFTPWA: {dest_name}")
-
-    dump_yaml(dest_yaml, ".nifty.yaml") # Create "synchronized" yaml file
-    if output_directory is not None and not os.path.exists(output_directory):
+        exit(1)
+    
+    output_directory = os.path.join(main_dict['base_directory'], "NIFTY")
+    if not os.path.exists(output_directory):
         os.makedirs(output_directory)
-    logger.info(f"Copying {yaml_name} to {output_directory}/.{os.path.basename(yaml_name)}")
-    os.system(f"cp {yaml_name} {output_directory}/.{os.path.basename(yaml_name)}") # Copy the source yaml file to the output directory
 
-    mpi_processes = src_yaml['nifty']['mpi_processes'] if 'mpi_processes' in src_yaml['nifty'] else None
+    iftpwa_yaml = main_dict['NIFTY']
+    iftpwa_dest = f"{output_directory}/iftpwa.yaml"
+    dump_yaml(iftpwa_yaml, iftpwa_dest)
+    logger.info(f"Copying {main_yaml} to {main_dest}")
+    os.system(f"cp {main_yaml} {main_dest}")
+
+    mpi_processes = main_dict['nifty']['mpi_processes'] if 'mpi_processes' in main_dict['nifty'] else None
 
     ## NOTE: GPU is not working. Distribution across mpi processes uses too much memory still. 
     ##       Unsure how to better balance. Uncomment the following to try to load GPUs again
@@ -159,13 +137,13 @@ if __name__ == "__main__":
         cmd = (f"{prefix}bash -c 'export CUDA_VISIBLE_DEVICES=$(($OMPI_COMM_WORLD_RANK % {num_gpus})); "
             f'export XLA_PYTHON_CLIENT_MEM_FRACTION=1; '
             f'export TF_FORCE_GPU_ALLOW_GROWTH=true; '
-            f"iftPwaFit --iftpwa_config .nifty.yaml{add_args}'")
+            f"iftPwaFit --iftpwa_config {iftpwa_dest}{add_args}'")
     else:
         cmd = (f"{prefix}bash -c 'export JAX_PLATFORMS=cpu; "
-                f"iftPwaFit --iftpwa_config .nifty.yaml{add_args}'")
+                f"iftPwaFit --iftpwa_config {iftpwa_dest}{add_args}'")
     
     print(f"\nmpiexec command:\n {cmd}\n")
     os.system(cmd) # Run IFT pwa fit
-    os.system("rm -f .nifty.yaml") # Cleanup
+    os.system(f"rm -f {iftpwa_dest}") # Cleanup
 
     logger.info(f"ift| Elapsed time {timer.read()[2]}\n\n")

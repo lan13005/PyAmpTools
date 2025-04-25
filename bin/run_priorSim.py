@@ -1,16 +1,5 @@
-import os
 import argparse
 from rich.console import Console
-from pyamptools.utility.general import load_yaml, dump_yaml, calculate_subplot_grid_size, identify_channel, converter, execute_cmd
-from pyamptools.utility.cfg_gen_utils import generate_amptools_cfg, amptools_zlm_ampName, amptools_vps_ampName
-import numpy as np
-import pickle as pkl
-import numpy as np
-import pandas as pd
-from iftpwa1.utilities.helpers import load_callable_from_module, reload_fields_and_components
-from omegaconf import DictConfig
-from pyamptools.utility.resultManager import ResultManager, plot_gen_curves
-import tempfile
 
 # TODO:
 # - currently only one polarization is supported with 100% pol mag
@@ -18,7 +7,7 @@ import tempfile
 subidr = "GENERATED"
 console = Console()
 
-def simulate_from_prior(main_yaml_path, iftpwa_yaml_path, base_directory, channel, verbose=True):
+def simulate_from_prior(main_yaml, base_directory, data_folder, channel, verbose=True):
     
     if channel == "TwoPseudoscalar":
         simulator = "gen_amp"
@@ -28,20 +17,20 @@ def simulate_from_prior(main_yaml_path, iftpwa_yaml_path, base_directory, channe
         raise ValueError(f"Unsupported channel: {channel}")
     
     stage1_dir = f"{base_directory}/GENERATED/prior_sim_unnormalized"
-    stage2_dir = f"{base_directory}/GENERATED/DATA_SOURCES"
+    stage2_dir = data_folder
     
     # Ask iftpwa for a sample from the prior distribution (does not consider normalization - which is why need to rerun later)
     cmd_list = []
-    cmd_list.append(f"sed -i -E 's/force_load_normint: true/force_load_normint: false/' {main_yaml_path}")
+    cmd_list.append(f"sed -i -E 's/force_load_normint: true/force_load_normint: false/' {main_yaml}")
     cmd_list.append(f"mkdir -p {stage1_dir}")
-    cmd_list.append(f"pa run_ift {main_yaml_path} --prior_simulation")
-    cmd_list.append(f"mv {base_directory}/NiftyFits/niftypwa_fit.pkl {stage1_dir}/niftypwa_fit.pkl")
+    cmd_list.append(f"pa run_ift {main_yaml} --prior_simulation")
+    cmd_list.append(f"mv {base_directory}/NIFTY/niftypwa_fit.pkl {stage1_dir}/niftypwa_fit.pkl")
     
     # Need to execute immediately since sim_to_amptools_cfg needs to use it
     #   Generate amptools cfg file using piecewise amplitudes
     execute_cmd(cmd_list, console=console)
     cmd_list = []
-    sim_to_amptools_cfg(stage1_dir + "/niftypwa_fit.pkl", main_yaml_path, output_file=f"{base_directory}/GENERATED/prior_sim_amptools.cfg")
+    sim_to_amptools_cfg(stage1_dir + "/niftypwa_fit.pkl", main_yaml, output_file=f"{base_directory}/GENERATED/prior_sim_amptools.cfg")
 
     # Make simulations (DATA)
     cmd_list.append(f"rm -rf {stage2_dir}")
@@ -57,29 +46,37 @@ def simulate_from_prior(main_yaml_path, iftpwa_yaml_path, base_directory, channe
     cmd_list.append(f"mv {simulator}_diagnostic.root {stage2_dir}/{simulator}_diagnostic_ps.root")
     
     # # Divide data to allow access to integral matrices
-    cmd_list.append(f"pa run_cfgGen {main_yaml_path}")
-    cmd_list.append(f"pa run_divideData {main_yaml_path}")
-    cmd_list.append(f"pa run_processEvents {main_yaml_path} --verbose")
+    cmd_list.append(f"pa run_cfgGen {main_yaml}")
+    cmd_list.append(f"pa run_divideData {main_yaml}")
+    cmd_list.append(f"pa run_processEvents {main_yaml} --verbose")
 
     # Recreate prior sim with proper normalization
-    cmd_list.append(f"sed -i -E 's/force_load_normint: false/force_load_normint: true/' {main_yaml_path}")
-    cmd_list.append(f"mkdir -p {base_directory}/NiftyFits/prior_sim")
-    cmd_list.append(f"pa run_ift {main_yaml_path} --prior_simulation")
-    cmd_list.append(f"mv {base_directory}/NiftyFits/niftypwa_fit.pkl {base_directory}/GENERATED/niftypwa_fit.pkl")
-    cmd_list.append(f"rm -rf {base_directory}/NiftyFits")
+    cmd_list.append(f"sed -i -E 's/force_load_normint: false/force_load_normint: true/' {main_yaml}")
+    cmd_list.append(f"mkdir -p {base_directory}/NIFTY/prior_sim")
+    cmd_list.append(f"pa run_ift {main_yaml} --prior_simulation")
+    cmd_list.append(f"mv {base_directory}/NIFTY/niftypwa_fit.pkl {base_directory}/GENERATED/niftypwa_fit.pkl")
+    cmd_list.append(f"rm -rf {base_directory}/NIFTY")
     
     execute_cmd(cmd_list, console=console)
 
-def sim_to_amptools_cfg(resultFile, yamlFile, output_file):
+def sim_to_amptools_cfg(resultFile, main_yaml, output_file):
     
     """
     Convert a NIFTy prior simulation amplitude field to an AmpTools configuration file
 
     Args:
         resultFile (str): Path to the NIFTy prior simulation pkl result file
-        yamlFile (str): Path to the yaml file
+        main_yaml (str): Path to the main yaml file
         output_file (str): Path to dump the output AmpTools configuration file to
     """
+    
+    from pyamptools.utility.cfg_gen_utils import generate_amptools_cfg, amptools_zlm_ampName, amptools_vps_ampName
+    import pickle as pkl
+    import numpy as np
+    import pandas as pd
+    from iftpwa1.utilities.helpers import load_callable_from_module, reload_fields_and_components
+    from omegaconf import DictConfig
+    import tempfile
     
     # NOTE: For some reason we have to include all 4 terms of the Zlm amplitude whether or not P_gamma is less than 1 or equal to 1
     #       Unsure why this is the case. When P_gamma = 1, half the terms drop off.
@@ -91,27 +88,27 @@ def sim_to_amptools_cfg(resultFile, yamlFile, output_file):
     amp_field_tprime = []
     ift_res_dfs = []
 
-    yaml_conf = load_yaml(yamlFile)
-    min_mass =  yaml_conf['min_mass']
-    max_mass = yaml_conf['max_mass']
-    nmbMasses = yaml_conf['n_mass_bins']
+    main_dict = load_yaml(main_yaml)
+    min_mass =  main_dict['min_mass']
+    max_mass = main_dict['max_mass']
+    nmbMasses = main_dict['n_mass_bins']
     
     ########################
     # DETERMINE POLARIZATION INFO
     ########################
     
-    if 'polarizations' not in yaml_conf:
+    if 'polarizations' not in main_dict:
         console.print("No polarizations found in yaml file. Assuming 100% polarization at angle 0.", style="bold yellow")
         polMag = 1.0
         polAngle = 0
     else:
-        if len(yaml_conf['polarizations']) != 1:
+        if len(main_dict['polarizations']) != 1:
             console.print("Only one polarization is supported at the moment. Using first one", style="bold red")
-        polAngle = list(yaml_conf['polarizations'].keys())[0]
-        if isinstance(yaml_conf['polarizations'][polAngle], (dict, DictConfig)):
-            polMag = float(yaml_conf['polarizations'][polAngle]['pol_mag'])
+        polAngle = list(main_dict['polarizations'].keys())[0]
+        if isinstance(main_dict['polarizations'][polAngle], (dict, DictConfig)):
+            polMag = float(main_dict['polarizations'][polAngle]['pol_mag'])
         else:
-            polMag = float(yaml_conf['polarizations'][polAngle])
+            polMag = float(main_dict['polarizations'][polAngle])
         
     polAngle = int(polAngle)
     if polAngle not in [0, 45, 90, 135]:
@@ -214,7 +211,7 @@ def sim_to_amptools_cfg(resultFile, yamlFile, output_file):
     # Generate the basic config structure
     fitName = "prior_sim"
     basereactName = "reaction"
-    particles = yaml_conf['reaction'].split()
+    particles = main_dict['reaction'].split()
 
     # Generate the basic config file
     initialization = complex(1.0, 0.0)
@@ -283,33 +280,43 @@ def sim_to_amptools_cfg(resultFile, yamlFile, output_file):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Draw sample from NIFTy prior, create amptools cfg file, generate data using {simulator}, and split data into kinematic bins")
-    parser.add_argument("yaml_file", type=str, help="Path to yaml file")
+    parser = argparse.ArgumentParser(description="Draw sample from NIFTy prior, create amptools cfg file, generate data using gen_amp/gen_vec_ps, and split data into kinematic bins")
+    parser.add_argument("main_yaml", type=str, help="Path to main yaml file")
     parser.add_argument("-emin", "--min_ebeam", type=float, default=8.2, help="Minimum photon beam energy (default: %(default)s)")
     parser.add_argument("-emax", "--max_ebeam", type=float, default=8.8, help="Maximum photon beam energy (default: %(default)s)")
-    parser.add_argument("-t", "--t_slope", type=float, default=-1, help="Slope of t distribution, reserved -1 to calculate from min_t and max_t (default: %(default)s)")
+    parser.add_argument("-t", "--t_slope", type=float, default=-1, help="Slope of t distribution, reserved -1 to calculate from min_t and max_t by maximing probability mass(default: %(default)s)")
     parser.add_argument("-nd", "--n_data", type=int, default=100000, help="Number of data events to generate (default: %(default)s)")
     parser.add_argument("-np", "--n_phasespace", type=int, default=500000, help="Number of phase space events to generate (default: %(default)s)")
     parser.add_argument("-s", "--seed", type=int, default=42, help="Random seed (default: %(default)s)")
     args = parser.parse_args()
+    
+    import os
+    os.environ["JAX_PLATFORMS"] = "cpu"
+    import sys
+    from pyamptools.utility.general import load_yaml, dump_yaml, identify_channel, converter, execute_cmd
+    from pyamptools.utility.resultManager import ResultManager, plot_gen_curves
+    import numpy as np
 
-    str_yaml_file = args.yaml_file
+    main_yaml = args.main_yaml
     min_ebeam = args.min_ebeam
     max_ebeam = args.max_ebeam
     n_data = args.n_data
     n_phasespace = args.n_phasespace
     seed = args.seed
     
-    yaml_file = load_yaml(str_yaml_file)
-    base_directory = yaml_file["base_directory"]
-    min_mass = yaml_file["min_mass"]
-    max_mass = yaml_file["max_mass"]
-    min_t = yaml_file["min_t"]
-    max_t = yaml_file["max_t"]
-    iftpwa_yaml = yaml_file["nifty"]["yaml"]
-    wave_names = yaml_file["waveset"].split("_")
+    if not os.path.exists(main_yaml):
+        console.print(f"YAML file does not exist: {main_yaml}", style="bold red")
+        sys.exit(1)
+    
+    main_dict = load_yaml(main_yaml)
+    base_directory = main_dict["base_directory"]
+    min_mass = main_dict["min_mass"]
+    max_mass = main_dict["max_mass"]
+    min_t = main_dict["min_t"]
+    max_t = main_dict["max_t"]
+    iftpwa_dict = main_dict["nifty"]["yaml"]
+    wave_names = main_dict["waveset"].split("_")
     channel = identify_channel(wave_names) # this function performs a check to ensure channel is supported
-    iftpwa_yaml = load_yaml(iftpwa_yaml)
     
     default_prob_mass = 0.9
     
@@ -335,7 +342,7 @@ if __name__ == "__main__":
 
     console.rule()
     console.print("Prior Simulation Configuration", style="bold green")
-    console.print(f"YAML file: {str_yaml_file}")
+    console.print(f"YAML file: {main_yaml}")
     console.print(f"Minimum mass: {min_mass:0.3f}")
     console.print(f"Maximum mass: {max_mass:0.3f}")
     console.print(f"Minimum t: {min_t:0.3f}")
@@ -349,32 +356,34 @@ if __name__ == "__main__":
 
     if not os.path.exists(f"{base_directory}/GENERATED"):
         os.makedirs(f"{base_directory}/GENERATED")
-    iftpwa_yaml_path = f"{base_directory}/GENERATED/iftpwa.yaml"
-    main_yaml_path = f"{base_directory}/GENERATED/main.yaml"
+    iftpwa_dest_path = f"{base_directory}/GENERATED/iftpwa.yaml"
+    main_dest_path = f"{base_directory}/GENERATED/main.yaml"
     
-    with open(iftpwa_yaml_path, "w") as iftpwa_yaml_file, \
-         open(main_yaml_path, "w") as main_yaml_file:
+    with open(iftpwa_dest_path, "w") as iftpwa_yaml_file, \
+         open(main_dest_path, "w") as main_yaml_file:
 
-        iftpwa_yaml['GENERAL']['seed'] = seed
-        iftpwa_yaml["PWA_MANAGER"]["yaml"] = main_yaml_path
-        iftpwa_yaml["IFT_MODEL"]["scale"] = 'auto'
+        iftpwa_dict['GENERAL']['seed'] = seed
+        iftpwa_dict["PWA_MANAGER"]["yaml"] = main_dest_path
+        iftpwa_dict["IFT_MODEL"]["scale"] = 'auto'
         console.print("Updated 'scale' in iftpwa yaml file to 'auto' to auto-scale amplitudes for downstream fitting", style="bold green")
-        yaml_file["nifty"]["yaml"] = iftpwa_yaml_path
-        yaml_file["data_folder"] = f"{base_directory}/GENERATED/DATA_SOURCES"
-        console.print(f"Updated 'data_folder' in main yaml file to {base_directory}/GENERATED/DATA_SOURCES\n", style="bold green")
+        main_dict["nifty"]["yaml"] = iftpwa_dest_path
+        data_folder = main_dict["data_folder"]
+        if not os.path.exists(data_folder):
+            os.makedirs(data_folder)
+        console.print(f"Dumping simulated data into yaml.data_folder: {data_folder}", style="bold blue")
         
         console.rule()
         console.print("NOTE: These YAML files contains properly updated file paths. "
-                      "Since the simulations have been generated, data split into kinematic bins (see AmpToolsFits folder), you are ready to run fits with this yaml pair. "
+                      "Since the simulations have been generated (stored in DATA_SOURCES folder), data split into kinematic bins, you are ready to run fits with this yaml pair. "
                       "User supplied YAML files have not been modified.", style="bold yellow")
-        dump_yaml(iftpwa_yaml, iftpwa_yaml_path, console=console)
-        dump_yaml(yaml_file, main_yaml_path, console=console)
+        dump_yaml(iftpwa_dict, iftpwa_dest_path, console=console)
+        dump_yaml(main_dict, main_dest_path, console=console)
         console.rule()
         
         # Run the prior simulation, drawing a sample from NIFTy prior, use {simulator} to generate data, split data into kinematic bins
-        simulate_from_prior(main_yaml_path, iftpwa_yaml_path, base_directory, channel)
+        simulate_from_prior(main_dest_path, base_directory, data_folder, channel)
 
         # Draw a plot of the generated partial waves
-        resultManager = ResultManager(yaml_file)
+        resultManager = ResultManager(main_dict)
         resultManager.attempt_load_all()
         plot_gen_curves(resultManager)

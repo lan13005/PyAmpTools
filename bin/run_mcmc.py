@@ -62,7 +62,7 @@ use_phase_param = 'tan' # 'tan' = tan half angle form AND 'vonmises' = Von Mises
 console = Console()
 
 # Define a worker function that will run a single MCMC chain
-def worker_function(pyamptools_yaml, iftpwa_yaml, bin_idx, prior_scale, prior_dist, n_samples, n_warmup, 
+def worker_function(main_dict, iftpwa_dict, bin_idx, prior_scale, prior_dist, n_samples, n_warmup, 
                    chain_idx, seed, output_file, cop, wave_prior_scales, target_accept_prob, max_tree_depth, 
                    step_size, adapt_step_size, dense_mass, adapt_mass_matrix, enforce_positive_reference, 
                    mass_centers, t_centers, use_progress_bar):
@@ -73,7 +73,7 @@ def worker_function(pyamptools_yaml, iftpwa_yaml, bin_idx, prior_scale, prior_di
     
     # Set up manager object for this bin_idx
     worker_mcmc = MCMCManager(
-        pyamptools_yaml, iftpwa_yaml, bin_idx,
+        main_dict, iftpwa_dict, bin_idx,
         prior_scale=prior_scale, prior_dist=prior_dist,
         n_chains=1, n_samples=n_samples, n_warmup=n_warmup,
         resume_path=None, cop=cop,
@@ -85,6 +85,7 @@ def worker_function(pyamptools_yaml, iftpwa_yaml, bin_idx, prior_scale, prior_di
         dense_mass=dense_mass,
         adapt_mass_matrix=adapt_mass_matrix,
         enforce_positive_reference=enforce_positive_reference,
+        seed=seed,
         verbose=False
     )
     
@@ -152,31 +153,32 @@ def worker_function(pyamptools_yaml, iftpwa_yaml, bin_idx, prior_scale, prior_di
 
 class MCMCManager:
     
-    def __init__(self, pyamptools_yaml, iftpwa_yaml, bin_idx, prior_scale=100.0, prior_dist='laplace', n_chains=20, n_samples=2000, n_warmup=1000, 
+    def __init__(self, main_dict, iftpwa_dict, bin_idx, prior_scale=100.0, prior_dist='laplace', n_chains=20, n_samples=2000, n_warmup=1000, 
                  resume_path=None, cop="cartesian", wave_prior_scales=None, target_accept_prob=0.85, max_tree_depth=12, 
-                 step_size=0.1, adapt_step_size=True, dense_mass=True, adapt_mass_matrix=True, enforce_positive_reference=False, verbose=True):
+                 step_size=0.1, adapt_step_size=True, dense_mass=True, adapt_mass_matrix=True, enforce_positive_reference=False, seed=42, verbose=True):
 
         # GENERAL PARAMETERS
-        self.pyamptools_yaml = pyamptools_yaml
-        self.iftpwa_yaml = iftpwa_yaml
+        self.main_dict = main_dict
+        self.iftpwa_dict = iftpwa_dict
         self.bin_idx = bin_idx
         self.resume_path = resume_path
         self.cop = cop
         self.enforce_positive_reference = enforce_positive_reference
         self.verbose = verbose
+        self.seed = seed
         
         # EXTRACTED PARAMETERS FROM YAML
-        self.waveNames = self.pyamptools_yaml["waveset"].split("_")
-        self.nmbMasses = self.pyamptools_yaml["n_mass_bins"]
-        self.nmbTprimes = self.pyamptools_yaml["n_t_bins"]
+        self.waveNames = self.main_dict["waveset"].split("_")
+        self.nmbMasses = self.main_dict["n_mass_bins"]
+        self.nmbTprimes = self.main_dict["n_t_bins"]
         self.nPars = 2 * len(self.waveNames)
-        self.masses = np.linspace(self.pyamptools_yaml["min_mass"], self.pyamptools_yaml["max_mass"], self.nmbMasses+1)
+        self.masses = np.linspace(self.main_dict["min_mass"], self.main_dict["max_mass"], self.nmbMasses+1)
         self.mass_centers = np.round(self.masses[:-1] + np.diff(self.masses) / 2, 5)
-        self.ts = np.linspace(self.pyamptools_yaml["min_t"], self.pyamptools_yaml["max_t"], self.nmbTprimes+1)
+        self.ts = np.linspace(self.main_dict["min_t"], self.main_dict["max_t"], self.nmbTprimes+1)
         self.t_centers = np.round(self.ts[:-1] + np.diff(self.ts) / 2, 5)
         
         # REFERENCE WAVES
-        self.reference_waves = self.pyamptools_yaml["phase_reference"].split("_")
+        self.reference_waves = self.main_dict["phase_reference"].split("_")
         self.ref_indices = None
         self.channel = None
         self.refl_sectors = None
@@ -411,7 +413,7 @@ class MCMCManager:
             
         return model
     
-    def run_mcmc_parallel(self, bins=None, nprocesses=None, use_progress_bar=False):
+    def run_mcmc_parallel(self, bins=None, n_processes=-1, use_progress_bar=False):
         """Run MCMC in parallel using multiple processes"""
 
         if self.model is None:
@@ -419,14 +421,14 @@ class MCMCManager:
             sys.exit(1)
         
         # Determine number of processes to use
-        if nprocesses is None:
-            nprocesses = min(mp.cpu_count(), len(bins) * self.n_chains)
+        if n_processes < 1:
+            n_processes = min(mp.cpu_count(), len(bins) * self.n_chains)
         else:
-            nprocesses = min(nprocesses, len(bins) * self.n_chains)
+            n_processes = min(n_processes, len(bins) * self.n_chains)
         
         temp_dir = tempfile.mkdtemp()
         if self.verbose:
-            console.print(f"Running MCMC with {nprocesses} parallel processes", style="bold")
+            console.print(f"Running MCMC with {n_processes} parallel processes", style="bold")
             console.print(f"Processing {len(bins)} bins with {self.n_chains} chains each", style="bold")
             console.print(f"Created temporary directory for results: {temp_dir}", style="bold")
         
@@ -438,9 +440,9 @@ class MCMCManager:
                 output_file = os.path.join(temp_dir, f"bin_{bin_idx}_chain_{chain_idx}.pkl")
                 output_files.append(output_file)
                 task = (
-                    self.pyamptools_yaml, self.iftpwa_yaml, bin_idx,
+                    self.main_dict, self.iftpwa_dict, bin_idx,
                     self.prior_scale, self.prior_dist, self.n_samples, self.n_warmup,
-                    chain_idx, args.seed, output_file, self.cop, self.wave_prior_scales,
+                    chain_idx, self.seed, output_file, self.cop, self.wave_prior_scales,
                     self.target_accept_prob, self.max_tree_depth, self.step_size,
                     self.adapt_step_size, self.dense_mass, self.adapt_mass_matrix,
                     self.enforce_positive_reference, self.mass_centers, self.t_centers,
@@ -452,7 +454,7 @@ class MCMCManager:
             console.print(f"Starting worker processes...", style="bold")
         
         # Use context manager and exceptions to ensure proper cleanup of resources
-        with mp.get_context('spawn').Pool(processes=nprocesses) as pool:
+        with mp.get_context('spawn').Pool(processes=n_processes) as pool:
             try:
                 pool.starmap(worker_function, tasks)
                 # ensure all processes are done before proceeding
@@ -680,8 +682,8 @@ class MCMCManager:
         from iftpwa1.pwa.gluex.gluex_jax_manager import GluexJaxManager
 
         self.pwa_manager = GluexJaxManager(comm0=None, mpi_offset=1,
-                                    yaml_file=self.pyamptools_yaml,
-                                    resolved_secondary=self.iftpwa_yaml, prior_simulation=False, sum_returned_nlls=False, logging_level=logging.WARNING)
+                                    yaml_file=self.main_dict,
+                                    resolved_secondary=self.iftpwa_dict, prior_simulation=False, sum_returned_nlls=False, logging_level=logging.WARNING)
         self.pwa_manager.prepare_nll()
         self.set_bin(self.bin_idx)
 
@@ -958,70 +960,92 @@ class TempMCMC:
         console.print(table)
 
 if __name__ == "__main__":
-    parser = OptimizerHelpFormatter(description="Run MCMC fits using numpyro. [bold yellow]Lots of MCMC args accept list of values. Outer product of hyperparameters is automatically performed.[/bold yellow]")
-    parser.add_argument("yaml_file", type=str,
-                       help="Path to PyAmpTools YAML configuration file")    
+    parser = OptimizerHelpFormatter(description="Run MCMC fits using numpyro.")
+    parser.add_argument("main_yaml", type=str,
+                       help="Path to main YAML configuration file")    
     parser.add_argument("-b", "--bins", type=int, nargs="+", default=None,
-                       help="List of bin indices to process (default: all bins)")
-    parser.add_argument("-np", "--nprocesses", type=int, default=None,
-                       help="Maximum number of parallel processes to use (default: min(CPU count, bins*chains))")
+                       help="List of bin indices to process")
+    parser.add_argument("-np", "--n_processes", type=int, default=None,
+                       help="Maximum number of parallel processes to use")
 
     #### MCMC ARGS ####
-    # Everything in this section accepts a list of values!
-    # A hyperparameter grid search is performed on the outer product of these lists
-    #   This can be very expensive but its power to the people
-    parser.add_argument("-ps", "--prior_scale", type=float, nargs="+", default=[1000.0],
-                       help="Prior scale for the magnitude of the complex amplitudes (default: %(default)s)")
+    parser.add_argument("-ps", "--prior_scale", type=float, default=None,
+                       help="Prior scale for the magnitude of the complex amplitudes")
     # NOTE: Block usage of horseshoe prior using 'choice' argument, bad performance and limited testing
-    parser.add_argument("-pd", "--prior_dist", type=str, choices=['laplace', 'gaussian'], nargs="+", default=['gaussian'], 
-                       help="Prior distribution for the complex amplitudes (default: %(default)s)")
-    parser.add_argument("-nc", "--nchains", type=int, nargs="+", default=[6],
-                       help="Number of chains to use for numpyro MCMC (default: %(default)s)")
-    parser.add_argument("-ns", "--nsamples", type=int, nargs="+", default=[1000],
-                       help="Number of samples to draw per chain (default: %(default)s)")
-    parser.add_argument("-nw", "--nwarmup", type=int, nargs="+", default=[500],
-                       help="Number of warmup samples to draw (default: %(default)s)")
-    parser.add_argument("-ta", "--target_accept_prob", type=float, nargs="+", default=[0.80],
-                       help="Target acceptance probability for NUTS sampler (default: %(default)s)")
-    parser.add_argument("-mtd", "--max_tree_depth", type=int, nargs="+", default=[12],
-                       help="Maximum tree depth for NUTS sampler (default: %(default)s)")
-    parser.add_argument("-ss", "--step_size", type=float, nargs="+", default=[0.1],
-                       help="Initial step size for NUTS sampler (default: %(default)s for cartesian)")
-    parser.add_argument("--adapt_step_size", type=str, nargs="+", choices=["True", "False"], default=["True"],
-                       help="Enable/disable step size adaptation (default: %(default)s)")
-    parser.add_argument("--dense_mass", type=str, nargs="+", choices=["True", "False"], default=["True"],
-                       help="Enable/disable dense mass matrix adaptation (default: %(default)s)")
-    parser.add_argument("--adapt_mass_matrix", type=str, nargs="+", choices=["True", "False"], default=["True"],
-                       help="Enable/disable mass matrix adaptation (default: %(default)s)")
+    parser.add_argument("-pd", "--prior_dist", type=str, choices=['laplace', 'gaussian'], default=None, 
+                       help="Prior distribution for the complex amplitudes")
+    parser.add_argument("-nc", "--nchains", type=int, default=None,
+                       help="Number of chains to use for numpyro MCMC")
+    parser.add_argument("-ns", "--nsamples", type=int, default=None,
+                       help="Number of samples to draw per chain")
+    parser.add_argument("-nw", "--nwarmup", type=int, default=None,
+                       help="Number of warmup samples to draw")
+    parser.add_argument("-ta", "--target_accept_prob", type=float, default=None,
+                       help="Target acceptance probability for NUTS sampler")
+    parser.add_argument("-mtd", "--max_tree_depth", type=int, default=None,
+                       help="Maximum tree depth for NUTS sampler")
+    parser.add_argument("-ss", "--step_size", type=float, default=None,
+                       help="Initial step size for NUTS sampler")
+    parser.add_argument("--adapt_step_size", action="store_true", default=None,
+                       help="Enable step size adaptation")
+    parser.add_argument("--dense_mass", action="store_true", default=None,
+                       help="Enable dense mass matrix adaptation")
+    parser.add_argument("--adapt_mass_matrix", action="store_true", default=None,
+                       help="Enable mass matrix adaptation")
+    parser.add_argument("-s", "--seed", type=int, default=None,
+                       help="Random seed")
     
-    #### SAVE/RESUME ARGS ####
-    parser.add_argument("-r", "--resume", type=str, default=None,
-                       help="Path to saved MCMC state to resume from, warmup will be skipped")
-    
-    #### HELPFUL ARGS ####
+    #### COMMAND LINE ARGS (MOSTLY SHOULD NOT BE USED) ####
     parser.add_argument("--print_wave_names", action="store_true",
                        help="Print wave names")
-    parser.add_argument("--seed", type=int, default=42,
-                       help="Random seed (default: %(default)s)")
-    parser.add_argument("-cop", "--coordinate_system", type=str, choices=["cartesian", "polar"], default="cartesian",
-                       help="Coordinate system to use for the complex amplitudes (default: %(default)s)")
+    parser.add_argument("-cop", "--coordinate_system", type=str, default='cartesian',
+                       help="Coordinate system to use for the complex amplitudes")
     parser.add_argument("--enforce_positive_reference", action="store_true",
-                       help="Force the real part of reference waves to be strictly positive (default: allow negative values)")
+                       help="Force the real part of reference waves to be strictly positive")
     parser.add_argument("--use_progress_bar", action="store_true",
                        help="Use progress bar to track MCMC progress (warning: messy printing when used with multiple processes)")
     
     args = parser.parse_args()
 
-    pyamptools_yaml = load_yaml(args.yaml_file)
-    iftpwa_yaml = pyamptools_yaml["nifty"]["yaml"]
-    iftpwa_yaml = load_yaml(iftpwa_yaml)
+    main_dict = load_yaml(args.main_yaml)
+    iftpwa_dict = main_dict["nifty"]["yaml"] # DictConfig ~ Dict-like object
+    output_folder = os.path.join(main_dict["base_directory"], "MCMC")
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    else:
+        raise ValueError(f"Output folder {output_folder} already exists! Please provide a different path or remove the folder.")
     
-    if not iftpwa_yaml:
+    if not iftpwa_dict:
         console.print("iftpwa YAML file is required", style="bold red")
         sys.exit(1)
-    if not pyamptools_yaml:
-        console.print("PyAmpTools YAML file is required", style="bold red")
+    if not main_dict:
+        console.print("main YAML file is required", style="bold red")
         sys.exit(1)
+        
+    #### PARSE ARGS ####
+    from pyamptools.utility.general import fyea
+    seed = fyea(main_dict["mcmc"], "seed", args.seed)
+    n_processes = fyea(main_dict["mcmc"], "n_processes", args.n_processes)
+    prior_scale = fyea(main_dict["mcmc"], "prior_scale", args.prior_scale)
+    prior_dist = fyea(main_dict["mcmc"], "prior_dist", args.prior_dist)
+    nchains = fyea(main_dict["mcmc"], "nchains", args.nchains)
+    nwarmup = fyea(main_dict["mcmc"], "nwarmup", args.nwarmup)
+    nsamples = fyea(main_dict["mcmc"], "nsamples", args.nsamples)
+    target_accept_prob = fyea(main_dict["mcmc"], "target_accept_prob", args.target_accept_prob)
+    max_tree_depth = fyea(main_dict["mcmc"], "max_tree_depth", args.max_tree_depth)
+    step_size = fyea(main_dict["mcmc"], "step_size", args.step_size)
+    adapt_step_size = fyea(main_dict["mcmc"], "adapt_step_size", args.adapt_step_size)
+    dense_mass = fyea(main_dict["mcmc"], "dense_mass", args.dense_mass)
+    adapt_mass_matrix = fyea(main_dict["mcmc"], "adapt_mass_matrix", args.adapt_mass_matrix)
+    
+    bins = fyea(main_dict["mcmc"], "bins", args.bins)
+    if bins is None:
+        bins = np.arange(main_dict["n_mass_bins"] * main_dict["n_t_bins"])
+    if len(bins) != len(set(bins)):
+        console.print("Warning: user requested repeated bins, ignoring repeated bins", style="bold yellow")
+        bins = sorted(list(set(bins)))
+
+    resume_path = None # TODO: I think this is mostly set up already?
     
     # TODO: Properly implement wave_prior_scales somewhere. Since its a dict we might have to put it into YAML file?
     wave_prior_scales = None
@@ -1030,25 +1054,17 @@ if __name__ == "__main__":
     #     "Dp2+": 150,
     # }
     
-    def run_mcmc_on_output_folder(name, prior_scale, prior_dist, nchains, nsamples, nwarmup, 
-                                 target_accept_prob, max_tree_depth, step_size, adapt_step_size, 
-                                 dense_mass, adapt_mass_matrix):
+    def run_mcmc_on_output_folder():
         """Run MCMC with specific parameters and save to output folder"""
-        if not isinstance(name, str) or name == "":
-            raise ValueError("name should be a non-empty string")
-        output_folder = os.path.join(pyamptools_yaml["base_directory"], "MCMC")
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
-        if os.path.exists(os.path.join(output_folder, name)):
-            console.print(f"Output folder {name} already exists! Skipping this configuration.", style="bold yellow")
-            return
         
         # Initialize MCMC Manager
         mcmc_manager = MCMCManager(
-            pyamptools_yaml, iftpwa_yaml, 0, 
+            main_dict, iftpwa_dict, 0, 
             prior_scale=prior_scale, prior_dist=prior_dist,
             n_chains=nchains, n_samples=nsamples, n_warmup=nwarmup, 
-            resume_path=args.resume, cop=args.coordinate_system, 
+            resume_path=resume_path, cop=args.coordinate_system, 
             wave_prior_scales=wave_prior_scales,
             target_accept_prob=target_accept_prob,
             max_tree_depth=max_tree_depth,
@@ -1056,11 +1072,12 @@ if __name__ == "__main__":
             adapt_step_size=adapt_step_size,
             dense_mass=dense_mass,
             adapt_mass_matrix=adapt_mass_matrix,
-            enforce_positive_reference=args.enforce_positive_reference
+            enforce_positive_reference=args.enforce_positive_reference,
+            seed=seed,
+            verbose=False
         )
         
         console.print(f"\n\n***************************************************", style="bold")
-        console.print(f"Configuration: {name}", style="bold blue")
         console.print(f"Using {mcmc_manager.n_chains} chains with {mcmc_manager.n_samples} samples per chain with {mcmc_manager.n_warmup} warmup samples", style="bold")
         console.print(f"Prior: {mcmc_manager.prior_dist} with scale {mcmc_manager.prior_scale}", style="bold")
         console.print(f"NUTS: Target accept prob: {mcmc_manager.target_accept_prob}", style="bold")
@@ -1077,91 +1094,31 @@ if __name__ == "__main__":
         
         #### RUN MCMC ####
         timer = Timer()
-                
-        # If bins is None, use all bins
-        if args.bins is None:
-            bins = np.arange(mcmc_manager.nmbMasses * mcmc_manager.nmbTprimes)
-        else:
-            bins = args.bins
         
         # Run MCMC in parallel
         start_time = timer.read(return_str=False)[1]
-        final_result_dicts = mcmc_manager.run_mcmc_parallel(bins=bins, nprocesses=args.nprocesses, use_progress_bar=args.use_progress_bar)
+        final_result_dicts = mcmc_manager.run_mcmc_parallel(bins=bins, n_processes=n_processes, use_progress_bar=args.use_progress_bar)
         end_time = timer.read(return_str=False)[1]
         mcmc_run_time = end_time - start_time
         mcmc_it_per_second = (nsamples + nwarmup) * nchains * len(bins) / mcmc_run_time
         
-        ofile = f"{output_folder}/{name}_samples.pkl"
+        ofile = f"{output_folder}/mcmc_samples.pkl"
         with open(ofile, "wb") as f:
             pkl.dump(final_result_dicts, f)
-        if name != "mcmc": # always symlink the latest run 
-            target = os.path.join(output_folder, "mcmc_samples.pkl")
-            console.print(f"Attempting to symlink {ofile} to {target} (the target for default plotting scripts)", style="bold blue")            
-            if os.path.exists(target):
-                if os.path.islink(target):
-                    console.print(f"  Warning: {target} already exists and is a symlink! Overwriting this link with new run", style="bold yellow")
-                    os.remove(target)
-                else:
-                    console.print(f"  Warning: {target} already exists and is not a symlink! Unable to link over it", style="bold yellow")
-            os.symlink(ofile, target)
 
-        console.print(f"Configuration {name} completed", style="bold green")
         console.print(f"Total time elapsed:  {timer.read(return_str=False)[2]:0.2f} seconds", style="bold")
         console.print(f"    MCMC run time: {mcmc_run_time:0.2f} seconds", style="bold")
         console.print(f"    MCMC samples per second: {mcmc_it_per_second:0.1f}", style="bold")
+        # end of run_mcmc_on_output_folder
     
-    # Convert string boolean arguments to actual booleans
-    adapt_step_size_values = [val == "True" for val in args.adapt_step_size]
-    dense_mass_values = [val == "True" for val in args.dense_mass]
-    adapt_mass_matrix_values = [val == "True" for val in args.adapt_mass_matrix]
-    
-    # Create all combinations of parameters
-    param_combinations = list(product(
-        args.prior_scale,
-        args.prior_dist,
-        args.nchains,
-        args.nsamples,
-        args.nwarmup,
-        args.target_accept_prob,
-        args.max_tree_depth,
-        args.step_size,
-        adapt_step_size_values,
-        dense_mass_values,
-        adapt_mass_matrix_values
-    ))
-    
-    console.print(f"\nUser requested {len(param_combinations)} hyperparameter combinations to test", style="bold blue")
-    
-    # Create output folder names based on parameter combinations
-    names = []
-    for combo in param_combinations:
-        prior_scale, prior_dist, nchains, nsamples, nwarmup, target_accept, max_tree_depth, step_size, adapt_step_size, dense_mass, adapt_mass_matrix = combo        
-        name = f"ps{prior_scale}_pd{prior_dist}"
-        name += f"_nc{nchains}_ns{nsamples}_nw{nwarmup}"
-        name += f"_ta{target_accept}_mtd{max_tree_depth}_ss{step_size}"
-
-        # Add boolean parameters only if they're False (assume True is default)
-        if not adapt_step_size:
-            name += "_noAS"
-        if not dense_mass:
-            name += "_noDM"
-        if not adapt_mass_matrix:
-            name += "_noAM"
-            
-        names.append(name)
-    
-    # Run MCMC for each parameter combination
+    # Run MCMC with the single set of parameters
     timer = Timer()
     
-    for i, (name, combo) in enumerate(zip(names, param_combinations)):
-        console.print(f"Running configuration {i+1}/{len(param_combinations)}: {name}", style="bold blue")
-        prior_scale, prior_dist, nchains, nsamples, nwarmup, target_accept, max_tree_depth, step_size, adapt_step_size, dense_mass, adapt_mass_matrix = combo
-        
-        run_mcmc_on_output_folder(
-            name, prior_scale, prior_dist, nchains, nsamples, nwarmup,
-            target_accept, max_tree_depth, step_size, adapt_step_size,
-            dense_mass, adapt_mass_matrix
-        )
+    # copy input main_yaml to output_folder for reproducibility
+    os.system(f"cp {args.main_yaml} {output_folder}/{os.path.basename(args.main_yaml)}")
+    console.print(f"Copied {args.main_yaml} to {output_folder}/{os.path.basename(args.main_yaml)}", style="bold blue")
     
-    console.print(f"All configurations completed in {timer.read(return_str=False)[2]:0.2f} seconds", style="bold green")
+    run_mcmc_on_output_folder()
+    
+    console.print(f"MCMC completed in {timer.read(return_str=False)[2]:0.2f} seconds", style="bold green")
     sys.exit(0)

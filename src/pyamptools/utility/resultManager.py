@@ -1,3 +1,5 @@
+import os
+os.environ["JAX_PLATFORMS"] = "cpu"
 from pyamptools.utility.general import load_yaml, calculate_subplot_grid_size, prettyLabels, identify_channel # TODO: must be loaded before loadIFTResultsFromPkl, IDKY yet
 from pyamptools.utility.MomentUtilities import MomentManagerTwoPS, MomentManagerVecPS
 from pyamptools.utility.IO import loadIFTResultsFromPkl
@@ -10,7 +12,6 @@ from typing import Tuple
 import matplotlib.pyplot as plt
 from rich.console import Console
 import re
-import os
 import tqdm
 from matplotlib.patches import Ellipse
 import matplotlib.patheffects as path_effects
@@ -45,7 +46,7 @@ gen_color = 'xkcd:green'
 mcmc_color = 'black'
 moment_inversion_color = 'xkcd:purple'
 
-ift_alpha = 0.35 # transparency of IFT fit results
+ift_alpha = 0.45 # transparency of IFT fit results
 mle_jitter_scale = 0.1 # percent of the bin width the MLE results are jittered
 
 # All plots are stored in this directory within the `base_directory` key in the YAML file
@@ -53,10 +54,10 @@ default_plot_subdir = "PLOTS"
 
 class ResultManager:
     
-    def __init__(self, yaml_file, silence=False):
+    def __init__(self, main_yaml, silence=False):
         """
         Args:
-            yaml_file [str, Dict]: path to the yaml file or already loaded as a dictionary
+            main_yaml [str, Dict]: path to the main yaml file or already loaded as a dictionary
             verbose [bool]: whether to print verbose output to console
         """
         
@@ -72,24 +73,25 @@ class ResultManager:
         self._mcmc_results = pd.DataFrame()
         self._hist_results = pd.DataFrame()
         self._moment_inversion_results = pd.DataFrame()
+        self._reloaded_normalization_scheme = None # if reloading from cache, this variable will store used normalization scheme
         
-        self.yaml = yaml_file
-        if isinstance(yaml_file, str):
-            self.yaml = load_yaml(yaml_file)
-        self.ift_yaml = self.yaml['nifty']['yaml']
-        self.base_directory = self.yaml['base_directory']
-        self.waveNames = self.yaml['waveset'].split("_")
-        self.phase_reference = self.yaml['phase_reference'].split("_")
-        min_mass = self.yaml['min_mass']
-        max_mass = self.yaml['max_mass']
+        self.main_dict = main_yaml
+        if isinstance(main_yaml, str):
+            self.main_dict = load_yaml(main_yaml)
+        self.iftpwa_dict = self.main_dict['nifty']['yaml']
+        self.base_directory = self.main_dict['base_directory']
+        self.waveNames = self.main_dict['waveset'].split("_")
+        self.phase_reference = self.main_dict['phase_reference'].split("_")
+        min_mass = self.main_dict['min_mass']
+        max_mass = self.main_dict['max_mass']
 
-        self.n_mass_bins = self.yaml['n_mass_bins']
+        self.n_mass_bins = self.main_dict['n_mass_bins']
         self.massBins = np.linspace(min_mass, max_mass, self.n_mass_bins+1)
         self.masses = (self.massBins[:-1] + self.massBins[1:]) / 2
         self.mass_bin_width = self.massBins[1] - self.massBins[0]
         
-        self.n_t_bins = self.yaml['n_t_bins']
-        self.ts = np.linspace(self.yaml['min_t'], self.yaml['max_t'], self.n_t_bins+1)
+        self.n_t_bins = self.main_dict['n_t_bins']
+        self.ts = np.linspace(self.main_dict['min_t'], self.main_dict['max_t'], self.n_t_bins+1)
         self.t_centers = (self.ts[:-1] + self.ts[1:]) / 2
         self.t_bin_width = self.ts[1] - self.ts[0]
         
@@ -110,9 +112,9 @@ class ResultManager:
         self.moment_cache_location = f"{self.base_directory}/projected_moments_cache.pkl"
         
         # TODO: fix bins per group
-        self.bpg = self.yaml['amptools']['bins_per_group']
+        self.bpg = self.main_dict['bins_per_group']
         
-        n_t_bins = self.yaml['n_t_bins']
+        n_t_bins = self.main_dict['n_t_bins']
         if n_t_bins != 1:
             self.console.print(f"[bold yellow]warning: Default plotting scripts will not work with more than 1 t-bin. Data loading should be fine[/bold yellow]")
         
@@ -140,7 +142,7 @@ class ResultManager:
             self.sectors[wave[-1]].append(f"{wave}_amp")
         
         self.console.print(f"\n")
-        self.console.print(header_fmt.format(f"Parsing yaml_file with these expected settings:"))
+        self.console.print(header_fmt.format(f"Parsing main_yaml with these expected settings:"))
         self.console.print(f"wave_names: {self.waveNames}")
         self.console.print(f"identified {len(self.sectors)} incoherent sectors: {self.sectors}")
         self.console.print(f"n_mass_bins: {self.n_mass_bins}")
@@ -148,19 +150,34 @@ class ResultManager:
         self.console.print(f"\n")
         
     def attempt_load_all(self):
+        
         if self._hist_results.empty:
             self._hist_results = self.load_hist_results()
             
         if os.path.exists(self.moment_cache_location):
-            self.console.print(f"Loading cached data with projected moments (and original amplitudes, etc) from {self.moment_cache_location}")
+            self.console.print(f"\nLoading cached data with projected moments (and original amplitudes, etc) from {self.moment_cache_location}\n", style="bold dark_orange")
             with open(self.moment_cache_location, "rb") as f:
                 _results = pkl.load(f)
-                self._mle_results  = _results["mle"]  if "mle"  in _results else self.load_mle_results()
-                self._mcmc_results = _results["mcmc"] if "mcmc" in _results else self.load_mcmc_results()
-                self._ift_results  = _results["ift"]  if "ift"  in _results else self.load_ift_results(source_type="FITTED")
-                self._gen_results  = _results["gen"]  if "gen"  in _results else self.load_ift_results(source_type="GENERATED")
-                self._moment_inversion_results = _results["moment_inversion"] if "moment_inversion" in _results else self.load_moment_inversion_results()
-                self.moment_latex_dict = _results["moment_latex_dict"] if "moment_latex_dict" in _results else None
+                
+                self._reloaded_normalization_scheme = _results["normalization_scheme"]
+                
+                if "mle"  in _results and not _results["mle"].empty: self._mle_results  = _results["mle"]
+                else: self._mle_results  = self.load_mle_results()
+                    
+                if "mcmc" in _results and not _results["mcmc"].empty: self._mcmc_results = _results["mcmc"]
+                else: self._mcmc_results = self.load_mcmc_results()
+                    
+                if "ift"  in _results and not _results["ift"][0].empty: self._ift_results  = _results["ift"]
+                else: self._ift_results  = self.load_ift_results(source_type="FITTED")
+                    
+                if "gen"  in _results and not _results["gen"][0].empty: self._gen_results  = _results["gen"]
+                else: self._gen_results  = self.load_ift_results(source_type="GENERATED")
+                
+                if "moment_inversion" in _results and not _results["moment_inversion"].empty: self._moment_inversion_results = _results["moment_inversion"]
+                else: self._moment_inversion_results = self.load_moment_inversion_results()
+                
+                if "moment_latex_dict" in _results: self.moment_latex_dict = _results["moment_latex_dict"]
+                else: self.moment_latex_dict = None
             return
         else:
             self._mle_results  = self.load_mle_results()
@@ -169,7 +186,7 @@ class ResultManager:
             self._gen_results = self.load_ift_results(source_type="GENERATED")
             self._moment_inversion_results = self.load_moment_inversion_results()
             
-    def attempt_project_moments(self, normalization_scheme=0, pool_size=1):
+    def attempt_project_moments(self, normalization_scheme=0, pool_size=-1):
         
         self.console.print(f"User requested moments to be calculated")
         dfs_to_process = [
@@ -178,6 +195,10 @@ class ResultManager:
             ("ift",  self._ift_results[0]),
             ("gen",  self._gen_results[0])
         ]
+        
+        # Load pool size from yaml file if not usable number
+        if pool_size < 1:
+            pool_size = self.main_dict['n_processes']
         
         _results = {}
         # Project dataframe of partial wave amplitudes into moment basis
@@ -230,6 +251,7 @@ class ResultManager:
         if "gen" not in _results:  _results["gen"]  = self._gen_results
         if "moment_inversion" not in _results:  _results["moment_inversion"]  = self._moment_inversion_results
         _results["moment_latex_dict"] = self.moment_latex_dict
+        _results["normalization_scheme"] = normalization_scheme
         with open(self.moment_cache_location, "wb") as f:
             pkl.dump(_results, f)
 
@@ -275,7 +297,7 @@ class ResultManager:
         if source_name is None:
             return self._hist_results
         
-        result_dir = f"{base_directory}/AmpToolsFits"
+        result_dir = f"{base_directory}/BINNED_DATA"
         if not os.path.exists(result_dir):
             self.console.print(f"[bold red]No 'histogram' results found in {result_dir}, return existing results with shape {self._hist_results.shape}\n[/bold red]")
             return self._hist_results
@@ -316,7 +338,7 @@ class ResultManager:
         if source_type not in ["GENERATED", "FITTED"]:
             raise ValueError(f"Source type {source_type} not supported. Must be one of: [GENERATED, FITTED]")
         
-        subdir = "GENERATED" if source_type == "GENERATED" else "NiftyFits"
+        subdir = "GENERATED" if source_type == "GENERATED" else "NIFTY"
         result_dir = f"{base_directory}/{subdir}"
         self.console.print(header_fmt.format(f"Loading '{source_type}' results from {result_dir}"))
         
@@ -635,7 +657,6 @@ class ResultManager:
         # Load the first pickle file found
         moment_inversion_results = pd.DataFrame()
         for inversion_file in pkl_list:
-            massBin = int(inversion_file.split("_mb")[1].split(".pkl")[0])
             with open(inversion_file, 'rb') as f:
                 results = pkl.load(f)
             _moment_inversion_results = results['prediction']
@@ -906,7 +927,7 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
         binned_gen_results  = safe_query(default_gen_results,  f'mass == {mass}')
         binned_ift_results  = safe_query(default_ift_results,  f'mass == {mass}')
         binned_moment_inversion_results = safe_query(default_moment_inversion_results, f'mass == {mass}')
-        
+
         # Skip bin if no data available for this mass bin
         if (binned_mcmc_samples.empty and binned_mle_results.empty and 
             binned_gen_results.empty and binned_ift_results.empty and binned_moment_inversion_results.empty):
@@ -1236,15 +1257,17 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
     
     nEvents, nEvents_err = None, None
     if not hist_results.empty:
-        nEvents = hist_results['nEvents'].values    
+        nEvents = hist_results['nEvents'].values
         nEvents_err = hist_results['nEvents_err'].values
 
     samples_to_draw = pd.DataFrame()
     if not mcmc_results.empty:
+        resultManager.console.print(f"subsampling mcmc results with '{mcmc_selection}' selection\n", style="bold yellow")
         if mcmc_selection == "random":
             samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.sample(n=mcmc_nsamples_per_bin, replace=False)).reset_index(drop=True)
         elif mcmc_selection == "thin":
             step_size = mcmc_results['sample'].unique().size // mcmc_nsamples_per_bin
+            if step_size == 0: step_size = 1 # requested more samples than available
             samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.iloc[::step_size]).reset_index(drop=True)
         elif mcmc_selection == "last":
             samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.iloc[-mcmc_nsamples_per_bin:]).reset_index(drop=True)
@@ -1483,6 +1506,7 @@ def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin
             samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.sample(n=mcmc_nsamples_per_bin, replace=False)).reset_index(drop=True)
         elif mcmc_selection == "thin":
             step_size = mcmc_results['sample'].unique().size // mcmc_nsamples_per_bin
+            if step_size == 0: step_size = 1 # requested more samples than available
             samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.iloc[::step_size]).reset_index(drop=True)
         elif mcmc_selection == "last":
             samples_to_draw = mcmc_results.groupby('mass')[mcmc_results.columns].apply(lambda x: x.iloc[-mcmc_nsamples_per_bin:]).reset_index(drop=True)
@@ -1516,7 +1540,8 @@ def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin
                 if np.allclose(moment_value, 0, atol=1e-6):
                     moment_is_zero = True
             if moment_is_zero:
-                resultManager.console.print(f"[bold yellow]Moment '{moment_name}' is zero in DataFrame'{df_name}', skipping.[/bold yellow]")
+                # If moment is zero in one dataframe then skip this plot. Presumably we should just compare approaches with the same initial model?
+                resultManager.console.print(f"[bold yellow]Moment '{moment_name}' is zero in DataFrame '{df_name}', skipping.[/bold yellow]")
                 plt.close()
                 return
         

@@ -324,47 +324,43 @@ def load_yaml(path_to_yaml, resolve=True):
         resolve (bool): Whether to resolve (variable interpolation) the yaml file
     """
     
-    try:
-        yaml = OmegaConf.load(path_to_yaml)
+    yaml = OmegaConf.load(path_to_yaml)
 
-        # Dump git commit hash into yaml file, do not resolve variables. Dont update yaml if exist.
-        changed = False
-        pyamptools_commit_hash = get_git_commit_hash_for_package("pyamptools")
-        iftpwa_commit_hash = get_git_commit_hash_for_package("iftpwa1")
-        if "pyamptools_commit_hash" not in yaml or yaml.pyamptools_commit_hash != pyamptools_commit_hash:
-                yaml.pyamptools_commit_hash = pyamptools_commit_hash
-                changed = True
-        if "iftpwa_commit_hash" not in yaml or yaml.iftpwa_commit_hash != iftpwa_commit_hash:
-                yaml.iftpwa_commit_hash = iftpwa_commit_hash
-                changed = True
-        if changed:
-            print(f"Current pyamptools or iftpwa commit differs from hash in the yaml file. Updating...")
-            import filelock
-            import os
-            import time
-            import random
-            time.sleep(random.uniform(0.1, 0.5)) # random delay to reduce fighting
-            try:
-                lock_path = f"{path_to_yaml}.lock"
-                with filelock.FileLock(lock_path, timeout=30):
-                    current_yaml = OmegaConf.load(path_to_yaml) # re-read to ensure we are not overwriting changes
-                    current_yaml.pyamptools_commit_hash = pyamptools_commit_hash
-                    current_yaml.iftpwa_commit_hash = iftpwa_commit_hash
-                    dump_yaml(current_yaml, path_to_yaml, resolve=False)
-                    print(f"Successfully updated YAML file with new commit hashes")
-            except filelock.Timeout:
-                print(f"Could not acquire lock for {path_to_yaml} after 30 seconds. Continuing without updating.")
-            except Exception as e:
-                print(f"Error while trying to update YAML file: {e}. Continuing without updating.")
-        
-        yaml = OmegaConf.to_container(yaml, resolve=resolve)
-        if "default_yaml" in yaml:
-            default = OmegaConf.load(yaml["default_yaml"])
-            yaml = OmegaConf.merge(default, yaml)  # Merge working yaml INTO the default yaml, ORDER MATTERS!
-        return yaml
-    except Exception as e:
-        print(f"Error loading yaml file: {e}")
-        return None
+    # Dump git commit hash into yaml file, do not resolve variables. Dont update yaml if exist.
+    changed = False
+    pyamptools_commit_hash = get_git_commit_hash_for_package("pyamptools")
+    iftpwa_commit_hash = get_git_commit_hash_for_package("iftpwa1")
+    if "pyamptools_commit_hash" not in yaml or yaml.pyamptools_commit_hash != pyamptools_commit_hash:
+            yaml.pyamptools_commit_hash = pyamptools_commit_hash
+            changed = True
+    if "iftpwa_commit_hash" not in yaml or yaml.iftpwa_commit_hash != iftpwa_commit_hash:
+            yaml.iftpwa_commit_hash = iftpwa_commit_hash
+            changed = True
+    if changed:
+        print(f"Current pyamptools or iftpwa commit differs from hash in the yaml file. Updating...")
+        import filelock
+        import os
+        import time
+        import random
+        time.sleep(random.uniform(0.1, 0.5)) # random delay to reduce fighting
+        try:
+            lock_path = f"{path_to_yaml}.lock"
+            with filelock.FileLock(lock_path, timeout=30):
+                current_yaml = OmegaConf.load(path_to_yaml) # re-read to ensure we are not overwriting changes
+                current_yaml.pyamptools_commit_hash = pyamptools_commit_hash
+                current_yaml.iftpwa_commit_hash = iftpwa_commit_hash
+                dump_yaml(current_yaml, path_to_yaml, resolve=False)
+                print(f"Successfully updated YAML file with new commit hashes")
+        except filelock.Timeout:
+            print(f"Could not acquire lock for {path_to_yaml} after 30 seconds. Continuing without updating.")
+        except Exception as e:
+            print(f"Error while trying to update YAML file: {e}. Continuing without updating.")
+    
+    yaml = OmegaConf.to_container(yaml, resolve=resolve)
+    if "default_yaml" in yaml:
+        default = OmegaConf.load(yaml["default_yaml"])
+        yaml = OmegaConf.merge(default, yaml)  # Merge working yaml INTO the default yaml, ORDER MATTERS!
+    return yaml
 
 
 class YamlDumper(OmegaConfDumper):
@@ -402,6 +398,8 @@ def dump_yaml(cfg, output_file_path, indent=4, resolve=False, console=None):
         Indentation (how many spaces per level), by default 4
     resolve : bool, optional
         Resolve variables (intepolation) in cfg before dumping, by default False
+    console : Console, optional
+        Rich console for output, by default None
     """
     if not isinstance(cfg, OmegaConf):
         try:
@@ -414,6 +412,10 @@ def dump_yaml(cfg, output_file_path, indent=4, resolve=False, console=None):
     if console is None:
         console = Console()
     console.print(f"Writing yaml file to: {output_file_path}", style="bold blue")
+    
+    # Make sure parent directory exists
+    if not os.path.exists(os.path.dirname(output_file_path)) and os.path.dirname(output_file_path):
+        os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
     
     with open(output_file_path, "w") as f:
         yaml.dump(  # type: ignore
@@ -771,3 +773,10 @@ def recursive_replace(d, old, new):
         elif isinstance(v, str):
             if old in v:
                 d[k] = v.replace(old, new)
+                
+def fyea(dict_value, final_key, arg_value): # from yaml else argparse
+    if arg_value is None:
+        return dict_value[final_key]
+    else:
+        _general_console.print(f"overiding yaml '{final_key}' with {arg_value}", style="bold yellow")
+        return arg_value

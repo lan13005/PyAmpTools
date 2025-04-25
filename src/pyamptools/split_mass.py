@@ -32,7 +32,6 @@ def split_mass_t(
         lowT (float): Lower bound of t range
         highT (float): Upper bound of t range
         nTBins (int): Number of t bins
-        split_pool_size (int): Number of parallel processes to split the data, default 1
         treeName (str): Name of the TTree in the input ROOT file
         mass_edges (List[float]): Bin the data with these bin edges (nMBins + 1 elements), default None
         t_edges (List[float]): Bin the data with these bin edges (nTBins + 1 elements), default None

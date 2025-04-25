@@ -461,6 +461,8 @@ def optimize_single_bin_scipy(objective, initial_params, bin_idx, method='L-BFGS
         dict: Dictionary containing optimization results
     """
     
+    from scipy.optimize import LbfgsInvHessProduct
+    
     x0 = initial_params.copy()
     objective.check_reference_wave_constraints(x0)
     
@@ -479,35 +481,24 @@ def optimize_single_bin_scipy(objective, initial_params, bin_idx, method='L-BFGS
                 'gtol': 1e-10,         # Gradient norm tolerance
                 'maxcor': 10           # Number of stored corrections
             }
-        elif method == "trust-ncg":
-            options = {
-                'initial_trust_radius': 1.0,  # Starting trust-region radius
-                'max_trust_radius': 1000.0,   # Maximum trust-region radius
-                'eta': 0.15,                  # Acceptance stringency for proposed steps
-                'gtol': 1e-8,                 # Gradient norm tolerance
-                'maxiter': 2000               # Maximum number of iterations
-            }
-        elif method == "trust-krylov":
-            options = {
-                'inexact': False,  # Solve subproblems with high accuracy
-                'gtol': 1e-8,      # Gradient norm tolerance
-                'maxiter': 2000    # Maximum number of iterations
-            }
+        # elif method == "trust-ncg":
+        #     options = {
+        #         'initial_trust_radius': 1.0,  # Starting trust-region radius
+        #         'max_trust_radius': 1000.0,   # Maximum trust-region radius
+        #         'eta': 0.15,                  # Acceptance stringency for proposed steps
+        #         'gtol': 1e-8,                 # Gradient norm tolerance
+        #         'maxiter': 2000               # Maximum number of iterations
+        #     }
+        # elif method == "trust-krylov":
+        #     options = {
+        #         'inexact': False,  # Solve subproblems with high accuracy
+        #         'gtol': 1e-8,      # Gradient norm tolerance
+        #         'maxiter': 2000    # Maximum number of iterations
+        #     }
         else:
             raise ValueError(f"Invalid method: {method}")
         
-    if method == 'trust-ncg' or method == 'trust-krylov':
-        objective._deriv_order = 0 # objective.__call__ is not used so no need to set deriv_order
-        result = minimize(
-            objective.objective,
-            x0,
-            method=method,
-            jac=objective.gradient,
-            hessp=objective.hessp,
-            bounds=bounds,
-            options=options
-        )
-    elif method == 'L-BFGS-B':
+    if method == 'L-BFGS-B':
         objective._deriv_order = 1 # since jac=True we need the function to return both the objective and the gradient
         result = minimize(
             objective,
@@ -517,6 +508,17 @@ def optimize_single_bin_scipy(objective, initial_params, bin_idx, method='L-BFGS
             bounds=bounds,
             options=options
         )
+    # elif method == 'trust-ncg' or method == 'trust-krylov':
+    #     objective._deriv_order = 0 # objective.__call__ is not used so no need to set deriv_order
+    #     result = minimize(
+    #         objective.objective,
+    #         x0,
+    #         method=method,
+    #         jac=objective.gradient,
+    #         hessp=objective.hessp,
+    #         bounds=bounds,
+    #         options=options
+    #     )
     else:
         raise ValueError(f"Invalid method: {method}")
         
@@ -524,10 +526,23 @@ def optimize_single_bin_scipy(objective, initial_params, bin_idx, method='L-BFGS
     hessian_matrix = objective.hessian(result.x)
     covariance, eigenvalues, hessian_diagnostics = regularize_hessian_return_covariance(hessian_matrix, ref_indices=objective.ref_indices)
     
-    # For comparison, try to get scipy's approximated inverse Hessian if available, always dump it if possible
+    # For comparison, try to get lbfgs approximated inverse Hessian if available
+    #   NOTE: lbfgs does not store the full hessian, only a low rank approximation
+    #         It does store a (inverse) matrix vector product which we use to reconstruct
+    #         the covariance matrix from by multiplying by basis vectors
     scipy_covariance = None
     if hasattr(result, 'hess_inv'):
-        scipy_covariance = result.hess_inv
+        if isinstance(result.hess_inv, LbfgsInvHessProduct):
+            n = len(result.x)
+            scipy_covariance = np.zeros((n, n))
+            for i in range(n):
+                e_i = np.zeros(n)
+                e_i[i] = 1.0
+                hess_i = result.hess_inv.dot(e_i)
+                for j in range(n):
+                    scipy_covariance[i, j] = hess_i[j]
+        else:
+            scipy_covariance = np.array(result.hess_inv)
         
     return {
         'parameters': result.x,

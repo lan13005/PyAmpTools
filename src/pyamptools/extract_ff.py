@@ -7,7 +7,7 @@ import sys
 from pyamptools.utility.general import load_yaml
 from omegaconf.dictconfig import DictConfig
 
-def extract_ff(results, outfileName="", fmt=".5f", test_regex=False, no_phases=False, only=None, regex_merge=None, yaml_file=''):
+def extract_ff(results, outfileName="", fmt=".5f", test_regex=False, no_phases=False, only=None, regex_merge=None, main_dict={}):
     """
     Extract fit fractions and phase differences between pairs of waves from a FitResults object.
 
@@ -27,7 +27,7 @@ def extract_ff(results, outfileName="", fmt=".5f", test_regex=False, no_phases=F
                 - '.*(.)$~>\\1': Captures last character and replaces full match
                 - '.*reaction_(000|045|090|135)::(Pos|Neg)(?:Im|Re)::': Removes matched pattern,
                   allowing grouping over polarizations and mirrored sums
-        yaml_file (str): YAML file name. Allows program to load YAML state, i.e. for getting user requested coherent sums
+        main_dict (Dict): main yaml dictionary. Allows program to load YAML state, i.e. for getting user requested coherent sums
     """
 
     def write_ff(amp, intensity, error, intensity_corr, error_corr, only=None):
@@ -106,9 +106,9 @@ def extract_ff(results, outfileName="", fmt=".5f", test_regex=False, no_phases=F
                     write_ff(merged_amp, intensity, error, intensity_corr, error_corr, only)
             merged.clear()
     
-    ########## CHECK IF results_dump.coherent_sums is in yaml_file ##########
-    if isinstance(yaml_file, (dict, DictConfig)) and "result_dump" in yaml_file and "coherent_sums" in yaml_file["result_dump"]:
-        coherent_sums = yaml_file["result_dump"]["coherent_sums"]
+    ########## CHECK IF results_dump.coherent_sums is in main_dict ##########
+    if isinstance(main_dict, (dict, DictConfig)) and "result_dump" in main_dict and "coherent_sums" in main_dict["result_dump"]:
+        coherent_sums = main_dict["result_dump"]["coherent_sums"]
         print("\nMerging Amplitude Groups based on user request in YAML field `result_dump.coherent_sums`")
         merged = {}
         for k, vs in coherent_sums.items():
@@ -156,7 +156,7 @@ def _cli_extract_ff():
     parser.add_argument("--no_phases", action="store_true", help="Do not dump phase differences")
     parser.add_argument("--only", type=str, default=None, help="Only dump fit fractions for ['acc', 'noacc']")
     parser.add_argument("--regex_merge", type=str, nargs="+", help="Merge amplitudes: Regex pair (pattern, replace) separated by ~>")
-    parser.add_argument("--yaml_file", type=str, default="", help="YAML file name")
+    parser.add_argument("--main_yaml", type=str, default="", help="YAML file name")
     args = parser.parse_args(sys.argv[1:])
 
     ################### LOAD LIBRARIES ##################
@@ -171,9 +171,10 @@ def _cli_extract_ff():
     regex_merge = args.regex_merge
     no_phases = args.no_phases
     only = args.only
-    yaml_file = args.yaml_file
-    if yaml_file != "":
-        yaml_file = load_yaml(yaml_file)
+    main_yaml = args.main_yaml
+    main_dict = {}
+    if main_yaml != "":
+        main_dict = load_yaml(main_yaml)
     assert os.path.isfile(fitFile), "Fit Results file does not exist at specified path"
 
     ############## LOAD FIT RESULTS OBJECT ##############
@@ -183,7 +184,7 @@ def _cli_extract_ff():
         exit()
 
     ############## EXTRACT FIT FRACTIONS ##############
-    extract_ff(results, outfileName, fmt, args.test_regex, no_phases, only, regex_merge, yaml_file)
+    extract_ff(results, outfileName, fmt, args.test_regex, no_phases, only, regex_merge, main_dict)
 
 if __name__ == "__main__":
     _cli_extract_ff()

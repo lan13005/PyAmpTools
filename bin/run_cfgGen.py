@@ -14,7 +14,7 @@ from pyamptools.utility.cfg_gen_utils import generate_amptools_cfg, help_header
 from rich.console import Console
 console = Console()
 
-def generate_amptools_cfg_from_dict(yaml_file, output_location):
+def generate_amptools_cfg_from_dict(main_dict, output_location):
     #####################################################
     ################ GENERAL SPECIFICATION ##############
     #####################################################
@@ -25,8 +25,8 @@ def generate_amptools_cfg_from_dict(yaml_file, output_location):
     fitName = "PLACEHOLDER_FITNAME"
     cfgFileOutputName = output_location
     basereactName = "reaction"
-    data_folder = yaml_file["data_folder"]
-    particles = yaml_file["reaction"].split(" ")
+    data_folder = main_dict["data_folder"]
+    particles = main_dict["reaction"].split(" ")
     console.print(f"Particles in reaction: {particles}", style="bold blue")
 
     cfgFileOutputFolder = os.path.dirname(cfgFileOutputName) if "/" in cfgFileOutputName else "."
@@ -43,10 +43,10 @@ def generate_amptools_cfg_from_dict(yaml_file, output_location):
 
     # If user supplies waveset string we will parse and use that
     #   otherwise we will check if buttons have been clicked.
-    if yaml_file["waveset"] == "":
+    if main_dict["waveset"] == "":
         check_string = "You did not select any partial waves... \n Please enter a waveset string and try again."
     else:
-        waveset = yaml_file["waveset"].split("_")
+        waveset = main_dict["waveset"].split("_")
         # Using waveset string:  Sp0+_Dp2+
         for wave in waveset:
             if wave == "isotropic": continue
@@ -58,17 +58,17 @@ def generate_amptools_cfg_from_dict(yaml_file, output_location):
                 check_string += f"\n\nExample partial vector pseudoscalar wave names: {example_vps_names[:10]}"
                 return check_string, generate_success
 
-    if yaml_file["real_waves"] == "" or yaml_file["fixed_waves"] is None:
-        realAmps = yaml_file["real_waves"].split("_")
+    if main_dict["real_waves"] == "" or main_dict["fixed_waves"] is None:
+        realAmps = main_dict["real_waves"].split("_")
         console.print(f"Using real waves: {realAmps}", style="bold blue")
 
-    if yaml_file["fixed_waves"] == "" or yaml_file["fixed_waves"] is None:
-        fixedAmps = yaml_file["fixed_waves"].split("_")
+    if main_dict["fixed_waves"] == "" or main_dict["fixed_waves"] is None:
+        fixedAmps = main_dict["fixed_waves"].split("_")
         console.print(f"Using fixed waves: {fixedAmps}", style="bold blue")
 
     if len(used_quantum_numbers) == 0:
         check_string = "You did not select any partial waves... \n Please go make some selections or enter a waveset string and try again."
-        check_string += f'\nYour waveset string: {yaml_file["waveset"]}'
+        check_string += f'\nYour waveset string: {main_dict["waveset"]}'
         check_string += f"\n\nExample partial wave names: {example_zlm_names}"
         return check_string, generate_success
 
@@ -82,7 +82,7 @@ def generate_amptools_cfg_from_dict(yaml_file, output_location):
     used_pols = []
     used_polMags = []
     used_polFixedScales = []
-    pols = yaml_file["polarizations"] # pols can be a Dict of float values or a Dict of Dicts(storing polarization magnitude and boolean for fixed scale factor)
+    pols = main_dict["polarizations"] # pols can be a Dict of float values or a Dict of Dicts(storing polarization magnitude and boolean for fixed scale factor)
     for i, (polAngle, mag) in enumerate(pols.items()):
         used_pols.append(polAngle)
         if isinstance(mag, float):
@@ -181,11 +181,11 @@ def generate_amptools_cfg_from_dict(yaml_file, output_location):
             basereactName,
             particles,
             header=help_header,
-            datareader=yaml_file["datareader"],
-            add_amp_factor=yaml_file.get("add_amp_factor", "").strip(),
-            append_to_cfg=yaml_file.get("append_to_cfg", "").strip(),
-            append_to_decay=yaml_file.get("append_to_decay", "").strip(),
-            initialization=yaml_file.get("initialization", None),
+            datareader=main_dict["datareader"],
+            add_amp_factor=main_dict.get("add_amp_factor", "").strip(),
+            append_to_cfg=main_dict.get("append_to_cfg", "").strip(),
+            append_to_decay=main_dict.get("append_to_decay", "").strip(),
+            initialization=main_dict.get("initialization", None),
         )
 
         generate_success = True
@@ -207,23 +207,23 @@ def generate_amptools_cfg_from_dict(yaml_file, output_location):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate an AmpTools configuration file for a Zlm fit")
-    parser.add_argument("yaml_name", type=str, default="conf/configuration.yaml", help="Path a configuration yaml file")
+    parser.add_argument("main_yaml", type=str, default="conf/configuration.yaml", help="Path a configuration yaml file")
     parser.add_argument("-o", "--output_location", type=str, default="", help="Path to the output configuration file")
     args = parser.parse_args()
-    yaml_name = args.yaml_name
+    main_yaml = args.main_yaml
     output_location = args.output_location
     cwd = os.getcwd()
 
     console.rule()
     console.print(f"Running {__file__}", style="bold blue")
-    console.print(f"  yaml location: {yaml_name}", style="bold blue")
+    console.print(f"  yaml location: {main_yaml}", style="bold blue")
     console.rule()
 
-    yaml_file = load_yaml(yaml_name)
+    main_dict = load_yaml(main_yaml)
     
-    output_location = f"{yaml_file['base_directory']}/amptools.cfg" if output_location == "" else output_location
+    output_location = f"{main_dict['base_directory']}/amptools.cfg" if output_location == "" else output_location
 
-    result, generate_success = generate_amptools_cfg_from_dict(yaml_file, output_location)
+    result, generate_success = generate_amptools_cfg_from_dict(main_dict, output_location)
 
     if generate_success:
         with open(output_location, "w") as f:
