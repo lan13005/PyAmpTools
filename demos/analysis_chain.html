@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Analysis Chain Example &#8212; PyAmpTools</title>
+    <title>Analysis Workflow &#8212; PyAmpTools</title>
   
   
   
@@ -60,8 +60,8 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'demos/analysis_chain';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Analysis Chain Gallery" href="../gallery.html" />
-    <link rel="prev" title="Analysis Chain Script" href="../analysis_example.html" />
+    <link rel="next" title="iftpwa - Introduction" href="../ift/iftpwa_intro.html" />
+    <link rel="prev" title="Introduction" href="../optimization.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -174,20 +174,17 @@
             </li>
         </ul>
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
-<ul class="nav bd-sidenav">
+<ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../optimization.html">Introduction</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Analysis Workflow</a></li>
+
+
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_intro.html">iftpwa - Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_cf.html">iftpwa - Correlated Field Model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_tips.html">iftpwa - Tips</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Analysis Chain Example</span></p>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../analysis_example.html">Analysis Chain Script</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Analysis Chain Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Analysis Chain Gallery</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
 <ul class="nav bd-sidenav">
@@ -388,7 +385,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Analysis Chain Example</h1>
+    <h1>Analysis Workflow</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -398,14 +395,17 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#draw-prior-sample-from-iftpwa">Draw prior sample from <code class="docutils literal notranslate"><span class="pre">iftpwa</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate-data-from-the-model-and-phase-space-mc">Simulate data from the model and phase space MC</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-mle-fits-using-amptools">Run the MLE fits using <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-iftpwa-fits">Run the <code class="docutils literal notranslate"><span class="pre">iftpwa</span></code> fits</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot-the-moments-and-dump-all-results-to-a-csv-file">Plot the moments and dump all results to a csv file</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#save-copies-for-the-gallery">Save copies for the gallery</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cleanup">Cleanup</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Analysis Workflow</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#motivation">Motivation</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulations">Simulations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-mle-fits-using-iminuit">Run the MLE fits using iminuit</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-mcmc-fits-using-nuts-algorithm">Run MCMC fits using NUTS algorithm</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-iftpwa-fit">Run <code class="docutils literal notranslate"><span class="pre">iftpwa</span></code> fit</a></li>
 </ul>
+</li>
+</ul>
+
             </nav>
         </div>
     </div>
@@ -416,199 +416,238 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="analysis-chain-example">
-<h1>Analysis Chain Example<a class="headerlink" href="#analysis-chain-example" title="Link to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="analysis-workflow">
+<h1>Analysis Workflow<a class="headerlink" href="#analysis-workflow" title="Link to this heading">#</a></h1>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="motivation">
+<h1>Motivation<a class="headerlink" href="#motivation" title="Link to this heading">#</a></h1>
+<ul class="simple">
+<li><p>Partial wave analysis can be complicated (fitting, bookkeeping, result handling, …)</p></li>
+<li><p>PyAmpTools sacrifices flexibility for ease of use and focuses on Python as the core language</p></li>
+<li><p><strong>Features:</strong></p>
+<ul>
+<li><p>Scientific Python ecosystem is massive (achieve most of the benefits of low level languages without the hassle)</p></li>
+<li><p>Optimization uses gradients provided by JAX automatic differentiation (scales better than numerical diff.)</p></li>
+<li><p>Hooks into several optimization frameworks spanning MLE, MCMC, to Variational Inference</p>
+<ul>
+<li><p>iminuit, scipy, numpyro, iftpwa</p></li>
+</ul>
+</li>
+<li><p>YAML file is used to configure the analysis for consistency and automation</p></li>
+<li><p>Fitting is generally done through the command line</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="example">
+<h1>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h1>
 <p>This analysis chain is an example of an <strong>input/output</strong> study.</p>
 <ol class="arabic simple">
 <li><p>We draw a sample from the nifty prior distribution</p></li>
 <li><p>generate simulations (using <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code> + <code class="docutils literal notranslate"><span class="pre">halld_sim/Piecewise</span></code> amplitude mimicking prior sample)</p></li>
-<li><p>fit the simulatisons using binned fits (by <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code>) and <code class="docutils literal notranslate"><span class="pre">iftpwa</span></code></p></li>
+<li><p>bin the data</p></li>
+<li><p>fit the simulated data using:</p>
+<ul class="simple">
+<li><p>Maximum Likelihood Estimation (MLE)</p></li>
+<li><p>Markov Chain Monte Carlo (MCMC)</p></li>
+<li><p>Information Field Theory (IFT)</p></li>
+</ul>
+</li>
+<li><p>plot the results</p></li>
 </ol>
-<p>We would like to show a high probability of reconstruction. If this occurs for a wide variety of samples (and we believe our data could be approximately described by the very-flexible nifty prior) then we have successfully demonstrated that inference would be robust. This is in constrast to standard analyses in the field where we come up with ad-hoc models (implicit priors) then perform an I/O study on it. In this case, perhaps only a handful of rigid models are tested which would not necessarily translate to robust inference.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This analysis is just for illustration purposes, optimization was not performed for very long.</p>
-</div>
+<p>We would like to show a high probability of reconstruction. If this occurs for a wide variety of samples (and we believe our data could be approximately described by the very-flexible nifty prior) then we have successfully demonstrated that inference would be robust.</p>
+<p><img alt="alt text" src="../_images/optimization_mermaid.png" /></p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyamptools</span><span class="w"> </span><span class="kn">import</span> <span class="n">atiSetup</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYTHONWARNINGS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ignore&quot;</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">run_cmd_list</span><span class="p">(</span><span class="n">cmds</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">command</span> <span class="ow">in</span> <span class="n">cmds</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;running: </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">atiSetup</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">use_fsroot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_genamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">PYAMPTOOLS_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;PYAMPTOOLS_HOME&quot;</span><span class="p">)</span>
-<span class="n">subdir</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PYAMPTOOLS_HOME</span><span class="si">}</span><span class="s2">/demos/ift_example/&quot;</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;subdir: </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># cleanup</span>
-<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rm -rf </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/NiftyFits&#39;</span><span class="p">)</span>
-<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rm -rf </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/AmpToolsFits&#39;</span><span class="p">)</span>
-<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;mkdir -p </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/NiftyFits/prior_sim_DATA&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<section id="draw-prior-sample-from-iftpwa">
-<h2>Draw prior sample from <code class="docutils literal notranslate"><span class="pre">iftpwa</span></code><a class="headerlink" href="#draw-prior-sample-from-iftpwa" title="Link to this heading">#</a></h2>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Draw from the nifty prior distribution</span>
-<span class="n">nifty_prior_draw_cmds</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="sa">f</span><span class="s1">&#39;sed -i -E &quot;s/force_load_normint: true/force_load_normint: false/&quot; </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/pyamptools.yaml&#39;</span><span class="p">,</span>
-    <span class="sa">f</span><span class="s1">&#39;mkdir -p </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/NiftyFits/prior_sim&#39;</span><span class="p">,</span>
-    <span class="sa">f</span><span class="s1">&#39;pa run_ift </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/pyamptools.yaml --prior_simulation&#39;</span><span class="p">,</span>
-    <span class="sa">f</span><span class="s1">&#39;mv </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/NiftyFits/niftypwa_fit.pkl </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/NiftyFits/prior_sim/niftypwa_fit.pkl&#39;</span><span class="p">,</span>
-    <span class="sa">f</span><span class="s1">&#39;rm -rf </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/NiftyFits/prior_sim/plots; iftPwaPlot --fitResult </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/NiftyFits/prior_sim/niftypwa_fit.pkl --plotFolder </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/NiftyFits/prior_sim/plots --n_prior_samples 1000&#39;</span>
-<span class="p">]</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyamptools.utility.resultManager</span><span class="w"> </span><span class="kn">import</span> <span class="n">ResultManager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyamptools.utility.resultManager</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">plot_binned_intensities</span><span class="p">,</span> 
+    <span class="n">plot_binned_complex_plane</span><span class="p">,</span> 
+    <span class="n">plot_overview_across_bins</span><span class="p">,</span> 
+    <span class="n">plot_moments_across_bins</span><span class="p">,</span> 
+    <span class="n">montage_and_gif_select_plots</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">IFrame</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pdf2image</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_from_path</span>
 
-<span class="n">run_cmd_list</span><span class="p">(</span><span class="n">nifty_prior_draw_cmds</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_command</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Captures output so we do not have to dump everything to the terminal&quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">show_pdf</span><span class="p">(</span><span class="n">pdf_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Show a PDF in the notebook cell, rasterized since vscode jupyter cannot render PDFs</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">convert_from_path</span><span class="p">(</span><span class="n">pdf_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">display</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+
+<span class="n">PYAMPTOOLS_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;PYAMPTOOLS_HOME&quot;</span><span class="p">)</span>
+<span class="n">result_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PYAMPTOOLS_HOME</span><span class="si">}</span><span class="s2">/demos/ift_example/&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Welcome to JupyROOT 6.28/06
 </pre></div>
 </div>
 </div>
 </div>
-</section>
-<section id="simulate-data-from-the-model-and-phase-space-mc">
-<h2>Simulate data from the model and phase space MC<a class="headerlink" href="#simulate-data-from-the-model-and-phase-space-mc" title="Link to this heading">#</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">max_mass</span> <span class="o">=</span> <span class="mf">1.72</span>
-<span class="n">min_mass</span> <span class="o">=</span> <span class="mf">1.04</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">main_yaml</span> <span class="o">=</span> <span class="s2">&quot;main.yaml&quot;</span>
+
+<span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pa from_default -o </span><span class="si">{</span><span class="n">main_yaml</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="simulations">
+<h2>Simulations<a class="headerlink" href="#simulations" title="Link to this heading">#</a></h2>
+<p>Draw a sample from the iftpwa prior model then simulate data from the model and phase space MC. Then divide the data into kinematic bins.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">seed</span> <span class="o">=</span> <span class="mi">42</span>
 <span class="n">t_slope</span> <span class="o">=</span> <span class="mf">3.0</span>
 <span class="n">min_ebeam</span> <span class="o">=</span> <span class="mf">8.2</span>
 <span class="n">max_ebeam</span> <span class="o">=</span> <span class="mf">8.8</span>
-<span class="n">data_nsamples</span> <span class="o">=</span> <span class="mi">100000</span>
-<span class="n">gen_nsamples</span> <span class="o">=</span> <span class="mi">500000</span>
-
-<span class="n">generation_cmds</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="sa">f</span><span class="s1">&#39;python </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/prior_sim_gen.py&#39;</span><span class="p">,</span> <span class="c1"># create the amptools cfg file using halld_sim/Piecewise to model the nifty prior sample</span>
-    <span class="sa">f</span><span class="s1">&#39;pa gen_amp </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/prior_sim_gen.cfg -o </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/NiftyFits/prior_sim_DATA/data000.root -l </span><span class="si">{</span><span class="n">min_mass</span><span class="si">}</span><span class="s1"> -u </span><span class="si">{</span><span class="n">max_mass</span><span class="si">}</span><span class="s1"> -n </span><span class="si">{</span><span class="n">data_nsamples</span><span class="si">}</span><span class="s1"> -a </span><span class="si">{</span><span class="n">min_ebeam</span><span class="si">}</span><span class="s1"> -b </span><span class="si">{</span><span class="n">max_ebeam</span><span class="si">}</span><span class="s1"> -t </span><span class="si">{</span><span class="n">t_slope</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-    <span class="sa">f</span><span class="s1">&#39;mv gen_amp_diagnostic.root </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/NiftyFits/prior_sim_DATA/gen_amp_diagnostic_data.root 2&gt;/dev/null&#39;</span><span class="p">,</span>
-    
-    <span class="sa">f</span><span class="s1">&#39;pa gen_amp </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/prior_sim_gen.cfg -o </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/NiftyFits/prior_sim_DATA/accmc000.root -l </span><span class="si">{</span><span class="n">min_mass</span><span class="si">}</span><span class="s1"> -u </span><span class="si">{</span><span class="n">max_mass</span><span class="si">}</span><span class="s1"> -n </span><span class="si">{</span><span class="n">gen_nsamples</span><span class="si">}</span><span class="s1"> -a </span><span class="si">{</span><span class="n">min_ebeam</span><span class="si">}</span><span class="s1"> -b </span><span class="si">{</span><span class="n">max_ebeam</span><span class="si">}</span><span class="s1"> -t </span><span class="si">{</span><span class="n">t_slope</span><span class="si">}</span><span class="s1"> -f &#39;</span><span class="p">,</span>
-    <span class="sa">f</span><span class="s1">&#39;cp </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/NiftyFits/prior_sim_DATA/accmc000.root </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/NiftyFits/prior_sim_DATA/genmc000.root&#39;</span><span class="p">,</span> <span class="c1"># uniform acceptance example</span>
-    <span class="sa">f</span><span class="s1">&#39;mv gen_amp_diagnostic.root </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/NiftyFits/prior_sim_DATA/gen_amp_diagnostic_ps.root 2&gt;/dev/null&#39;</span><span class="p">,</span>
-<span class="p">]</span>
-
-<span class="n">run_cmd_list</span><span class="p">(</span><span class="n">generation_cmds</span><span class="p">)</span>
+<span class="n">n_data</span> <span class="o">=</span> <span class="mi">10000</span>
+<span class="n">n_ps</span> <span class="o">=</span> <span class="mi">50000</span>
+<span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pa run_priorSim </span><span class="si">{</span><span class="n">main_yaml</span><span class="si">}</span><span class="s2"> -s </span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="s2"> -emin </span><span class="si">{</span><span class="n">min_ebeam</span><span class="si">}</span><span class="s2"> -emax </span><span class="si">{</span><span class="n">max_ebeam</span><span class="si">}</span><span class="s2"> -t </span><span class="si">{</span><span class="n">t_slope</span><span class="si">}</span><span class="s2"> -nd </span><span class="si">{</span><span class="n">n_data</span><span class="si">}</span><span class="s2"> -np </span><span class="si">{</span><span class="n">n_ps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
-</section>
-<section id="run-the-mle-fits-using-amptools">
-<h2>Run the MLE fits using <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code><a class="headerlink" href="#run-the-mle-fits-using-amptools" title="Link to this heading">#</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mle_cmds</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="sa">f</span><span class="s1">&#39;pa run_cfgGen </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/pyamptools.yaml&#39;</span><span class="p">,</span>
-    <span class="sa">f</span><span class="s1">&#39;pa run_divideData </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/pyamptools.yaml&#39;</span><span class="p">,</span>
-    <span class="sa">f</span><span class="s1">&#39;pa run_mle </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/pyamptools.yaml&#39;</span><span class="p">,</span>
-    <span class="sa">f</span><span class="s1">&#39;pa run_processEvents </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/pyamptools.yaml&#39;</span><span class="p">,</span>
-<span class="p">]</span>
-
-<span class="n">run_cmd_list</span><span class="p">(</span><span class="n">mle_cmds</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/gen_curves.pdf&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/a472a64067a14a52248e384ec0315326a67129fa2cbf3b2b59f6669970530d98.png" src="../_images/a472a64067a14a52248e384ec0315326a67129fa2cbf3b2b59f6669970530d98.png" />
+</div>
+</div>
+</section>
+<section id="run-the-mle-fits-using-iminuit">
+<h2>Run the MLE fits using iminuit<a class="headerlink" href="#run-the-mle-fits-using-iminuit" title="Link to this heading">#</a></h2>
+<p>We begin by running a set of maximum likelihood fits on the generated data and compare the results to the generated amplitudes. The <strong>ResultManager</strong> class, when initialized with the path to the YAML file, will automatically attempt to load all results into memory. Each result (from MLE, MCMC, IFT) is stored a separate directory for unique access. All results (complex amplitude values, intensities, and metadata like mass, likelihood, etc.) are pulled into a flat pandas dataframe for efficient plotting and analysis.</p>
+<p>The main “money” plot (intensity and relative phases of all partial waves) can be generated with the default plotting function, <strong>plot_overview_across_bins</strong>. The MLE results a slightly jittered to avoid too much overlap. The <strong>dashed lines</strong> are the generated amplitudes</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pa run_mle </span><span class="si">{</span><span class="n">main_yaml</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
-</section>
-<section id="run-the-iftpwa-fits">
-<h2>Run the <code class="docutils literal notranslate"><span class="pre">iftpwa</span></code> fits<a class="headerlink" href="#run-the-iftpwa-fits" title="Link to this heading">#</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ift_cmds</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="sa">f</span><span class="s1">&#39;sed -i -E &quot;s/force_load_normint: false/force_load_normint: true/&quot; </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/pyamptools.yaml&#39;</span><span class="p">,</span>
-    <span class="sa">f</span><span class="s1">&#39;rm -rf </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/NiftyFits/.nifty_expanded.yaml&#39;</span><span class="p">,</span> <span class="c1"># trash previous expanded yaml which might not have the right IFT_MODEL.scale since \&#39;auto\&#39; could be overwritten</span>
-    <span class="sa">f</span><span class="s1">&#39;pa run_ift </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/pyamptools.yaml&#39;</span><span class="p">,</span>
-    <span class="sa">f</span><span class="s2">&quot;rm -rf </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/NiftyFits/plots&quot;</span><span class="p">,</span>
-    <span class="sa">f</span><span class="s2">&quot;iftPwaPlot --fitResult </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/NiftyFits/niftypwa_fit.pkl --plotFolder </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/NiftyFits/plots  --massIndepFit </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/NiftyFits/.nifty_expanded.yaml --n_prior_samples 1000&quot;</span><span class="p">,</span>
-    <span class="sa">f</span><span class="s2">&quot;plotConvergence --inputFolder </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/NiftyFits/fit_parameter_history --plotFolder </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/NiftyFits/convergence_plots&quot;</span><span class="p">,</span>
-<span class="p">]</span>
-
-<span class="n">run_cmd_list</span><span class="p">(</span><span class="n">ift_cmds</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">resultManager</span> <span class="o">=</span> <span class="n">ResultManager</span><span class="p">(</span><span class="n">main_yaml</span><span class="p">,</span> <span class="n">silence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Silence all the helpful output for clean documentation</span>
+<span class="n">resultManager</span><span class="o">.</span><span class="n">attempt_load_all</span><span class="p">()</span>
+<span class="n">plot_overview_across_bins</span><span class="p">(</span><span class="n">resultManager</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">)</span>
+<span class="n">montage_and_gif_select_plots</span><span class="p">(</span><span class="n">resultManager</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">)</span>
+<span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/intensity_and_phases/montage_output.pdf&quot;</span><span class="p">)</span>
+<span class="k">del</span> <span class="n">resultManager</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/WORK/PyAmpTools9/src/pyamptools/utility/resultManager.py:441: RuntimeWarning: invalid value encountered in sqrt
+  relative_phase_error = np.sqrt(variance) * 180.0 / np.pi
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
+</pre></div>
+</div>
+<img alt="../_images/00c412ebeca1b8069e8f0cc85a71a834b4454a116addd669ed4d4e75116254b6.png" src="../_images/00c412ebeca1b8069e8f0cc85a71a834b4454a116addd669ed4d4e75116254b6.png" />
+</div>
+</div>
+</section>
+<section id="run-mcmc-fits-using-nuts-algorithm">
+<h2>Run MCMC fits using NUTS algorithm<a class="headerlink" href="#run-mcmc-fits-using-nuts-algorithm" title="Link to this heading">#</a></h2>
+<p>MCMC is a set of techniques that draws samples from the posterior distribution. This framework uses Hamiltonian Monte Carlo (HMC) implemented in the No U-Turn Sampler (NUTS) algorithm. For this study, we choose 8 independent chains (each starting off in a different region of parameter space, traverses and draws samples from the posterior). <strong>n_warmup</strong> designates the number of samples to discard as the chains move toward a posterior mode and is used to adapt internal NUTS parameters. <strong>n_samples</strong> is the number of samples to draw for each chain. <strong>n_chains</strong> is drawn for each mass bin independently and the work is pooled across all <strong>n_processes</strong> processes.</p>
+<p>The newly created MCMC results is automatically loaded by the <strong>ResultManager</strong> class and the same plotting calls are made</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n_processes</span> <span class="o">=</span> <span class="mi">17</span>
+<span class="n">n_chains</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">n_warmup</span> <span class="o">=</span> <span class="mi">500</span>
+<span class="n">n_samples</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pa run_mcmc </span><span class="si">{</span><span class="n">main_yaml</span><span class="si">}</span><span class="s2"> -np </span><span class="si">{</span><span class="n">n_processes</span><span class="si">}</span><span class="s2"> -nc </span><span class="si">{</span><span class="n">n_chains</span><span class="si">}</span><span class="s2"> -nw </span><span class="si">{</span><span class="n">n_warmup</span><span class="si">}</span><span class="s2"> -ns </span><span class="si">{</span><span class="n">n_samples</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
-</section>
-<section id="plot-the-moments-and-dump-all-results-to-a-csv-file">
-<h2>Plot the moments and dump all results to a csv file<a class="headerlink" href="#plot-the-moments-and-dump-all-results-to-a-csv-file" title="Link to this heading">#</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">aux_cmds</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="sa">f</span><span class="s1">&#39;pa run_momentPlotter </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/pyamptools.yaml -n 10&#39;</span><span class="p">,</span>
-    <span class="sa">f</span><span class="s1">&#39;pa run_resultDump </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/pyamptools.yaml -n 10&#39;</span><span class="p">,</span>
-<span class="p">]</span>
-
-<span class="n">run_cmd_list</span><span class="p">(</span><span class="n">aux_cmds</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">resultManager</span> <span class="o">=</span> <span class="n">ResultManager</span><span class="p">(</span><span class="n">main_yaml</span><span class="p">,</span> <span class="n">silence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">resultManager</span><span class="o">.</span><span class="n">attempt_load_all</span><span class="p">()</span>
+<span class="n">plot_overview_across_bins</span><span class="p">(</span><span class="n">resultManager</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">)</span>
+<span class="n">montage_and_gif_select_plots</span><span class="p">(</span><span class="n">resultManager</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">)</span>
+<span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/intensity_and_phases/montage_output.pdf&quot;</span><span class="p">)</span>
+<span class="k">del</span> <span class="n">resultManager</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/WORK/PyAmpTools9/src/pyamptools/utility/resultManager.py:441: RuntimeWarning: invalid value encountered in sqrt
+  relative_phase_error = np.sqrt(variance) * 180.0 / np.pi
+/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
+</pre></div>
+</div>
+<img alt="../_images/35ed84786b2243c2cf8f838709e214ae721add8a5acf627c16470eb47177cc40.png" src="../_images/35ed84786b2243c2cf8f838709e214ae721add8a5acf627c16470eb47177cc40.png" />
+</div>
+</div>
+</section>
+<section id="run-iftpwa-fit">
+<h2>Run <code class="docutils literal notranslate"><span class="pre">iftpwa</span></code> fit<a class="headerlink" href="#run-iftpwa-fit" title="Link to this heading">#</a></h2>
+<p>Finally we run a IFT analysis with the same prior model used to generate the synthetic data to obtain a posterior estimate. These are shown in the <strong>solid lines</strong></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pa run_ift </span><span class="si">{</span><span class="n">main_yaml</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
-</section>
-<section id="save-copies-for-the-gallery">
-<h2>Save copies for the gallery<a class="headerlink" href="#save-copies-for-the-gallery" title="Link to this heading">#</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># # copy some select plots to be used in the gallery and perform cleanup</span>
-<span class="c1"># copy_cmds = [</span>
-<span class="c1">#     f&#39;cp {subdir}/NiftyFits/plots/moments/H0\(0,0\)_t0.5.pdf {PYAMPTOOLS_HOME}/assets/images/H0_0_0.pdf&#39;,</span>
-<span class="c1">#     f&#39;cp {subdir}/NiftyFits/plots/moments/H0\(2,0\)_t0.5.pdf {PYAMPTOOLS_HOME}/assets/images/H0_2_0.pdf&#39;,</span>
-<span class="c1">#     f&#39;cp &quot;{subdir}/NiftyFits/plots/parameters/m_{{a_2(1320)}}.pdf&quot; &quot;{PYAMPTOOLS_HOME}/assets/images/m_a2_1320_kde.pdf&quot;&#39;,</span>
-<span class="c1">#     f&#39;cp &quot;{subdir}/NiftyFits/plots/parameters/m_{{a_0(980)}}.pdf&quot; &quot;{PYAMPTOOLS_HOME}/assets/images/m_a0_980_kde.pdf&quot;&#39;,</span>
-<span class="c1">#     f&#39;cp &quot;{subdir}/NiftyFits/convergence_plots/m_{{a_2(1320)}}.pdf&quot; &quot;{PYAMPTOOLS_HOME}/assets/images/m_a2_1320_convergence.pdf&quot;&#39;,</span>
-<span class="c1">#     f&#39;cp &quot;{subdir}/NiftyFits/convergence_plots/m_{{a_0(980)}}.pdf&quot; &quot;{PYAMPTOOLS_HOME}/assets/images/m_a0_980_convergence.pdf&quot;&#39;,</span>
-<span class="c1"># ]</span>
-
-<span class="c1"># run_cmd_list(copy_cmds)</span>
-
-<span class="c1"># # Copy all pdfs to assets/images and convert to png to be rendered in gallery page</span>
-<span class="c1"># os.chdir(f&#39;{PYAMPTOOLS_HOME}/assets/images&#39;)</span>
-<span class="c1"># os.system(&#39;for f in *.pdf; do convert -density 300 &quot;$f&quot; &quot;${f%.pdf}.png&quot;; done&#39;)</span>
-<span class="c1"># os.system(&#39;rm *.pdf&#39;)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">resultManager</span> <span class="o">=</span> <span class="n">ResultManager</span><span class="p">(</span><span class="n">main_yaml</span><span class="p">,</span> <span class="n">silence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">resultManager</span><span class="o">.</span><span class="n">attempt_load_all</span><span class="p">()</span>
+<span class="n">plot_overview_across_bins</span><span class="p">(</span><span class="n">resultManager</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">)</span>
+<span class="n">montage_and_gif_select_plots</span><span class="p">(</span><span class="n">resultManager</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">)</span>
+<span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/intensity_and_phases/montage_output.pdf&quot;</span><span class="p">)</span>
+<span class="k">del</span> <span class="n">resultManager</span>
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/WORK/PyAmpTools9/src/pyamptools/utility/resultManager.py:441: RuntimeWarning: invalid value encountered in sqrt
+  relative_phase_error = np.sqrt(variance) * 180.0 / np.pi
+/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
+</pre></div>
 </div>
-</section>
-<section id="cleanup">
-<h2>Cleanup<a class="headerlink" href="#cleanup" title="Link to this heading">#</a></h2>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
+</pre></div>
+</div>
+<img alt="../_images/237411abd9a7e6e93b3118c214b92c50161c3dca400f283bd989b4092e98c0b2.png" src="../_images/237411abd9a7e6e93b3118c214b92c50161c3dca400f283bd989b4092e98c0b2.png" />
+</div>
+</div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># clean up </span>
-<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;rm *.pdf&#39;</span><span class="p">)</span>
-<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rm -f </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/../local_beam.conf&#39;</span><span class="p">)</span>
-<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rm -rf </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/AmpToolsFits&#39;</span><span class="p">)</span>
-<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rm -rf </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/NiftyFits&#39;</span><span class="p">)</span>
-<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rm -rf </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/*pkl&#39;</span><span class="p">)</span>
-<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rm -rf </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/*cfg&#39;</span><span class="p">)</span>
-<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rm -rf </span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s1">/*csv&#39;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># os.system(f&#39;rm -rf main.yaml local_beam.conf *.lock&#39;)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rm -r RESULTS&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0
 </pre></div>
 </div>
 </div>
@@ -647,20 +686,20 @@ document.write(`
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../analysis_example.html"
+       href="../optimization.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Analysis Chain Script</p>
+        <p class="prev-next-title">Introduction</p>
       </div>
     </a>
     <a class="right-next"
-       href="../gallery.html"
+       href="../ift/iftpwa_intro.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Analysis Chain Gallery</p>
+        <p class="prev-next-title">iftpwa - Introduction</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -680,14 +719,17 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#draw-prior-sample-from-iftpwa">Draw prior sample from <code class="docutils literal notranslate"><span class="pre">iftpwa</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate-data-from-the-model-and-phase-space-mc">Simulate data from the model and phase space MC</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-mle-fits-using-amptools">Run the MLE fits using <code class="docutils literal notranslate"><span class="pre">AmpTools</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-iftpwa-fits">Run the <code class="docutils literal notranslate"><span class="pre">iftpwa</span></code> fits</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot-the-moments-and-dump-all-results-to-a-csv-file">Plot the moments and dump all results to a csv file</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#save-copies-for-the-gallery">Save copies for the gallery</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cleanup">Cleanup</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Analysis Workflow</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#motivation">Motivation</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulations">Simulations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-mle-fits-using-iminuit">Run the MLE fits using iminuit</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-mcmc-fits-using-nuts-algorithm">Run MCMC fits using NUTS algorithm</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-iftpwa-fit">Run <code class="docutils literal notranslate"><span class="pre">iftpwa</span></code> fit</a></li>
 </ul>
+</li>
+</ul>
+
   </nav></div>
 
 </div></div>
@@ -708,6 +750,13 @@ By Lawrence Ng
   
   <div class="footer-item">
     
+
+  <p class="copyright">
+    
+      © Copyright 2025.
+      <br/>
+    
+  </p>
 
   </div>
   

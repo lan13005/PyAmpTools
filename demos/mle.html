@@ -176,18 +176,15 @@
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../optimization.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis_chain.html">Analysis Workflow</a></li>
+
+
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_intro.html">iftpwa - Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_cf.html">iftpwa - Correlated Field Model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ift/iftpwa_tips.html">iftpwa - Tips</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Analysis Chain Example</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../analysis_example.html">Analysis Chain Script</a></li>
-<li class="toctree-l1"><a class="reference internal" href="analysis_chain.html">Analysis Chain Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Analysis Chain Gallery</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">AmpTools Related Tutorials</span></p>
 <ul class="current nav bd-sidenav">
@@ -446,7 +443,10 @@ atiSetup| GPU is disabled
 atiSetup| Loading library libIUAmpTools.so ............  ON
 atiSetup| Loading library libAmpTools.so ..............  ON
 atiSetup| Loading library libAmpPlotter.so ............  ON
-atiSetup| Loading library libAmpsDataIO.so ............  ON
+atiSetup| Loading library libAmpsDataIO.so ............
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  ON
 atiSetup| Loading library libFSRoot.so ................  OFF
 atiSetup| Loading library libAmpsGen.so ...............  OFF
 
@@ -480,7 +480,7 @@ atiSetup| minor warning: Unable to alias URConfig - doesn&#39;t exist under ROOT
 Config file: /w/halld-scshelf2101/lng/WORK/PyAmpTools9/tests/samples/SIMPLE_EXAMPLE/fitInit.cfg
 Seed file: seed_file
 Number of random fits: 0
-Random seed: 1745517315
+Random seed: 1745544125
  ============================= 
 </pre></div>
 </div>
@@ -531,9 +531,7 @@ Random seed: 1745517315
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LIKELIHOOD BEFORE MINIMIZATION: 112356.11732090596
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): 14346.408126566821
+LIKELIHOOD AFTER MINIMIZATION (NO RANDOMIZATION): 14346.408126566821
 </pre></div>
 </div>
 </div>
@@ -621,6 +619,13 @@ By Lawrence Ng
   
   <div class="footer-item">
     
+
+  <p class="copyright">
+    
+      © Copyright 2025.
+      <br/>
+    
+  </p>
 
   </div>
   
