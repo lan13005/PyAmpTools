@@ -186,7 +186,7 @@ class ResultManager:
             self._gen_results = self.load_ift_results(source_type="GENERATED")
             self._moment_inversion_results = self.load_moment_inversion_results()
             
-    def attempt_project_moments(self, normalization_scheme=0, pool_size=-1):
+    def attempt_project_moments(self, normalization_scheme=0, pool_size=-1, silence=False):
         
         self.console.print(f"User requested moments to be calculated")
         dfs_to_process = [
@@ -225,7 +225,8 @@ class ResultManager:
                     processed_df, moment_latex_dict = momentManager.process_and_return_df(
                         normalization_scheme=normalization_scheme,
                         pool_size=pool_size, 
-                        append=True
+                        append=True,
+                        silence=silence
                     )                
                     if   df_name == "mle":  self._mle_results    = processed_df
                     elif df_name == "mcmc": self._mcmc_results   = processed_df
@@ -895,7 +896,7 @@ def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10), file_type='p
     ofile = f"{resultManager.base_directory}/{default_plot_subdir}/gen_curves.{file_type}"
     save_and_close_fig(ofile, fig, axes, console=resultManager.console, overwrite=True)
     
-def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, figsize=(10, 10), file_type='pdf'):
+def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, figsize=(10, 10), file_type='pdf', silence=False):
     name = "binned intensity"
     resultManager.console.print(header_fmt.format(f"Plotting '{name}' plots..."))
     
@@ -917,7 +918,7 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
     nrows, ncols = calculate_subplot_grid_size(len(cols_to_plot))
     
     saved_files = []
-    for bin in tqdm.tqdm(bins_to_plot):
+    for bin in tqdm.tqdm(bins_to_plot, disable=silence):
         
         fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
         
@@ -1008,7 +1009,7 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
     resultManager.console.print(f"\n")
 
 def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, figsize=(10, 10), 
-                              mcmc_nsamples=500, mcmc_selection="thin", file_type='pdf'):
+                              mcmc_nsamples=500, mcmc_selection="thin", file_type='pdf', silence=False):
     
     """
     Plot ~posterior distribution of the complex plane, overlaying generated curves, MLE, MCMC, IFT results when possible
@@ -1048,7 +1049,7 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
     saved_files = []
     if not default_mle_results.empty:
         resultManager.console.print(f"Warning: MLE error ellipses does not currently propagate errors from any reference wave rotation", style="bold yellow")
-    for bin in tqdm.tqdm(bins_to_plot):
+    for bin in tqdm.tqdm(bins_to_plot, disable=silence):
         
         fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
         axes = axes.flatten()

@@ -202,7 +202,7 @@ class MomentManagerTwoPS(MomentManager):
         
         print(f"MomentManagerTwoPS| Calculating moments assuming a {self.channel} system with max J = {self.max_J}")
 
-    def process_and_return_df(self, normalization_scheme=0, pool_size=1, append=True, batch_size=100):
+    def process_and_return_df(self, normalization_scheme=0, pool_size=1, append=True, batch_size=100, silence=False):
         
         if len(self.df) == 0:
             return pd.DataFrame(), {}
@@ -215,7 +215,8 @@ class MomentManagerTwoPS(MomentManager):
             batch_results = list(tqdm(
                 pool.imap(_calc_moments_twops_batch_wrapper, args_list),
                 total=len(batches),
-                desc=f"Calculating TwoPS moments in batches of {batch_size}"
+                desc=f"Calculating TwoPS moments in batches of {batch_size}",
+                disable=silence
             ))
             
         # Flatten the list of batch results
