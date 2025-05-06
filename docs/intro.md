@@ -43,8 +43,8 @@ source DockerInstall.sh
 # --writable-tmpfs allows temp modifications to sif contents. Ideally you can git pull and push updates changes to repos
 # --bind whatever directories you need access to
 apptainer exec --contain --writable-tmpfs \
-    --bind /working/directory \
-    --bind /data/directory \
+    --bind /my/working/directory \
+    --bind /my/data/directory \
     --bind /scratch \
     --bind ~/.cache/fontconfig \
     --env BASH_ENV=/dev/null \
@@ -55,8 +55,22 @@ apptainer exec --contain --writable-tmpfs \
 source /etc/bash.bashrc
 ```
 
-```{note}
-`vscode` works inside containers with `Remote - Containers` extension. Unfortunately, it does not work `apptainer`. I followed [this Github solution using ssh](https://github.com/oschulz/container-env) to get it working.  
+### For VSCode Remote Containter Development
+
+`vscode` remote development of containers is possible following [this Github solution using ssh](https://github.com/oschulz/container-env) to get it working. Install `cenv`, then call `cenv --help` for info to setup environment (which should store the location of the singularity image).
+
+**NOTE:** This repo does not fully work when running remote container on macOS (arm) system since pypi wheels for jaxlib uses AVX hardware instruction set. 
+
+```shell
+# Example ssh config for vscode remote container on the jlab farm with proxyjump
+#    using example an existing 'pyamptools' cenv
+Host pyamptools~ifarm
+  HostName ifarm.jlab.org
+  ProxyJump login.jlab.org
+  # ${HOME} in the container is actually /root which is not writable so mount local writable folder over it
+  RemoteCommand bash --noprofile --norc -c "export CENV_APPTAINER_OPTS='--contain --writable-tmpfs -B /w/halld-scshelf2101/lng,/scratch'; ${HOME}/.local/bin/cenv pyamptools"
+  RequestTTY yes
+  user lng
 ```
 
 # Additional Information
