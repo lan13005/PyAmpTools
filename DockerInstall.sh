@@ -45,7 +45,7 @@ dnf install -y --allowerasing \
     fftw-devel cfitsio-devel graphviz-devel libuuid-devel \
     avahi-compat-libdns_sd-devel openldap-devel python-devel python3-numpy \
     libxml2-devel gsl-devel readline-devel qt5-qtwebengine-devel \
-    R-devel R-Rcpp-devel R-RInside-devel && \
+    R-devel R-Rcpp-devel R-RInside-devel diffutils poppler-util ImageMagick && \
     dnf clean all  # Clean package lists to reduce image size
 source /etc/profile.d/modules.sh
 ########################################################################################################################
@@ -124,3 +124,13 @@ echo 'source /opt/conda/bin/activate' >> /etc/bash.bashrc && \
 echo 'conda activate pyamptools' >> /etc/bash.bashrc && \
 echo 'OLD_DIR=$(pwd) && cd /app/PyAmpTools/ && source set_environment.sh && cd "$OLD_DIR"' >> /etc/bash.bashrc && \
 echo 'if [ -f /etc/bash.bashrc ]; then source /etc/bash.bashrc; fi' >> ~/.bashrc
+
+# conda environment will source this script every time it is activated
+#   This allows us to attach environment variables (i.e. paths) so a
+#   jupyter/python kernel can access additional paths
+cat > /opt/conda/envs/pyamptools/etc/conda/activate.d/env_vars.sh << EOF
+#!/bin/bash
+source /app/PyAmpTools/set_environment.sh
+source /etc/profile.d/modules.sh
+module unload mpi && module load mpi
+EOF
