@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
     <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css?v=be8a1c11" />
     <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -180,7 +180,6 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="optimization.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demos/analysis_chain.html">Analysis Workflow</a></li>
-
 
 
 
@@ -405,7 +404,10 @@ document.write(`
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-docker-image-developers">Build Docker Image (developers)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apptainer-usage">Apptainer Usage</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apptainer-usage">Apptainer Usage</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#for-vscode-remote-containter-development">For VSCode Remote Containter Development</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-information">Additional Information</a><ul class="visible nav section-nav flex-column">
@@ -457,7 +459,7 @@ pa<span class="w"> </span>-f<span class="w"> </span><span class="c1"># for dispa
 </div>
 <section id="build-docker-image-developers">
 <h2>Build Docker Image (developers)<a class="headerlink" href="#build-docker-image-developers" title="Link to this heading">#</a></h2>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./DockerBuild.sh<span class="w"> </span>&lt;GH_USERNAME&gt;<span class="w"> </span>&lt;GH_PAT&gt;<span class="w"> </span><span class="c1"># github username and pat needed for now due to private repo access</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./DockerBuild.sh<span class="w"> </span><span class="c1"># ensure GH_USERNAME and GH_PAT are environment variables</span>
 </pre></div>
 </div>
 </section>
@@ -467,8 +469,8 @@ pa<span class="w"> </span>-f<span class="w"> </span><span class="c1"># for dispa
 <span class="c1"># --writable-tmpfs allows temp modifications to sif contents. Ideally you can git pull and push updates changes to repos</span>
 <span class="c1"># --bind whatever directories you need access to</span>
 apptainer<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>--contain<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--bind<span class="w"> </span>/working/directory<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--bind<span class="w"> </span>/data/directory<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/my/working/directory<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/my/data/directory<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--bind<span class="w"> </span>/scratch<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--bind<span class="w"> </span>~/.cache/fontconfig<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--env<span class="w"> </span><span class="nv">BASH_ENV</span><span class="o">=</span>/dev/null<span class="w"> </span><span class="se">\</span>
@@ -479,10 +481,22 @@ apptainer<span class="w"> </span><span class="nb">exec</span><span class="w"> </
 <span class="nb">source</span><span class="w"> </span>/etc/bash.bashrc
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><code class="docutils literal notranslate"><span class="pre">vscode</span></code> works inside containers with <code class="docutils literal notranslate"><span class="pre">Remote</span> <span class="pre">-</span> <span class="pre">Containers</span></code> extension. Unfortunately, it does not work <code class="docutils literal notranslate"><span class="pre">apptainer</span></code>. I followed <a class="reference external" href="https://github.com/oschulz/container-env">this Github solution using ssh</a> to get it working.</p>
+<section id="for-vscode-remote-containter-development">
+<h3>For VSCode Remote Containter Development<a class="headerlink" href="#for-vscode-remote-containter-development" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">vscode</span></code> remote development of containers is possible following <a class="reference external" href="https://github.com/oschulz/container-env">this Github solution using ssh</a> to get it working. Install <code class="docutils literal notranslate"><span class="pre">cenv</span></code>, then call <code class="docutils literal notranslate"><span class="pre">cenv</span> <span class="pre">--help</span></code> for info to setup environment.</p>
+<p><strong>NOTE:</strong> This repo does not fully work when running remote container on macOS (arm) system since pypi wheels for jaxlib uses AVX hardware instruction set.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example ssh config for vscode remote container on the jlab farm with proxyjump</span>
+<span class="c1">#    using example an existing &#39;pyamptools&#39; cenv</span>
+Host<span class="w"> </span>pyamptools~ifarm
+<span class="w">  </span>HostName<span class="w"> </span>ifarm.jlab.org
+<span class="w">  </span>ProxyJump<span class="w"> </span>login.jlab.org
+<span class="w">  </span><span class="c1"># ${HOME} in the container is actually /root which is not writable so mount local writable folder over it</span>
+<span class="w">  </span>RemoteCommand<span class="w"> </span>bash<span class="w"> </span>--noprofile<span class="w"> </span>--norc<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;export CENV_APPTAINER_OPTS=&#39;--contain --writable-tmpfs -B /w/halld-scshelf2101/lng,/scratch&#39;; </span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.local/bin/cenv pyamptools&quot;</span>
+<span class="w">  </span>RequestTTY<span class="w"> </span>yes
+<span class="w">  </span>user<span class="w"> </span>lng
+</pre></div>
 </div>
+</section>
 </section>
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="additional-information">
@@ -590,7 +604,10 @@ pytest<span class="w"> </span>-k<span class="w"> </span><span class="o">[</span>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-docker-image-developers">Build Docker Image (developers)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apptainer-usage">Apptainer Usage</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apptainer-usage">Apptainer Usage</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#for-vscode-remote-containter-development">For VSCode Remote Containter Development</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-information">Additional Information</a><ul class="visible nav section-nav flex-column">

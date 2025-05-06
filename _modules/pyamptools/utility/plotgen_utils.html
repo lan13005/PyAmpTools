@@ -180,7 +180,6 @@
 
 
 
-
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Information Field Theory</span></p>
 <ul class="nav bd-sidenav">
@@ -518,6 +517,7 @@ document.write(`
 	<span class="n">wavesets</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
 	<span class="n">stack_background</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 	<span class="n">plot_acc_corrected</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+	<span class="n">plot_chi2</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 	<span class="n">output_format</span><span class="o">=</span><span class="s2">&quot;pdf&quot;</span>
 <span class="p">):</span>
 <span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
@@ -531,7 +531,8 @@ document.write(`
 <span class="sd">		HISTS_TO_BOOK (Dict[str, List]): Dictionary of histograms to book. See book_histogram() for details</span>
 <span class="sd">		wavesets (str): Space separated list of wavesets to turn on. Wavesets are semi-colon ; separated list of amplitudes. &quot;all&quot; turns on all waves.</span>
 <span class="sd">		stack_background (bool): Stack backgrounds instead of subtracting them</span>
-<span class="sd">		plot_acc_corrected (bool): Plot acceptance corrected data, compare to weighted genmc</span>
+<span class="sd">		plot_acc_corrected (bool): Also plot acceptance corrected data, compare to weighted genmc</span>
+<span class="sd">		plot_chi2 (bool): Plot chi2 values on the plot</span>
 <span class="sd">		output_format (str): Output file format, &quot;pdf&quot; or &quot;png&quot;</span>
 
 <span class="sd">	Returns:</span>
@@ -692,7 +693,8 @@ document.write(`
 
 				<span class="c1"># chi2 = data_hist.Chi2Test(accmc_hist.GetPtr(), &quot;CHI2/NDF&quot;)</span>
 				<span class="n">chi2</span> <span class="o">=</span> <span class="n">calculate_chi_squared</span><span class="p">(</span><span class="n">data_hist</span><span class="p">,</span> <span class="n">accmc_hist</span><span class="p">)</span>
-				<span class="n">latex</span><span class="o">.</span><span class="n">DrawLatex</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.87</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;#chi^</span><span class="se">{{</span><span class="s2">2</span><span class="se">}}</span><span class="s2">/bin = </span><span class="si">{</span><span class="n">chi2</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+				<span class="k">if</span> <span class="n">plot_chi2</span><span class="p">:</span>
+					<span class="n">latex</span><span class="o">.</span><span class="n">DrawLatex</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.87</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;#chi^</span><span class="se">{{</span><span class="s2">2</span><span class="se">}}</span><span class="s2">/bin = </span><span class="si">{</span><span class="n">chi2</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 				<span class="k">if</span> <span class="n">plot_acc_corrected</span><span class="p">:</span> <span class="c1"># Overlay acceptance corrected data only if bkgnd subtracted</span>
 					<span class="n">canvas_gen</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="n">ihist</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
@@ -715,7 +717,8 @@ document.write(`
 					<span class="n">genmc_hist</span><span class="o">.</span><span class="n">SetMaximum</span><span class="p">(</span><span class="n">max_y</span><span class="p">)</span>
 
 					<span class="n">chi2_gen</span> <span class="o">=</span> <span class="n">calculate_chi_squared</span><span class="p">(</span><span class="n">corrected_data_hists</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">genmc_hist</span><span class="p">)</span>
-					<span class="n">latex</span><span class="o">.</span><span class="n">DrawLatex</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.87</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;#chi^</span><span class="se">{{</span><span class="s2">2</span><span class="se">}}</span><span class="s2">/bin = </span><span class="si">{</span><span class="n">chi2_gen</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+					<span class="k">if</span> <span class="n">plot_chi2</span><span class="p">:</span>
+						<span class="n">latex</span><span class="o">.</span><span class="n">DrawLatex</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.87</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;#chi^</span><span class="se">{{</span><span class="s2">2</span><span class="se">}}</span><span class="s2">/bin = </span><span class="si">{</span><span class="n">chi2_gen</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 			<span class="k">else</span><span class="p">:</span> <span class="c1"># STACK BACKGROUND</span>
 				<span class="n">stacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">THStack</span><span class="p">(</span><span class="s2">&quot;stack&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
@@ -733,7 +736,8 @@ document.write(`
 				<span class="n">stacks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">SetMaximum</span><span class="p">(</span><span class="n">max_y</span><span class="p">)</span>
 
 				<span class="n">chi2_stack</span> <span class="o">=</span> <span class="n">calculate_chi_squared</span><span class="p">(</span><span class="n">data_hist</span><span class="p">,</span> <span class="n">stacks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">GetStack</span><span class="p">()</span><span class="o">.</span><span class="n">Last</span><span class="p">())</span>
-				<span class="n">latex</span><span class="o">.</span><span class="n">DrawLatex</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.87</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;#chi^</span><span class="se">{{</span><span class="s2">2</span><span class="se">}}</span><span class="s2">/bin = </span><span class="si">{</span><span class="n">chi2_stack</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+				<span class="k">if</span> <span class="n">plot_chi2</span><span class="p">:</span>
+					<span class="n">latex</span><span class="o">.</span><span class="n">DrawLatex</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.87</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;#chi^</span><span class="se">{{</span><span class="s2">2</span><span class="se">}}</span><span class="s2">/bin = </span><span class="si">{</span><span class="n">chi2_stack</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
   
 		<span class="n">canvas</span><span class="o">.</span><span class="n">Print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">output_format</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 		<span class="k">if</span> <span class="n">plot_acc_corrected</span><span class="p">:</span>
