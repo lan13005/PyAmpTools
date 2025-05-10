@@ -791,8 +791,8 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 <span class="n">t_slope</span> <span class="o">=</span> <span class="mf">3.0</span> <span class="c1"># slope of the momentum transfer (exponentially distributed)</span>
 <span class="n">min_ebeam</span> <span class="o">=</span> <span class="mf">8.2</span> <span class="c1"># minimum energy of the photon beam</span>
 <span class="n">max_ebeam</span> <span class="o">=</span> <span class="mf">8.8</span> <span class="c1"># maximum energy of the photon beam</span>
-<span class="n">n_data</span> <span class="o">=</span> <span class="mi">10000</span> <span class="c1"># number of data samples to generate</span>
-<span class="n">n_ps</span> <span class="o">=</span> <span class="mi">50000</span>   <span class="c1"># number of phase space samples to generate</span>
+<span class="n">n_data</span> <span class="o">=</span> <span class="mi">25000</span> <span class="c1"># number of data samples to generate</span>
+<span class="n">n_ps</span> <span class="o">=</span> <span class="mi">100000</span>   <span class="c1"># number of phase space samples to generate</span>
 <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pa run_priorSim </span><span class="si">{</span><span class="n">main_yaml</span><span class="si">}</span><span class="s2"> -s </span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="s2"> -emin </span><span class="si">{</span><span class="n">min_ebeam</span><span class="si">}</span><span class="s2"> -emax </span><span class="si">{</span><span class="n">max_ebeam</span><span class="si">}</span><span class="s2"> -t </span><span class="si">{</span><span class="n">t_slope</span><span class="si">}</span><span class="s2"> -nd </span><span class="si">{</span><span class="n">n_data</span><span class="si">}</span><span class="s2"> -np </span><span class="si">{</span><span class="n">n_ps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -805,7 +805,7 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/5dacbccfecab042fa4d2ecbaa85e4359d879d60f4b5154fc57d20eb891ac7b96.png" src="../_images/5dacbccfecab042fa4d2ecbaa85e4359d879d60f4b5154fc57d20eb891ac7b96.png" />
+<img alt="../_images/7472082b92a3fdd4c439b47900dce28a5071dcf17cc70f0abfcfe8c6dced902e.png" src="../_images/7472082b92a3fdd4c439b47900dce28a5071dcf17cc70f0abfcfe8c6dced902e.png" />
 </div>
 </div>
 </section>
@@ -838,7 +838,7 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
   warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
 </pre></div>
 </div>
-<img alt="../_images/a822a9e113bb6973f37b2993e4d2c9a319c41b852c82297ab2a08b2edd6a6b54.png" src="../_images/a822a9e113bb6973f37b2993e4d2c9a319c41b852c82297ab2a08b2edd6a6b54.png" />
+<img alt="../_images/cce810579634b6640466a1d19a49abec123338b0de1f581364dadda45a2f713b.png" src="../_images/cce810579634b6640466a1d19a49abec123338b0de1f581364dadda45a2f713b.png" />
 </div>
 </div>
 </section>
@@ -874,7 +874,7 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
   warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
 </pre></div>
 </div>
-<img alt="../_images/a822a9e113bb6973f37b2993e4d2c9a319c41b852c82297ab2a08b2edd6a6b54.png" src="../_images/a822a9e113bb6973f37b2993e4d2c9a319c41b852c82297ab2a08b2edd6a6b54.png" />
+<img alt="../_images/7012d746cb886671e49d4ba17e60c1db2f20e369ab433edeecbca01dff52afc3.png" src="../_images/7012d746cb886671e49d4ba17e60c1db2f20e369ab433edeecbca01dff52afc3.png" />
 </div>
 </div>
 </section>
@@ -903,7 +903,11 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
   warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
 </pre></div>
 </div>
-<img alt="../_images/a822a9e113bb6973f37b2993e4d2c9a319c41b852c82297ab2a08b2edd6a6b54.png" src="../_images/a822a9e113bb6973f37b2993e4d2c9a319c41b852c82297ab2a08b2edd6a6b54.png" />
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
+</pre></div>
+</div>
+<img alt="../_images/f885f6ded37ba5a84119e4880d5515fec16fcefb73db4c1e9bd199e637f13599.png" src="../_images/f885f6ded37ba5a84119e4880d5515fec16fcefb73db4c1e9bd199e637f13599.png" />
 </div>
 </div>
 </section>
@@ -935,6 +939,31 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
   warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
 </pre></div>
 </div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MomentManagerTwoPS| Calculating moments assuming a TwoPseudoscalar system with max J = 4
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/multiprocessing/popen_fork.py:66: RuntimeWarning: os.fork() was called. os.fork() is incompatible with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
+  self.pid = os.fork()
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MomentManagerTwoPS| Calculating moments assuming a TwoPseudoscalar system with max J = 4
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/multiprocessing/popen_fork.py:66: RuntimeWarning: os.fork() was called. os.fork() is incompatible with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
+  self.pid = os.fork()
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MomentManagerTwoPS| Calculating moments assuming a TwoPseudoscalar system with max J = 4
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/multiprocessing/popen_fork.py:66: RuntimeWarning: os.fork() was called. os.fork() is incompatible with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
+  self.pid = os.fork()
+</pre></div>
+</div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MomentManagerTwoPS| Calculating moments assuming a TwoPseudoscalar system with max J = 4
 </pre></div>
 </div>
@@ -955,7 +984,7 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/2c9fd4dee299c12574ae74d7e05f18d4322e44c731cf1d6678a588cbe964a5d8.png" src="../_images/2c9fd4dee299c12574ae74d7e05f18d4322e44c731cf1d6678a588cbe964a5d8.png" />
+<img alt="../_images/f5c569c9ce26314ef111ca240855d7020033ec681d2dd3538e8d0ca06e709833.png" src="../_images/f5c569c9ce26314ef111ca240855d7020033ec681d2dd3538e8d0ca06e709833.png" />
 </div>
 </div>
 </section>
@@ -969,7 +998,7 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/f858988938e9dc916a2ef471ac8a14e752c5f21587394dbbc9adb1005ad341ff.png" src="../_images/f858988938e9dc916a2ef471ac8a14e752c5f21587394dbbc9adb1005ad341ff.png" />
+<img alt="../_images/e05610673985b2ec9dab1517d9526c41e8e498bf9673866c8c1b5e95f84b20e4.png" src="../_images/e05610673985b2ec9dab1517d9526c41e8e498bf9673866c8c1b5e95f84b20e4.png" />
 </div>
 </div>
 </section>
@@ -983,7 +1012,7 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/abf94a7d0e4ae400c307cdf70ee579643f8e53279b010e7b1e5beff1ddab1270.png" src="../_images/abf94a7d0e4ae400c307cdf70ee579643f8e53279b010e7b1e5beff1ddab1270.png" />
+<img alt="../_images/859e63acea13b923c154d3e4a8b98f2bb438b0662d48c3975af1ef2dfa8f341f.png" src="../_images/859e63acea13b923c154d3e4a8b98f2bb438b0662d48c3975af1ef2dfa8f341f.png" />
 </div>
 </div>
 </section>
