@@ -33,7 +33,7 @@ source DockerInstall.sh
 ## Build Docker Image (developers)
 
 ```shell
-./DockerBuild.sh <GH_USERNAME> <GH_PAT> # github username and pat needed for now due to private repo access
+./DockerBuild.sh # ensure GH_USERNAME and GH_PAT are environment variables
 ```
 
 ## Apptainer Usage
@@ -57,7 +57,7 @@ source /etc/bash.bashrc
 
 ### For VSCode Remote Containter Development
 
-`vscode` remote development of containers is possible following [this Github solution using ssh](https://github.com/oschulz/container-env) to get it working. Install `cenv`, then call `cenv --help` for info to setup environment (which should store the location of the singularity image).
+`vscode` remote development of containers is possible following [this Github solution using ssh](https://github.com/oschulz/container-env) to get it working. Install `cenv`, then call `cenv --help` for info to setup environment.
 
 **NOTE:** This repo does not fully work when running remote container on macOS (arm) system since pypi wheels for jaxlib uses AVX hardware instruction set. 
 

@@ -29,6 +29,7 @@ clean:
 	@echo "Cleaning up build directory..."
 	@-rm -rf $(BUILD_DIR)
 	@-rm -rf $(AUTOSUM_DIR)
+	@-rm -rf ${BOOK_DIR}/demos/main.yaml ${BOOK_DIR}/demos/RESULTS ${BOOK_DIR}/demos/local_beam.conf
 
 # The .PHONY rule keeps make from doing something with a file named clean
 .PHONY: all build clean serve
