@@ -1,5 +1,5 @@
 import os
-os.environ["JAX_PLATFORMS"] = ""
+os.environ["JAX_PLATFORMS"] = "cpu"
 os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=1"
 
 import jax
@@ -35,11 +35,12 @@ console = Console()
 #    Tracing is broken if state changes. Setting use_running_average=True in the batchnorm layer for now but I should fix it.
 
 ################################################################
-
-use_gpu = True
+use_gpu = jax.device_count() == 1 and "cuda" in str(jax.devices()[0]).lower()
 feature_names = ["mMassX", "mCosHel", "mPhiHel", "mt", "mPhi"]
 seed = 42 # main rng seed
 n_test_samples = 2000000 # Used for Monte Carlo integration of 1D/2D proj
+
+console.print("Using " + ("GPU" if use_gpu else "CPU") + " for training", style="bold green")
 
 ### CHECKPOINTING
 cwd = os.getcwd()

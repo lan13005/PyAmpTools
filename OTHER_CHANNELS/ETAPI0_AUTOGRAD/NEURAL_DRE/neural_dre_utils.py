@@ -75,33 +75,6 @@ def likelihood_ratio_loss(model_outputs, labels, loss_type_code=0, weights=None)
         weights = jnp.squeeze(weights)
         return jnp.mean(weights * loss)
 
-# Define gradient regularization loss
-def gradient_regularization_loss(model, params, x, rngs=None):
-    """
-    Compute gradient regularization loss to enforce smoothness in model outputs.
-    
-    Args:
-        model: The neural network model
-        params: Model parameters
-        x: Input data
-        rngs: Random number generators for stochastic operations
-    
-    Returns:
-        Regularization loss that penalizes large gradients in the output
-    """
-    def model_fn(x_sample):
-        return model.apply(params, x_sample, training=False, rngs=rngs)
-    
-    # Compute gradients of model output with respect to inputs
-    batch_gradients = jax.vmap(jax.grad(lambda x_i: jnp.sum(model_fn(x_i))), in_axes=0)(x)
-    
-    # Compute L2 norm of gradients with clipping to prevent extreme values
-    batch_gradients = jnp.clip(batch_gradients, -1e3, 1e3)
-    gradient_norms = jnp.sum(batch_gradients**2, axis=1)
-    
-    # Return mean of gradient norms as the regularization loss
-    return jnp.mean(gradient_norms)
-
 # Define adaptive gradient regularization loss
 def adaptive_gradient_regularization_loss(model, params, x, transition_sensitivity=0.5, rngs=None):
     """

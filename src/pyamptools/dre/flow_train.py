@@ -118,16 +118,17 @@ def fit_maf(maf, params, data, rngs, batch_size=1024, learning_rate=1e-3, weight
         Dictionary containing the trained MAF model, parameters, and losses
     """
 
-    # Create optimizer with AdamW (includes weight decay)
-    optimizer = optax.chain(
+    # Create optimizer with nnx.Optimizer
+    # This wraps the model and handles parameter updates
+    optimizer = nnx.Optimizer(maf, 
+        optax.chain(
         optax.clip_by_global_norm(clip_norm),
         optax.adamw(learning_rate, b1=adam_b1, b2=adam_b2, eps=adam_eps, weight_decay=weight_decay)
-    )    
-    opt_state = optimizer.init(params)
+    ))
     
     # Get data size and prepare for batching
     data_size = data.shape[0]
-    if batch_size == -1: # -1 is reserved for batch size = data size (if your data is smaller relative to RAM size)
+    if batch_size == -1: # -1 is reserved for batch size = data size
         steps_per_epoch = 1
         batch_size = data_size
     else:
@@ -138,6 +139,7 @@ def fit_maf(maf, params, data, rngs, batch_size=1024, learning_rate=1e-3, weight
     
     epoch_losses = [] # track losses for plotting
     logdet_stats = {
+        'mean': [],
         'median': [],
         'percentile_2.5': [],
         'percentile_16': [],
@@ -151,33 +153,23 @@ def fit_maf(maf, params, data, rngs, batch_size=1024, learning_rate=1e-3, weight
         print(f"Training MAF using GPU: {jax.devices('gpu')[0]}")
         # Define a jitted update function for single GPU
         @nnx.jit
-        def update_step(params, opt_state, batch_x, batch_weights):
-            def loss_fn(p):
-                return weighted_maximum_likelihood_loss(p, maf, batch_x, batch_weights, training=False)
-            
-            loss_value, grads = jax.value_and_grad(loss_fn)(params)
-            updates, new_opt_state = optimizer.update(grads, opt_state, params)
-            new_params = optax.apply_updates(params, updates)
-            return new_params, new_opt_state, loss_value
+        def update_step(optimizer, batch_x, batch_weights):
+            def loss_fn(model):
+                return weighted_maximum_likelihood_loss(model, maf, batch_x, batch_weights, training=True)
+            loss_value, grads = nnx.value_and_grad(loss_fn)(optimizer.target)
+            optimizer.update(grads)
+            return loss_value
     else:
         # Get number of devices for parallelization
         num_devices = jax.device_count()
-        print(f"Training MAF using {num_devices} CPU cores")
-        
-        # Define a pmapped update function to parallelize across devices
-        @nnx.pmap
-        def update_step_parallel(params_device, opt_state_device, batch_x_device, batch_weights_device):
+        print(f"Training MAF using {num_devices} CPU cores")        
+        @nnx.jit
+        def update_step(optimizer, batch_x, batch_weights):
             def loss_fn(p):
-                return weighted_maximum_likelihood_loss(p, maf, batch_x_device, batch_weights_device, training=False)
-            
-            loss_value, grads = jax.value_and_grad(loss_fn)(params_device)
-            updates, new_opt_state = optimizer.update(grads, opt_state_device, params_device)
-            new_params = optax.apply_updates(params_device, updates)
-            return new_params, new_opt_state, loss_value
-        
-        # Replicate parameters and optimizer state across devices
-        params = jax.device_put_replicated(params, jax.devices())
-        opt_state = jax.device_put_replicated(opt_state, jax.devices())
+                return weighted_maximum_likelihood_loss(p, maf, batch_x, batch_weights, training=True)
+            loss_value, grads = jax.value_and_grad(loss_fn)(optimizer.target)
+            optimizer.update(grads)
+            return loss_value
     
     progress_bar = tqdm(total=num_epochs, desc=f"Training MAF")
     
@@ -213,10 +205,11 @@ def fit_maf(maf, params, data, rngs, batch_size=1024, learning_rate=1e-3, weight
             
             if use_gpu and jax.devices('gpu'):
                 # Single GPU update
-                params, opt_state, loss_value = update_step(
-                    params, opt_state, batch_x, batch_weights
+                loss_value = update_step(
+                    optimizer, batch_x, batch_weights
                 )
             else:
+                # TODO: Perhpas batches need to be sharded rather than manually padding and reshaping
                 # Multi-CPU update
                 # Pad batch to be divisible by number of devices
                 if actual_batch_size % num_devices != 0:
@@ -229,8 +222,8 @@ def fit_maf(maf, params, data, rngs, batch_size=1024, learning_rate=1e-3, weight
                 batch_weights_shaped = batch_weights.reshape(num_devices, -1)
                 
                 # Update model in parallel across devices
-                params, opt_state, losses_device = update_step_parallel(
-                    params, opt_state, batch_x_shaped, batch_weights_shaped
+                losses_device = update_step(
+                    optimizer, batch_x_shaped, batch_weights_shaped
                 )
                 
                 # Average loss across devices
@@ -241,36 +234,20 @@ def fit_maf(maf, params, data, rngs, batch_size=1024, learning_rate=1e-3, weight
                 print(f"\nWARNING: NaN loss detected at epoch {epoch+1}, batch {idx+1}. Stopping training.")
                 progress_bar.close()
                 
-                # Get the parameters from the last stable iteration
-                if not use_gpu or not jax.devices('gpu'):
-                    params = jax.tree_map(lambda x: x[0], params)
-                
-                maf_trained = MAF(maf.input_dim, maf.hidden_dims, maf.num_flows, rngs=rngs)
-                maf_trained.made_layers = maf.made_layers  # Copy the architecture
-                
-                return {"maf": maf_trained, "params": params, "losses": epoch_losses, "logdet_stats": logdet_stats}
+                # Return the model and losses collected so far
+                return {"maf": optimizer.target, "losses": epoch_losses, "logdet_stats": logdet_stats}
             
             epoch_loss += loss_value
             
             # Collect statistics for a subset of batches
             if idx % batch_sample_frequency == 0:
                 subset_size = min(256, actual_batch_size)
-                if use_gpu and jax.devices('gpu'):
-                    # For GPU, just take the first subset_size samples
-                    subset_x = batch_x[:subset_size]
-                    
-                    # Get log probabilities and log determinants
-                    log_probs, batch_logdets = maf.log_prob(params, subset_x, training=False)
-                    epoch_logdets.extend(jnp.array(batch_logdets))                    
-                else:
-                    # For multi-CPU, extract data from the first device
-                    current_params = jax.tree_map(lambda x: x[0], params)
-                    subset_x = batch_x_shaped[0, :subset_size]
-                    
-                    # Get log probabilities and log determinants in one call
-                    log_probs, batch_logdets = maf.log_prob(current_params, subset_x, training=False)
-                    epoch_logdets.extend(jnp.array(batch_logdets))
-                                
+                subset_x = batch_x[:subset_size]
+                
+                # Get log probabilities and log determinants
+                log_probs, batch_logdets = optimizer.target.log_prob(subset_x, training=False)
+                epoch_logdets.extend(jnp.array(batch_logdets))
+                
         # Record average epoch loss
         avg_loss = epoch_loss / steps_per_epoch
         epoch_losses.append(float(avg_loss))
@@ -278,6 +255,10 @@ def fit_maf(maf, params, data, rngs, batch_size=1024, learning_rate=1e-3, weight
         # Record logdet statistics for this epoch
         if epoch_logdets:
             epoch_logdets = jnp.array(epoch_logdets)
+            logdet_stats['mean'].append(float(jnp.mean(epoch_logdets)))
+            logdet_stats['std'].append(float(jnp.std(epoch_logdets)))
+            logdet_stats['min'].append(float(jnp.min(epoch_logdets)))
+            logdet_stats['max'].append(float(jnp.max(epoch_logdets)))
             logdet_stats['median'].append(float(jnp.median(epoch_logdets)))
             logdet_stats['percentile_2.5'].append(float(jnp.percentile(epoch_logdets, 2.5)))
             logdet_stats['percentile_16'].append(float(jnp.percentile(epoch_logdets, 16)))
@@ -285,7 +266,7 @@ def fit_maf(maf, params, data, rngs, batch_size=1024, learning_rate=1e-3, weight
             logdet_stats['percentile_97.5'].append(float(jnp.percentile(epoch_logdets, 97.5)))
             logdet_stats['epoch'].append(epoch+1)
                 
-        # Update progress bar with epoch info (only once per epoch)
+        # Update progress bar with epoch info
         progress_bar.update(1)
         progress_bar.set_description(f"Training MAF [Epoch {epoch+1}/{num_epochs}, Avg Loss: {avg_loss:.4f}]")
         
@@ -297,7 +278,6 @@ def fit_maf(maf, params, data, rngs, batch_size=1024, learning_rate=1e-3, weight
         if avg_loss < best_loss:
             best_loss = avg_loss
             patience_counter = 0
-            best_params = jax.tree_map(lambda x: jnp.copy(x), params) # save best model
         else:
             patience_counter += 1
         
@@ -309,18 +289,14 @@ def fit_maf(maf, params, data, rngs, batch_size=1024, learning_rate=1e-3, weight
         if X_gen is not None and X_acc is not None:
             if plot_latent_frequency is not None and checkpoint_dir is not None and (epoch + 1) % plot_latent_frequency == 0:
                 try:
-                    # Get current parameters
-                    current_params = params 
-                    if not use_gpu or not jax.devices('gpu'):
-                        current_params = jax.tree_map(lambda x: x[0], params)
                     
                     # Use batched transformation instead of all-at-once
                     print(f"Transforming subsampled data to latent space...")
                     X_gen_latent_np, _ = batch_transform_maf(
-                        maf, current_params, X_gen, batch_size=1000, direction="forward"
+                        maf, X_gen, batch_size=1000, direction="forward"
                     )
                     X_acc_latent_np, _ = batch_transform_maf(
-                        maf, current_params, X_acc, batch_size=1000, direction="forward"
+                        maf, X_acc, batch_size=1000, direction="forward"
                     )
                     
                     # Create corner plot for transformed data
@@ -364,33 +340,12 @@ def fit_maf(maf, params, data, rngs, batch_size=1024, learning_rate=1e-3, weight
     
     progress_bar.close()
     
-    # Get final parameters (extract from first device if using multi-CPU)
-    if not use_gpu or not jax.devices('gpu'):
-        params = jax.tree_map(lambda x: x[0], params)
-    
-    maf_trained = MAF(maf.input_dim, maf.hidden_dims, maf.num_flows, rngs=rngs)
-    maf_trained.made_layers = maf.made_layers  # Copy the architecture
-    
-    # Parameters can be replicated across devices (for multi-CPU training)
-    #   We have to unreplicate them before saving
-    def unreplicate_params(params):
-        """Fully unreplicate parameters no matter how many levels of replication exist."""
-        def _unreplicate(x):
-            while hasattr(x, 'ndim') and x.ndim > 2:
-                x = x[0]
-            return x
-        return jax.tree_map(_unreplicate, params)
-
-    # Use this before saving or returning
-    best_params = unreplicate_params(best_params)
-    
     # Create a final logdet plot if we have data
     if logdet_stats and checkpoint_dir:
         create_logdet_plot(logdet_stats, checkpoint_dir)
-        
-    # Return the best model parameters with added stats
-    return {"maf": maf_trained, "params": best_params, "losses": epoch_losses, 
-            "logdet_stats": logdet_stats}
+    
+    # Return the best model with added stats
+    return {"maf": optimizer.target, "losses": epoch_losses, "logdet_stats": logdet_stats}
 
 def save_maf_model(maf_result, filepath):
     """

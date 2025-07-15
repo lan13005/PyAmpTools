@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 from flax import nnx
 
-class MADE:
+class MADE(nnx.Module):
     """
     Masked Autoregressive Density Estimator for MAF implementation.
     
@@ -10,7 +10,7 @@ class MADE:
     parameters for the normalizing flow.
     """
     
-    def __init__(self, input_dim, hidden_dims, rngs, reverse=False):
+    def __init__(self, input_dim, hidden_dims, *, rngs, reverse=False):
         """
         Initialize a MADE network.
         
@@ -30,11 +30,24 @@ class MADE:
         # Initialize network parameters
         #   Define dimensions for (input, hidden, and output) layers
         layer_dims = [input_dim] + hidden_dims + [self.output_dim]
-        self.params = []        
+        
+        # Recommended initializers
+        he_init = nnx.initializers.variance_scaling(
+            scale=2.0,
+            mode='fan_in',
+            distribution='truncated_normal'
+        )
+        zeros_init = nnx.initializers.zeros
+
+        # Initialize weights and biases
+        self.layers = []
         for l in range(len(layer_dims) - 1):
-            self.params.append({
-                'w': jax.random.normal(rngs.weights(), (layer_dims[l], layer_dims[l+1])) * 0.01,
-                'b': jax.random.normal(rngs.biases(),  (layer_dims[l+1],)) * 0.01,
+            w_key, b_key = rngs.split(2)
+            W = nnx.Param(he_init(w_key, (layer_dims[l], layer_dims[l + 1])))
+            b = nnx.Param(zeros_init(b_key, (layer_dims[l + 1],)))
+            self.layers.append({
+                'w': W,
+                'b': b,
                 'mask': self.masks[l]
             })
     
@@ -81,8 +94,40 @@ class MADE:
         masks.append(m)
         
         return masks
+    
+    def __call__(self, x):
+        """
+        Forward pass through the MADE network.
+        
+        Args:
+            x: Input data of shape (batch_size, input_dim)
+            
+        Returns:
+            Tuple of (means, log_scales) for the autoregressive transformation
+        """
+        h = x
+        
+        # Apply all layers with leaky ReLU activation except for the last one
+        for layer_idx, layer_params in enumerate(self.layers):
+            w = layer_params['w'] * layer_params['mask']
+            b = layer_params['b']
+            
+            h = jnp.dot(h, w) + b
+            
+            # Apply activation to all layers except the last one
+            if layer_idx < len(self.layers) - 1:
+                h = jax.nn.leaky_relu(h, negative_slope=0.01)
+        
+        # Split output into means and log_scales
+        means = h[..., :self.input_dim]
+        log_scales = h[..., self.input_dim:]
+        
+        # Constrain scales to prevent numerical issues
+        log_scales = 2 * jnp.tanh(log_scales / 2)
+        
+        return means, jnp.exp(log_scales)
 
-class MAF:
+class MAF(nnx.Module):
     """
     Masked Autoregressive Flow implementation.
     
@@ -90,7 +135,7 @@ class MAF:
     of autoregressive transformations.
     """
     
-    def __init__(self, input_dim, hidden_dims, num_flows, rngs):
+    def __init__(self, input_dim, hidden_dims, num_flows, *, rngs):
         """
         Initialize a MAF model.
         
@@ -105,23 +150,25 @@ class MAF:
         self.num_flows = num_flows
         
         # Initialize layers
+        made_rngs = rngs.split(num_flows)
         self.made_layers = []
         self.batch_norms = []
         
         for i in range(num_flows):
             # Alternate between forward and reverse ordering
             reverse = i % 2 == 1
-            self.made_layers.append(MADE(input_dim, hidden_dims, rngs, reverse=reverse))
+            self.made_layers.append(MADE(input_dim, hidden_dims, rngs=made_rngs[i], reverse=reverse))
             if i < num_flows - 1:
-                self.batch_norms.append(nnx.BatchNorm(num_features=input_dim, rngs=rngs))
+                bn_rng = rngs.split(1)[0]
+                self.batch_norms.append(nnx.BatchNorm(num_features=input_dim, rngs=bn_rng))
     
-    def forward(self, params, x, training=True):
+    def forward(self, x, training=True):
         """
         Transform data from input space to latent space (forward flow).
         
         Args:
-            params: The model parameters
             x: Input data of shape (batch_size, input_dim)
+            training: Whether to use training mode for batch norm
             
         Returns:
             z: Transformed data in latent space
@@ -131,8 +178,8 @@ class MAF:
         log_det_sum = jnp.zeros(x.shape[0])
         
         for i in range(self.num_flows):
-            # Get means and scales from MADE using the parameters for this layer
-            means, scales = self._apply_made_layer(params[i], self.made_layers[i], z)
+            # Get means and scales from MADE
+            means, scales = self.made_layers[i](z)
             
             # Transform
             z = (z - means) / scales
@@ -144,17 +191,17 @@ class MAF:
             # Permute dimensions for the next flow (except for the last one)
             if i < self.num_flows - 1:
                 z = self.batch_norms[i](z, use_running_average=not training)  # Apply BatchNorm
-                z = jnp.flip(z, axis=-1)    # Simple reversing permutation
+                z = jnp.flip(z, axis=-1) # Simple reversing permutation
         
         return z, log_det_sum
     
-    def inverse(self, params, z, training=True):
+    def inverse(self, z, training=True):
         """
         Transform data from latent space to input space (inverse flow).
         
         Args:
-            params: The model parameters
             z: Latent variables of shape (batch_size, input_dim)
+            training: Whether to use training mode for batch norm
             
         Returns:
             x: Transformed data in input space
@@ -163,14 +210,14 @@ class MAF:
         x = z
         log_det_sum = jnp.zeros(z.shape[0])
         
-        # Apply flows in reverse order (see forward method)
+        # Apply flows in reverse order
         for i in range(self.num_flows - 1, -1, -1):
             if i < self.num_flows - 1:
                 x = jnp.flip(x, axis=-1)
                 x = self.batch_norms[i].inverse(x, use_running_average=not training)
             
             # Get means and scales for this input
-            means, scales = self._apply_made_layer(params[i], self.made_layers[i], x)
+            means, scales = self.made_layers[i](x)
             
             # Inverse transform: z = (x - μ)/σ => x = z*σ + μ
             x = x * scales + means
@@ -181,12 +228,11 @@ class MAF:
         
         return x, log_det_sum
     
-    def log_prob(self, params, x, training=True):
+    def log_prob(self, x, training=True):
         """
         Compute log probability of data under the MAF model.
         
         Args:
-            params: The model parameters
             x: Input data of shape (batch_size, input_dim)
             training: Whether to use training mode for batch norm
             
@@ -195,75 +241,41 @@ class MAF:
                 - log_prob: Total log probability of each input point
                 - log_det: Log determinant of the Jacobian for each input
         """
-        z, log_det = self.forward(params, x, training=training)
-        # Prior is a standard normal
+        z, log_det = self.forward(x, training=training)
+        # Log probability of standard normal distribution N(0,I)
         log_prior = -0.5 * jnp.sum(z**2, axis=1) - 0.5 * self.input_dim * jnp.log(2 * jnp.pi)
         log_prob = log_prior + log_det
         return log_prob, log_det
-    
-    def init_params(self):
-        """
-        Initialize the parameters for the MAF model.
-        
-        Returns:
-            A list of parameters for each MADE layer.
-        """
-        return [layer.params for layer in self.made_layers]
 
-    def _apply_made_layer(self, params, made_layer, x):
-        """Apply a MADE layer with its parameters."""
-        h = x
+    # def _apply_made_layer(self, params, made_layer, x):
+    #     """Apply a MADE layer with its parameters."""
+    #     h = x
         
-        # Apply all layers with ReLU activation except for the last one
-        for layer_idx, layer_params in enumerate(params):
-            w = layer_params['w'] * made_layer.masks[layer_idx]
-            b = layer_params['b']
+    #     # Apply all layers with ReLU activation except for the last one
+    #     for layer_idx, layer_params in enumerate(params):
+    #         w = layer_params['w'] * made_layer.masks[layer_idx]
+    #         b = layer_params['b']
             
-            # Check if we need to handle multi-device parameters.
-            # - Weight matrix should only have 2 dimensions.
-            # - Bias vector should only have 1 dimension.
-            if w.ndim > 2: w = w[0]
-            if b.ndim > 1: b = b[0]
+    #         # Check if we need to handle multi-device parameters.
+    #         # - Weight matrix should only have 2 dimensions.
+    #         # - Bias vector should only have 1 dimension.
+    #         if w.ndim > 2: w = w[0]
+    #         if b.ndim > 1: b = b[0]
             
-            h = jnp.dot(h, w) + b
+    #         h = jnp.dot(h, w) + b
             
-            # Apply ReLU to all layers except the last one
-            if layer_idx < len(params) - 1:
-                # h = jax.nn.relu(h)
-                h = jax.nn.leaky_relu(h, negative_slope=0.01)
+    #         # Apply ReLU to all layers except the last one
+    #         if layer_idx < len(params) - 1:
+    #             # h = jax.nn.relu(h)
+    #             h = jax.nn.leaky_relu(h, negative_slope=0.01)
         
-        # Split output into means and log_scales
-        means = h[..., :self.input_dim]
-        log_scales = h[..., self.input_dim:]
+    #     # Split output into means and log_scales
+    #     means = h[..., :self.input_dim]
+    #     log_scales = h[..., self.input_dim:]
         
-        # Constrain scales to prevent numerical issues
-        # log_scales = jnp.clip(log_scales, -5, 5)
-        log_scales = 2 * jnp.tanh(log_scales / 2) # could be more stable?
+    #     # Constrain scales to prevent numerical issues
+    #     # log_scales = jnp.clip(log_scales, -5, 5)
+    #     log_scales = 2 * jnp.tanh(log_scales / 2) # could be more stable?
         
-        return means, jnp.exp(log_scales)
-    
-    def calculate_flow_entropy(self, log_probs, z):
-        """
-        Calculate the differential entropy for normalizing flow models.
-        
-        For normalizing flows, the differential entropy is:
-        H[p(x)] = H[N(0,I)] - E[log|det(dz/dx)|]
-        
-        Args:
-            log_probs: Log probabilities from the flow model
-            z: Latent space variables (output of the forward transformation)
-            
-        Returns:
-            Array of entropy values with shape (batch_size,)
-        """
-        # Standard normal entropy in d dimensions: d/2 * (log(2π) + 1)
-        d = z.shape[1]
-        log_prior = -0.5 * jnp.sum(z**2, axis=1) - 0.5 * self.input_dim * jnp.log(2 * jnp.pi)
-
-        normal_entropy = 0.5 * d * (jnp.log(2 * jnp.pi) + 1)
-        
-        # The log_prob already includes log_det, so we extract just the entropy part
-        # log_prob = log_prior + log_det, so log_prior = log_prob - log_det
-        # Therefore entropy = normal_entropy - log_det = normal_entropy - (log_prob - log_prior)
-        return normal_entropy - log_probs
+    #     return means, jnp.exp(log_scales)
     
