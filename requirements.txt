@@ -1,3 +1,4 @@
+absl-py==2.1.0
 accessible-pygments==0.0.5
 alabaster==0.7.16
 alembic==1.13.2
@@ -25,6 +26,7 @@ certifi==2025.1.31
 cffi==1.17.1
 cfgv==3.4.0
 charset-normalizer==3.4.1
+chex==0.1.89
 click==8.1.8
 cloudpickle==3.1.1
 colorama==0.4.6
@@ -43,11 +45,14 @@ dash-table==5.0.0
 debugpy==1.8.12
 decorator==5.2.1
 defusedxml==0.7.1
+densratio==0.3.0
 dill==0.3.9
 distlib==0.3.9
 docutils==0.21.2
 ducc0==0.36.0
 emcee==3.1.6
+equinox==0.11.10
+etils==1.5.2
 etuples==0.3.9
 exceptiongroup==1.2.2
 executing==2.2.0
@@ -55,6 +60,7 @@ fastjsonschema==2.21.1
 fastprogress==1.0.3
 filelock==3.17.0
 Flask==3.0.3
+flax==0.8.5
 fonttools==4.53.1
 fqdn==1.5.1
 fsspec==2024.6.1
@@ -68,10 +74,13 @@ h5py==3.13.0
 hepunits==2.3.5
 httpcore==1.0.7
 httpx==0.28.1
+humanize==4.12.1
 hydra-core==1.3.2
 identify==2.6.8
 idna==3.10
+-e git+ssh://git@github.com/fmkroci/iftpwa.git@4f6fd0963313297e226e0d22d7943149b546d283#egg=iftpwa1
 imagesize==1.4.1
+iminuit==2.30.1
 importlib_metadata==8.0.0
 importlib_resources==6.4.0
 iniconfig==2.0.0
@@ -82,7 +91,10 @@ isoduration==20.11.0
 isort==6.0.1
 itsdangerous==2.2.0
 jax==0.4.30
+jax-cuda12-pjrt==0.4.30
+jax-cuda12-plugin==0.4.30
 jaxlib==0.4.30
+jaxtyping==0.2.36
 jedi==0.19.2
 Jinja2==3.1.5
 joblib==1.4.2
@@ -101,9 +113,12 @@ jupyter_core==5.7.2
 jupyter_server==2.15.0
 jupyter_server_terminals==0.5.3
 jupyterlab==4.3.5
+jupyterlab-mathjax3==4.3.0
 jupyterlab_pygments==0.3.0
+jupyterlab_rise==0.43.1
 jupyterlab_server==2.27.3
 jupyterlab_widgets==3.0.13
+jupytext==1.16.7
 kaleido==0.2.1
 kiwisolver==1.4.7
 latexcodec==3.0.0
@@ -123,6 +138,8 @@ ml_dtypes==0.5.1
 mpi4py==4.0.3
 mplhep==0.3.50
 mplhep-data==0.0.3
+mpmath==1.3.0
+msgpack==1.1.0
 multipledispatch==1.0.0
 mypy-extensions==1.0.0
 myst-nb==1.2.0
@@ -131,6 +148,7 @@ nbclient==0.10.2
 nbconvert==7.16.6
 nbformat==5.10.4
 nest-asyncio==1.6.0
+networkx==3.2.1
 nifty8==8.4
 nodeenv==1.9.1
 notebook==7.3.2
@@ -139,9 +157,21 @@ nptyping==2.5.0
 numba==0.60.0
 numpy==1.26.4
 numpyro==0.17.0
+nvidia-cublas-cu12==12.8.4.1
+nvidia-cuda-cupti-cu12==12.8.90
+nvidia-cuda-nvcc-cu12==12.8.93
+nvidia-cuda-runtime-cu12==12.8.90
+nvidia-cudnn-cu12==9.8.0.87
+nvidia-cufft-cu12==11.3.3.83
+nvidia-cusolver-cu12==11.7.3.90
+nvidia-cusparse-cu12==12.5.8.93
+nvidia-nccl-cu12==2.26.2
+nvidia-nvjitlink-cu12==12.8.93
 omegaconf==2.3.0
 opt_einsum==3.4.0
+optax==0.2.4
 optuna==3.6.1
+orbax-checkpoint==0.6.4
 overrides==7.7.0
 packaging==24.2
 pandas==2.2.2
@@ -149,6 +179,7 @@ pandocfilters==1.5.1
 parso==0.8.4
 particle==0.25.2
 pathspec==0.12.1
+patsy==1.0.1
 pdf2image==1.17.0
 pexpect==4.9.0
 pillow==11.1.0
@@ -160,9 +191,12 @@ pre_commit==4.1.0
 pretty-errors==1.2.25
 prometheus_client==0.21.1
 prompt_toolkit==3.0.50
+protobuf==6.30.1
 psutil==7.0.0
 ptyprocess==0.7.0
 pure_eval==0.2.3
+-e git+https://github.com/lan13005/PyAmpTools@6df5e6bd33761765aec34ba637fd2dd3ccdd9a94#egg=pyamptools
+pyamptools9==0.1.0
 pyarrow==19.0.1
 pybtex==0.24.0
 pybtex-docutils==1.0.3
@@ -185,6 +219,8 @@ retrying==1.3.4
 rfc3339-validator==0.1.4
 rfc3986-validator==0.1.1
 rich==13.9.4
+ridgeplot==0.3.1
+rise==5.7.1
 rpds-py==0.23.1
 ruff==0.9.7
 scikit-learn==1.6.1
@@ -218,8 +254,11 @@ sphinxcontrib-serializinghtml==2.0.0
 spinsfast==2022.4.10
 SQLAlchemy==2.0.31
 stack-data==0.6.3
+statsmodels==0.14.4
+sympy==1.13.3
 tabulate==0.9.0
 tenacity==9.0.0
+tensorstore==0.1.69
 terminado==0.18.1
 threadpoolctl==3.5.0
 tinycss2==1.4.0
