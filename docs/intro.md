@@ -21,16 +21,14 @@ AmpTools and FSRoot are included as git submodules. Modified source files and ma
 
 # Installation
 
+**Note:** Skip to *Apptainer Usage*, below, to simply use the container. The following instructions are for developers to build/maintain the container.
+
 Please make modifications to `DockerInstall.sh` to match your environment. These installation steps builds on top of a minimal base image/environment. Some important considerations:
 - if you already have conda then comment out those lines
 - default is to build with mpi support
 - if you need gpu support or gpu+mpi support then you can still go into `external` folder and run `make mpigpi` and additional shared libraries will be built
-
-```shell
-source DockerInstall.sh
-```
-
-## Build Docker Image (developers)
+- simply call `source DockerInstall.sh` to install necessary dependencies (i.e. if you are in a minimal `almalinux` container environment already)
+- instead, if you want to build the docker image simply call:
 
 ```shell
 ./DockerBuild.sh # ensure GH_USERNAME and GH_PAT are environment variables
