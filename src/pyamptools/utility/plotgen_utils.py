@@ -2,6 +2,8 @@ import numpy as np
 import ROOT
 from pyamptools.utility.general import remove_all_whitespace
 
+label_size = 0.06
+title_size = 0.07
 
 def calculate_chi_squared(data_hist, mc_hist):
     chi2 = 0
@@ -150,6 +152,7 @@ def draw_histograms(
 	wavesets="all",
 	stack_background=False,
 	plot_acc_corrected=False,
+	plot_chi2=False,
 	output_format="pdf"
 ):
 	"""
@@ -163,7 +166,8 @@ def draw_histograms(
 		HISTS_TO_BOOK (Dict[str, List]): Dictionary of histograms to book. See book_histogram() for details
 		wavesets (str): Space separated list of wavesets to turn on. Wavesets are semi-colon ; separated list of amplitudes. "all" turns on all waves.
 		stack_background (bool): Stack backgrounds instead of subtracting them
-		plot_acc_corrected (bool): Plot acceptance corrected data, compare to weighted genmc
+		plot_acc_corrected (bool): Also plot acceptance corrected data, compare to weighted genmc
+		plot_chi2 (bool): Plot chi2 values on the plot
 		output_format (str): Output file format, "pdf" or "png"
 
 	Returns:
@@ -273,15 +277,25 @@ def draw_histograms(
 			data_hist = HISTOGRAM_STORAGE[kData][ihist]
 			data_hist.SetMarkerStyle(ROOT.kFullCircle)
 			data_hist.SetMarkerSize(1.0)
-			data_hist.GetXaxis().SetNdivisions(5,5,0)
-			data_hist.GetYaxis().SetNdivisions(5,5,0)
+			data_hist.GetXaxis().SetNdivisions(505)  # 5 primary divisions, 0 secondary, 5 tertiary
+			data_hist.GetYaxis().SetNdivisions(505)
+			# Set font sizes for data histogram
+			data_hist.GetXaxis().SetLabelSize(label_size)
+			data_hist.GetXaxis().SetTitleSize(title_size)
+			data_hist.GetYaxis().SetLabelSize(label_size)
+			data_hist.GetYaxis().SetTitleSize(title_size)
 
 			bkgnd_hist = HISTOGRAM_STORAGE[kBkgnd][ihist]
 			accmc_hist = HISTOGRAM_STORAGE[kAccMC][ihist]
 			accmc_hist.SetFillColorAlpha(kColors[kAccMC], 0.9)
 			accmc_hist.SetLineWidth(0)
-			accmc_hist.GetXaxis().SetNdivisions(5,5,0)
-			accmc_hist.GetYaxis().SetNdivisions(5,5,0)
+			accmc_hist.GetXaxis().SetNdivisions(505)  # 5 primary divisions, 0 secondary, 5 tertiary
+			accmc_hist.GetYaxis().SetNdivisions(505)
+			# Set font sizes for accmc histogram
+			accmc_hist.GetXaxis().SetLabelSize(label_size)
+			accmc_hist.GetXaxis().SetTitleSize(title_size)
+			accmc_hist.GetYaxis().SetLabelSize(label_size)
+			accmc_hist.GetYaxis().SetTitleSize(title_size)
 
 			data_hist.Sumw2()
 			bkgnd_hist.Sumw2()
@@ -292,13 +306,23 @@ def draw_histograms(
 				genmc_hist.Sumw2()
 				genmc_hist.SetFillColorAlpha(kColors[kGenMC], 0.9)
 				genmc_hist.SetLineWidth(0)
-				genmc_hist.GetXaxis().SetNdivisions(5,5,0)
-				genmc_hist.GetYaxis().SetNdivisions(5,5,0)
+				genmc_hist.GetXaxis().SetNdivisions(505)  # 5 primary divisions
+				genmc_hist.GetYaxis().SetNdivisions(505)
+				# Set font sizes for genmc histogram
+				genmc_hist.GetXaxis().SetLabelSize(label_size)
+				genmc_hist.GetXaxis().SetTitleSize(title_size)
+				genmc_hist.GetYaxis().SetLabelSize(label_size)
+				genmc_hist.GetYaxis().SetTitleSize(title_size)
 				corrected_data_hists.append(data_hist.Clone())
 				corrected_data_hists[-1].SetMarkerStyle(ROOT.kFullCircle)
 				corrected_data_hists[-1].SetMarkerSize(1.0)
-				corrected_data_hists[-1].GetXaxis().SetNdivisions(5,5,0)
-				corrected_data_hists[-1].GetYaxis().SetNdivisions(5,5,0)
+				corrected_data_hists[-1].GetXaxis().SetNdivisions(505)  # 5 primary divisions
+				corrected_data_hists[-1].GetYaxis().SetNdivisions(505)
+				# Set font sizes for corrected data histogram
+				corrected_data_hists[-1].GetXaxis().SetLabelSize(label_size)
+				corrected_data_hists[-1].GetXaxis().SetTitleSize(title_size)
+				corrected_data_hists[-1].GetYaxis().SetLabelSize(label_size)
+				corrected_data_hists[-1].GetYaxis().SetTitleSize(title_size)
 				corrected_data_hists[-1].Sumw2()
 
 			canvas.cd(ihist + 1)
@@ -324,7 +348,8 @@ def draw_histograms(
 
 				# chi2 = data_hist.Chi2Test(accmc_hist.GetPtr(), "CHI2/NDF")
 				chi2 = calculate_chi_squared(data_hist, accmc_hist)
-				latex.DrawLatex(0.25, 0.87, f"#chi^{{2}}/bin = {chi2:.1f}")
+				if plot_chi2:
+					latex.DrawLatex(0.25, 0.87, f"#chi^{{2}}/bin = {chi2:.1f}")
 
 				if plot_acc_corrected: # Overlay acceptance corrected data only if bkgnd subtracted
 					canvas_gen.cd(ihist + 1)
@@ -347,7 +372,8 @@ def draw_histograms(
 					genmc_hist.SetMaximum(max_y)
 
 					chi2_gen = calculate_chi_squared(corrected_data_hists[-1], genmc_hist)
-					latex.DrawLatex(0.25, 0.87, f"#chi^{{2}}/bin = {chi2_gen:.1f}")
+					if plot_chi2:
+						latex.DrawLatex(0.25, 0.87, f"#chi^{{2}}/bin = {chi2_gen:.1f}")
 
 			else: # STACK BACKGROUND
 				stacks.append(THStack("stack", ""))
@@ -359,13 +385,21 @@ def draw_histograms(
 				stacks[-1].Draw("HIST")
 				data_hist.Draw("E SAME")
 				stacks[-1].SetMinimum(0)
+				# Set font sizes for stacked histogram
+				stacks[-1].GetXaxis().SetLabelSize(label_size)
+				stacks[-1].GetXaxis().SetTitleSize(title_size)
+				stacks[-1].GetXaxis().SetNdivisions(505)
+				stacks[-1].GetYaxis().SetLabelSize(label_size)
+				stacks[-1].GetYaxis().SetTitleSize(title_size)
+				stacks[-1].GetYaxis().SetNdivisions(505)
 				stacks[-1].GetYaxis().SetLabelOffset(0.01)
 				stacks[-1].GetYaxis().SetTitleOffset(1.70)
 				max_y = 1.2 * max(data_hist.GetMaximum(), stacks[-1].GetStack().Last().GetMaximum())
 				stacks[-1].SetMaximum(max_y)
 
 				chi2_stack = calculate_chi_squared(data_hist, stacks[-1].GetStack().Last())
-				latex.DrawLatex(0.25, 0.87, f"#chi^{{2}}/bin = {chi2_stack:.1f}")
+				if plot_chi2:
+					latex.DrawLatex(0.25, 0.87, f"#chi^{{2}}/bin = {chi2_stack:.1f}")
   
 		canvas.Print(f"{output_name}.{output_format}")
 		if plot_acc_corrected:

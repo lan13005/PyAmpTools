@@ -3,7 +3,7 @@ import itertools
 import os
 import re
 from collections import defaultdict
-from pyamptools.utility.general import glob_sort_captured, identify_channel
+from pyamptools.utility.general import glob_sort_captured, identify_channel, load_yaml
 from pyamptools.utility.MomentUtilities import MomentManagerTwoPS, MomentManagerVecPS
 from iftpwa1.utilities.helpers import reload_fields_and_components
 import numpy as np

@@ -2,10 +2,6 @@ import argparse
 import array
 import os
 
-import ROOT
-from pyamptools.utility.general import converter, example_vps_names, example_zlm_names, load_yaml
-from pyamptools.utility.cfg_gen_utils import generate_amptools_cfg, help_header
-
 ############################################################################
 # This script generates AmpTools configuration files with knobs/flags to
 # append additional information to the generated file
@@ -218,11 +214,14 @@ if __name__ == "__main__":
     console.print(f"Running {__file__}", style="bold blue")
     console.print(f"  yaml location: {main_yaml}", style="bold blue")
     console.rule()
+    
+    import ROOT
+    from pyamptools.utility.general import converter, example_vps_names, example_zlm_names, load_yaml
+    from pyamptools.utility.cfg_gen_utils import generate_amptools_cfg, help_header
 
     main_dict = load_yaml(main_yaml)
     
     output_location = f"{main_dict['base_directory']}/amptools.cfg" if output_location == "" else output_location
-
     result, generate_success = generate_amptools_cfg_from_dict(main_dict, output_location)
 
     if generate_success:

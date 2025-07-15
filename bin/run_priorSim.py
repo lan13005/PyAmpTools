@@ -70,7 +70,7 @@ def sim_to_amptools_cfg(resultFile, main_yaml, output_file):
         output_file (str): Path to dump the output AmpTools configuration file to
     """
     
-    from pyamptools.utility.cfg_gen_utils import generate_amptools_cfg, amptools_zlm_ampName, amptools_vps_ampName
+    from pyamptools.utility.cfg_gen_utils import generate_amptools_cfg, amptools_zlm_ampName, amptools_vps_ampName, help_header
     import pickle as pkl
     import numpy as np
     import pandas as pd
@@ -230,8 +230,13 @@ def sim_to_amptools_cfg(resultFile, main_yaml, output_file):
         temp_cfg_name,
         basereactName,
         particles,
+        header=help_header,
+        datareader=main_dict["datareader"],
+        add_amp_factor=main_dict.get("add_amp_factor", "").strip(),
+        append_to_cfg=main_dict.get("append_to_cfg", "").strip(),
+        append_to_decay=main_dict.get("append_to_decay", "").strip(),
         initialization=initialization,
-        exclude_sums_zeroed_by_polmag_value=False
+        exclude_sums_zeroed_by_polmag_value=False,
     )
     
     # Read the basic config

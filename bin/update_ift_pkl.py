@@ -2,6 +2,9 @@ import argparse
 import pickle as pkl
 from omegaconf.dictconfig import DictConfig
 
+# NOTE: This script will break if there are repeated keys in the pkl file. Even if the parent keys are different.
+# to be more robust I think the user has to specify the key path in the pkl file and directly replace that value
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -46,12 +49,12 @@ if __name__ == "__main__":
                 d = d[key]  # Access next level of dictionary
             d[key_chain[-1]] = update_value  # Update the final key
 
-    print(f"Recursively searching for {key_to_find} in {result_pkl}")
+    print(f"  Recursively searching for {key_to_find} in {result_pkl}")
     find_nested_key(data, key_to_find, update_value)
 
     if output_pkl is None:
         output_pkl = result_pkl
 
     with open(output_pkl, "wb") as f:
-        print(f"Dumping updated pickle file to: {output_pkl}")
+        print(f"  Dumping updated pickle file to: {output_pkl}")
         pkl.dump(data, f)

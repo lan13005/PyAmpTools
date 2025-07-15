@@ -30,7 +30,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Divide data into mass bins")
     parser.add_argument("main_yaml", type=str, default="conf/configuration.yaml", help="Path to the main yaml file")
     parser.add_argument("-e", "--use_edges", action="store_true", help="Use mass_edges and t_edges from the yaml file. Else recompute")
-    parser.add_argument("-np", "--n_processes", type=int, default=-1, help="Number of parallel processes to merge (hadd) the data")
+    parser.add_argument("-np", "--n_processes", type=int, default=-1, help="Override (spec in yaml) number of parallel processes to merge (hadd) the data")
     parser.add_argument("--nosplit", action="store_true", help="Skip the split_mass step")
     parser.add_argument("--nomerge", action="store_true", help="Skip the merge_bins step")
     args = parser.parse_args()
@@ -57,6 +57,7 @@ if __name__ == "__main__":
     min_t = main_dict["min_t"]
     max_t = main_dict["max_t"]
     n_t_bins = main_dict["n_t_bins"]
+    n_processes = main_dict["n_processes"] if n_processes == -1 else n_processes
     base_directory = main_dict["base_directory"]
     output_directory = f"{base_directory}/BINNED_DATA"
     bins_per_group = main_dict["bins_per_group"] if "bins_per_group" in main_dict else 1
