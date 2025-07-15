@@ -275,7 +275,7 @@ if __name__ == "__main__":
     ##### LOAD DEFAULTS IF NONE PROVIDED #####
     bins = fyea(main_dict["mle"], "bins", args.bins)
     if bins is None:
-        bins = np.arange(nmbMasses * nmbTprimes)
+        bins = list(np.arange(nmbMasses * nmbTprimes))
     if len(bins) != len(set(bins)):
         console.print("Warning: user requested repeated bins, ignoring repeated bins", style="bold yellow")
         bins = sorted(list(set(bins)))  
@@ -283,8 +283,17 @@ if __name__ == "__main__":
     output_folder = os.path.join(main_dict["base_directory"], "MLE")
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
-    else:
-        raise ValueError(f"Output folder {output_folder} already exists! Please provide a different path or remove the folder.")
+    
+    # Check for any bins that are already processed
+    for bin_idx in bins.copy():
+        check_path = os.path.join(output_folder, f"{method}_bin{bin_idx}.pkl")
+        if os.path.exists(check_path):
+            bins.remove(bin_idx)
+    if len(bins) == 0:
+        console.print("No bins to process, exiting", style="bold red")
+        sys.exit(0)
+    console.print(f"Found {nmbMasses*nmbTprimes - len(bins)}/{nmbMasses*nmbTprimes} bins already processed", style="bold green")
+    console.print(f"  Need to process {len(bins)}/{nmbMasses*nmbTprimes} bins", style="bold yellow")
 
     ##### LOAD PWA MANAGER #####
     from iftpwa1.pwa.gluex.gluex_jax_manager import (
@@ -299,11 +308,11 @@ if __name__ == "__main__":
     job_assignments = {}
     job_counter = 0
     bin_seeds = np.random.randint(0, 100000000, len(bins))
-    for bin_idx in bins:
-        job_assignments[job_counter] = (bin_idx, bin_seeds[bin_idx])
+    for bin_idx, seed in zip(bins, bin_seeds):
+        job_assignments[job_counter] = (bin_idx, seed)
         job_counter += 1
     total_jobs = len(job_assignments)
-    console.print(f"Total jobs: {total_jobs}\n  Distributed across {n_processes} processes", style="bold")
+    console.print(f"Total jobs: {total_jobs} -- distributing across {n_processes} processes", style="bold yellow")
     
     # copy input yaml_file to output_folder for reproducibility
     os.system(f"cp {args.main_yaml} {output_folder}/{os.path.basename(args.main_yaml)}")
