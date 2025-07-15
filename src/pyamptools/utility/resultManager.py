@@ -149,6 +149,11 @@ class ResultManager:
         self.console.print(f"masses: {self.masses}")
         self.console.print(f"\n")
         
+    def clean(self):
+        """Clean up - remove all cached data"""
+        if os.path.exists(self.moment_cache_location):
+            os.remove(self.moment_cache_location)
+        
     def attempt_load_all(self):
         
         if self._hist_results.empty:
@@ -1222,7 +1227,7 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
         resultManager.console.print(f"  - {file}")
     resultManager.console.print(f"\n")
         
-def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin", file_type='pdf'):
+def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin", file_type='pdf', log_scale=False):
     """
     This is a money plot. Two plots stacked vertically (intensity on top, relative phases on bottom)
     
@@ -1233,6 +1238,8 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
             "random": random samples will be used
             "thin": draw mcmc_nsamples using nsamples / mcmc_nsamples steps
             "last": last mcmc_nsamples will be used
+        file_type: Output file type for plots
+        log_scale: If True, plot intensities on log scale (phases remain linear)
     """
     name = "intensity + phases"
     resultManager.console.print(header_fmt.format(f"Plotting '{name}' plots..."))
@@ -1284,7 +1291,7 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
         
         # Main intensity plot
         ax = axes[0]
-        ax.set_xlim(1.04, 1.72)
+        ax.set_xlim(masses[0], masses[-1])
         
         # Track available legend elements. We primarily do this so we have control over the alpha of the
         #   legend lines. We do this by creating empty plots with appropriate styles
@@ -1451,10 +1458,20 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
         text.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
         
         #### AXIS SETTINGS
-        ax.set_ylim(0, 1.15 * np.max(nEvents))
+        if log_scale:
+            # Set log scale for intensity plot only, ensure reasonable limits
+            ax.set_yscale('log')
+            min_intensity = np.max([1e-3, np.min(nEvents) * 0.1]) if nEvents is not None else 1e-3
+            max_intensity = 1.15 * np.max(nEvents) if nEvents is not None else 1.0
+            ax.set_ylim(min_intensity, max_intensity)
+        else:
+            ax.set_ylim(0, 1.15 * np.max(nEvents))
+        
         phase_ax.set_xlabel(r"$m_X$ [GeV]", size=20)
         phase_ax.tick_params(axis='x', labelsize=16)
+        
         ax.set_ylabel(rf"Intensity / {resultManager.mass_bin_width:.3f} GeV", size=22)
+        
         ax.tick_params(axis='y', labelsize=16)
         wave_label1 = prettyLabels[waveName].strip("$")
         wave_label2 = prettyLabels[reference_wave].strip("$")
