@@ -363,7 +363,12 @@ class ResultManager:
             return ift_results
         with open(truth_loc, "rb") as f:
             truth_pkl = pkl.load(f)
-        ift_df, ift_res_df = loadIFTResultsFromPkl(truth_pkl)
+
+        sums_dict = None
+        if "coherent_sums" in self.main_dict:
+            self.console.print(f"[bold yellow]Will attempt to calculate coherent sums: {self.main_dict['coherent_sums']}[/bold yellow]")
+            sums_dict = self.main_dict["coherent_sums"]
+        ift_df, ift_res_df = loadIFTResultsFromPkl(truth_pkl, sums_dict)
 
         # requires loading hist results first to scale generated curves to data scale
         if source_type == "GENERATED":

@@ -288,8 +288,8 @@ def loadIFTResultsFromYaml(main_yaml):
         resultData = pkl.load(f)
         
     sums_dict = None
-    if "result_dump" in main_dict and "coherent_sums" in main_dict["result_dump"]:
-        sums_dict = main_dict["result_dump"]["coherent_sums"]            
+    if "coherent_sums" in main_dict:
+        sums_dict = main_dict["coherent_sums"]            
         
     return loadIFTResultsFromPkl(resultData, sums_dict)
         

@@ -107,11 +107,11 @@ def extract_ff(results, outfileName="", fmt=".5f", test_regex=False, no_phases=F
             merged.clear()
     
     ########## CHECK IF results_dump.coherent_sums is in main_dict ##########
-    if isinstance(main_dict, (dict, DictConfig)) and "result_dump" in main_dict and "coherent_sums" in main_dict["result_dump"]:
-        coherent_sums = main_dict["result_dump"]["coherent_sums"]
+    if isinstance(main_dict, (dict, DictConfig)) and "coherent_sums" in main_dict:
+        coherent_sums = main_dict["coherent_sums"]
         if coherent_sums is None:
             coherent_sums = {}
-        print("\nMerging Amplitude Groups based on user request in YAML field `result_dump.coherent_sums`")
+        print("\nMerging Amplitude Groups based on user request in YAML field `coherent_sums`")
         merged = {}
         for k, vs in coherent_sums.items():
             vs = vs.split("_")

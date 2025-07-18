@@ -27,6 +27,7 @@ fixed_waves: "" # same form as waveset, define which waves are fixed
 add_amp_factor: "" # Add an amplitude factor to every amplitude. For example, OmegaDalitz 0.1212 0.0257 0.0 0.0 will create a factor for the dalitz decay of the omega
 append_to_decay: "" # append this string to the decay amplitude, i.e. 'omega3pi' can be appended to Vec_ps_refl amplitude definition
 append_to_cfg: "" # append this string to the AmpTools configuration file
+coherent_sums: null # Dict[coherentSumName: UnderscoreSeparatedListOfWaves]
 mle:
   seed: 42 # rng seed
   scale: 100 # production coenfficients sampled uniformly from [-scale, scale]
@@ -68,8 +69,6 @@ moment_inversion:
   initial_scale: 1.0 # SVGD: initial kernel bandwidth scale
   min_scale: 0.0 # SVGD: minimum kernel bandwidth scale
   step_size: 0.01 # SVGD: step size for Adam optimizer
-result_dump:
-  coherent_sums: null # Dict[coherentSumName: UnderscoreSeparatedListOfWaves]
 nifty:
   yaml: ${NIFTY} # Dictionary for config file used by iftpwa
   force_load_normint: false # force loading normalization integrals (used for prior simulation)
