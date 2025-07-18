@@ -44,6 +44,7 @@ def main():
     func_map = {
         # 'command' : (path, description)
         "nentries": (f"{PYAMPTOOLS_HOME}/bin/get_nentries.py", "Print entries in List[ROOT files] (* wildcard), flag for branch integration"),
+        "subset": (f"{PYAMPTOOLS_HOME}/bin/subset.py", "Subset a root file by randomly selecting a fraction of the events"),
         "fit": (f"{PYAMPTOOLS_HOME}/src/pyamptools/mle.py", "[AmpTools] Perform a set of MLE fits given an amptools config file"),
         "fitfrac": (f"{PYAMPTOOLS_HOME}/src/pyamptools/extract_ff.py", "[AmpTools] Extract fit fractions from a given amptools FitResults file"),
         "gen_amp": (f"{PYAMPTOOLS_HOME}/bin/gen_amp.py", "[AmpTools] Generate data for a given configuration file"),
