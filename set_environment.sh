@@ -58,6 +58,8 @@ mark_removed_files_assume_unchanged() {
 }
 
 hostname=$(hostname)
+# if hostname contains jlab.org and default_env is set and not in an apptainer or singularity container
+# then load the default environment
 if [[ "$hostname" == *"jlab.org"* && -n "$default_env" && -z "$APPTAINER_CONTAINER" && -z "$SINGULARITY_CONTAINER" ]]; then
 
     echo "Hostname contains 'jlab.org'. Loading default JLab environment..."

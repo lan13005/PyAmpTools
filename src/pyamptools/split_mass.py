@@ -19,6 +19,7 @@ def split_mass_t(
     mass_edges=None, 
     t_edges=None,
     dump_augmented_tree=False,
+    overwrite=False,
 ):
     """
     Split events into bins based on (invariant mass, t) and save to separate ROOT files.
@@ -36,6 +37,7 @@ def split_mass_t(
         mass_edges (List[float]): Bin the data with these bin edges (nMBins + 1 elements), default None
         t_edges (List[float]): Bin the data with these bin edges (nTBins + 1 elements), default None
         dump_augmented_tree (bool): Whether to save the augmented tree with all events
+        overwrite (bool): If True, force recalculation of derived kinematics even if they already exist
     
     Returns:
         tuple: (mass_edges, t_edges, nBar, nBar_err)
@@ -55,7 +57,7 @@ def split_mass_t(
         t_edges = np.array(t_edges)
 
     console.print(f"Appending kinematics to {infile}", style="bold blue")
-    df, kin_quantities = append_kinematics(infile, None, treeName, console=console)
+    df, kin_quantities = append_kinematics(infile, None, treeName, console=console, overwrite=overwrite)
 
     # Initialize arrays to store the bin information
     nBar = np.zeros((nMBins, nTBins))
@@ -123,9 +125,10 @@ if __name__ == "__main__":
     parser.add_argument("--treeName", type=str, default="kin", help="Name of the TTree in the input ROOT file")
     parser.add_argument("--mass_edges", type=list, default=None, help="Bin the data with these mass-bin edges (nBins + 1 elements). If None, will be computed based on other cfg options")
     parser.add_argument("--t_edges", type=list, default=None, help="Bin the data with these t-bin edges (nBins + 1 elements). If None, will be computed based on other cfg options")
+    parser.add_argument("--overwrite", action="store_true", help="Force recalculation of kinematics even if they already exist")
     args = parser.parse_args()
 
     split_mass_t(args.infile, args.outputBase, 
                 args.lowMass, args.highMass, args.nBins, 
                 args.lowT, args.highT, args.nTBins,
-                args.treeName, args.mass_edges, args.t_edges)
+                args.treeName, args.mass_edges, args.t_edges, args.overwrite)

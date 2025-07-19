@@ -130,6 +130,7 @@ def append_kinematics(
     treeName="kin",
     console=None,
     beam_angle=None,
+    overwrite=False,
     ):
     
     """
@@ -152,6 +153,7 @@ def append_kinematics(
         treeName (str): Name of the TTree in the input ROOT file
         console (rich.console.Console): Console object for printing
         beam_angle (float, str): Beam angle in degrees or branch name in the tree the beam angles (deg) are stored in
+        overwrite (bool): If True, force recalculation of derived kinematics even if they already exist
     
     Returns:
         df: ROOT.RDataFrame with kinematics appended, None if file already exists
@@ -177,6 +179,11 @@ def append_kinematics(
         "mMassX": "MASS(X1,X2)",
         "mMassX1": "MASS(X1)",
         "mMassX2": "MASS(X2)",
+        "mMassX1Recoil": "MASS(X1,RECOIL)",
+        "mMassX2Recoil": "MASS(X2,RECOIL)",
+        "mVanHoveX": "VANHOVEX(RECOIL,X2,X1)",
+        "mVanHoveY": "VANHOVEY(RECOIL,X2,X1)",
+        "mVanHoveOmega": "VANHOVEOMEGA(RECOIL,X2,X1)",
         "mCosHel": "HELCOSTHETA(X1,X2,RECOIL)",
         "mPhiHel": "HELPHI(X1,X2,RECOIL,GLUEXBEAM)",
         "mt": "T(GLUEXTARGET,RECOIL)"
@@ -208,14 +215,18 @@ def append_kinematics(
     columns = df.GetColumnNames()
     console.print(f"Available columns: {list(columns)}", style="bold blue")
     
-    if "mMassX" in columns and "mt" in columns: # woo nothing to do
+    if "mMassX" in columns and "mt" in columns and not overwrite: # woo nothing to do
         console.print(f"Expected kinematics already present in {infile}, loading...", style="bold yellow")
         return df, KINEMATIC_QUANTITIES
     else:
+        if overwrite:
+            console.print(f"Overwrite=True: Forcing recalculation of kinematics in {infile}", style="bold yellow")
         # Define particle four-vectors
         particles = ["RECOIL", "X2", "X1"] # Particle order in AmpTools output tree
-        df = df.Define("GLUEXTARGET", "std::vector<float> p{0.0, 0.0, 0.0, 0.938272}; return p;")
-        df = df.Define("GLUEXBEAM",   "std::vector<float> p{{Px_Beam, Py_Beam, Pz_Beam, E_Beam}}; return p;")
+        if "GLUEXTARGET" not in columns:
+            df = df.Define("GLUEXTARGET", "std::vector<float> p{0.0, 0.0, 0.0, 0.938272}; return p;")
+        if "GLUEXBEAM" not in columns:
+            df = df.Define("GLUEXBEAM",   "std::vector<float> p{{Px_Beam, Py_Beam, Pz_Beam, E_Beam}}; return p;")
 
         # Assuming AmpTools formatted tree
         for i, particle in enumerate(particles):
@@ -224,10 +235,15 @@ def append_kinematics(
         
         # Define kinematic quantities
         for name, function in KINEMATIC_QUANTITIES.items():
-            df = df.Define(name, function)
+            if overwrite and name in columns:
+                df = df.Redefine(name, function)
+            else:
+                df = df.Define(name, function)
 
         # Do not save the particle four-vectors
         original_columns = list(columns)
+        if overwrite: # drop previously derived columns if overwriting
+            original_columns = [c for c in original_columns if c not in KINEMATIC_QUANTITIES.keys()]
         kinematic_columns = list(KINEMATIC_QUANTITIES.keys())
         columns_to_keep = original_columns + kinematic_columns
             
@@ -238,8 +254,10 @@ def append_kinematics(
         #    Instead, snapshot to temp file then move to overwrite original
         is_overwriting = output_location in infile # infile ~ List[str]
         if is_overwriting:
-            temp_dir = tempfile.gettempdir()
-            temp_file = os.path.join(temp_dir, f"temp_{os.path.basename(output_location)}")            
+            user = os.getenv('USER')
+            if not os.path.exists(f'/scratch/{user}'):
+                os.makedirs(f'/scratch/{user}', exist_ok=True)
+            temp_file = os.path.join(f'/scratch/{user}', f"temp_{os.path.basename(output_location)}")            
             df.Snapshot(treeName, temp_file, columns_to_keep)
             df = None # close dataframe releasing input file
             shutil.move(temp_file, output_location)

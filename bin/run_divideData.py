@@ -33,6 +33,7 @@ if __name__ == "__main__":
     parser.add_argument("-np", "--n_processes", type=int, default=-1, help="Override (spec in yaml) number of parallel processes to merge (hadd) the data")
     parser.add_argument("--nosplit", action="store_true", help="Skip the split_mass step")
     parser.add_argument("--nomerge", action="store_true", help="Skip the merge_bins step")
+    parser.add_argument("--overwrite", action="store_true", help="Force recalculation of derived kinematics even if they already exist")
     args = parser.parse_args()
     main_yaml = args.main_yaml
     use_edges = args.use_edges
@@ -154,7 +155,7 @@ if __name__ == "__main__":
                         mass_edges, t_edges, nBar, nBar_err = split_mass_t(fname, oname, 
                                                     min_mass, max_mass, n_mass_bins, 
                                                     min_t, max_t, n_t_bins,
-                                                    treeName="kin", mass_edges=mass_edges, t_edges=t_edges)
+                                                    treeName="kin", mass_edges=mass_edges, t_edges=t_edges, overwrite=args.overwrite)
                         _pol = "shared" if sharemc else pol
                         nBars[f"{ftype}_{_pol}"] = nBar
                         nBar_errs[f"{ftype}_{_pol}"] = nBar_err
@@ -167,7 +168,7 @@ if __name__ == "__main__":
                     mass_edges, t_edges, nBar, nBar_err = split_mass_t(f"{data_folder}/bkgnd{pol}.root", f"bkgnd{pol}", 
                                                         min_mass, max_mass, n_mass_bins, 
                                                         min_t, max_t, n_t_bins,
-                                                        treeName="kin", mass_edges=mass_edges, t_edges=t_edges)
+                                                        treeName="kin", mass_edges=mass_edges, t_edges=t_edges, overwrite=args.overwrite)
                     nBars[f"bkgnd_{pol}"] = nBar
                     nBar_errs[f"bkgnd_{pol}"] = nBar_err
                 else:

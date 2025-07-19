@@ -28,6 +28,7 @@ def loadMacros():
 
     ROOT.gInterpreter.Declare("""
     #include "FSBasic/FSMath.h"
+    #include <cmath>
     using Vec_t = const ROOT::RVec<float>&;
 
     // PYAMPTOOLS DEFINED - see RDF_userDefFuncs.cc
@@ -46,6 +47,12 @@ def loadMacros():
     //   4 Particle versions of costheta
     double HELCOSTHETA( Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4 ){return FSMath::helcostheta( P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3] ); }
     double GJCOSTHETA(  Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4 ){return FSMath::gjcostheta(  P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3] ); }
+
+    // VAN HOVE VARIABLES (3 BODY)
+    double VANHOVEOMEGA(Vec_t P1, Vec_t P2, Vec_t P3){ return FSMath::vanHoveomega(P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3]); }
+    double VANHOVEX(Vec_t P1, Vec_t P2, Vec_t P3){ return FSMath::vanHoveX(P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3]); }
+    double VANHOVEY(Vec_t P1, Vec_t P2, Vec_t P3){ return FSMath::vanHoveY(P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3]); }
+    double VANHOVEQ(Vec_t P1, Vec_t P2, Vec_t P3){ double x = VANHOVEX(P1, P2, P3); double y = VANHOVEY(P1, P2, P3); return std::sqrt(x*x + y*y); }
 
     // MASS
     double MASS(Vec_t P1, Vec_t P2, Vec_t P3 ){ return sqrt(pow(P1[3]+P2[3]+P3[3],2) - pow(P1[0]+P2[0]+P3[0],2) - pow(P1[1]+P2[1]+P3[1],2) - pow(P1[2]+P2[2]+P3[2],2)); }

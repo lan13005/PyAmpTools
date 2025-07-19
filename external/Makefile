@@ -12,7 +12,7 @@ endif
 # Features introduced beyond these commits might get overwritten
 # by the distribution process and can crash the build
 AMPTOOLS_COMMIT := 0753e28 # master as of 07/20/2024
-FSROOT_COMMIT := d4d7e73
+FSROOT_COMMIT := 93bf25b
 
 SRC_DIRS := Distribution
 SUB_DIRS := IUAmpTools IUAmpToolsMPI MinuitInterface UpRootMinuit
@@ -45,6 +45,7 @@ gpu: | run_default
 	@if [ -z "$$CUDA_INSTALL_PATH" ]; then \
 		echo " === ERROR: CUDA_INSTALL_PATH is not set. GPU build skipped. ===" ; \
 		echo " === Please set CUDA_INSTALL_PATH to your CUDA installation directory. ===" ; \
+		echo " === If on JLab farm see set_environment.sh for more information. ===" ; \
 	else \
 		echo " === Running 'make gpu' in the target directory... ===" ; \
 		cd AmpTools/AmpTools; make GPU=1 ; \
