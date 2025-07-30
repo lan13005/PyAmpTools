@@ -856,8 +856,101 @@ def query_default(df):
     return df.query("source == 'yaml'") if not df.empty else pd.DataFrame()
 def safe_query(df, query):
     return df.query(query) if not df.empty else pd.DataFrame()
+
+def _apply_mass_filtering(resultManager, masses, dataframes, min_mass=None, max_mass=None, massBins=None):
+    """
+    Apply mass filtering to masses and corresponding DataFrames.
     
-def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10), file_type='pdf'):
+    Args:
+        resultManager: ResultManager instance
+        masses: Array of masses to filter
+        dataframes: Dict of DataFrames to filter by mass
+        min_mass: Minimum mass for plotting (GeV/c2). If None, use actual masses range
+        max_mass: Maximum mass for plotting (GeV/c2). If None, use actual masses range
+        massBins: Optional massBins array to filter (has n_mass_bins + 1 elements)
+    
+    Returns:
+        tuple: (filtered_masses, filtered_dataframes, mass_mask, filtered_massBins)
+    """
+    if min_mass is None and max_mass is None:
+        filtered_massBins = massBins if massBins is not None else None
+        return masses, dataframes, np.ones(len(masses), dtype=bool), filtered_massBins
+    
+    # Use _get_filtered_bins to get the mass mask
+    filtered_bins = _get_filtered_bins(resultManager, np.arange(len(masses)), min_mass, max_mass)
+    
+    if not filtered_bins:
+        filtered_massBins = massBins if massBins is not None else None
+        return masses, dataframes, np.zeros(len(masses), dtype=bool), filtered_massBins
+    
+    # Create mass mask from filtered bins
+    mass_mask = np.zeros(len(masses), dtype=bool)
+    mass_mask[filtered_bins] = True
+    
+    filtered_masses = masses[mass_mask]
+    filtered_dataframes = {}
+    
+    for name, df in dataframes.items():
+        if not df.empty:
+            filtered_dataframes[name] = df[df['mass'].isin(filtered_masses)]
+        else:
+            filtered_dataframes[name] = df
+    
+    filtered_massBins = None
+    if massBins is not None:
+        # need routine to conditionally include bin edges
+        bin_mask = np.zeros(len(massBins), dtype=bool)
+        for i in range(len(massBins) - 1):
+            if i < len(mass_mask) and mass_mask[i]:
+                bin_mask[i] = True
+                bin_mask[i + 1] = True
+        filtered_massBins = massBins[bin_mask]
+    
+    return filtered_masses, filtered_dataframes, mass_mask, filtered_massBins
+
+def _get_filtered_bins(resultManager, bins_to_plot, min_mass=None, max_mass=None):
+    """
+    Get filtered bin indices based on mass range.
+    
+    Args:
+        resultManager: ResultManager instance
+        bins_to_plot: List of bin indices to plot. If None, all bins are plotted
+        min_mass: Minimum mass for plotting (GeV/c²). If None, use full range.
+        max_mass: Maximum mass for plotting (GeV/c²). If None, use full range.
+    
+    Returns:
+        list: Filtered bin indices
+    """
+    if min_mass is None and max_mass is None:
+        return bins_to_plot if bins_to_plot is not None else np.arange(resultManager.n_mass_bins)
+    
+    masses = resultManager.masses
+    mass_mask = np.ones(len(masses), dtype=bool)
+    if min_mass is not None:
+        mass_mask &= masses >= min_mass
+    if max_mass is not None:
+        mass_mask &= masses <= max_mass
+    
+    if not np.any(mass_mask):
+        return []
+    
+    filtered_bins = np.where(mass_mask)[0]
+    if bins_to_plot is None:
+        return filtered_bins.tolist()
+    
+    return [bin_idx for bin_idx in bins_to_plot if bin_idx in filtered_bins]
+    
+def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10), file_type='pdf', min_mass=None, max_mass=None):
+    """
+    Plot generated curves with optional mass range filtering.
+    
+    Args:
+        resultManager: ResultManager instance
+        figsize: Tuple of the figure size
+        file_type: Output file type for plots
+        min_mass: Minimum mass for plotting (GeV/c²). If None, use full range.
+        max_mass: Maximum mass for plotting (GeV/c²). If None, use full range.
+    """
     ift_gen_df = resultManager.gen_results[0]
     ift_gen_df = query_default(ift_gen_df)
     cols = ift_gen_df.columns
@@ -871,6 +964,16 @@ def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10), file_type='p
     
     waveNames = resultManager.waveNames
     masses = resultManager.masses
+    
+    # Apply mass filtering
+    dataframes = {'gen': ift_gen_df}
+    masses, dataframes, mass_mask, _ = _apply_mass_filtering(resultManager, masses, dataframes, min_mass, max_mass)
+    
+    if not np.any(mass_mask):
+        resultManager.console.print(f"[bold yellow]No masses in range [{min_mass}, {max_mass}]. Skipping gen_curves plot.[/bold yellow]")
+        return
+    
+    ift_gen_df = dataframes['gen']
         
     nrows, ncols = calculate_subplot_grid_size(len(waveNames))
 
@@ -906,7 +1009,19 @@ def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10), file_type='p
     ofile = f"{resultManager.base_directory}/{default_plot_subdir}/gen_curves.{file_type}"
     save_and_close_fig(ofile, fig, axes, console=resultManager.console, overwrite=True)
     
-def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, figsize=(10, 10), file_type='pdf', silence=False):
+def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, figsize=(10, 10), file_type='pdf', silence=False, min_mass=None, max_mass=None):
+    """
+    Plot binned intensities with optional mass range filtering.
+    
+    Args:
+        resultManager: ResultManager instance
+        bins_to_plot: List of bin indices to plot. If None, all bins are plotted
+        figsize: Tuple of the figure size
+        file_type: Output file type for plots
+        silence: If True, suppress progress bars
+        min_mass: Minimum mass for plotting (GeV/c²). If None, use full range.
+        max_mass: Maximum mass for plotting (GeV/c²). If None, use full range.
+    """
     name = "binned intensity"
     resultManager.console.print(header_fmt.format(f"Plotting '{name}' plots..."))
     
@@ -921,8 +1036,12 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
         resultManager.console.print(f"[bold yellow]No data available for binned intensity plots. Skipping.[/bold yellow]")
         return
     
-    if bins_to_plot is None:
-        bins_to_plot = np.arange(resultManager.n_mass_bins)
+    # Apply mass filtering to bins_to_plot
+    bins_to_plot = _get_filtered_bins(resultManager, bins_to_plot, min_mass, max_mass)
+    
+    if not bins_to_plot:
+        resultManager.console.print(f"[bold yellow]No bins in mass range [{min_mass}, {max_mass}]. Skipping binned intensity plots.[/bold yellow]")
+        return
 
     cols_to_plot = ['intensity'] + resultManager.waveNames
     nrows, ncols = calculate_subplot_grid_size(len(cols_to_plot))
@@ -1019,8 +1138,7 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
     resultManager.console.print(f"\n")
 
 def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, figsize=(10, 10), 
-                              mcmc_nsamples=500, mcmc_selection="thin", file_type='pdf', silence=False):
-    
+                              mcmc_nsamples=500, mcmc_selection="thin", file_type='pdf', silence=False, min_mass=None, max_mass=None):
     """
     Plot ~posterior distribution of the complex plane, overlaying generated curves, MLE, MCMC, IFT results when possible
     
@@ -1033,6 +1151,10 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
             "random": random samples will be used
             "thin": draw mcmc_nsamples using nsamples / mcmc_nsamples steps
             "last": last mcmc_nsamples will be used
+        file_type: Output file type for plots
+        silence: If True, suppress progress bars
+        min_mass: Minimum mass for plotting (GeV/c²). If None, use full range.
+        max_mass: Maximum mass for plotting (GeV/c²). If None, use full range.
     """
     
     name = "binned complex plane"
@@ -1050,8 +1172,12 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
         resultManager.console.print(f"[bold yellow]No data available for binned complex plane plots. Skipping.[/bold yellow]")
         return
 
-    if bins_to_plot is None:
-        bins_to_plot = np.arange(resultManager.n_mass_bins)
+    # Apply mass filtering to bins_to_plot
+    bins_to_plot = _get_filtered_bins(resultManager, bins_to_plot, min_mass, max_mass)
+    
+    if not bins_to_plot:
+        resultManager.console.print(f"[bold yellow]No bins in mass range [{min_mass}, {max_mass}]. Skipping binned complex plane plots.[/bold yellow]")
+        return
 
     cols_to_plot = resultManager.waveNames
     nrows, ncols = calculate_subplot_grid_size(len(cols_to_plot))
@@ -1232,7 +1358,7 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
         resultManager.console.print(f"  - {file}")
     resultManager.console.print(f"\n")
         
-def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin", file_type='pdf', log_scale=False):
+def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin", file_type='pdf', log_scale=False, min_mass=None, max_mass=None):
     """
     This is a money plot. Two plots stacked vertically (intensity on top, relative phases on bottom)
     
@@ -1245,6 +1371,8 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
             "last": last mcmc_nsamples will be used
         file_type: Output file type for plots
         log_scale: If True, plot intensities on log scale (phases remain linear)
+        min_mass: Minimum mass for plotting (GeV/c2). If None, use full range.
+        max_mass: Maximum mass for plotting (GeV/c2). If None, use full range.
     """
     name = "intensity + phases"
     resultManager.console.print(header_fmt.format(f"Plotting '{name}' plots..."))
@@ -1267,6 +1395,33 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
     massBins = resultManager.massBins
     masses = resultManager.masses
     line_half_width = resultManager.mass_bin_width / 2
+    
+    # Apply mass filtering
+    dataframes = {
+        'hist': hist_results,
+        'mcmc': mcmc_results,
+        'mle': mle_results,
+        'gen': gen_results,
+        'ift': ift_results,
+        'moment_inversion': moment_inversion_results
+    }
+    masses, dataframes, mass_mask, filtered_massBins = _apply_mass_filtering(resultManager, masses, dataframes, min_mass, max_mass, massBins)
+    
+    if not np.any(mass_mask):
+        resultManager.console.print(f"[bold yellow]No masses in range [{min_mass}, {max_mass}]. Skipping overview plots.[/bold yellow]")
+        return
+    
+    # Update massBins to match filtered masses
+    if filtered_massBins is not None:
+        massBins = filtered_massBins
+    
+    # Update DataFrames
+    hist_results = dataframes['hist']
+    mcmc_results = dataframes['mcmc']
+    mle_results = dataframes['mle']
+    gen_results = dataframes['gen']
+    ift_results = dataframes['ift']
+    moment_inversion_results = dataframes['moment_inversion']
     
     nEvents, nEvents_err = None, None
     if not hist_results.empty:
@@ -1327,7 +1482,7 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
 
         #### PLOT MCMC FIT INTENSITY
         if not samples_to_draw.empty:
-            for bin_idx in range(n_mass_bins):
+            for bin_idx in range(len(masses)):
                 mass = masses[bin_idx]
                 binned_samples = samples_to_draw.query('mass == @mass')
                 x_starts = np.full_like(binned_samples[waveName], mass - line_half_width)
@@ -1360,7 +1515,7 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
         
         #### PLOT MOMENT INVERSION INTENSITY
         if not moment_inversion_results.empty:
-            for bin_idx in range(n_mass_bins):
+            for bin_idx in range(len(masses)):
                 mass = masses[bin_idx]
                 binned_samples = moment_inversion_results.query('mass == @mass')
                 x_starts = np.full_like(binned_samples[waveName], mass - line_half_width)
@@ -1401,7 +1556,7 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
         
         #### PLOT MCMC PHASES
         if not samples_to_draw.empty:
-            for bin_idx in range(n_mass_bins):
+            for bin_idx in range(len(masses)):
                 mass = masses[bin_idx]
                 binned_samples = samples_to_draw.query('mass == @mass')
                 x_starts = np.full_like(binned_samples[waveName], mass - line_half_width)
@@ -1438,7 +1593,7 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
             
         #### PLOT MOMENT INVERSION PHASES
         if not moment_inversion_results.empty and f"{waveName}_amp" in moment_inversion_results.columns:
-            for bin_idx in range(n_mass_bins):
+            for bin_idx in range(len(masses)):
                 mass = masses[bin_idx]
                 binned_samples = moment_inversion_results.query('mass == @mass')
                 x_starts = np.full_like(binned_samples[waveName], mass - line_half_width)
@@ -1489,8 +1644,7 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
         
     resultManager.console.print(f"\n")
     
-def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin", file_type='pdf'):
-    
+def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin", file_type='pdf', min_mass=None, max_mass=None):
     """
     This is another money plot. All non-zero projected moments are plotted
     
@@ -1501,6 +1655,9 @@ def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin
             "random": random samples will be used
             "thin": draw mcmc_nsamples using nsamples / mcmc_nsamples steps
             "last": last mcmc_nsamples will be used
+        file_type: Output file type for plots
+        min_mass: Minimum mass for plotting (GeV/c2). If None, use full range.
+        max_mass: Maximum mass for plotting (GeV/c2). If None, use full range.
     """
     name = "moments"
     resultManager.console.print(header_fmt.format(f"Plotting '{name}' plots..."))
@@ -1522,6 +1679,25 @@ def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin
     n_mass_bins = resultManager.n_mass_bins
     masses = resultManager.masses
     line_half_width = resultManager.mass_bin_width / 2
+    
+    # Apply mass filtering
+    dataframes = {
+        'mcmc': mcmc_results,
+        'mle': mle_results,
+        'gen': gen_results,
+        'ift': ift_results
+    }
+    masses, dataframes, mass_mask, _ = _apply_mass_filtering(resultManager, masses, dataframes, min_mass, max_mass)
+    
+    if not np.any(mass_mask):
+        resultManager.console.print(f"[bold yellow]No masses in range [{min_mass}, {max_mass}]. Skipping moment plots.[/bold yellow]")
+        return
+    
+    # Update DataFrames
+    mcmc_results = dataframes['mcmc']
+    mle_results = dataframes['mle']
+    gen_results = dataframes['gen']
+    ift_results = dataframes['ift']
     
     samples_to_draw = pd.DataFrame()
     if not mcmc_results.empty:
@@ -1581,7 +1757,7 @@ def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin
             
         #### PLOT MCMC FIT INTENSITY
         if not samples_to_draw.empty:
-            for bin_idx in range(n_mass_bins):
+            for bin_idx in range(len(masses)):
                 mass = masses[bin_idx]
                 binned_samples = samples_to_draw.query('mass == @mass')
                 x_starts = np.full_like(binned_samples[moment_name], mass - line_half_width)
