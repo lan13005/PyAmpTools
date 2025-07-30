@@ -185,46 +185,52 @@ if __name__ == "__main__":
                     console.print(f"Perform final preparation for bin: {k}", style="bold yellow")
                     os.system(f"mkdir -p bin_{k}")
                     os.system(f"cp -f {amptools_cfg} bin_{k}/bin_{k}.cfg")
-                    with open(f"bin_{k}/metadata.txt", "w") as f:
-                        f.write("---------------------\n")
-                        f.write(f"bin number: {k}\n")
-                        if mass_edges is not None:
-                            f.write(f"mass range: {mass_edges[i]:.2f} - {mass_edges[i + 1]:.2f} GeV\n")
-                        if t_edges is not None:
-                            f.write(f"t range: {t_edges[j]:.2f} - {t_edges[j + 1]:.2f} GeV^2\n")
-                        nBar_ftype = {pair.split("_")[0]: 0 for pair in nBars.keys()} # keys ~ ftype_pol
-                        nBar_var_ftype = {pair.split("_")[0]: 0 for pair in nBars.keys()} # variance
-                        f.write("---------------------\n")
-                        for ftype_pol in nBars:
-                            ftype, pol = ftype_pol.split("_")
-                            _nBars = nBars[f"{ftype}_{pol}"]
-                            _nBar_errs = nBar_errs[f"{ftype}_{pol}"]
-                            f.write(f"nBar {ftype} {pol}: {_nBars[i][j]} +/- {_nBar_errs[i][j]}\n")
-                            if ftype in ["data", "bkgnd"]:
-                                nBar_ftype[ftype] += _nBars[i][j]
-                                nBar_var_ftype[ftype] += _nBar_errs[i][j]**2
-                            if ftype in ["accmc", "genmc"]:
-                                share_factor = (len(pols) if pol == "shared" else 1)
-                                nBar_ftype[ftype] += _nBars[i][j] * share_factor
-                                nBar_var_ftype[ftype] += (_nBar_errs[i][j] * share_factor)**2
-                        f.write("---------------------\n")
-                        for ftype in nBar_ftype:
-                            f.write(f"nBar {ftype}: {nBar_ftype[ftype]} +/- {nBar_var_ftype[ftype]**0.5}\n")
-                        f.write("---------------------\n")
-                        if len(nBars) != 0:
-                            if "bkgnd" in nBar_ftype: # if there is bkgnd we subtract it to get the signal
-                                signal = nBar_ftype['data'] - nBar_ftype['bkgnd']
-                                signal_err = (nBar_var_ftype['data'] + nBar_var_ftype['bkgnd'])**0.5
-                            else:
-                                signal = nBar_ftype['data']
-                                signal_err = nBar_var_ftype['data']**0.5
-                            f.write(f"nBar signal: {signal} +/- {signal_err}\n")
-                            eff = nBar_ftype['accmc'] / nBar_ftype['genmc']                            
-                            eff_err = eff * ((nBar_var_ftype['accmc']**0.5 / nBar_ftype['accmc'])**2 + (nBar_var_ftype['genmc']**0.5 / nBar_ftype['genmc'])**2)**0.5
-                            corr_signal = signal / eff
-                            corr_signal_err = corr_signal * ((signal_err / signal)**2 + (eff_err / eff)**2)**0.5
-                            f.write(f"efficiency (%): {eff*100:.3f} +/- {eff_err*100:.3f}\n")
-                            f.write(f"nBar corrected signal: {corr_signal} +/- {corr_signal_err}\n")
+                    
+                    if not os.path.exists(f"bin_{k}/metadata.txt"):
+                        console.print(f"  Creating metadata file", style="bold green")
+                        with open(f"bin_{k}/metadata.txt", "w") as f:
+                            f.write("---------------------\n")
+                            f.write(f"bin number: {k}\n")
+                            if mass_edges is not None:
+                                f.write(f"mass range: {mass_edges[i]:.2f} - {mass_edges[i + 1]:.2f} GeV\n")
+                            if t_edges is not None:
+                                f.write(f"t range: {t_edges[j]:.2f} - {t_edges[j + 1]:.2f} GeV^2\n")
+                            nBar_ftype = {pair.split("_")[0]: 0 for pair in nBars.keys()} # keys ~ ftype_pol
+                            nBar_var_ftype = {pair.split("_")[0]: 0 for pair in nBars.keys()} # variance
+                            f.write("---------------------\n")
+                            for ftype_pol in nBars:
+                                ftype, pol = ftype_pol.split("_")
+                                _nBars = nBars[f"{ftype}_{pol}"]
+                                _nBar_errs = nBar_errs[f"{ftype}_{pol}"]
+                                f.write(f"nBar {ftype} {pol}: {_nBars[i][j]} +/- {_nBar_errs[i][j]}\n")
+                                if ftype in ["data", "bkgnd"]:
+                                    nBar_ftype[ftype] += _nBars[i][j]
+                                    nBar_var_ftype[ftype] += _nBar_errs[i][j]**2
+                                if ftype in ["accmc", "genmc"]:
+                                    share_factor = (len(pols) if pol == "shared" else 1)
+                                    nBar_ftype[ftype] += _nBars[i][j] * share_factor
+                                    nBar_var_ftype[ftype] += (_nBar_errs[i][j] * share_factor)**2
+                            f.write("---------------------\n")
+                            for ftype in nBar_ftype:
+                                f.write(f"nBar {ftype}: {nBar_ftype[ftype]} +/- {nBar_var_ftype[ftype]**0.5}\n")
+                            f.write("---------------------\n")
+                            if len(nBars) != 0:
+                                if "bkgnd" in nBar_ftype: # if there is bkgnd we subtract it to get the signal
+                                    signal = nBar_ftype['data'] - nBar_ftype['bkgnd']
+                                    signal_err = (nBar_var_ftype['data'] + nBar_var_ftype['bkgnd'])**0.5
+                                else:
+                                    signal = nBar_ftype['data']
+                                    signal_err = nBar_var_ftype['data']**0.5
+                                f.write(f"nBar signal: {signal} +/- {signal_err}\n")
+                                eff = nBar_ftype['accmc'] / nBar_ftype['genmc']                            
+                                eff_err = eff * ((nBar_var_ftype['accmc']**0.5 / nBar_ftype['accmc'])**2 + (nBar_var_ftype['genmc']**0.5 / nBar_ftype['genmc'])**2)**0.5
+                                corr_signal = signal / eff
+                                corr_signal_err = corr_signal * ((signal_err / signal)**2 + (eff_err / eff)**2)**0.5
+                                f.write(f"efficiency (%): {eff*100:.3f} +/- {eff_err*100:.3f}\n")
+                                f.write(f"nBar corrected signal: {corr_signal} +/- {corr_signal_err}\n")
+                    else:
+                        console.print(f"  Metadata file already exists, skipping", style="bold green")
+
                     replace_fitname = f"sed -i 's|PLACEHOLDER_FITNAME|bin_{k}|g' bin_{k}/bin_{k}.cfg"
                     os.system(replace_fitname)
                     for pol in pols:
@@ -270,11 +276,20 @@ if __name__ == "__main__":
         prexist_groups = glob.glob(f"{output_directory}/group_*")
         n_prexist = len(prexist_groups)
         ans = "y"
+        create_group_cfg = False
         if n_prexist > 0:
             ans = input(f"\n{n_prexist} group folders already exist. Ovewrite? (y/n): ")
             if ans.lower() == "y":
                 os.system(f"rm -rf {output_directory}/group_*")
                 console.print("  Deleted pre-existing groups", style="bold green")
+            elif create_cfg:  # If we previously chose to create new cfg files for bins
+                ans_create_group_cfg = input("Create new group cfg files? (y/n): ")
+                if ans_create_group_cfg.lower() == "y":
+                    console.print("  Will create new group cfg files", style="bold green")
+                    create_group_cfg = True
+                    ans = "y"  # Allow group processing to continue
+                else:
+                    console.print("  Skipping group cfg creation", style="bold yellow")
 
         if bins_per_group > 1 and ans == "y":
             bins = glob.glob(f"{output_directory}/bin_*")
@@ -329,13 +344,15 @@ if __name__ == "__main__":
                     sed_repl = f"sed -i '/^fit/ s|{bin_name}|bin_{i}|g' {output_directory}/{group_name}/{cfg_name}"
                     os.system(sed_repl)
 
-                    # update naming for sources
-                    for source in sources:
-                        console.print(f"Merging {source} from {len(bin_group)} bins", style="bold yellow")
-                        bin_sources = [f"{bin}/{source}" for bin in bin_group]
-                        hadd_cmd = f"hadd {output_directory}/{group_name}/{source} {' '.join(bin_sources)}"
-                        console.print(hadd_cmd, style="bold yellow")
-                        os.system(hadd_cmd+" > /dev/null")
+                    # Only merge data files if not just creating cfg files
+                    if not create_group_cfg:
+                        # update naming for sources
+                        for source in sources:
+                            console.print(f"Merging {source} from {len(bin_group)} bins", style="bold yellow")
+                            bin_sources = [f"{bin}/{source}" for bin in bin_group]
+                            hadd_cmd = f"hadd {output_directory}/{group_name}/{source} {' '.join(bin_sources)}"
+                            console.print(hadd_cmd, style="bold yellow")
+                            os.system(hadd_cmd+" > /dev/null")
                     
                     os.system(f"touch {output_directory}/{group_name}/seed_nifty.txt")
 
@@ -353,16 +370,23 @@ if __name__ == "__main__":
                     group_name = f"group_{i}"
                     os.makedirs(f"{output_directory}/{group_name}", exist_ok=True)
 
-                    metadata = open(f"{output_directory}/{group_name}/metadata.txt", "w")
+                    # Only create new metadata if not just creating cfg files or if metadata doesn't exist
+                    metadata_exists = os.path.exists(f"{output_directory}/{group_name}/metadata.txt")
+                    should_create_metadata = not create_group_cfg or not metadata_exists
+                    if should_create_metadata:
+                        metadata = open(f"{output_directory}/{group_name}/metadata.txt", "w")
+                        metadata.close()
                     
                     first_pass = True
                     for j, bin in enumerate(bin_group):
                         bin_name = bin.split("/")[-1]
                         cfg_name = f"G{j}_{bin_name}.cfg"
                         os.system(f"cp -r {bin}/{bin_name}.cfg {output_directory}/{group_name}/{cfg_name}")
-                        os.system(f"cat {bin}/metadata.txt >> {output_directory}/{group_name}/metadata.txt")
-                        os.system(f"echo '' >> {output_directory}/{group_name}/metadata.txt")
-                        os.system(f"echo '' >> {output_directory}/{group_name}/metadata.txt")
+                        # Only append metadata if we decided to create it
+                        if should_create_metadata:
+                            os.system(f"cat {bin}/metadata.txt >> {output_directory}/{group_name}/metadata.txt")
+                            os.system(f"echo '' >> {output_directory}/{group_name}/metadata.txt")
+                            os.system(f"echo '' >> {output_directory}/{group_name}/metadata.txt")
 
                         # Replace all bin names with group names if line does not start with fit
                         sed_repl = f"sed -i '/^fit/! s|{bin_name}|group_{i}|g' {output_directory}/{group_name}/{cfg_name}"
@@ -395,7 +419,9 @@ if __name__ == "__main__":
                             source_repl = source.replace("data", f"G{j}_data").replace("accmc", f"G{j}_accmc").replace("genmc", f"G{j}_genmc").replace("bkgnd", f"G{j}_bkgnd")
                             sed_repl = f"sed -i 's|{source}|{source_repl}|g' {output_directory}/{group_name}/{cfg_name}"
                             os.system(sed_repl)
-                            os.system(f"cp -r {bin}/{source} {output_directory}/{group_name}/G{j}_{source}")
+                            # Only copy data files if not just creating cfg files
+                            if not create_group_cfg:
+                                os.system(f"cp -r {bin}/{source} {output_directory}/{group_name}/G{j}_{source}")
 
                         # append seed file parameters into group seed files
                         for include in includes:
