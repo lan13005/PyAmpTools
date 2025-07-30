@@ -922,7 +922,10 @@ def _get_filtered_bins(resultManager, bins_to_plot, min_mass=None, max_mass=None
         list: Filtered bin indices
     """
     if min_mass is None and max_mass is None:
-        return bins_to_plot if bins_to_plot is not None else np.arange(resultManager.n_mass_bins)
+        if bins_to_plot is not None:
+            return bins_to_plot
+        else:
+            return list(np.arange(resultManager.n_mass_bins))
     
     masses = resultManager.masses
     mass_mask = np.ones(len(masses), dtype=bool)
