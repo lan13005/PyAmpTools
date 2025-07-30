@@ -8,6 +8,8 @@ import numpy as np
 from iftpwa1.model.physics_functions import barrier_factor_sq, breakup_momentum
 from omegaconf import OmegaConf
 
+from rich.console import Console
+console = Console()
 
 def calc_ps_ift(yaml_file, output):
 
@@ -26,9 +28,15 @@ def calc_ps_ift(yaml_file, output):
     yaml_file = OmegaConf.load(yaml_file)
 
     masses = yaml_file["daughters"].values()
-    if len(masses) != 2:
-        raise ValueError("Only two daughter particles in the reaction are supported. Please modify 'daughters' key in source yaml")
-    mass1, mass2 = masses
+    if len(masses) == 1:
+        mass1, mass2 = masses[0], masses[0]
+        console.print(f"Only 1 daughter specified in yaml, calculating phase space factors for decay into 2 identical particles")
+    elif len(masses) == 2:
+        mass1, mass2 = masses
+        console.print(f"Calculating phase space factors for decay into 2 different particles")
+    else:
+        console.print(f"Invalid number of daughters specified in yaml: {len(masses)}", style="bold red")
+        return
 
     waveNames = yaml_file["waveset"].split("_")
     min_mass = yaml_file["min_mass"]
@@ -41,23 +49,36 @@ def calc_ps_ift(yaml_file, output):
 
     scaling = {}
 
-    breakup_momenta = np.zeros(n_mass_bins) # just for diagnostics
+    # ---------------------------------------------------------------------------
+    # In iftpwa model_builder.py, the production kinFactor is calculated as follows:
+    #     proton_mass = 0.938 # proton mass (GeV)
+    #     Egamma  = 8.5       # lab photon energy
+    #     s0 = 2*proton_mass*Egamma + proton_mass**2
+    #     flux = 1.0 / (16 * jnp.pi * (s0 - proton_mass**2)**2)
+    #     kinFactor = flux * 2 / masses
+    # This needs to be multiplied by the barrier factor and breakup momentum
+    #     These factors depend on mass and spin which can be incorporated using this module
+    #     and be included in the config file as a phaseSpaceMultiplier.
+    # All partial waves will be scaled by the kinFactor * phaseSpaceMultiplier
+    # Breit-Wigner amplitudes defined in iftpwa physics_functions.py should use Gamma0 in the numerator
+    #     since phase space factors are absorbed into the phaseSpaceMultiplier.
+    # ---------------------------------------------------------------------------
+    
     for iw, wave in enumerate(waveNames):
         spin = spin_map[wave[0]]
-        barrier_factors = np.zeros(n_mass_bins)
+        factors = np.zeros(n_mass_bins)
         for i, mass in enumerate(masses_ps):
             q = breakup_momentum(mass, mass1, mass2)
-            barrier_factors[i] = barrier_factor_sq(q, spin)
-            if iw == 0:
-                breakup_momenta[i] = q
-        scaling[wave] = barrier_factors
-
-    # for m, b in zip(masses_ps, breakup_momenta):
-    #     print(m, b)
+            factors[i] = barrier_factor_sq(q, spin) * q
+        scaling[wave] = factors
+        
+    # Print some diagnostics (min, max)
+    for wave in waveNames:
+        console.print(f"Wave: {wave} [{scaling[wave][0]:.3f}, ..., {scaling[wave][-1]:.3f}]")
 
     with open(output, "wb") as f:
         pickle.dump((masses_ps, scaling), f)
-        print(f"\nSuccess! Phase space factors saved to {output}")
+        console.print(f"\nSuccess! Phase space factors saved to {output}", style="bold green")
 
 if __name__ == "__main__":
 
