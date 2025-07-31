@@ -53,6 +53,8 @@ def loadMacros():
     double VANHOVEX(Vec_t P1, Vec_t P2, Vec_t P3){ return FSMath::vanHoveX(P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3]); }
     double VANHOVEY(Vec_t P1, Vec_t P2, Vec_t P3){ return FSMath::vanHoveY(P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3]); }
     double VANHOVEQ(Vec_t P1, Vec_t P2, Vec_t P3){ double x = VANHOVEX(P1, P2, P3); double y = VANHOVEY(P1, P2, P3); return std::sqrt(x*x + y*y); }
+    double VANHOVETHETA(Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4){ return FSMath::vanHovetheta(P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3], P4[0], P4[1], P4[2], P4[3]); }
+    double VANHOVEPHI(Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4){ return FSMath::vanHovephi(P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3], P4[0], P4[1], P4[2], P4[3]); }
 
     // MASS
     double MASS(Vec_t P1, Vec_t P2, Vec_t P3 ){ return sqrt(pow(P1[3]+P2[3]+P3[3],2) - pow(P1[0]+P2[0]+P3[0],2) - pow(P1[1]+P2[1]+P3[1],2) - pow(P1[2]+P2[2]+P3[2],2)); }

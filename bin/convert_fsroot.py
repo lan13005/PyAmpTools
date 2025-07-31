@@ -34,7 +34,7 @@ from array import array
 #     --weight_branch: name of the branch in weight_tree holding per-entry weights
 #     --mc          : use MC-prefixed branches (e.g. MCEnPB, MCPxPB) instead of regular ones
 #
-# Input‐tree branch requirements:
+# Input-tree branch requirements:
 #   • Beam momentum branches:      PxPB, PyPB, PzPB      (float) [or MCPxPB, MCPyPB, MCPzPB with --mc]
 #   • Beam energy branch:          EnPB                 (float) [or MCEnPB with --mc]
 #   • Final‐state momentum:        PxP1, PyP1, PzP1 …   (float) [or MCPxP1, MCPyP1, MCPzP1 … with --mc]
@@ -90,7 +90,7 @@ def convert_tree(input_root_path, input_tree_name,
             sys.exit("ERROR: input tree and weight tree have different numbers of entries")
         use_weights = True
 
-    # 3) Discover beam vs. final‐state branches
+    # 3) Discover beam vs. final-state branches
     branch_list = [b.GetName() for b in in_tree.GetListOfBranches()]
     
     # Choose prefix based on MC flag
@@ -129,21 +129,21 @@ def convert_tree(input_root_path, input_tree_name,
     if beam_E is None:
         sys.exit(f"ERROR: missing input branch {prefix}EnPB for beam energy")
 
-    # final‐state indices
+    # final-state indices
     fids = sorted(final_mom.keys(), key=lambda x: int(x))
     n_final = len(fids)
     if n_final == 0:
         example_branches = f"{prefix}PxP1, {prefix}PyP1, …" if prefix else "PxP1, PyP1, …"
-        sys.exit(f"ERROR: no final‐state momentum branches found (e.g. {example_branches})")
+        sys.exit(f"ERROR: no final-state momentum branches found (e.g. {example_branches})")
 
     # check each final state has all momentum comps + EnP
     for pid in fids:
         comps = final_mom[pid]
         for c in ('x','y','z'):
             if c not in comps:
-                sys.exit(f"ERROR: missing input branch {prefix}P{c.upper()}P{pid} for final‐state {pid}")
+                sys.exit(f"ERROR: missing input branch {prefix}P{c.upper()}P{pid} for final-state {pid}")
         if pid not in final_E:
-            sys.exit(f"ERROR: missing input branch {prefix}EnP{pid} for final‐state energy")
+            sys.exit(f"ERROR: missing input branch {prefix}EnP{pid} for final-state energy")
 
     # 4) Prepare the output file & tree
     out_file = ROOT.TFile.Open(output_root_path, "RECREATE")
@@ -165,7 +165,7 @@ def convert_tree(input_root_path, input_tree_name,
     out_tree.Branch('NumFinalState', buf_Nfs, "NumFinalState/I")
     out_tree.Branch('Weight',         buf_W,   "Weight/F")
 
-    # final‐state arrays - now NumFinalState branch exists
+    # final-state arrays - now NumFinalState branch exists
     buf_Ef  = array('f', [0.]*n_final)
     buf_Pxf = array('f', [0.]*n_final)
     buf_Pyf = array('f', [0.]*n_final)
