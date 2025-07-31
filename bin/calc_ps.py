@@ -11,7 +11,7 @@ from omegaconf import OmegaConf
 from rich.console import Console
 console = Console()
 
-def calc_ps_ift(yaml_file, output):
+def calc_ps_ift(yaml_file):
 
     """
     Calculate the barrier factor for a given orbital angular momentum and breakup momentum.
@@ -22,12 +22,17 @@ def calc_ps_ift(yaml_file, output):
 
     Args:
         yaml_file (str): path to the primary yaml file
-        output (str): pickle dump path
     """
 
-    yaml_file = OmegaConf.load(yaml_file)
+    config = OmegaConf.load(yaml_file)
+    
+    # Get output path from NIFTY.IFT_MODEL.phaseSpaceMultiplier
+    output = config.NIFTY.IFT_MODEL.phaseSpaceMultiplier
+    if output is None:
+        raise ValueError("phaseSpaceMultiplier dump location is not set in the config file")
+    console.print(f"Output path from config: {output}")
 
-    masses = yaml_file["daughters"].values()
+    masses = config["daughters"].values()
     if len(masses) == 1:
         mass1, mass2 = masses[0], masses[0]
         console.print(f"Only 1 daughter specified in yaml, calculating phase space factors for decay into 2 identical particles")
@@ -38,10 +43,10 @@ def calc_ps_ift(yaml_file, output):
         console.print(f"Invalid number of daughters specified in yaml: {len(masses)}", style="bold red")
         return
 
-    waveNames = yaml_file["waveset"].split("_")
-    min_mass = yaml_file["min_mass"]
-    max_mass = yaml_file["max_mass"]
-    n_mass_bins = yaml_file["n_mass_bins"]
+    waveNames = config["waveset"].split("_")
+    min_mass = config["min_mass"]
+    max_mass = config["max_mass"]
+    n_mass_bins = config["n_mass_bins"]
     masses_ps_edges = np.linspace(min_mass, max_mass, n_mass_bins+1)
     masses_ps = 0.5 * (masses_ps_edges[1:] + masses_ps_edges[:-1])
 
@@ -84,10 +89,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Calculate the phase space factor for ift fits")
     parser.add_argument("yaml_file", type=str, help="Path to the primary yaml file")
-    parser.add_argument("output", type=str, help="Path to the output pickle file")
     args = parser.parse_args()
 
     yaml_file = args.yaml_file
-    output = args.output
 
-    calc_ps_ift(yaml_file, output)
+    calc_ps_ift(yaml_file)
