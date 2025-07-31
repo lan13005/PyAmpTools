@@ -58,7 +58,7 @@ def calc_ps_ift(yaml_file, output):
     #     kinFactor = flux * 2 / masses
     # This needs to be multiplied by the barrier factor and breakup momentum
     #     These factors depend on mass and spin which can be incorporated using this module
-    #     and be included in the config file as a phaseSpaceMultiplier.
+    #     and be included in the config file as a pkl file at key "phaseSpaceMultiplier".
     # All partial waves will be scaled by the kinFactor * phaseSpaceMultiplier
     # Breit-Wigner amplitudes defined in iftpwa physics_functions.py should use Gamma0 in the numerator
     #     since phase space factors are absorbed into the phaseSpaceMultiplier.

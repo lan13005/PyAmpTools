@@ -12,6 +12,7 @@ if __name__ == "__main__":
     parser.add_argument("-log", "--log_scale", action="store_true", help="Plot intensities on log scale in overview plots (phases remain linear)")
     parser.add_argument("--min_mass", type=float, default=None, help="Minimum mass for plotting (GeV/c²). If None, use full range.")
     parser.add_argument("--max_mass", type=float, default=None, help="Maximum mass for plotting (GeV/c²). If None, use full range.")
+    parser.add_argument("--ylim", type=float, default=None, help="Limit y-axis to this percentage of the would-be used axis limit (0.0-1.0). If None, use full range.")
     args = parser.parse_args()
     
     # Put here to faster argparse
@@ -36,7 +37,7 @@ if __name__ == "__main__":
     if not args.no_plot_complex_plane:
         plot_binned_complex_plane(resultManager, min_mass=args.min_mass, max_mass=args.max_mass)
     if not args.no_plot_overview:
-        plot_overview_across_bins(resultManager, log_scale=args.log_scale, min_mass=args.min_mass, max_mass=args.max_mass)
+        plot_overview_across_bins(resultManager, log_scale=args.log_scale, min_mass=args.min_mass, max_mass=args.max_mass, ylim=args.ylim)
     if not args.no_plot_moments:
         plot_moments_across_bins(resultManager, min_mass=args.min_mass, max_mass=args.max_mass)
     if not args.no_montage:

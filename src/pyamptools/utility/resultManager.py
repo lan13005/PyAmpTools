@@ -857,6 +857,27 @@ def query_default(df):
 def safe_query(df, query):
     return df.query(query) if not df.empty else pd.DataFrame()
 
+def _apply_ylim(ax, ylim=None):
+    """
+    Apply y-axis limit to a percentage of the would-be used axis limit.
+    
+    Args:
+        ax: Matplotlib axis object
+        ylim: Percentage to limit y-axis (0.0-1.0). If None, no change is made.
+    """
+    if ylim is None or not (0.0 <= ylim <= 1.0):
+        return
+    
+    # Get current y limits
+    ymin, ymax = ax.get_ylim()
+    yrange = ymax - ymin
+    
+    # Calculate new ymax based on percentage
+    new_ymax = ymin + yrange * ylim
+    
+    # Set new y limits
+    ax.set_ylim(ymin, new_ymax)
+
 def _apply_mass_filtering(resultManager, masses, dataframes, min_mass=None, max_mass=None, massBins=None):
     """
     Apply mass filtering to masses and corresponding DataFrames.
@@ -1361,7 +1382,7 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
         resultManager.console.print(f"  - {file}")
     resultManager.console.print(f"\n")
         
-def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin", file_type='pdf', log_scale=False, min_mass=None, max_mass=None):
+def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin", file_type='pdf', log_scale=False, min_mass=None, max_mass=None, ylim=None):
     """
     This is a money plot. Two plots stacked vertically (intensity on top, relative phases on bottom)
     
@@ -1376,6 +1397,7 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
         log_scale: If True, plot intensities on log scale (phases remain linear)
         min_mass: Minimum mass for plotting (GeV/c2). If None, use full range.
         max_mass: Maximum mass for plotting (GeV/c2). If None, use full range.
+        ylim: Percentage to limit y-axis (0.0-1.0). If None, use full range.
     """
     name = "intensity + phases"
     resultManager.console.print(header_fmt.format(f"Plotting '{name}' plots..."))
@@ -1629,6 +1651,9 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
             ax.set_ylim(min_intensity, max_intensity)
         else:
             ax.set_ylim(0, 1.15 * np.max(nEvents))
+        
+        # Apply ylim if specified (only to intensity plot, not phase plot)
+        _apply_ylim(ax, ylim)
         
         phase_ax.set_xlabel(r"$m_X$ [GeV]", size=20)
         phase_ax.tick_params(axis='x', labelsize=16)
