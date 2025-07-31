@@ -131,6 +131,7 @@ def append_kinematics(
     console=None,
     beam_angle=None,
     overwrite=False,
+    particles=None,
     ):
     
     """
@@ -149,20 +150,34 @@ def append_kinematics(
     
     Args:
         infile (List[str], str): Input ROOT file(s)
-        output_location (str): output root file path. If None will overwrite the input file. Output has calculated kinematics included as branchs. 
+        output_location (str, None): output root file path. If None and overwrite=True, will overwrite the input file. 
+                                    If None and overwrite=False, will overwrite the input file. Output has calculated kinematics included as branches.
         treeName (str): Name of the TTree in the input ROOT file
         console (rich.console.Console): Console object for printing
         beam_angle (float, str): Beam angle in degrees or branch name in the tree the beam angles (deg) are stored in
         overwrite (bool): If True, force recalculation of derived kinematics even if they already exist
+        particles (List[str]): List of particle names in the order they appear in the final state. 
+                              Must be one of: {RECOIL, X1, X2, X3}. For 4-particle final states, 
+                              RECOIL and X3 will be combined into BARYRECOIL.
+                              NOTE: The rest of the framework does not support 4-body final states ATM
+                                    Kinematic calculations support it but should not be used with other part of framework
     
     Returns:
         df: ROOT.RDataFrame with kinematics appended, None if file already exists
         KINEMATIC_QUANTITIES: Dictionary of kinematic quantities calculated by fsroot
     """
     
+    if len(set(particles)) != len(particles):
+        raise ValueError(f"particles must be a list of unique particles, got {particles}")
+    if len(particles) not in [3, 4]:
+        raise ValueError(f"particles must be a list of 3 or 4 particles, got {particles}")
+    if len(particles) == 3 and set(particles) != {"RECOIL", "X1", "X2"}:
+        raise ValueError(f"particles must be a list of unique particles from {{RECOIL, X1, X2}}, got {particles}")
+    elif len(particles) == 4 and set(particles) != {"RECOIL", "X1", "X2", "X3"}:
+        raise ValueError(f"particles must be a list of unique particles from {{RECOIL, X1, X2, X3}}, got {particles}")
+    
     # Import here to ensure a clean ROOT environment for each call
     import ROOT
-    import tempfile
     import os
     import shutil
     
@@ -171,38 +186,18 @@ def append_kinematics(
     # ROOT.ROOT.EnableImplicitMT()
     # from pyamptools.utility.rdf_macros import loadMacros
     # loadMacros()
-
-    # Define kinematic quantities to calculate using FSROOT macros
-    # For etapi0: X1 = eta, X2 = pi0, RECOIL = recoil proton
-    # NOTE: append (m) to lower chance of name conflicts
-    KINEMATIC_QUANTITIES = {
-        "mMassX": "MASS(X1,X2)",
-        "mMassX1": "MASS(X1)",
-        "mMassX2": "MASS(X2)",
-        "mMassX1Recoil": "MASS(X1,RECOIL)",
-        "mMassX2Recoil": "MASS(X2,RECOIL)",
-        "mVanHoveX": "VANHOVEX(RECOIL,X2,X1)",
-        "mVanHoveY": "VANHOVEY(RECOIL,X2,X1)",
-        "mVanHoveOmega": "VANHOVEOMEGA(RECOIL,X2,X1)",
-        "mCosHel": "HELCOSTHETA(X1,X2,RECOIL)",
-        "mPhiHel": "HELPHI(X1,X2,RECOIL,GLUEXBEAM)",
-        "mt": "T(GLUEXTARGET,RECOIL)"
-    }
     
     if console is None:
         from rich.console import Console
         console = Console()
     
-    if beam_angle is not None:
-        KINEMATIC_QUANTITIES["mPhi"] = f"BIGPHI({beam_angle},X1,X2,RECOIL,GLUEXBEAM)"
-    else:
-        console.print("beam_angle not set, will not calculate Phi (angle between production plane and beam polarization)", style="bold yellow")
-        
     # Ensure infile is a list of strings
     if isinstance(infile, str):
         infile = [infile]  # Convert single string to list
     if not isinstance(infile, list): # if not a list by now
         raise ValueError(f"infile must be a list of strings or a single string, got {type(infile)}")
+    
+    # Set output_location if None
     if output_location is None:
         if len(infile) == 1:
             output_location = infile[0]
@@ -215,23 +210,102 @@ def append_kinematics(
     columns = df.GetColumnNames()
     console.print(f"Available columns: {list(columns)}", style="bold blue")
     
+    # Get NumFinalState to determine which kinematic quantities to calculate
+    if "NumFinalState" not in columns:
+        raise ValueError("NumFinalState column not found in the tree!")
+    
+    # Get a sample value of NumFinalState (should be constant across all entries)
+    num_final_state = df.Take["Int_t"]("NumFinalState").GetValue()[0]
+    console.print(f"NumFinalState = {num_final_state}", style="bold blue")
+    
+    # Validate particles parameter
+    valid_particles = {"RECOIL", "X1", "X2", "X3"}
+    if particles is None:
+        # Default particle ordering based on NumFinalState
+        if num_final_state == 3:
+            particles = ["RECOIL", "X1", "X2"]  # Default for 3-body final state
+        elif num_final_state == 4:
+            particles = ["RECOIL", "X1", "X2", "X3"]  # Default for 4-body final state
+        else:
+            raise ValueError(f"Unsupported NumFinalState = {num_final_state}. Only 3 and 4 body final states are supported.")
+    else:
+        # Validate user-provided particles
+        if len(particles) != num_final_state:
+            raise ValueError(f"Number of particles ({len(particles)}) must match NumFinalState ({num_final_state})")
+        
+        invalid_particles = set(particles) - valid_particles
+        if invalid_particles:
+            raise ValueError(f"Invalid particle names: {invalid_particles}. Valid names are: {valid_particles}")
+    
+    console.print(f"Using particle order: {particles}", style="bold blue")
+    
+    # Define kinematic quantities based on NumFinalState and particle order
+    if num_final_state == 3:
+        # For 3-body final state (e.g., etapi0: X1=eta, X2=pi0, RECOIL=proton)
+        KINEMATIC_QUANTITIES = {
+            "mMassX": "MASS(X1,X2)",
+            "mMassX1": "MASS(X1)",
+            "mMassX2": "MASS(X2)",
+            "mMassX1Recoil": "MASS(X1,RECOIL)",
+            "mMassX2Recoil": "MASS(X2,RECOIL)",
+            "mMassRecoil": "MASS(RECOIL)",
+            "mVanHoveX": "VANHOVEX(RECOIL,X2,X1)",
+            "mVanHoveY": "VANHOVEY(RECOIL,X2,X1)",
+            "mVanHoveOmega": "VANHOVEOMEGA(RECOIL,X2,X1)",
+            "mCosHel": "HELCOSTHETA(X1,X2,RECOIL)",
+            "mPhiHel": "HELPHI(X1,X2,RECOIL,GLUEXBEAM)",
+            "mt": "T(GLUEXTARGET,RECOIL)"
+        }
+        
+    elif num_final_state == 4:
+        # For 4-body final state (e.g., etapi-pi+: X1=pi+, X2=eta, X3=pi-, RECOIL=proton)
+        # X3 and RECOIL are combined to form excited baryon, X1 and X2 are mesons at top vertex
+        KINEMATIC_QUANTITIES = {
+            "mMassX": "MASS(X1,X2)",
+            "mMassX1": "MASS(X1)",
+            "mMassX2": "MASS(X2)",
+            "mMassX3": "MASS(X3)",
+            "mMassRecoil": "MASS(RECOIL)",
+            "mMassX3Recoil": "MASS(X3,RECOIL)",
+            "mVanHoveTheta": "VANHOVETHETA(RECOIL,X1,X2,X3)",
+            "mVanHovePhi": "VANHOVEPHI(RECOIL,X1,X2,X3)",
+            "mCosHel": "HELCOSTHETA(X1,X2,BARYRECOIL)",
+            "mPhiHel": "HELPHI(X1,X2,BARYRECOIL,GLUEXBEAM)",
+            "mt": "T(GLUEXTARGET,BARYRECOIL)"
+        }
+        
+    else:
+        raise ValueError(f"Unsupported NumFinalState = {num_final_state}. Only 3 and 4 body final states are supported.")
+    
+    if beam_angle is not None:
+        if num_final_state == 3:
+            KINEMATIC_QUANTITIES["mPhi"] = f"BIGPHI({beam_angle},X1,X2,RECOIL,GLUEXBEAM)"
+        elif num_final_state == 4:
+            KINEMATIC_QUANTITIES["mPhi"] = f"BIGPHI({beam_angle},X1,X2,BARYRECOIL,GLUEXBEAM)"
+    else:
+        console.print("beam_angle not set, will not calculate Phi (angle between production plane and beam polarization)", style="bold yellow")
+    
     if "mMassX" in columns and "mt" in columns and not overwrite: # woo nothing to do
         console.print(f"Expected kinematics already present in {infile}, loading...", style="bold yellow")
         return df, KINEMATIC_QUANTITIES
     else:
         if overwrite:
             console.print(f"Overwrite=True: Forcing recalculation of kinematics in {infile}", style="bold yellow")
+        
         # Define particle four-vectors
-        particles = ["RECOIL", "X2", "X1"] # Particle order in AmpTools output tree
         if "GLUEXTARGET" not in columns:
             df = df.Define("GLUEXTARGET", "std::vector<float> p{0.0, 0.0, 0.0, 0.938272}; return p;")
         if "GLUEXBEAM" not in columns:
             df = df.Define("GLUEXBEAM",   "std::vector<float> p{{Px_Beam, Py_Beam, Pz_Beam, E_Beam}}; return p;")
 
-        # Assuming AmpTools formatted tree
+        # Define particle four-vectors based on user-provided particle order
         for i, particle in enumerate(particles):
             cmd = f"std::vector<float> p{{ Px_FinalState[{i}], Py_FinalState[{i}], Pz_FinalState[{i}], E_FinalState[{i}] }}; return p;"
             df = df.Define(f"{particle}", cmd)
+        
+        # Define BARYRECOIL for 4-body final states (combine RECOIL and X3)
+        if num_final_state == 4:
+            df = df.Define("BARYRECOIL", "std::vector<float> p{RECOIL[0] + X3[0], RECOIL[1] + X3[1], RECOIL[2] + X3[2], RECOIL[3] + X3[3]}; return p;")
         
         # Define kinematic quantities
         for name, function in KINEMATIC_QUANTITIES.items():

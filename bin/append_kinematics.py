@@ -9,7 +9,8 @@ def append_kinematics_cli(input_file: str,
                          output_file: str = None,
                          tree_name: str = "kin",
                          beam_angle: float = None,
-                         overwrite: bool = False) -> None:
+                         overwrite: bool = False,
+                         particles: list = None) -> None:
     """
     Append various derived kinematics to a ROOT file using the append_kinematics function
     
@@ -19,6 +20,9 @@ def append_kinematics_cli(input_file: str,
         tree_name: Name of the TTree inside the file
         beam_angle: Beam angle in degrees or branch name for beam angles
         overwrite: Force recalculation of derived kinematics even if they already exist
+        particles: List of particle names in the order they appear in the final state. 
+                  Must be one of: {RECOIL, X1, X2, X3}. For 4-particle final states, 
+                  RECOIL and X3 will be combined into BARYRECOIL.
     """
     try:
         console.print(f"[blue]Processing kinematics for {input_file}...[/blue]")
@@ -29,7 +33,8 @@ def append_kinematics_cli(input_file: str,
             treeName=tree_name,
             console=console,
             beam_angle=beam_angle,
-            overwrite=overwrite
+            overwrite=overwrite,
+            particles=particles
         )
         
         if df is not None:
@@ -53,8 +58,14 @@ def main():
     parser.add_argument("--beam-angle", type=float, help="Beam angle in degrees or branch name for beam angles")
     parser.add_argument("--overwrite", action="store_true", help="Force recalculation of derived kinematics even if they already exist")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose logging")
+    parser.add_argument("--particles", nargs="+", choices=["RECOIL", "X1", "X2", "X3"], 
+                       help="List of particle names in the order they appear in the final state. Each must be either: {RECOIL, X1, X2, X3}")
     
     args = parser.parse_args()
+    
+    if args.particles is not None and len(args.particles) not in [3, 4]:
+        console.print(f"[bold red]Error: --particles must be either 3 or 4 particles if not None[/bold red]")
+        return 1
 
     try:
         from pyamptools import atiSetup
@@ -69,7 +80,8 @@ def main():
             output_file=args.output,
             tree_name=args.tree,
             beam_angle=args.beam_angle,
-            overwrite=args.overwrite
+            overwrite=args.overwrite,
+            particles=args.particles
         )
     except Exception as e:
         console.print(f"[bold red]Error: {e}[/bold red]")
