@@ -12,12 +12,12 @@ from array import array
 #   into another AmpTools structure:
 #     • Beam quantities:
 #         – E_Beam, Px_Beam, Py_Beam, Pz_Beam      (all floats)
-#     • Final‐state particle arrays (length = NumFinalState):
+#     • Final‐state particle arrays (length = NumFinalState = 3):
 #         – E_FinalState[NumFinalState]/F
 #         – Px_FinalState[NumFinalState]/F
 #         – Py_FinalState[NumFinalState]/F
 #         – Pz_FinalState[NumFinalState]/F
-#     • NumFinalState    (integer, number of final‐state particles)
+#     • NumFinalState    (integer, only support 3 output particles)
 #     • Weight           (float; all ones if no weight input provided)
 #
 # Expected inputs:
@@ -33,13 +33,22 @@ from array import array
 #     --weight_tree  : name of the weight tree inside weight_root
 #     --weight_branch: name of the branch in weight_tree holding per-entry weights
 #     --mc          : use MC-prefixed branches (e.g. MCEnPB, MCPxPB) instead of regular ones
+#     --particles   : list of particle assignments [RECOIL, X1, X2, X3] (default: [RECOIL, X2, X1])
 #
 # Input-tree branch requirements:
 #   • Beam momentum branches:      PxPB, PyPB, PzPB      (float) [or MCPxPB, MCPyPB, MCPzPB with --mc]
-#   • Beam energy branch:          EnPB                 (float) [or MCEnPB with --mc]
+#   • Beam energy branch:          EnPB                  (float) [or MCEnPB with --mc]
 #   • Final‐state momentum:        PxP1, PyP1, PzP1 …   (float) [or MCPxP1, MCPyP1, MCPzP1 … with --mc]
 #   • Final‐state energy:          EnP1, EnP2, …        (float) [or MCEnP1, MCEnP2, … with --mc]
 #     – Particle indices must be numeric and start at 1
+#
+# Particle assignment rules:
+#   • Each particle must be one of: RECOIL, X1, X2, X3
+#   • No duplicate particle assignments allowed
+#   • Particle list length must match number of input final-state particles: {PxP1, PxP2, PxP3, ..}
+#   • When RECOIL and X3 are both present and NumFinalState = 4, they are combined to form an excited baryon
+#     stored as the first element in the *_FinalState arrays
+#   • Output always contains exactly 3 final-state particles
 #
 # Behavior:
 #   • If input_tree is not specified, automatically selects the first tree found in the input file.
@@ -49,14 +58,70 @@ from array import array
 #   • If weight arguments are provided, checks that the weight tree has the same
 #     number of entries as the input tree and uses its values for Weight.
 #   • Otherwise, fills Weight = 1.0 for every entry.
+#   • Validates particle assignments and exits early if inconsistencies are detected.
 #   • Writes out the new tree with renamed and restructured branches.
 #
 # -----------------------------------------------------------------------------
 
 
+def validate_particle_assignments(particles, n_final):
+    """
+    Validate particle assignment list.
+    
+    Args:
+        particles (list): List of particle assignments
+        n_final (int): Number of final-state particles in input
+        
+    Returns:
+        bool: True if valid, exits with error if invalid
+    """
+    valid_particles = {'RECOIL', 'X1', 'X2', 'X3'}
+    required_particles = {'RECOIL', 'X1', 'X2'}
+    
+    # Check length matches
+    if len(particles) != n_final:
+        sys.exit(f"ERROR: particle list length ({len(particles)}) must match number of final-state particles ({n_final})")
+    
+    # Check all particles are valid
+    invalid_particles = set(particles) - valid_particles
+    if invalid_particles:
+        sys.exit(f"ERROR: invalid particle assignments: {invalid_particles}. Valid options: {valid_particles}")
+    
+    # Check for duplicates
+    if len(particles) != len(set(particles)):
+        sys.exit(f"ERROR: duplicate particle assignments found: {particles}")
+    
+    # Check required particles are present
+    missing_required = required_particles - set(particles)
+    if missing_required:
+        sys.exit(f"ERROR: missing required particles: {missing_required}. RECOIL, X1, and X2 are always required.")
+    
+    return True
+
+
+def combine_particles_for_baryon(particle1_data, particle2_data):
+    """
+    Combine two particles to form an excited baryon.
+    
+    Args:
+        particle1_data (dict): First particle's 4-momentum {E, x, y, z}
+        particle2_data (dict): Second particle's 4-momentum {E, x, y, z}
+        
+    Returns:
+        dict: Combined 4-momentum for excited baryon
+    """
+    return {
+        'E': particle1_data['E'] + particle2_data['E'],
+        'x': particle1_data['x'] + particle2_data['x'],
+        'y': particle1_data['y'] + particle2_data['y'],
+        'z': particle1_data['z'] + particle2_data['z']
+    }
+
+
 def convert_tree(input_root_path, input_tree_name,
                  output_root_path, output_tree_name,
-                 weight_root_path=None, weight_tree_name=None, weight_branch_name=None, use_mc=False):
+                 weight_root_path=None, weight_tree_name=None, weight_branch_name=None, 
+                 use_mc=False, particles=['RECOIL', 'X2', 'X1']):
     # 1) Open input file & tree
     input_file = ROOT.TFile.Open(input_root_path)
     if not input_file or input_file.IsZombie():
@@ -145,7 +210,25 @@ def convert_tree(input_root_path, input_tree_name,
         if pid not in final_E:
             sys.exit(f"ERROR: missing input branch {prefix}EnP{pid} for final-state energy")
 
-    # 4) Prepare the output file & tree
+    # 4) Validate particle assignments
+    print(f"INFO: Using particle assignments: {particles}")
+    
+    validate_particle_assignments(particles, n_final)
+    
+    # Check if we can form excited baryon (X3 present with 4 particles)
+    has_x3 = 'X3' in particles
+    can_form_baryon = has_x3 and n_final == 4
+    
+    if has_x3 and n_final != 4:
+        sys.exit(f"ERROR: X3 present but baryon formation requires exactly 4 input particles, found {n_final}")
+    
+    # Determine output particle count (always 3)
+    n_output = 3
+    print(f"INFO: Input particles: {particles}, Output will have {n_output} particles")
+    if can_form_baryon:
+        print(f"INFO: Will form excited baryon from RECOIL + X3")
+
+    # 5) Prepare the output file & tree
     out_file = ROOT.TFile.Open(output_root_path, "RECREATE")
     out_tree = ROOT.TTree(output_tree_name, output_tree_name)
 
@@ -160,22 +243,22 @@ def convert_tree(input_root_path, input_tree_name,
     out_tree.Branch('Pz_Beam', buf_Pzb, "Pz_Beam/F")
 
     # NumFinalState and Weight - MUST come before variable-size arrays
-    buf_Nfs = array('i',[n_final])
+    buf_Nfs = array('i',[n_output])
     buf_W   = array('f',[1.])
     out_tree.Branch('NumFinalState', buf_Nfs, "NumFinalState/I")
     out_tree.Branch('Weight',         buf_W,   "Weight/F")
 
     # final-state arrays - now NumFinalState branch exists
-    buf_Ef  = array('f', [0.]*n_final)
-    buf_Pxf = array('f', [0.]*n_final)
-    buf_Pyf = array('f', [0.]*n_final)
-    buf_Pzf = array('f', [0.]*n_final)
+    buf_Ef  = array('f', [0.]*n_output)
+    buf_Pxf = array('f', [0.]*n_output)
+    buf_Pyf = array('f', [0.]*n_output)
+    buf_Pzf = array('f', [0.]*n_output)
     out_tree.Branch('E_FinalState',  buf_Ef,  "E_FinalState[NumFinalState]/F")
     out_tree.Branch('Px_FinalState', buf_Pxf, "Px_FinalState[NumFinalState]/F")
     out_tree.Branch('Py_FinalState', buf_Pyf, "Py_FinalState[NumFinalState]/F")
     out_tree.Branch('Pz_FinalState', buf_Pzf, "Pz_FinalState[NumFinalState]/F")
 
-    # 5) Link input branches with proper data types
+    # 6) Link input branches with proper data types
     in_tree.SetBranchStatus('*', 0)
     
     # beam - use double arrays for Double_t branches
@@ -209,7 +292,7 @@ def convert_tree(input_root_path, input_tree_name,
         wtree.SetBranchStatus(weight_branch_name,1)
         wtree.SetBranchAddress(weight_branch_name, w_arr)
 
-    # 6) Loop
+    # 7) Loop
     nent = in_tree.GetEntries()
     for i in range(nent):
         in_tree.GetEntry(i)
@@ -224,25 +307,79 @@ def convert_tree(input_root_path, input_tree_name,
         buf_Pyb[0] = be_arr['y'][0]
         buf_Pzb[0] = be_arr['z'][0]
 
-        buf_Nfs[0] = n_final
-        for idx, pid in enumerate(fids):
-            buf_Ef[idx]  = fs_arr[(pid,'E')][0]
-            buf_Pxf[idx] = fs_arr[(pid,'x')][0]
-            buf_Pyf[idx] = fs_arr[(pid,'y')][0]
-            buf_Pzf[idx] = fs_arr[(pid,'z')][0]
+        buf_Nfs[0] = n_output
+        
+        # Create mapping from particle assignments to input indices
+        particle_to_input = {}
+        for idx, particle in enumerate(particles):
+            particle_to_input[particle] = fids[idx]
+        
+        output_idx = 0
+        
+        if can_form_baryon:
+            # Combine RECOIL and X3 to form excited baryon (first output particle)
+            recoil_pid = particle_to_input['RECOIL']
+            x3_pid = particle_to_input['X3']
+            
+            recoil_data = {
+                'E': fs_arr[(recoil_pid, 'E')][0],
+                'x': fs_arr[(recoil_pid, 'x')][0],
+                'y': fs_arr[(recoil_pid, 'y')][0],
+                'z': fs_arr[(recoil_pid, 'z')][0]
+            }
+            x3_data = {
+                'E': fs_arr[(x3_pid, 'E')][0],
+                'x': fs_arr[(x3_pid, 'x')][0],
+                'y': fs_arr[(x3_pid, 'y')][0],
+                'z': fs_arr[(x3_pid, 'z')][0]
+            }
+            
+            baryon_data = combine_particles_for_baryon(recoil_data, x3_data)
+            buf_Ef[output_idx] = baryon_data['E']
+            buf_Pxf[output_idx] = baryon_data['x']
+            buf_Pyf[output_idx] = baryon_data['y']
+            buf_Pzf[output_idx] = baryon_data['z']
+            output_idx += 1
+            
+            # Add X1 and X2 as remaining particles (mesons at top vertex)
+            for particle in ['X1', 'X2']:
+                pid = particle_to_input[particle]
+                buf_Ef[output_idx] = fs_arr[(pid, 'E')][0]
+                buf_Pxf[output_idx] = fs_arr[(pid, 'x')][0]
+                buf_Pyf[output_idx] = fs_arr[(pid, 'y')][0]
+                buf_Pzf[output_idx] = fs_arr[(pid, 'z')][0]
+                output_idx += 1
+        else:
+            # No baryon formation, RECOIL goes first, then X1 and X2
+            recoil_pid = particle_to_input['RECOIL']
+            buf_Ef[output_idx] = fs_arr[(recoil_pid, 'E')][0]
+            buf_Pxf[output_idx] = fs_arr[(recoil_pid, 'x')][0]
+            buf_Pyf[output_idx] = fs_arr[(recoil_pid, 'y')][0]
+            buf_Pzf[output_idx] = fs_arr[(recoil_pid, 'z')][0]
+            output_idx += 1
+            
+            # Add X1 and X2
+            for particle in ['X1', 'X2']:
+                pid = particle_to_input[particle]
+                buf_Ef[output_idx] = fs_arr[(pid, 'E')][0]
+                buf_Pxf[output_idx] = fs_arr[(pid, 'x')][0]
+                buf_Pyf[output_idx] = fs_arr[(pid, 'y')][0]
+                buf_Pzf[output_idx] = fs_arr[(pid, 'z')][0]
+                output_idx += 1
 
         out_tree.Fill()
 
-    # 7) Write and close
+    # 8) Write and close
     out_file.Write()
     out_file.Close()
     input_file.Close()
     if use_weights:
         wfile.Close()
 
+
 def main():
     p = argparse.ArgumentParser(
-        description="Convert P{x,y,z}P* + EnP* → beam+array format with Weight")
+        description="Convert P{x,y,z}P* + EnP* → beam+array format with Weight and particle assignments")
     p.add_argument("input_root",  help="input ROOT file")
     p.add_argument("input_tree",  help="input tree name (default: first tree in file)", nargs='?', default=None)
     p.add_argument("output_root", help="output ROOT file")
@@ -251,13 +388,15 @@ def main():
     p.add_argument("--weight_tree",  help="name of weight tree", default=None)
     p.add_argument("--weight_branch",help="branch name holding weights", default=None)
     p.add_argument("--mc", action="store_true", help="use MC-prefixed branches (e.g. MCEnPB, MCPxPB)")
+    p.add_argument("--particles", nargs='+', choices=['RECOIL', 'X1', 'X2', 'X3'], 
+                   help="particle assignments (default: RECOIL X2 X1)", default=['RECOIL', 'X2', 'X1'])
     args = p.parse_args()
 
     convert_tree(
         args.input_root, args.input_tree,
         args.output_root, args.output_tree,
-        args.weight_root, args.weight_tree, args.weight_branch, args.mc
+        args.weight_root, args.weight_tree, args.weight_branch, args.mc, args.particles
     )
 
 if __name__ == "__main__":
-    main() 
+    main()
