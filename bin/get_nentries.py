@@ -112,13 +112,14 @@ if __name__ == "__main__":
         entries, integrated_entries = get_nentries(file, delete_if_empty=clean, integrate_branch=integrate_branch, filters=filters)
         list_entries.append(entries)
         list_integrated_entries.append(integrated_entries)
-        if args.verbose:
-            output += f"{os.path.basename(file):<20}: Total Entries: {entries}"
-            if integrate_branch != "None":
-                output += f" | Integrated Entries (branch: {integrate_branch}): {integrated_entries:0.2f} | Ratio: {integrated_entries/entries:0.3f}"
-            output += "\n"
-            console.print(output)
-        else:
-            console.print(f"file, entries, integral, integral/entries")
-            for file, entries, integrated_entries in zip(files, list_entries, list_integrated_entries):
-                console.print(f"{file}, {entries}, {integrated_entries}, {integrated_entries/entries:0.3f}")
+
+    if args.verbose:
+        output += f"{os.path.basename(file):<20}: Total Entries: {entries}"
+        if integrate_branch != "None":
+            output += f" | Integrated Entries (branch: {integrate_branch}): {integrated_entries:0.2f} | Ratio: {integrated_entries/entries:0.3f}"
+        output += "\n"
+        console.print(output)
+    else:
+        console.print(f"file, entries, integral, integral/entries")
+        for file, entries, integrated_entries in zip(files, list_entries, list_integrated_entries):
+            console.print(f"{file}, {entries}, {integrated_entries}, {integrated_entries/entries:0.3f}")

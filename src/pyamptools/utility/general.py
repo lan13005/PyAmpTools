@@ -167,14 +167,16 @@ def append_kinematics(
         KINEMATIC_QUANTITIES: Dictionary of kinematic quantities calculated by fsroot
     """
     
-    if len(set(particles)) != len(particles):
-        raise ValueError(f"particles must be a list of unique particles, got {particles}")
-    if len(particles) not in [3, 4]:
-        raise ValueError(f"particles must be a list of 3 or 4 particles, got {particles}")
-    if len(particles) == 3 and set(particles) != {"RECOIL", "X1", "X2"}:
-        raise ValueError(f"particles must be a list of unique particles from {{RECOIL, X1, X2}}, got {particles}")
-    elif len(particles) == 4 and set(particles) != {"RECOIL", "X1", "X2", "X3"}:
-        raise ValueError(f"particles must be a list of unique particles from {{RECOIL, X1, X2, X3}}, got {particles}")
+    # Only validate particles if user provided them
+    if particles is not None:
+        if len(set(particles)) != len(particles):
+            raise ValueError(f"particles must be a list of unique particles, got {particles}")
+        if len(particles) not in [3, 4]:
+            raise ValueError(f"particles must be a list of 3 or 4 particles, got {particles}")
+        if len(particles) == 3 and set(particles) != {"RECOIL", "X1", "X2"}:
+            raise ValueError(f"particles must be a list of unique particles from {{RECOIL, X1, X2}}, got {particles}")
+        elif len(particles) == 4 and set(particles) != {"RECOIL", "X1", "X2", "X3"}:
+            raise ValueError(f"particles must be a list of unique particles from {{RECOIL, X1, X2, X3}}, got {particles}")
     
     # Import here to ensure a clean ROOT environment for each call
     import ROOT
