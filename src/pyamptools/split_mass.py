@@ -20,6 +20,7 @@ def split_mass_t(
     t_edges=None,
     dump_augmented_tree=False,
     overwrite=False,
+    apply_df_filter_before_split="",
 ):
     """
     Split events into bins based on (invariant mass, t) and save to separate ROOT files.
@@ -38,6 +39,7 @@ def split_mass_t(
         t_edges (List[float]): Bin the data with these bin edges (nTBins + 1 elements), default None
         dump_augmented_tree (bool): Whether to save the augmented tree with all events
         overwrite (bool): If True, force recalculation of derived kinematics even if they already exist
+        apply_df_filter_before_split (str): Additional ROOT DataFrame filter query to apply before binning. If empty string or None, no additional filtering is applied.
     
     Returns:
         tuple: (mass_edges, t_edges, nBar, nBar_err)
@@ -63,6 +65,8 @@ def split_mass_t(
     nBar = np.zeros((nMBins, nTBins))
     nBar_err = np.zeros((nMBins, nTBins))
     
+    console.print(f"Applying additional filter: {apply_df_filter_before_split}", style="bold yellow")
+    
     # Create separate dataframes for each (mMassX, t) bin
     for i in range(nMBins):
         mass_low = mass_edges[i]
@@ -81,7 +85,16 @@ def split_mass_t(
                 console.print(f"File {fname} already exists, skipping bin {k}", style="bold yellow")
                 continue
             
-            bin_df = df.Filter(f"mMassX >= {mass_low} && mMassX < {mass_high} && mt >= {t_low} && mt < {t_high}")
+            # Build the filter query
+            base_filter = f"mMassX >= {mass_low} && mMassX < {mass_high} && mt >= {t_low} && mt < {t_high}"
+            
+            # Add additional filter if provided
+            if apply_df_filter_before_split and apply_df_filter_before_split.strip():
+                full_filter = f"({base_filter}) && ({apply_df_filter_before_split})"
+            else:
+                full_filter = base_filter
+                
+            bin_df = df.Filter(full_filter)
             
             nentries = bin_df.Count().GetValue()
 
@@ -126,9 +139,11 @@ if __name__ == "__main__":
     parser.add_argument("--mass_edges", type=list, default=None, help="Bin the data with these mass-bin edges (nBins + 1 elements). If None, will be computed based on other cfg options")
     parser.add_argument("--t_edges", type=list, default=None, help="Bin the data with these t-bin edges (nBins + 1 elements). If None, will be computed based on other cfg options")
     parser.add_argument("--overwrite", action="store_true", help="Force recalculation of kinematics even if they already exist")
+    parser.add_argument("--apply_df_filter_before_split", type=str, default="", help="Additional ROOT DataFrame filter query to apply before binning")
     args = parser.parse_args()
 
     split_mass_t(args.infile, args.outputBase, 
                 args.lowMass, args.highMass, args.nBins, 
                 args.lowT, args.highT, args.nTBins,
-                args.treeName, args.mass_edges, args.t_edges, args.overwrite)
+                args.treeName, args.mass_edges, args.t_edges, args.overwrite,
+                apply_df_filter_before_split=args.apply_df_filter_before_split)

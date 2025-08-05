@@ -58,12 +58,13 @@ if __name__ == "__main__":
     min_t = main_dict["min_t"]
     max_t = main_dict["max_t"]
     n_t_bins = main_dict["n_t_bins"]
-    n_processes = main_dict["n_processes"] if n_processes == -1 else n_processes
-    base_directory = main_dict["base_directory"]
+    n_processes = main_dict.get("n_processes", n_processes) if n_processes == -1 else n_processes
+    base_directory = main_dict.get("base_directory")
     output_directory = f"{base_directory}/BINNED_DATA"
-    bins_per_group = main_dict["bins_per_group"] if "bins_per_group" in main_dict else 1
-    constrain_grouped_production = main_dict["constrain_grouped_production"] if "constrain_grouped_production" in main_dict else False
-    merge_grouped_trees = main_dict["merge_grouped_trees"] if "merge_grouped_trees" in main_dict else True
+    bins_per_group = main_dict.get("bins_per_group", 1)
+    constrain_grouped_production = main_dict.get("constrain_grouped_production", False)
+    merge_grouped_trees = main_dict.get("merge_grouped_trees", True)
+    apply_df_filter_before_split = main_dict.get("apply_df_filter_before_split", "")
     data_folder = main_dict["data_folder"]
     pols = main_dict["polarizations"]
     prepare_for_nifty = True
@@ -155,7 +156,8 @@ if __name__ == "__main__":
                         mass_edges, t_edges, nBar, nBar_err = split_mass_t(fname, oname, 
                                                     min_mass, max_mass, n_mass_bins, 
                                                     min_t, max_t, n_t_bins,
-                                                    treeName="kin", mass_edges=mass_edges, t_edges=t_edges, overwrite=args.overwrite)
+                                                    treeName="kin", mass_edges=mass_edges, t_edges=t_edges, overwrite=args.overwrite,
+                                                    apply_df_filter_before_split=apply_df_filter_before_split)
                         _pol = "shared" if sharemc else pol
                         nBars[f"{ftype}_{_pol}"] = nBar
                         nBar_errs[f"{ftype}_{_pol}"] = nBar_err
@@ -168,7 +170,8 @@ if __name__ == "__main__":
                     mass_edges, t_edges, nBar, nBar_err = split_mass_t(f"{data_folder}/bkgnd{pol}.root", f"bkgnd{pol}", 
                                                         min_mass, max_mass, n_mass_bins, 
                                                         min_t, max_t, n_t_bins,
-                                                        treeName="kin", mass_edges=mass_edges, t_edges=t_edges, overwrite=args.overwrite)
+                                                        treeName="kin", mass_edges=mass_edges, t_edges=t_edges, overwrite=args.overwrite,
+                                                        apply_df_filter_before_split=apply_df_filter_before_split)
                     nBars[f"bkgnd_{pol}"] = nBar
                     nBar_errs[f"bkgnd_{pol}"] = nBar_err
                 else:
