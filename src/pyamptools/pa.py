@@ -54,7 +54,7 @@ def main():
         "gen_vec_ps": (f"{PYAMPTOOLS_HOME}/bin/gen_vec_ps.py", "[AmpTools] Generate vector-pseduoscalar data for a given configuration file"),
         "ift_pkl_summary": (f"{PYAMPTOOLS_HOME}/bin/ift_pkl_summary.py", "Summarize the contents of an IFT results pickle file"),
         # "dx_normint": (f"{PYAMPTOOLS_HOME}/bin/dx_normint.py", "Make diagnostic heatmaps for (norm)alizaton and (amp)litude integrals. Can tracks matrix elements over all mass bins"),
-        "calc_ps": (f"{PYAMPTOOLS_HOME}/bin/calc_ps.py", "[In Development] Calculate the phase space factor for IFT fits"),
+        "calc_ps": (f"{PYAMPTOOLS_HOME}/bin/calc_ps.py", "Calculate the phase space factor for IFT fits"),
     }
 
     analysis_map = {

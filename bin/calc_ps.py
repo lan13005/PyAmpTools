@@ -32,7 +32,7 @@ def calc_ps_ift(yaml_file):
         raise ValueError("phaseSpaceMultiplier dump location is not set in the config file")
     console.print(f"Output path from config: {output}")
 
-    masses = config["daughters"].values()
+    masses = list(config["daughters"].values())
     if len(masses) == 1:
         mass1, mass2 = masses[0], masses[0]
         console.print(f"Only 1 daughter specified in yaml, calculating phase space factors for decay into 2 identical particles")
