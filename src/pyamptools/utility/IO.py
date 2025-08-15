@@ -445,7 +445,22 @@ def loadIFTResultsFromPkl(resultData, sums_dict=None):
             )
     ift_res_df = pd.DataFrame(ift_res_df)
     
-    return ift_pwa_df, ift_res_df
+    modelName = None
+    if resultData["metadata"]["iftpwa_config"]["IFT_MODEL"]["custom_model_path"] is not None:
+        modelName = resultData["metadata"]["iftpwa_config"]["IFT_MODEL"]["modelName"]
+        
+    from iftpwa1.model.parametric.parametric_model_builder import get_param_model
+    wave_parametrizations, paras, resonances, no_bkg_waves = get_param_model(
+        nTprimeBins=nmb_tprime,
+        modelName=modelName,
+        custom_model_path=resultData["metadata"]["iftpwa_config"]["IFT_MODEL"]["custom_model_path"],
+    )
+    
+    aux_dict = {
+        'paras': paras, # nifty object for prior distribution definition, can be None if no model
+    }
+    
+    return ift_pwa_df, ift_res_df, aux_dict
 
 def loadAmpToolsResultsFromYaml(main_yaml, ensure_one_fit_per_bin=True, apply_mle_queries=True):
     """ 

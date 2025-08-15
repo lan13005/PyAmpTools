@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import pickle as pkl
 import glob
-from typing import Tuple
+from typing import Tuple, Dict
 import matplotlib.pyplot as plt
 from rich.console import Console
 import re
@@ -18,6 +18,9 @@ import matplotlib.patheffects as path_effects
 import mplhep as hep
 import gc
 import io
+from nifty8 import from_random
+import mplhep as hep
+from pyamptools.utility.general import calculate_subplot_grid_size
 
 # TODO:
 # - Ensure all IFT, MLE, MCMC uses intensity, intensity_error
@@ -68,8 +71,8 @@ class ResultManager:
             self.console = Console(file=io.StringIO(), force_terminal=True, force_jupyter=False)
         
         self._mle_results  = pd.DataFrame()
-        self._gen_results  = [pd.DataFrame(), pd.DataFrame()] # (generated samples of amplitudes, generated samples of resonance parameters)
-        self._ift_results  = [pd.DataFrame(), pd.DataFrame()] # (fitted samples of amplitudes, fitted samples of resonance parameters)
+        self._gen_results  = [pd.DataFrame(), pd.DataFrame(), Dict] # (generated samples of amplitudes, generated samples of resonance parameters)
+        self._ift_results  = [pd.DataFrame(), pd.DataFrame(), Dict] # (fitted samples of amplitudes, fitted samples of resonance parameters, iftpwa result data)
         self._mcmc_results = pd.DataFrame()
         self._hist_results = pd.DataFrame()
         self._moment_inversion_results = pd.DataFrame()
@@ -270,11 +273,11 @@ class ResultManager:
         return self._mcmc_results
     
     @property
-    def ift_results(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    def ift_results(self) -> Tuple[pd.DataFrame, pd.DataFrame, Dict]:
         return self._ift_results
     
     @property
-    def gen_results(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    def gen_results(self) -> Tuple[pd.DataFrame, pd.DataFrame, Dict]:
         return self._gen_results
     
     @property
@@ -368,7 +371,7 @@ class ResultManager:
         if "coherent_sums" in self.main_dict:
             self.console.print(f"[bold yellow]Will attempt to calculate coherent sums: {self.main_dict['coherent_sums']}[/bold yellow]")
             sums_dict = self.main_dict["coherent_sums"]
-        ift_df, ift_res_df = loadIFTResultsFromPkl(truth_pkl, sums_dict)
+        ift_df, ift_res_df, aux_dict = loadIFTResultsFromPkl(truth_pkl, sums_dict)
 
         # requires loading hist results first to scale generated curves to data scale
         if source_type == "GENERATED":
@@ -405,7 +408,7 @@ class ResultManager:
         self.console.print(f"Resonance Parameters DataFrame shape: {ift_res_df.shape}")
         self.console.print(f"\n")
     
-        return [ift_df, ift_res_df]
+        return [ift_df, ift_res_df, aux_dict]
         
     def load_mle_results(self, base_directory=None, alias=None):
         
@@ -1841,6 +1844,67 @@ def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin
 
     for moment_name in resultManager.moment_latex_dict.keys():
         plot_moment(moment_name, ofile=f"{resultManager.base_directory}/{default_plot_subdir}/moments/moment_{moment_name}.{file_type}")
+        
+def plot_resonance_parameters(resultManager: ResultManager, nsamples=1000, nbins=50, figsize=(15, 15), stat_text_size=20, axes_fontsize=20, file_type='pdf'):
+    
+    aux_dict = resultManager.ift_results[2]
+    paras = aux_dict['paras']
+    
+    if paras is None:
+        resultManager.console.print("[bold yellow]No model used, no resonance parameters to plot[/bold yellow]")
+        return
+        
+    prior_resonance_parameter_samples = {}
+    for _ in range(nsamples):
+        para_sample_dict = paras(from_random(paras.domain)).val
+        for k in para_sample_dict:
+            if "scale" not in k:
+                if k not in prior_resonance_parameter_samples:
+                    prior_resonance_parameter_samples[k] = []
+                prior_resonance_parameter_samples[k].append(
+                    para_sample_dict[k].item()
+                )  # <- this is a zero dimensional array ... use item() to make pandas realize that we have floats not objects -.-
+                
+    prior_resonance_parameter_samples = pd.DataFrame(prior_resonance_parameter_samples)
+    posterior_resonance_parameter_samples = resultManager.ift_results[1]
+
+    nrows, ncols = calculate_subplot_grid_size(len(prior_resonance_parameter_samples.columns))
+    fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
+    axes = axes.flatten()
+
+    for iax, var in enumerate(prior_resonance_parameter_samples.columns):
+        min_val = min(prior_resonance_parameter_samples[var].min(), posterior_resonance_parameter_samples[var].min())
+        max_val = max(prior_resonance_parameter_samples[var].max(), posterior_resonance_parameter_samples[var].max())
+        edges = np.linspace(min_val, max_val, nbins+1)
+        prior_counts, _ = np.histogram(prior_resonance_parameter_samples[var], bins=edges)
+        posterior_counts, _ = np.histogram(posterior_resonance_parameter_samples[var], bins=edges)
+        hep.histplot(prior_counts, edges, ax=axes[iax], histtype="fill", density=True, alpha=0.7, color='tab:gray')
+        hep.histplot(posterior_counts, edges, ax=axes[iax], histtype="fill", density=True, alpha=0.7, color='xkcd:sea blue')
+        axes[iax].set_xlabel(var, fontsize=axes_fontsize)
+        axes[iax].ticklabel_format(style='plain', axis='x') 
+        axes[iax].ticklabel_format(style='plain', axis='y')
+        axes[iax].tick_params(axis='x', labelsize=axes_fontsize-2)
+        axes[iax].tick_params(axis='y', labelsize=axes_fontsize-2)
+        prior_mean = prior_resonance_parameter_samples[var].mean()
+        prior_std = prior_resonance_parameter_samples[var].std()
+        post_mean = posterior_resonance_parameter_samples[var].mean()
+        post_std = np.nan_to_num(posterior_resonance_parameter_samples[var].std())
+        n_posterior_samples = len(posterior_resonance_parameter_samples[var])
+        
+        axes[iax].text(0.05, 0.95, f"Prior = ${prior_mean:.3f} \pm {prior_std:.3f}$\nPosterior ($N_{{samples}}={n_posterior_samples}$) = ${post_mean:.3f} \pm {post_std:.3f}$",
+                    transform=axes[iax].transAxes, fontsize=stat_text_size, verticalalignment='top', horizontalalignment='left')
+        
+        axes[iax].set_ylim(0, axes[iax].get_ylim()[1]*1.2)
+        
+    for iax in range(0, nrows*ncols, nrows):
+        axes[iax].set_ylabel("Density", fontsize=axes_fontsize)
+        
+    for iax in range(len(prior_resonance_parameter_samples.columns), nrows*ncols):
+        axes[iax].set_visible(False)
+        
+    plt.tight_layout()
+    ofile = f"{resultManager.base_directory}/{default_plot_subdir}/resonance_parameters.{file_type}"
+    save_and_close_fig(ofile, fig, axes, console=resultManager.console, overwrite=True, verbose=True)
     
 def montage_and_gif_select_plots(resultManager: ResultManager, file_type='pdf'):
     
