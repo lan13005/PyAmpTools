@@ -267,8 +267,16 @@ def regularize_hessian_return_covariance(hessian_matrix, tikhonov_delta=1e-4, re
         return covariance, eigenvalues, hessian_diagnostics
         
     except np.linalg.LinAlgError as e:
-        print(f"Error calculating covariance matrix: {e}")
-        return None, None, {'error': str(e)}
+        print(f"Error calculating covariance matrix (return nans): {e}")
+        error_result = {
+             'error': str(e),
+             'smallest_eigenvalue': np.nan,
+             'largest_eigenvalue': np.nan,
+             'condition_number': np.nan,
+             'fraction_negative_eigenvalues': np.nan,
+             'fraction_small_eigenvalues': np.nan,
+        }
+        return None, None, error_result
     
 def calculate_intensity_and_error(amp, cov_amp, ampMatrix, ampMatrixTermOrder, wave_list, all_waves_list, scale_factors=None):
     """

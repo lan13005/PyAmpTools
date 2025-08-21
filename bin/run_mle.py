@@ -97,7 +97,9 @@ def run_single_bin_fits(
         final_result_dict['likelihood'] = optim_result['likelihood']
         final_result_dict['initial_likelihood'] = initial_likelihood
         
-        bin_console.print(f"\nTotal Intensity: value = {final_result_dict['intensity']:<10.5f} +- {final_result_dict['intensity_err']:<10.5f}", style="bold")
+        _intensity = final_result_dict['intensity'] if final_result_dict['intensity'] is not None else np.nan
+        _intensity_err = final_result_dict['intensity_err'] if final_result_dict['intensity_err'] is not None else np.nan
+        bin_console.print(f"\nTotal Intensity: value = {_intensity:<10.5f} +- {_intensity_err:<10.5f}", style="bold")
         for iw, wave in enumerate(pwa_manager.waveNames):
             real_part = final_params[2*iw]
             imag_part = final_params[2*iw+1]
@@ -122,7 +124,9 @@ def run_single_bin_fits(
             bounds['iub'] = optim_result['bounds'][2*iw+1][1]   # imag part upper bound
             for key in bounds.keys():
                 if bounds[key] is None: bounds[key] = "None"
-            bin_console.print(f"{wave:<10}  Intensity: value = {final_result_dict[wave]:<10.5f} +- {final_result_dict[f'{wave}_err']:<10.5f}", style="bold")
+            _intensity = final_result_dict[wave] if final_result_dict[wave] is not None else np.nan
+            _intensity_err = final_result_dict[f'{wave}_err'] if final_result_dict[f'{wave}_err'] is not None else np.nan
+            bin_console.print(f"{wave:<10}  Intensity: value = {_intensity:<10.5f} +- {_intensity_err:<10.5f}", style="bold")
             bin_console.print(f"            Real part: value = {real_part:<10.5f} | Errors ({', '.join(methods)}) = ({', '.join(real_part_errs)}) | Bounds: \[{bounds['rlb']:<10}, {bounds['rub']:<10}]) ", style="bold")
             bin_console.print(f"            Imag part: value = {imag_part:<10.5f} | Errors ({', '.join(methods)}) = ({', '.join(imag_part_errs)}) | Bounds: \[{bounds['ilb']:<10}, {bounds['iub']:<10}]) ", style="bold")
 
