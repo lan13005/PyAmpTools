@@ -486,6 +486,7 @@ document.write(`
     <span class="n">plot_binned_complex_plane</span><span class="p">,</span> 
     <span class="n">plot_overview_across_bins</span><span class="p">,</span> 
     <span class="n">plot_moments_across_bins</span><span class="p">,</span> 
+    <span class="n">plot_gen_curves</span><span class="p">,</span>
     <span class="n">montage_and_gif_select_plots</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pdf2image</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_from_path</span>
@@ -799,59 +800,28 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">resultManager</span> <span class="o">=</span> <span class="n">ResultManager</span><span class="p">(</span><span class="n">main_yaml</span><span class="p">,</span> <span class="n">silence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">resultManager</span><span class="o">.</span><span class="n">attempt_load_all</span><span class="p">()</span>
+<span class="n">plot_gen_curves</span><span class="p">(</span><span class="n">resultManager</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">)</span>
+<span class="k">del</span> <span class="n">resultManager</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/gen_curves.pdf&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">ValueError</span><span class="g g-Whitespace">                                </span>Traceback (most recent call last)
-<span class="nn">File /w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/pdf2image/pdf2image.py:602,</span> in <span class="ni">pdfinfo_from_path</span><span class="nt">(pdf_path, userpw, ownerpw, poppler_path, rawdates, timeout, first_page, last_page)</span>
-<span class="g g-Whitespace">    </span><span class="mi">601</span> <span class="k">if</span> <span class="s2">&quot;Pages&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
-<span class="ne">--&gt; </span><span class="mi">602</span>     <span class="k">raise</span> <span class="ne">ValueError</span>
-<span class="g g-Whitespace">    </span><span class="mi">604</span> <span class="k">return</span> <span class="n">d</span>
-
-<span class="ne">ValueError</span>: 
-
-<span class="n">During</span> <span class="n">handling</span> <span class="n">of</span> <span class="n">the</span> <span class="n">above</span> <span class="n">exception</span><span class="p">,</span> <span class="n">another</span> <span class="n">exception</span> <span class="n">occurred</span><span class="p">:</span>
-
-<span class="ne">PDFPageCountError</span><span class="g g-Whitespace">                         </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
-<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/gen_curves.pdf&quot;</span><span class="p">)</span>
-
-<span class="nn">Cell In[1], line 23,</span> in <span class="ni">show_pdf</span><span class="nt">(pdf_path, dpi)</span>
-<span class="g g-Whitespace">     </span><span class="mi">18</span> <span class="k">def</span><span class="w"> </span><span class="nf">show_pdf</span><span class="p">(</span><span class="n">pdf_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">):</span>
-<span class="g g-Whitespace">     </span><span class="mi">19</span><span class="w">     </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="g g-Whitespace">     </span><span class="mi">20</span><span class="sd">     Show a PDF in the notebook cell, rasterized since vscode jupyter cannot render PDFs</span>
-<span class="g g-Whitespace">     </span><span class="mi">21</span><span class="sd">     </span>
-<span class="g g-Whitespace">     </span><span class="mi">22</span><span class="sd">     &quot;&quot;&quot;</span>
-<span class="ne">---&gt; </span><span class="mi">23</span>     <span class="n">img</span> <span class="o">=</span> <span class="n">convert_from_path</span><span class="p">(</span><span class="n">pdf_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="g g-Whitespace">     </span><span class="mi">24</span>     <span class="n">display</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
-
-<span class="nn">File /w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/pdf2image/pdf2image.py:127,</span> in <span class="ni">convert_from_path</span><span class="nt">(pdf_path, dpi, output_folder, first_page, last_page, fmt, jpegopt, thread_count, userpw, ownerpw, use_cropbox, strict, transparent, single_file, output_file, poppler_path, grayscale, size, paths_only, use_pdftocairo, timeout, hide_annotations)</span>
-<span class="g g-Whitespace">    </span><span class="mi">124</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">poppler_path</span><span class="p">,</span> <span class="n">PurePath</span><span class="p">):</span>
-<span class="g g-Whitespace">    </span><span class="mi">125</span>     <span class="n">poppler_path</span> <span class="o">=</span> <span class="n">poppler_path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
-<span class="ne">--&gt; </span><span class="mi">127</span> <span class="n">page_count</span> <span class="o">=</span> <span class="n">pdfinfo_from_path</span><span class="p">(</span>
-<span class="g g-Whitespace">    </span><span class="mi">128</span>     <span class="n">pdf_path</span><span class="p">,</span> <span class="n">userpw</span><span class="p">,</span> <span class="n">ownerpw</span><span class="p">,</span> <span class="n">poppler_path</span><span class="o">=</span><span class="n">poppler_path</span>
-<span class="g g-Whitespace">    </span><span class="mi">129</span> <span class="p">)[</span><span class="s2">&quot;Pages&quot;</span><span class="p">]</span>
-<span class="g g-Whitespace">    </span><span class="mi">131</span> <span class="c1"># We start by getting the output format, the buffer processing function and if we need pdftocairo</span>
-<span class="g g-Whitespace">    </span><span class="mi">132</span> <span class="n">parsed_fmt</span><span class="p">,</span> <span class="n">final_extension</span><span class="p">,</span> <span class="n">parse_buffer_func</span><span class="p">,</span> <span class="n">use_pdfcairo_format</span> <span class="o">=</span> <span class="n">_parse_format</span><span class="p">(</span>
-<span class="g g-Whitespace">    </span><span class="mi">133</span>     <span class="n">fmt</span><span class="p">,</span> <span class="n">grayscale</span>
-<span class="g g-Whitespace">    </span><span class="mi">134</span> <span class="p">)</span>
-
-<span class="nn">File /w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/pdf2image/pdf2image.py:611,</span> in <span class="ni">pdfinfo_from_path</span><span class="nt">(pdf_path, userpw, ownerpw, poppler_path, rawdates, timeout, first_page, last_page)</span>
-<span class="g g-Whitespace">    </span><span class="mi">607</span>     <span class="k">raise</span> <span class="n">PDFInfoNotInstalledError</span><span class="p">(</span>
-<span class="g g-Whitespace">    </span><span class="mi">608</span>         <span class="s2">&quot;Unable to get page count. Is poppler installed and in PATH?&quot;</span>
-<span class="g g-Whitespace">    </span><span class="mi">609</span>     <span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">610</span> <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-<span class="ne">--&gt; </span><span class="mi">611</span>     <span class="k">raise</span> <span class="n">PDFPageCountError</span><span class="p">(</span>
-<span class="g g-Whitespace">    </span><span class="mi">612</span>         <span class="sa">f</span><span class="s2">&quot;Unable to get page count.</span><span class="se">\n</span><span class="si">{</span><span class="n">err</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-<span class="g g-Whitespace">    </span><span class="mi">613</span>     <span class="p">)</span>
-
-<span class="ne">PDFPageCountError</span>: Unable to get page count.
-<span class="n">I</span><span class="o">/</span><span class="n">O</span> <span class="n">Error</span><span class="p">:</span> <span class="n">Couldn</span><span class="s1">&#39;t open file &#39;</span><span class="n">RESULTS</span><span class="o">/</span><span class="n">PLOTS</span><span class="o">/</span><span class="n">gen_curves</span><span class="o">.</span><span class="n">pdf</span><span class="s1">&#39;: No such file or directory.</span>
-</pre></div>
-</div>
+<img alt="../_images/7b80f36e68b419c94c981c42b717efa61eecc0ef163390ba1e9ac073747ab17d.png" src="../_images/7b80f36e68b419c94c981c42b717efa61eecc0ef163390ba1e9ac073747ab17d.png" />
 </div>
 </div>
 </section>
@@ -878,6 +848,20 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 <span class="k">del</span> <span class="n">resultManager</span>
 </pre></div>
 </div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/WORK/PyAmpTools9/src/pyamptools/utility/resultManager.py:461: RuntimeWarning: invalid value encountered in sqrt
+  relative_phase_error = np.sqrt(variance) * 180.0 / np.pi
+/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>=================================================================
+
+=================================================================
+</pre></div>
+</div>
+<img alt="../_images/3c2d0b45aacd119523ae558a511a31d52d343101aab81aa50ec52aeba51f81c7.png" src="../_images/3c2d0b45aacd119523ae558a511a31d52d343101aab81aa50ec52aeba51f81c7.png" />
 </div>
 </div>
 </section>
@@ -908,6 +892,22 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/WORK/PyAmpTools9/src/pyamptools/utility/resultManager.py:461: RuntimeWarning: invalid value encountered in sqrt
+  relative_phase_error = np.sqrt(variance) * 180.0 / np.pi
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>=================================================================
+
+=================================================================
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
+</pre></div>
+</div>
+<img alt="../_images/67cb8a05c33f1f26713cc4f2000f6c5b87364d0d2f2894f66ccd8715b300bea6.png" src="../_images/67cb8a05c33f1f26713cc4f2000f6c5b87364d0d2f2894f66ccd8715b300bea6.png" />
+</div>
 </div>
 </section>
 <section id="run-iftpwa-fit">
@@ -929,6 +929,26 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 <span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/intensity_and_phases/montage_output.pdf&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/WORK/PyAmpTools9/src/pyamptools/utility/resultManager.py:461: RuntimeWarning: invalid value encountered in sqrt
+  relative_phase_error = np.sqrt(variance) * 180.0 / np.pi
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>=================================================================
+
+=================================================================
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
+</pre></div>
+</div>
+<img alt="../_images/89dae23be9082734eb4f24d4b75b7cdedcfd0f41367f103a284a33490e73de56.png" src="../_images/89dae23be9082734eb4f24d4b75b7cdedcfd0f41367f103a284a33490e73de56.png" />
 </div>
 </div>
 </section>
@@ -955,6 +975,51 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/WORK/PyAmpTools9/src/pyamptools/utility/resultManager.py:461: RuntimeWarning: invalid value encountered in sqrt
+  relative_phase_error = np.sqrt(variance) * 180.0 / np.pi
+/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>=================================================================
+
+=================================================================
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MomentManagerTwoPS| Calculating moments assuming a TwoPseudoscalar system with max J = 4
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/multiprocessing/popen_fork.py:66: RuntimeWarning: os.fork() was called. os.fork() is incompatible with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
+  self.pid = os.fork()
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MomentManagerTwoPS| Calculating moments assuming a TwoPseudoscalar system with max J = 4
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/multiprocessing/popen_fork.py:66: RuntimeWarning: os.fork() was called. os.fork() is incompatible with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
+  self.pid = os.fork()
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MomentManagerTwoPS| Calculating moments assuming a TwoPseudoscalar system with max J = 4
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/multiprocessing/popen_fork.py:66: RuntimeWarning: os.fork() was called. os.fork() is incompatible with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
+  self.pid = os.fork()
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MomentManagerTwoPS| Calculating moments assuming a TwoPseudoscalar system with max J = 4
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/multiprocessing/popen_fork.py:66: RuntimeWarning: os.fork() was called. os.fork() is incompatible with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
+  self.pid = os.fork()
+</pre></div>
+</div>
+</div>
 </div>
 <section id="plot-projected-moments">
 <h2>Plot projected moments<a class="headerlink" href="#plot-projected-moments" title="Link to this heading">#</a></h2>
@@ -965,6 +1030,9 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/moments/montage_output.pdf&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/264939a5f2f59a68d9cd96d9b47bbfb0c81a92d54e4f23c784c08816389e34ec.png" src="../_images/264939a5f2f59a68d9cd96d9b47bbfb0c81a92d54e4f23c784c08816389e34ec.png" />
 </div>
 </div>
 </section>
@@ -977,6 +1045,9 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<img alt="../_images/8ac22ba1681c3c0f4eaf16c97ca5a9e076876bef1b1449c3e42d3523ddae3e93.png" src="../_images/8ac22ba1681c3c0f4eaf16c97ca5a9e076876bef1b1449c3e42d3523ddae3e93.png" />
+</div>
 </div>
 </section>
 <section id="plots-of-the-intensity-distributions">
@@ -987,6 +1058,9 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/intensity/bin1_intensities.pdf&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/c84b755bbac66650c8180a7dc0f72333a9a97a30d7da818f713e0765adea9655.png" src="../_images/c84b755bbac66650c8180a7dc0f72333a9a97a30d7da818f713e0765adea9655.png" />
 </div>
 </div>
 </section>
