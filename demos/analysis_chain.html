@@ -571,6 +571,7 @@ document.write(`
 <span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">add_amp_factor</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #ba2121; text-decoration-color: #ba2121; background-color: #f8f8f8">""</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># Add an amplitude factor to every amplitude. For example, OmegaDalitz 0.1212 0.0257 0.0 0.0 wil</span>
 <span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">append_to_decay</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #ba2121; text-decoration-color: #ba2121; background-color: #f8f8f8">""</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># append this string to the decay amplitude, i.e. 'omega3pi' can be appended to Vec_ps_refl amp</span>
 <span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">append_to_cfg</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #ba2121; text-decoration-color: #ba2121; background-color: #f8f8f8">""</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># append this string to the AmpTools configuration file</span><span style="background-color: #f8f8f8">                                          </span>
+<span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">coherent_sums</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">null</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># Dict[coherentSumName: UnderscoreSeparatedListOfWaves]</span><span style="background-color: #f8f8f8">                                        </span>
 <span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">mle</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="background-color: #f8f8f8">                                                                                                               </span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">  </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">seed</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">42</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># rng seed</span><span style="background-color: #f8f8f8">                                                                                              </span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">  </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">scale</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">100</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># production coenfficients sampled uniformly from [-scale, scale]</span><span style="background-color: #f8f8f8">                                     </span>
@@ -612,8 +613,6 @@ document.write(`
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">  </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">initial_scale</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">1.0</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># SVGD: initial kernel bandwidth scale</span><span style="background-color: #f8f8f8">                                                        </span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">  </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">min_scale</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">0.0</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># SVGD: minimum kernel bandwidth scale</span><span style="background-color: #f8f8f8">                                                            </span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">  </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">step_size</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">0.01</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># SVGD: step size for Adam optimizer</span><span style="background-color: #f8f8f8">                                                             </span>
-<span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">result_dump</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="background-color: #f8f8f8">                                                                                                       </span>
-<span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">  </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">coherent_sums</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">null</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># Dict[coherentSumName: UnderscoreSeparatedListOfWaves]</span><span style="background-color: #f8f8f8">                                      </span>
 <span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">nifty</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="background-color: #f8f8f8">                                                                                                             </span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">  </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">yaml</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">${NIFTY}</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># Dictionary for config file used by iftpwa</span><span style="background-color: #f8f8f8">                                                       </span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">  </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">force_load_normint</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">false</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># force loading normalization integrals (used for prior simulation)</span><span style="background-color: #f8f8f8">                    </span>
@@ -805,7 +804,54 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/7472082b92a3fdd4c439b47900dce28a5071dcf17cc70f0abfcfe8c6dced902e.png" src="../_images/7472082b92a3fdd4c439b47900dce28a5071dcf17cc70f0abfcfe8c6dced902e.png" />
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">ValueError</span><span class="g g-Whitespace">                                </span>Traceback (most recent call last)
+<span class="nn">File /w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/pdf2image/pdf2image.py:602,</span> in <span class="ni">pdfinfo_from_path</span><span class="nt">(pdf_path, userpw, ownerpw, poppler_path, rawdates, timeout, first_page, last_page)</span>
+<span class="g g-Whitespace">    </span><span class="mi">601</span> <span class="k">if</span> <span class="s2">&quot;Pages&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">602</span>     <span class="k">raise</span> <span class="ne">ValueError</span>
+<span class="g g-Whitespace">    </span><span class="mi">604</span> <span class="k">return</span> <span class="n">d</span>
+
+<span class="ne">ValueError</span>: 
+
+<span class="n">During</span> <span class="n">handling</span> <span class="n">of</span> <span class="n">the</span> <span class="n">above</span> <span class="n">exception</span><span class="p">,</span> <span class="n">another</span> <span class="n">exception</span> <span class="n">occurred</span><span class="p">:</span>
+
+<span class="ne">PDFPageCountError</span><span class="g g-Whitespace">                         </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
+<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/gen_curves.pdf&quot;</span><span class="p">)</span>
+
+<span class="nn">Cell In[1], line 23,</span> in <span class="ni">show_pdf</span><span class="nt">(pdf_path, dpi)</span>
+<span class="g g-Whitespace">     </span><span class="mi">18</span> <span class="k">def</span><span class="w"> </span><span class="nf">show_pdf</span><span class="p">(</span><span class="n">pdf_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">):</span>
+<span class="g g-Whitespace">     </span><span class="mi">19</span><span class="w">     </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="g g-Whitespace">     </span><span class="mi">20</span><span class="sd">     Show a PDF in the notebook cell, rasterized since vscode jupyter cannot render PDFs</span>
+<span class="g g-Whitespace">     </span><span class="mi">21</span><span class="sd">     </span>
+<span class="g g-Whitespace">     </span><span class="mi">22</span><span class="sd">     &quot;&quot;&quot;</span>
+<span class="ne">---&gt; </span><span class="mi">23</span>     <span class="n">img</span> <span class="o">=</span> <span class="n">convert_from_path</span><span class="p">(</span><span class="n">pdf_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="g g-Whitespace">     </span><span class="mi">24</span>     <span class="n">display</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+
+<span class="nn">File /w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/pdf2image/pdf2image.py:127,</span> in <span class="ni">convert_from_path</span><span class="nt">(pdf_path, dpi, output_folder, first_page, last_page, fmt, jpegopt, thread_count, userpw, ownerpw, use_cropbox, strict, transparent, single_file, output_file, poppler_path, grayscale, size, paths_only, use_pdftocairo, timeout, hide_annotations)</span>
+<span class="g g-Whitespace">    </span><span class="mi">124</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">poppler_path</span><span class="p">,</span> <span class="n">PurePath</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">125</span>     <span class="n">poppler_path</span> <span class="o">=</span> <span class="n">poppler_path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+<span class="ne">--&gt; </span><span class="mi">127</span> <span class="n">page_count</span> <span class="o">=</span> <span class="n">pdfinfo_from_path</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">128</span>     <span class="n">pdf_path</span><span class="p">,</span> <span class="n">userpw</span><span class="p">,</span> <span class="n">ownerpw</span><span class="p">,</span> <span class="n">poppler_path</span><span class="o">=</span><span class="n">poppler_path</span>
+<span class="g g-Whitespace">    </span><span class="mi">129</span> <span class="p">)[</span><span class="s2">&quot;Pages&quot;</span><span class="p">]</span>
+<span class="g g-Whitespace">    </span><span class="mi">131</span> <span class="c1"># We start by getting the output format, the buffer processing function and if we need pdftocairo</span>
+<span class="g g-Whitespace">    </span><span class="mi">132</span> <span class="n">parsed_fmt</span><span class="p">,</span> <span class="n">final_extension</span><span class="p">,</span> <span class="n">parse_buffer_func</span><span class="p">,</span> <span class="n">use_pdfcairo_format</span> <span class="o">=</span> <span class="n">_parse_format</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">133</span>     <span class="n">fmt</span><span class="p">,</span> <span class="n">grayscale</span>
+<span class="g g-Whitespace">    </span><span class="mi">134</span> <span class="p">)</span>
+
+<span class="nn">File /w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/pdf2image/pdf2image.py:611,</span> in <span class="ni">pdfinfo_from_path</span><span class="nt">(pdf_path, userpw, ownerpw, poppler_path, rawdates, timeout, first_page, last_page)</span>
+<span class="g g-Whitespace">    </span><span class="mi">607</span>     <span class="k">raise</span> <span class="n">PDFInfoNotInstalledError</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">608</span>         <span class="s2">&quot;Unable to get page count. Is poppler installed and in PATH?&quot;</span>
+<span class="g g-Whitespace">    </span><span class="mi">609</span>     <span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">610</span> <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">611</span>     <span class="k">raise</span> <span class="n">PDFPageCountError</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">612</span>         <span class="sa">f</span><span class="s2">&quot;Unable to get page count.</span><span class="se">\n</span><span class="si">{</span><span class="n">err</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="g g-Whitespace">    </span><span class="mi">613</span>     <span class="p">)</span>
+
+<span class="ne">PDFPageCountError</span>: Unable to get page count.
+<span class="n">I</span><span class="o">/</span><span class="n">O</span> <span class="n">Error</span><span class="p">:</span> <span class="n">Couldn</span><span class="s1">&#39;t open file &#39;</span><span class="n">RESULTS</span><span class="o">/</span><span class="n">PLOTS</span><span class="o">/</span><span class="n">gen_curves</span><span class="o">.</span><span class="n">pdf</span><span class="s1">&#39;: No such file or directory.</span>
+</pre></div>
+</div>
 </div>
 </div>
 </section>
@@ -832,13 +878,6 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 <span class="k">del</span> <span class="n">resultManager</span>
 </pre></div>
 </div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
-  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
-</pre></div>
-</div>
-<img alt="../_images/cce810579634b6640466a1d19a49abec123338b0de1f581364dadda45a2f713b.png" src="../_images/cce810579634b6640466a1d19a49abec123338b0de1f581364dadda45a2f713b.png" />
 </div>
 </div>
 </section>
@@ -869,13 +908,6 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
-  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
-</pre></div>
-</div>
-<img alt="../_images/7012d746cb886671e49d4ba17e60c1db2f20e369ab433edeecbca01dff52afc3.png" src="../_images/7012d746cb886671e49d4ba17e60c1db2f20e369ab433edeecbca01dff52afc3.png" />
-</div>
 </div>
 </section>
 <section id="run-iftpwa-fit">
@@ -897,17 +929,6 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 <span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/intensity_and_phases/montage_output.pdf&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
-  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
-  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
-</pre></div>
-</div>
-<img alt="../_images/f885f6ded37ba5a84119e4880d5515fec16fcefb73db4c1e9bd199e637f13599.png" src="../_images/f885f6ded37ba5a84119e4880d5515fec16fcefb73db4c1e9bd199e637f13599.png" />
 </div>
 </div>
 </section>
@@ -934,44 +955,6 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
-  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
-  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MomentManagerTwoPS| Calculating moments assuming a TwoPseudoscalar system with max J = 4
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/multiprocessing/popen_fork.py:66: RuntimeWarning: os.fork() was called. os.fork() is incompatible with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
-  self.pid = os.fork()
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MomentManagerTwoPS| Calculating moments assuming a TwoPseudoscalar system with max J = 4
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/multiprocessing/popen_fork.py:66: RuntimeWarning: os.fork() was called. os.fork() is incompatible with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
-  self.pid = os.fork()
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MomentManagerTwoPS| Calculating moments assuming a TwoPseudoscalar system with max J = 4
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/multiprocessing/popen_fork.py:66: RuntimeWarning: os.fork() was called. os.fork() is incompatible with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
-  self.pid = os.fork()
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MomentManagerTwoPS| Calculating moments assuming a TwoPseudoscalar system with max J = 4
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/multiprocessing/popen_fork.py:66: RuntimeWarning: os.fork() was called. os.fork() is incompatible with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
-  self.pid = os.fork()
-</pre></div>
-</div>
-</div>
 </div>
 <section id="plot-projected-moments">
 <h2>Plot projected moments<a class="headerlink" href="#plot-projected-moments" title="Link to this heading">#</a></h2>
@@ -982,9 +965,6 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/moments/montage_output.pdf&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="cell_output docutils container">
-<img alt="../_images/f5c569c9ce26314ef111ca240855d7020033ec681d2dd3538e8d0ca06e709833.png" src="../_images/f5c569c9ce26314ef111ca240855d7020033ec681d2dd3538e8d0ca06e709833.png" />
 </div>
 </div>
 </section>
@@ -997,9 +977,6 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<img alt="../_images/e05610673985b2ec9dab1517d9526c41e8e498bf9673866c8c1b5e95f84b20e4.png" src="../_images/e05610673985b2ec9dab1517d9526c41e8e498bf9673866c8c1b5e95f84b20e4.png" />
-</div>
 </div>
 </section>
 <section id="plots-of-the-intensity-distributions">
@@ -1010,9 +987,6 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/intensity/bin1_intensities.pdf&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="cell_output docutils container">
-<img alt="../_images/859e63acea13b923c154d3e4a8b98f2bb438b0662d48c3975af1ef2dfa8f341f.png" src="../_images/859e63acea13b923c154d3e4a8b98f2bb438b0662d48c3975af1ef2dfa8f341f.png" />
 </div>
 </div>
 </section>

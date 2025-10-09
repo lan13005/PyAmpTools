@@ -403,7 +403,6 @@ document.write(`
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">PyAmpTools</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-docker-image-developers">Build Docker Image (developers)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apptainer-usage">Apptainer Usage</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#for-vscode-remote-containter-development">For VSCode Remote Containter Development</a></li>
 </ul>
@@ -448,32 +447,31 @@ pa<span class="w"> </span>-f<span class="w"> </span><span class="c1"># for dispa
 <hr class="docutils" />
 <section class="tex2jax_ignore mathjax_ignore" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
+<p><strong>Note:</strong> Skip to <em>Apptainer Usage</em>, below, to simply use the container. The following instructions are for developers to build/maintain the container.</p>
 <p>Please make modifications to <code class="docutils literal notranslate"><span class="pre">DockerInstall.sh</span></code> to match your environment. These installation steps builds on top of a minimal base image/environment. Some important considerations:</p>
 <ul class="simple">
 <li><p>if you already have conda then comment out those lines</p></li>
 <li><p>default is to build with mpi support</p></li>
 <li><p>if you need gpu support or gpu+mpi support then you can still go into <code class="docutils literal notranslate"><span class="pre">external</span></code> folder and run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">mpigpi</span></code> and additional shared libraries will be built</p></li>
+<li><p>simply call <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">DockerInstall.sh</span></code> to install necessary dependencies (i.e. if you are in a minimal <code class="docutils literal notranslate"><span class="pre">almalinux</span></code> container environment already)</p></li>
+<li><p>instead, if you want to build the docker image simply call:</p></li>
 </ul>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>DockerInstall.sh
-</pre></div>
-</div>
-<section id="build-docker-image-developers">
-<h2>Build Docker Image (developers)<a class="headerlink" href="#build-docker-image-developers" title="Link to this heading">#</a></h2>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./DockerBuild.sh<span class="w"> </span><span class="c1"># ensure GH_USERNAME and GH_PAT are environment variables</span>
 </pre></div>
 </div>
-</section>
 <section id="apptainer-usage">
 <h2>Apptainer Usage<a class="headerlink" href="#apptainer-usage" title="Link to this heading">#</a></h2>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># /scratch needed for MPI and fontconfig for matplotlib(not so important)</span>
 <span class="c1"># --writable-tmpfs allows temp modifications to sif contents. Ideally you can git pull and push updates changes to repos</span>
 <span class="c1"># --bind whatever directories you need access to</span>
 apptainer<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>--contain<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/tmp<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/var/tmp<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--bind<span class="w"> </span>/my/working/directory<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--bind<span class="w"> </span>/my/data/directory<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--bind<span class="w"> </span>/scratch<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--bind<span class="w"> </span>~/.cache/fontconfig<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--env<span class="w"> </span><span class="nv">BASH_ENV</span><span class="o">=</span>/dev/null<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--env<span class="w"> </span><span class="nv">TMPDIR</span><span class="o">=</span>/tmp,TEMP<span class="o">=</span>/tmp,TMP<span class="o">=</span>/tmp,BASH_ENV<span class="o">=</span>/dev/null<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>/LOCATION/OF/pyamptools.sif<span class="w"> </span>bash
 <span class="c1"># Location on the jlab farm: /w/halld-scshelf2101/lng/WORK/PyAmpTools/pyamptools.sif</span>
 
@@ -603,7 +601,6 @@ pytest<span class="w"> </span>-k<span class="w"> </span><span class="o">[</span>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">PyAmpTools</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-design">Usage / Design</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-docker-image-developers">Build Docker Image (developers)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apptainer-usage">Apptainer Usage</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#for-vscode-remote-containter-development">For VSCode Remote Containter Development</a></li>
 </ul>

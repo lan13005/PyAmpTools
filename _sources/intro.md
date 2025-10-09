@@ -21,16 +21,14 @@ AmpTools and FSRoot are included as git submodules. Modified source files and ma
 
 # Installation
 
+**Note:** Skip to *Apptainer Usage*, below, to simply use the container. The following instructions are for developers to build/maintain the container.
+
 Please make modifications to `DockerInstall.sh` to match your environment. These installation steps builds on top of a minimal base image/environment. Some important considerations:
 - if you already have conda then comment out those lines
 - default is to build with mpi support
 - if you need gpu support or gpu+mpi support then you can still go into `external` folder and run `make mpigpi` and additional shared libraries will be built
-
-```shell
-source DockerInstall.sh
-```
-
-## Build Docker Image (developers)
+- simply call `source DockerInstall.sh` to install necessary dependencies (i.e. if you are in a minimal `almalinux` container environment already)
+- instead, if you want to build the docker image simply call:
 
 ```shell
 ./DockerBuild.sh # ensure GH_USERNAME and GH_PAT are environment variables
@@ -43,11 +41,13 @@ source DockerInstall.sh
 # --writable-tmpfs allows temp modifications to sif contents. Ideally you can git pull and push updates changes to repos
 # --bind whatever directories you need access to
 apptainer exec --contain --writable-tmpfs \
+    --bind /tmp \
+    --bind /var/tmp \
     --bind /my/working/directory \
     --bind /my/data/directory \
     --bind /scratch \
     --bind ~/.cache/fontconfig \
-    --env BASH_ENV=/dev/null \
+    --env TMPDIR=/tmp,TEMP=/tmp,TMP=/tmp,BASH_ENV=/dev/null \
     /LOCATION/OF/pyamptools.sif bash
 # Location on the jlab farm: /w/halld-scshelf2101/lng/WORK/PyAmpTools/pyamptools.sif
 
