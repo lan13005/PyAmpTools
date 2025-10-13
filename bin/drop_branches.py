@@ -11,26 +11,40 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 console = Console()
 
-def parse_branch_indexes(index_strings: List[str]) -> List[int]:
+def parse_branch_indexes(index_strings: List[str], max_index: int) -> List[int]:
     """
     Parse branch index strings into a list of integer indexes.
-    
+
     Supports individual indexes and ranges:
-    - "1" -> [1]
-    - "3-5" -> [3, 4, 5]
+    - "1"      -> [1]
+    - "3-5"    -> [3, 4, 5]
+    - "1-"     -> [1, 2, ..., max_index]
     - "1 3-5 10-12" -> [1, 3, 4, 5, 10, 11, 12]
+
+    Open-ended ranges use the discovered maximum branch index.
     """
     indexes = []
     for s in index_strings:
         s = s.strip()
         if '-' in s:
+            # Support open-ended ranges like "1-" meaning to the end
+            start_str, end_str = s.split('-', 1)
             try:
-                start, end = map(int, s.split('-'))
-                if start > end:
-                    raise ValueError(f"Invalid range: {s} (start > end)")
-                indexes.extend(range(start, end + 1))
-            except ValueError as e:
-                raise ValueError(f"Invalid range format '{s}': {e}")
+                start = int(start_str)
+            except ValueError:
+                raise ValueError(f"Invalid start index in range '{s}'")
+
+            if end_str == "":
+                end = max_index
+            else:
+                try:
+                    end = int(end_str)
+                except ValueError:
+                    raise ValueError(f"Invalid end index in range '{s}'")
+
+            if start > end:
+                raise ValueError(f"Invalid range: {s} (start > end)")
+            indexes.extend(range(start, end + 1))
         else:
             try:
                 indexes.append(int(s))
@@ -53,10 +67,7 @@ def drop_branches_cli(input_file: str,
     if not input_path.exists():
         raise FileNotFoundError(f"Input file not found: {input_path}")
 
-    # parse 0‑based indexes
-    indexes_to_drop = parse_branch_indexes(branch_indexes)
     console.print(f"[blue]Opening {input_path}…[/blue]")
-    console.print(f"[blue]Dropping branch indexes: {indexes_to_drop}[/blue]")
 
     # Open input file and tree
     fin = ROOT.TFile.Open(str(input_path), "READ")
@@ -70,8 +81,12 @@ def drop_branches_cli(input_file: str,
     all_branches = [b.GetName() for b in tin.GetListOfBranches()]
     console.print(f"[green]Found {len(all_branches)} branches in '{tree_name}'[/green]")
 
-    # Validate indexes
+    # Parse 0-based indexes now that we know the maximum index
     max_idx = len(all_branches) - 1
+    indexes_to_drop = parse_branch_indexes(branch_indexes, max_idx)
+    console.print(f"[blue]Dropping branch indexes: {indexes_to_drop}[/blue]")
+
+    # Validate indexes
     bad = [i for i in indexes_to_drop if i < 0 or i > max_idx]
     if bad:
         raise ValueError(f"Invalid branch indexes {bad} (must be 0–{max_idx})")

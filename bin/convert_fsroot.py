@@ -20,21 +20,6 @@ from array import array
 #     • NumFinalState    (integer, only support 3 output particles)
 #     • Weight           (float; all ones if no weight input provided)
 #
-# Expected inputs:
-#   Required positional arguments:
-#     input_root     : path to the input ROOT file
-#   Optional positional arguments:
-#     input_tree     : name of the tree inside input_root (default: first tree in file)
-#     output_root    : path for the output ROOT file to be created
-#     output_tree    : name of the new tree in output_root (default: 'kin')
-#
-#   Optional (all-or-none):
-#     --weight_root  : path to a ROOT file containing an auxiliary weight tree
-#     --weight_tree  : name of the weight tree inside weight_root
-#     --weight_branch: name of the branch in weight_tree holding per-entry weights
-#     --mc          : use MC-prefixed branches (e.g. MCEnPB, MCPxPB) instead of regular ones
-#     --particles   : list of particle assignments [RECOIL, X1, X2, X3] (default: [RECOIL, X2, X1])
-#
 # Input-tree branch requirements:
 #   • Beam momentum branches:      PxPB, PyPB, PzPB      (float) [or MCPxPB, MCPyPB, MCPzPB with --mc]
 #   • Beam energy branch:          EnPB                  (float) [or MCEnPB with --mc]
@@ -48,17 +33,15 @@ from array import array
 #   • Particle list length must match number of input final-state particles: {PxP1, PxP2, PxP3, ..}
 #   • When RECOIL and X3 are both present and NumFinalState = 4, they are combined to form an excited baryon
 #     stored as the first element in the *_FinalState arrays
-#   • Output always contains exactly 3 final-state particles
+#   • Output always contains exactly 3 final-state particles (as this package can only handle 3 particle final states)
 #
 # Behavior:
 #   • If input_tree is not specified, automatically selects the first tree found in the input file.
 #   • If output_tree is not specified, defaults to 'kin'.
 #   • If --mc flag is used, reads from MC-prefixed branches (e.g. MCEnPB, MCPxPB) instead of regular ones.
-#   • Verifies all required branches exist; exits with an error if any are missing.
 #   • If weight arguments are provided, checks that the weight tree has the same
 #     number of entries as the input tree and uses its values for Weight.
-#   • Otherwise, fills Weight = 1.0 for every entry.
-#   • Validates particle assignments and exits early if inconsistencies are detected.
+#     Otherwise, fills Weight = 1.0 for every entry.
 #   • Writes out the new tree with renamed and restructured branches.
 #
 # -----------------------------------------------------------------------------
@@ -160,14 +143,14 @@ def convert_tree(input_root_path, input_tree_name,
     
     # Choose prefix based on MC flag
     prefix = "MC" if use_mc else ""
-    mom_patt = re.compile(f'^{prefix}P([xyz])P(B|\\d+)$')      # e.g. PxPB or MCPxPB
-    ene_patt = re.compile(f'^{prefix}EnP(B|\\d+)$')            # e.g. EnPB or MCEnPB
+    mom_patt = re.compile(f'^{prefix}P([xyz])P(B|\\d+)$') # e.g. PxPB or MCPxPB
+    ene_patt = re.compile(f'^{prefix}EnP(B|\\d+)$')       # e.g. EnPB or MCEnPB
 
     # store beam components
     beam_mom = {}
-    final_mom = {}   # pid -> {comp: branch}
+    final_mom = {}
     beam_E = None
-    final_E = {}     # pid -> branch
+    final_E = {}
 
     for name in branch_list:
         m = mom_patt.match(name)
@@ -379,7 +362,7 @@ def convert_tree(input_root_path, input_tree_name,
 
 def main():
     p = argparse.ArgumentParser(
-        description="Convert P{x,y,z}P* + EnP* → beam+array format with Weight and particle assignments")
+        description="Convert P{x,y,z}P* + EnP* → Beam+FinalState format with Weight and particle assignments")
     p.add_argument("input_root",  help="input ROOT file")
     p.add_argument("input_tree",  help="input tree name (default: first tree in file)", nargs='?', default=None)
     p.add_argument("output_root", help="output ROOT file")

@@ -54,3 +54,6 @@ if __name__ == "__main__":
         montage_and_gif_select_plots(resultManager)
     # Note: plot_gen_curves is not called by default in the original script, but adding it for completeness
     plot_gen_curves(resultManager, min_mass=args.min_mass, max_mass=args.max_mass)
+    
+    # without this, jax complains, probably some leak
+    del resultManager

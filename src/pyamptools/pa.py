@@ -45,10 +45,11 @@ def main():
         # 'command' : (path, description)
         "nentries": (f"{PYAMPTOOLS_HOME}/bin/get_nentries.py", "Print entries in List[ROOT files] (* wildcard), flag for branch integration (i.e. Weight)"),
         "subset": (f"{PYAMPTOOLS_HOME}/bin/subset.py", "Subset a root file by randomly selecting a fraction of the events"),
-        "select": (f"{PYAMPTOOLS_HOME}/bin/selector.py", "Filter a root file by a selection expression"),
+        "select": (f"{PYAMPTOOLS_HOME}/bin/selector.py", "Filter a root file by a selection expression, RDataFrame.Filter() style"),
+        "draw_branch": (f"{PYAMPTOOLS_HOME}/bin/draw_branch.py", "Draw a branch(es) from a root file potentially weighted"),
         "rename_tree": (f"{PYAMPTOOLS_HOME}/bin/rename_tree.py", "Rename a TTree inside a ROOT file"),
         "drop_branches": (f"{PYAMPTOOLS_HOME}/bin/drop_branches.py", "Drop branches from a root file"),
-        "append_kinematics": (f"{PYAMPTOOLS_HOME}/bin/append_kinematics.py", "Append various derived kinematics to a root file (part of run_divideData step)"),
+        "append_kinematics": (f"{PYAMPTOOLS_HOME}/bin/append_kinematics.py", "Append derived kinematics to root file, i.e. mMassX, to a root file"),
         "convert_fsroot": (f"{PYAMPTOOLS_HOME}/bin/convert_fsroot.py", "Convert a fsroot file to expected ROOT file format"),
         "fit": (f"{PYAMPTOOLS_HOME}/src/pyamptools/mle.py", "[AmpTools] Perform a set of MLE fits given an amptools config file"),
         "fitfrac": (f"{PYAMPTOOLS_HOME}/src/pyamptools/extract_ff.py", "[AmpTools] Extract fit fractions from a given amptools FitResults file"),
@@ -111,7 +112,7 @@ def main():
                 file_help += f"  * {command:25} {path}\n"
             return file_help
 
-    parser = HelpOnErrorParser(description="Dispatch pyamptools commands. Select a command from the Commands section below. Remaining arguments will be passed to the selected command.")
+    parser = HelpOnErrorParser(description="Dispatch pyamptools commands. Select a command from the Commands section below. Remaining arguments will be passed to the selected command (i.e. -h for help)")
     parser.add_argument("-f", "--files", action="store_true", help="show command file locations and exit ")
     parser.add_argument("command", nargs="?", choices=choices, help=argparse.SUPPRESS)
     parser.add_argument("command_args", nargs=argparse.REMAINDER, help=argparse.SUPPRESS)

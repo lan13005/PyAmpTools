@@ -72,6 +72,16 @@ if __name__ == "__main__":
         os.system("iftPwaFit --help")
         exit(0)
 
+    # Optuna had a conflict with CCDB from PYTHONPATH
+    _pp = os.environ.get("PYTHONPATH", "")
+    if _pp:
+        _filtered = []
+        for _p in _pp.split(":"):
+            if "AMPTOOLS_GENERATORS/ccdb" in _p or "/ccdb/" in _p or _p.endswith("/ccdb"):
+                continue
+            _filtered.append(_p)
+        os.environ["PYTHONPATH"] = ":".join(_filtered)
+
     parser = argparse.ArgumentParser(description="Perform IFT fit over all cfg files")
     parser.add_argument("main_yaml", type=str, default="conf/configuration.yaml", help="Path to the main yaml file")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
