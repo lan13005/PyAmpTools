@@ -345,10 +345,10 @@ def loadIFTResultsFromPkl(resultData, sums_dict=None):
             
         # For the total signal
         for wave_name in wave_names:
-            if f'{wave_name}' not in flat_amps_waves_tprime:
+            if f'{wave_name}_amp' not in flat_amps_waves_tprime:
                 flat_amps_waves_tprime[f'{wave_name}_amp'] = amp_field[:, wave_names.index(wave_name), :, tbin].flatten()
             else:
-                flat_amps_waves_tprime[f'{wave_name}_amp'] = np.concatenate((flat_amps_waves_tprime[f'{wave_name}'], amp_field[:, wave_names.index(wave_name), :, tbin].flatten()))
+                flat_amps_waves_tprime[f'{wave_name}_amp'] = np.concatenate((flat_amps_waves_tprime[f'{wave_name}_amp'], amp_field[:, wave_names.index(wave_name), :, tbin].flatten()))
 
         # For the parametric models
         for wave_name in wave_names:
@@ -368,7 +368,7 @@ def loadIFTResultsFromPkl(resultData, sums_dict=None):
                 flat_amps_waves_tprime[f'{wave_name}_cf_amp'] = bkg_amps_waves_tprime[wave_name][tbin].flatten()
             else:
                 flat_amps_waves_tprime[f'{wave_name}_cf_amp'] = np.concatenate((flat_amps_waves_tprime[f'{wave_name}_cf_amp'], bkg_amps_waves_tprime[wave_name][tbin].flatten()))
-                
+    
     flat_amps_waves_tprime = pd.DataFrame(flat_amps_waves_tprime)
 
     # Stage 2: Loop over amp columns and calculate+store the normalized intensity
@@ -380,13 +380,16 @@ def loadIFTResultsFromPkl(resultData, sums_dict=None):
         for col in amp_cols:
             wave = col.split('_')[0]
             intens = calc_intens([wave], tbin, [tmp[col].values.reshape(nmb_samples, nmb_masses)])
-            if f'{col.strip("_amp")}' not in flat_amps_waves_tprime:
+            if f'{col.strip("_amp")}' not in flat_intens_waves_tprime:
                     flat_intens_waves_tprime[f'{col.strip("_amp")}'] = intens.flatten().real
             else:
-                flat_intens_waves_tprime[f'{col.strip("_amp")}'] = np.concatenate((flat_amps_waves_tprime[f'{col.strip("_amp")}'], intens.flatten().real))
+                flat_intens_waves_tprime[f'{col.strip("_amp")}'] = np.concatenate((flat_intens_waves_tprime[f'{col.strip("_amp")}'], intens.flatten().real))
         all_values = [tmp[f"{wave_name}_amp"].values.reshape(nmb_samples, nmb_masses) for wave_name in wave_names]
         _intens = calc_intens(wave_names, tbin, all_values)
-        flat_intens_waves_tprime['intensity'] = _intens.flatten().real
+        if 'intensity' not in flat_intens_waves_tprime:
+            flat_intens_waves_tprime['intensity'] = _intens.flatten().real
+        else:
+            flat_intens_waves_tprime['intensity'] = np.concatenate((flat_intens_waves_tprime['intensity'], _intens.flatten().real))
                     
     # Stage 3: Calculate intensity for user requested coherent sums defined in yaml["result_dump"]["coherent_sums"]
     # NOTE: There might be something wrong with calc_intens? Directly summing intensities across GP waves (i.e. Pm1+_Pp0+_Pp1+) gives very similar results as the coherent sum P+
