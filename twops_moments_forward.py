@@ -36,12 +36,14 @@ class MomentStruct:
     n: int               # number of (l,m) per reflectivity block
     M_eps: jnp.ndarray   # shape (2, Lmax+1, Lmax+1, n, n); only M<=L used
 
-def build_dense_matrix(lmax: int) -> MomentStruct:
-    Lmax = 2*lmax
+def build_dense(lmax: int) -> MomentStruct:
+    Lmax  = 2*lmax
     waves = waves_m_nonneg(lmax)
-    n = len(waves)
-    idx = {wm:i for i, wm in enumerate(waves)}
-    M_eps = np.zeros((2, Lmax+1, Lmax+1, n, n), dtype=np.complex128)
+    n     = len(waves)
+    idx   = {wm:i for i, wm in enumerate(waves)}
+
+    # store as REAL symmetric (float64). we'll cast to complex later.
+    M_eps = np.zeros((2, Lmax+1, Lmax+1, n, n), dtype=np.float64)
 
     for L in range(Lmax+1):
         for M in range(L+1):
@@ -49,22 +51,38 @@ def build_dense_matrix(lmax: int) -> MomentStruct:
                 for (l, m) in waves:
                     if not tri_parity_ok(lp, l, L):
                         continue
-                    pref = Nm(m)*Nm(mp) * np.sqrt((2*lp+1)/(2*l+1)) * cg(lp, l, L, 0, 0, 0)
 
-                    # Four CG pieces from Eq. 63
-                    T1 = cg(lp, L, l, mp,  M,  m) if (m ==  mp + M) else 0.0
-                    T2 = ((-1.0)**M) * cg(lp, L, l, mp, -M,  m) if (m ==  mp - M) else 0.0
-                    T3 = ((-1.0)**mp) * cg(lp, L, l, -mp, M,  m) if (m == -mp + M) else 0.0
-                    T4 = ((-1.0)**m)  * cg(lp, L, l, mp,  M, -m) if (m == -mp - M) else 0.0
+                    # all pieces are real by construction; coerce to float
+                    pref = float(Nm(m)*Nm(mp) * np.sqrt((2*lp+1)/(2*l+1)) * cg(lp, l, L, 0, 0, 0))
+
+                    T1 = float(cg(lp, L, l, mp,  M,  m)) if (m ==  mp + M) else 0.0
+                    T2 = float(((-1.0)**M) * cg(lp, L, l, mp, -M,  m)) if (m ==  mp - M) else 0.0
+                    T3 = float(((-1.0)**mp) * cg(lp, L, l, -mp, M,  m)) if (m == -mp + M) else 0.0
+                    T4 = float(((-1.0)**m)  * cg(lp, L, l, mp,  M, -m)) if (m == -mp - M) else 0.0
 
                     a = idx[(l, m)]
                     b = idx[(lp, mp)]
-                    eps = +1
-                    M_eps[0, L, M, a, b] += np.complex128(pref * ( T1 + T2 - eps*(T3 + T4) ))
-                    eps = -1
-                    M_eps[1, L, M, a, b] += np.complex128(pref * ( T1 + T2 - eps*(T3 + T4) ))
 
-    return MomentStruct(lmax=lmax, Lmax=Lmax, waves=waves, M_eps=jnp.asarray(M_eps, dtype=jnp.complex128), n=n)
+                    # values for ε=+ and ε=−
+                    val_plus  = pref * (T1 + T2 - (+1.0)*(T3 + T4))
+                    val_minus = pref * (T1 + T2 - (-1.0)*(T3 + T4))
+
+                    # write BOTH (a,b) and (b,a); keep matrices exactly symmetric
+                    if a == b:
+                        M_eps[0, L, M, a, b] += val_plus
+                        M_eps[1, L, M, a, b] += val_minus
+                    else:
+                        M_eps[0, L, M, a, b] += val_plus
+                        M_eps[0, L, M, b, a] += val_plus
+                        M_eps[1, L, M, a, b] += val_minus
+                        M_eps[1, L, M, b, a] += val_minus
+
+    # cast to complex128 for JAX einsum
+    return MomentStruct(
+        lmax=lmax, Lmax=Lmax, waves=waves,
+        M_eps=jnp.asarray(M_eps, dtype=jnp.complex128),
+        n=n
+    )
 
 def evaluate_moments(A_plus: jnp.ndarray, A_minus: jnp.ndarray, ms: MomentStruct) -> jnp.ndarray:
     """
@@ -96,7 +114,7 @@ def moment_names(Lmax):
 
 # ------------------------------ Example usage ---------------------------------
 ell_max = 2
-mom_struct = build_dense_matrix(ell_max)
+mom_struct = build_dense(ell_max)
 waves = mom_struct.waves
 
 # Random complex amplitudes per reflectivity (deterministic seed)
