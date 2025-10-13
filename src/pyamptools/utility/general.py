@@ -9,6 +9,8 @@ import unittest
 from typing import List
 
 import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
 import importlib.util
 from git import Repo
 
@@ -55,7 +57,7 @@ def vps_amp_name(refl, J, M, l):
 
 
 converter = {}  # i.e. {'Sp0+': [1, 0, 0]} ~ [refl, l, m]
-channel_map = {}
+channel_map = {} # i.e. {'Sp0+': 'TwoPseudoscalar'}
 prettyLabels = {}  # i.e. {'Sp0+': '$S_{0}^{+}$'}
 example_zlm_names = []  # i.e. ['Sp0+', 'Pp1+', 'Dm2-']
 example_vps_names = []
@@ -92,11 +94,17 @@ def identify_channel(wave_names: List[str]) -> str:
     if not wave_names_is_list_like:
         raise ValueError(f"wave_names must be an iterable like list or array, got {type(wave_names)}")
     for w in wave_names:
-        channels.append(channel_map[w])
+        if w.startswith("Amp"):
+            channel = "Amp"
+        elif w in channel_map:
+            channel = channel_map[w]
+        else:
+            raise ValueError(f"Encountered unexpected wave name (not in TwoPS/VecPS format nor starting with Amp): {w}")
+        channels.append(channel)
     if len(set(channels)) > 1:
         raise ValueError(f"io| wave_names appears to use multiple channels. This is not supported! wave_names = {wave_names}")
     channel = channels[0]
-    if channel not in ["TwoPseudoscalar", "VectorPseudoscalar"]:
+    if channel not in ["TwoPseudoscalar", "VectorPseudoscalar", "Amp"]:
         raise ValueError(f"Unknown channel: {channel}")
     return channel
 
@@ -124,6 +132,53 @@ def console_print(msg, style="bold blue", console=None):
         console = _general_console
     console.print(msg, style=style)
 
+def parse_particle_order(particle_order_str):
+    """
+    Parse particle order string into list of particle names.
+    
+    Args:
+        particle_order_str (str): String like "R12" or "21R" representing particle order
+                                 R = RECOIL, 1 = X1, 2 = X2, 3 = X3
+    
+    Returns:
+        List[str]: List of particle names in the specified order
+        
+    Examples:
+        "R12" -> ["RECOIL", "X1", "X2"]
+        "21R" -> ["X2", "X1", "RECOIL"] 
+        "R123" -> ["RECOIL", "X1", "X2", "X3"]
+        "321R" -> ["X3", "X2", "X1", "RECOIL"]
+    """
+    if not particle_order_str:
+        return None
+        
+    # Mapping from character to particle name
+    char_to_particle = {
+        'R': 'RECOIL',
+        '1': 'X1',
+        '2': 'X2',
+        '3': 'X3'
+    }
+    
+    # Validate input characters
+    valid_chars = set(char_to_particle.keys())
+    input_chars = set(particle_order_str.upper())
+    invalid_chars = input_chars - valid_chars
+    if invalid_chars:
+        raise ValueError(f"Invalid particle order characters: {invalid_chars}. Valid characters are: {sorted(valid_chars)}")
+    
+    # Parse the order
+    particles = []
+    for char in particle_order_str.upper():
+        particles.append(char_to_particle[char])
+    
+    # Check for duplicates
+    if len(particles) != len(set(particles)):
+        raise ValueError(f"Duplicate particles found in order string: {particle_order_str}")
+    
+    return particles
+
+
 def append_kinematics(
     infile, 
     output_location=None, 
@@ -132,6 +187,7 @@ def append_kinematics(
     beam_angle=None,
     overwrite=False,
     particles=None,
+    particle_order=None,
     ):
     
     """
@@ -161,11 +217,20 @@ def append_kinematics(
                               RECOIL and X3 will be combined into BARYRECOIL.
                               NOTE: The rest of the framework does not support 4-body final states ATM
                                     Kinematic calculations support it but should not be used with other part of framework
+        particle_order (str): Alternative to particles parameter. String like "R12" or "21R" representing particle order.
+                             R = RECOIL, 1 = X1, 2 = X2, 3 = X3. If provided, will override particles parameter.
     
     Returns:
         df: ROOT.RDataFrame with kinematics appended, None if file already exists
         KINEMATIC_QUANTITIES: Dictionary of kinematic quantities calculated by fsroot
     """
+    
+    # Parse particle order if provided
+    if particle_order is not None:
+        particles = parse_particle_order(particle_order)
+        if console is None:
+            console = _general_console
+        console.print(f"Parsed particle order '{particle_order}' -> {particles}", style="bold blue")
     
     # Only validate particles if user provided them
     if particles is not None:
@@ -245,6 +310,7 @@ def append_kinematics(
     if num_final_state == 3:
         # For 3-body final state (e.g., etapi0: X1=eta, X2=pi0, RECOIL=proton)
         KINEMATIC_QUANTITIES = {
+            # General Quantities
             "mMassX": "MASS(X1,X2)",
             "mMassX1": "MASS(X1)",
             "mMassX2": "MASS(X2)",
@@ -256,7 +322,9 @@ def append_kinematics(
             "mVanHoveOmega": "VANHOVEOMEGA(RECOIL,X2,X1)",
             "mCosHel": "HELCOSTHETA(X1,X2,RECOIL)",
             "mPhiHel": "HELPHI(X1,X2,RECOIL,GLUEXBEAM)",
-            "mt": "T(GLUEXTARGET,RECOIL)"
+            "mt": "T(GLUEXTARGET,RECOIL)",
+            "mBeamPhi": "LABPHI(GLUEXBEAM)",
+            "mProdPlanePhi": "PRODPHI(X1,X2,RECOIL,GLUEXBEAM)",
         }
         
     elif num_final_state == 4:
@@ -273,7 +341,7 @@ def append_kinematics(
             "mVanHovePhi": "VANHOVEPHI(RECOIL,X1,X2,X3)",
             "mCosHel": "HELCOSTHETA(X1,X2,BARYRECOIL)",
             "mPhiHel": "HELPHI(X1,X2,BARYRECOIL,GLUEXBEAM)",
-            "mt": "T(GLUEXTARGET,BARYRECOIL)"
+            "mt": "T(GLUEXTARGET,BARYRECOIL)",
         }
         
     else:
@@ -617,6 +685,12 @@ def calculate_subplot_grid_size(length_of_list):
 
     return rows, columns
 
+def standardize_axes(axes):
+    if type(axes) == plt.Axes:
+        return np.array([[axes]])
+    elif type(axes) == np.ndarray and axes.ndim == 1:
+        return axes[np.newaxis, :]
+    return axes
 
 def PrintSourceCode(function):
     """Returns the source code of a function"""

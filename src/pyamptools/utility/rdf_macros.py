@@ -38,8 +38,6 @@ def loadMacros():
     // ANGULAR QUANTITIES
     double HELPHI( Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4 ){return FSMath::helphi( P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3], P4[0], P4[1], P4[2], P4[3]); }
     double GJPHI(  Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4 ){return FSMath::gjphi(  P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3], P4[0], P4[1], P4[2], P4[3]); }
-    double PRODCOSTHETA( Vec_t P1, Vec_t P2, Vec_t P3 ){return FSMath::prodcostheta( P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3] ); }
-    double PLANEPHI(     Vec_t P1, Vec_t P2, Vec_t P3 ){return FSMath::planephi(     P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3] ); }
     double ENERGY( Vec_t P1, Vec_t P2){return FSMath::boostEnergy( P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3]); }
     //   3 Particle versions of costheta
     double HELCOSTHETA( Vec_t P1, Vec_t P2, Vec_t P3 ){return FSMath::helcostheta( P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3] ); }
@@ -47,6 +45,113 @@ def loadMacros():
     //   4 Particle versions of costheta
     double HELCOSTHETA( Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4 ){return FSMath::helcostheta( P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3] ); }
     double GJCOSTHETA(  Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4 ){return FSMath::gjcostheta(  P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3] ); }
+    
+    //   Production plane phi --> FSROOT expects order to be argument order to be (resonance, recoil, beam)
+    double PRODPHI( Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4 ){return FSMath::prodphi( P1[0]+P2[0], P1[1]+P2[1], P1[2]+P2[2], P1[3]+P2[3], P3[0], P3[1], P3[2], P3[3], P4[0], P4[1], P4[2], P4[3] ); }
+
+
+    // P1=π0_A, P2=π0_B, P3=p' (recoil proton), P4=g (beam photon): 
+    // lab azimuth of π0_A
+    // φ_A in S (gp final-state c.m.) BEFORE any rotations
+    // helicity φ just BEFORE boost to R rest (should equal final)
+    // production-plane azimuth alpha in S (plane angle, mod π)
+    double PHI_S_R( Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4 ){
+        return ([&](){ 
+        TLorentzVector PR(P1[0]+P2[0],P1[1]+P2[1],P1[2]+P2[2],P1[3]+P2[3]), PC(P3[0],P3[1],P3[2],P3[3]), PD(P4[0],P4[1],P4[2],P4[3]); 
+        TLorentzVector PS=PR+PC; 
+        PR.Boost(-PS.BoostVector()); PD.Boost(-PS.BoostVector()); 
+        return PR.Phi(); })();
+    }
+    double COS_S_R( Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4 ){
+        return ([&](){ 
+        TLorentzVector PR(P1[0]+P2[0],P1[1]+P2[1],P1[2]+P2[2],P1[3]+P2[3]), PC(P3[0],P3[1],P3[2],P3[3]), PD(P4[0],P4[1],P4[2],P4[3]); 
+        TLorentzVector PS=PR+PC; 
+        PR.Boost(-PS.BoostVector()); PD.Boost(-PS.BoostVector()); 
+        return PR.CosTheta(); })();
+    }
+    // lab azimuth of π0_A
+    double PHI_LAB_A( Vec_t P1 ){
+        TLorentzVector P(P1[0],P1[1],P1[2],P1[3]);
+        return P.Phi();
+    }
+    double COS_LAB_A( Vec_t P1 ){
+        TLorentzVector P(P1[0],P1[1],P1[2],P1[3]);
+        return P.CosTheta();
+    }
+    double PHI_S_A( Vec_t P1, Vec_t P2, Vec_t P3 ){
+        return ([&](){ 
+        TLorentzVector PA(P1[0],P1[1],P1[2],P1[3]), PB(P2[0],P2[1],P2[2],P2[3]), PC(P3[0],P3[1],P3[2],P3[3]); 
+        TLorentzVector PR=PA+PB, PS=PR+PC; 
+        PA.Boost(-PS.BoostVector()); 
+        return PA.Phi(); })();
+    }
+    double COS_S_A( Vec_t P1, Vec_t P2, Vec_t P3 ){
+        return ([&](){ 
+        TLorentzVector PA(P1[0],P1[1],P1[2],P1[3]), PB(P2[0],P2[1],P2[2],P2[3]), PC(P3[0],P3[1],P3[2],P3[3]); 
+        TLorentzVector PR=PA+PB, PS=PR+PC; 
+        PA.Boost(-PS.BoostVector()); 
+        return PA.CosTheta(); })();
+    }
+    double HELPHI_PREBOOST_ROTZ( Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4 ){
+        return ([&](){ 
+        TLorentzVector PA(P1[0],P1[1],P1[2],P1[3]), PB(P2[0],P2[1],P2[2],P2[3]), PC(P3[0],P3[1],P3[2],P3[3]), PD(P4[0],P4[1],P4[2],P4[3]); 
+        TLorentzVector PR=PA+PB, PS=PR+PC; 
+        PA.Boost(-PS.BoostVector()); PR.Boost(-PS.BoostVector()); PD.Boost(-PS.BoostVector()); 
+        double thetaR=PR.Theta(), phiR=PR.Phi(); 
+        PA.RotateZ(-phiR); PR.RotateZ(-phiR); PD.RotateZ(-phiR); 
+        return PA.Phi(); })();
+    }
+    double HELCOS_PREBOOST_ROTZ( Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4 ){
+        return ([&](){ 
+        TLorentzVector PA(P1[0],P1[1],P1[2],P1[3]), PB(P2[0],P2[1],P2[2],P2[3]), PC(P3[0],P3[1],P3[2],P3[3]), PD(P4[0],P4[1],P4[2],P4[3]); 
+        TLorentzVector PR=PA+PB, PS=PR+PC; 
+        PA.Boost(-PS.BoostVector()); PR.Boost(-PS.BoostVector()); PD.Boost(-PS.BoostVector()); 
+        double thetaR=PR.Theta(), phiR=PR.Phi(); 
+        PA.RotateZ(-phiR); PR.RotateZ(-phiR); PD.RotateZ(-phiR); 
+        return PA.CosTheta(); })();
+    }
+    double HELPHI_PREBOOST_ROTZ_ROTY( Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4 ){
+        return ([&](){ 
+        TLorentzVector PA(P1[0],P1[1],P1[2],P1[3]), PB(P2[0],P2[1],P2[2],P2[3]), PC(P3[0],P3[1],P3[2],P3[3]), PD(P4[0],P4[1],P4[2],P4[3]); 
+        TLorentzVector PR=PA+PB, PS=PR+PC; 
+        PA.Boost(-PS.BoostVector()); PR.Boost(-PS.BoostVector()); PD.Boost(-PS.BoostVector()); 
+        double thetaR=PR.Theta(), phiR=PR.Phi(); 
+        PA.RotateZ(-phiR); PR.RotateZ(-phiR); PD.RotateZ(-phiR); 
+        PA.RotateY(-thetaR); PR.RotateY(-thetaR); PD.RotateY(-thetaR); 
+        return PA.Phi(); })();
+    }
+    double HELCOS_PREBOOST_ROTZ_ROTY( Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4 ){
+        return ([&](){ 
+        TLorentzVector PA(P1[0],P1[1],P1[2],P1[3]), PB(P2[0],P2[1],P2[2],P2[3]), PC(P3[0],P3[1],P3[2],P3[3]), PD(P4[0],P4[1],P4[2],P4[3]); 
+        TLorentzVector PR=PA+PB, PS=PR+PC; 
+        PA.Boost(-PS.BoostVector()); PR.Boost(-PS.BoostVector()); PD.Boost(-PS.BoostVector()); 
+        double thetaR=PR.Theta(), phiR=PR.Phi(); 
+        PA.RotateZ(-phiR); PR.RotateZ(-phiR); PD.RotateZ(-phiR); 
+        PA.RotateY(-thetaR); PR.RotateY(-thetaR); PD.RotateY(-thetaR); 
+        return PA.CosTheta(); })();
+    }
+    double HELPHI_PREBOOST( Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4 ){
+        return ([&](){ 
+        TLorentzVector PA(P1[0],P1[1],P1[2],P1[3]), PB(P2[0],P2[1],P2[2],P2[3]), PC(P3[0],P3[1],P3[2],P3[3]), PD(P4[0],P4[1],P4[2],P4[3]); 
+        TLorentzVector PR=PA+PB, PS=PR+PC; 
+        PA.Boost(-PS.BoostVector()); PR.Boost(-PS.BoostVector()); PD.Boost(-PS.BoostVector()); 
+        double thetaR=PR.Theta(), phiR=PR.Phi(); 
+        PA.RotateZ(-phiR); PR.RotateZ(-phiR); PD.RotateZ(-phiR); 
+        PA.RotateY(-thetaR); PR.RotateY(-thetaR); PD.RotateY(-thetaR); 
+        PA.RotateZ(-PD.Phi()); PR.RotateZ(-PD.Phi()); PD.RotateZ(-PD.Phi()); 
+        return PA.Phi(); })();
+    }
+    double HELCOS_PREBOOST( Vec_t P1, Vec_t P2, Vec_t P3, Vec_t P4 ){
+        return ([&](){ 
+        TLorentzVector PA(P1[0],P1[1],P1[2],P1[3]), PB(P2[0],P2[1],P2[2],P2[3]), PC(P3[0],P3[1],P3[2],P3[3]), PD(P4[0],P4[1],P4[2],P4[3]); 
+        TLorentzVector PR=PA+PB, PS=PR+PC; 
+        PA.Boost(-PS.BoostVector()); PR.Boost(-PS.BoostVector()); PD.Boost(-PS.BoostVector()); 
+        double thetaR=PR.Theta(), phiR=PR.Phi(); 
+        PA.RotateZ(-phiR); PR.RotateZ(-phiR); PD.RotateZ(-phiR); 
+        PA.RotateY(-thetaR); PR.RotateY(-thetaR); PD.RotateY(-thetaR); 
+        PA.RotateZ(-PD.Phi()); PR.RotateZ(-PD.Phi()); PD.RotateZ(-PD.Phi()); 
+        return PA.CosTheta(); })();
+    }
 
     // VAN HOVE VARIABLES (3 BODY)
     double VANHOVEOMEGA(Vec_t P1, Vec_t P2, Vec_t P3){ return FSMath::vanHoveomega(P1[0], P1[1], P1[2], P1[3], P2[0], P2[1], P2[2], P2[3], P3[0], P3[1], P3[2], P3[3]); }
@@ -74,6 +179,11 @@ def loadMacros():
     double ENERGY(   Vec_t P1){ return P1[3]; }
     double MOMENTUMR(Vec_t P1){ return sqrt(pow(P1[0],2) + pow(P1[1],2)               ); }
     double MOMENTUM( Vec_t P1){ return sqrt(pow(P1[0],2) + pow(P1[1],2) + pow(P1[2],2)); }
+    
+    // LAB FRAME QUANTITIES
+    double LABPHI( Vec_t P1 ){ return std::atan2(P1[1], P1[0]); }
+    double LABCOSTHETA( Vec_t P1 ){ const double momentumMagnitude = MOMENTUM(P1); return P1[2] / momentumMagnitude; }
+    double LABTHETA( Vec_t P1 ){ const double transverseMomentum = MOMENTUMR(P1); return std::atan2(transverseMomentum, P1[2]); }
 
     // MATH
     double DOTPRODUCT(Vec_t P1, Vec_t P2){ return P1[0]*P2[0] + P1[1]*P2[1] + P1[2]*P2[2]; }
