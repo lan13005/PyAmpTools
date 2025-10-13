@@ -41,11 +41,13 @@ Please make modifications to `DockerInstall.sh` to match your environment. These
 # --writable-tmpfs allows temp modifications to sif contents. Ideally you can git pull and push updates changes to repos
 # --bind whatever directories you need access to
 apptainer exec --contain --writable-tmpfs \
+    --bind /tmp \
+    --bind /var/tmp \
     --bind /my/working/directory \
     --bind /my/data/directory \
     --bind /scratch \
     --bind ~/.cache/fontconfig \
-    --env BASH_ENV=/dev/null \
+    --env TMPDIR=/tmp,TEMP=/tmp,TMP=/tmp,BASH_ENV=/dev/null \
     /LOCATION/OF/pyamptools.sif bash
 # Location on the jlab farm: /w/halld-scshelf2101/lng/WORK/PyAmpTools/pyamptools.sif
 
