@@ -57,6 +57,15 @@ def _calc_moments_twops_batch_wrapper(args):
     instance, indices, normalization_scheme = args
     return [instance.calc_moments(i, normalization_scheme) for i in indices]
 
+class EscapeMomentManager(MomentManager):
+    def __init__(self, df, wave_names):
+        super().__init__(df, wave_names)
+        print(f"EscapeMomentManager| Escape manager initialized to escape moment projection and plotting!")
+        if self.channel != "Amp":
+            raise ValueError("EscapeMomentManager| amplitudes defined in `waveset` in yaml file must start with `Amp`!")
+    def process_and_return_df(self, normalization_scheme=0, pool_size=1, append=True, batch_size=100, silence=False):
+        return self.df, None # second arg None blocks plotting of moments
+
 class MomentManagerVecPS(MomentManager):
     
     def __init__(self, df, wave_names):
@@ -83,7 +92,7 @@ class MomentManagerVecPS(MomentManager):
         self.J_array = np.arange(0, self.max_J + 1)
         self.M_array = np.arange(0, self.max_M + 1)  # like Lambda, -m ∝ +m moments
 
-    def process_and_return_df(self, normalization_scheme=0, pool_size=1, append=True, batch_size=100):
+    def process_and_return_df(self, normalization_scheme=0, pool_size=1, append=True, batch_size=100, silence=False):
     
         if len(self.df) == 0:
             return pd.DataFrame(), {}
@@ -265,7 +274,7 @@ class MomentManagerTwoPS(MomentManager):
             raise ValueError(f"Invalid normalization scheme: {normalization_scheme}")
         
         amplitudes = read_partial_wave_amplitudes_twops(self.df.iloc[i], self.wave_names)
-        amplitude_set = AmplitudeSet(amps=amplitudes, tolerance=1e-10)
+        amplitude_set = AmplitudeSet(amps=amplitudes, tolerance=1e-9)
         moment_result = amplitude_set.photoProdMomentSet(
             maxL=self.max_J,
             normalize=normalization,
