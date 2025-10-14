@@ -1,12 +1,12 @@
 import os
 os.environ["JAX_PLATFORMS"] = "cpu"
-from pyamptools.utility.general import load_yaml, calculate_subplot_grid_size, prettyLabels, identify_channel # TODO: must be loaded before loadIFTResultsFromPkl, IDKY yet
-from pyamptools.utility.MomentUtilities import MomentManagerTwoPS, MomentManagerVecPS
+from pyamptools.utility.general import load_yaml, calculate_subplot_grid_size, prettyLabels, identify_channel, standardize_axes # TODO: must be loaded before loadIFTResultsFromPkl, IDKY yet
+from pyamptools.utility.MomentUtilities import MomentManagerTwoPS, MomentManagerVecPS, EscapeMomentManager
 from pyamptools.utility.IO import loadIFTResultsFromPkl
 from pyamptools.utility.IO import get_nEventsInBin
 import pandas as pd
 import numpy as np
-import pickle as pkl
+import dill as pkl
 import glob
 from typing import Tuple, Dict
 import matplotlib.pyplot as plt
@@ -71,8 +71,8 @@ class ResultManager:
             self.console = Console(file=io.StringIO(), force_terminal=True, force_jupyter=False)
         
         self._mle_results  = pd.DataFrame()
-        self._gen_results  = [pd.DataFrame(), pd.DataFrame(), Dict] # (generated samples of amplitudes, generated samples of resonance parameters)
-        self._ift_results  = [pd.DataFrame(), pd.DataFrame(), Dict] # (fitted samples of amplitudes, fitted samples of resonance parameters, iftpwa result data)
+        self._gen_results  = [pd.DataFrame(), pd.DataFrame(), {}] # (generated samples of amplitudes, generated samples of resonance parameters)
+        self._ift_results  = [pd.DataFrame(), pd.DataFrame(), {}] # (fitted samples of amplitudes, fitted samples of resonance parameters, iftpwa result data)
         self._mcmc_results = pd.DataFrame()
         self._hist_results = pd.DataFrame()
         self._moment_inversion_results = pd.DataFrame()
@@ -88,6 +88,8 @@ class ResultManager:
         min_mass = self.main_dict['min_mass']
         max_mass = self.main_dict['max_mass']
 
+        self.pwa_manager_type = self.iftpwa_dict['GENERAL']['pwa_manager']
+        
         self.n_mass_bins = self.main_dict['n_mass_bins']
         self.massBins = np.linspace(min_mass, max_mass, self.n_mass_bins+1)
         self.masses = (self.massBins[:-1] + self.massBins[1:]) / 2
@@ -112,14 +114,10 @@ class ResultManager:
         
         # Moment calculations can take a long time (especially lots of MCMC samples, we can cache the result)
         #    NOTE: This will technically cache the entire dataframe (including amplitudes, etc)
-        self.moment_cache_location = f"{self.base_directory}/projected_moments_cache.pkl"
+        self.moment_cache_location = f"{self.base_directory}/iftpwa_result_cache.pkl"
         
         # TODO: fix bins per group
-        self.bpg = self.main_dict['bins_per_group']
-        
-        n_t_bins = self.main_dict['n_t_bins']
-        if n_t_bins != 1:
-            self.console.print(f"[bold yellow]warning: Default plotting scripts will not work with more than 1 t-bin. Data loading should be fine[/bold yellow]")
+        self.bpg = self.main_dict.get('bins_per_group', 1)
         
         # Keep track of all the unique fit sources that the user loads
         #   Why would the user want to load multiple gen/hist sources?
@@ -156,6 +154,16 @@ class ResultManager:
         """Clean up - remove all cached data"""
         if os.path.exists(self.moment_cache_location):
             os.remove(self.moment_cache_location)
+    
+    def _format_bin_values(self, df):
+        """Format bin values to ensure consistent floating-point precision"""
+        if df is None or df.empty:
+            return df        
+        if 'mass' in df.columns:
+            df['mass'] = np.round(df['mass'], self.n_decimal_places)
+        if 'tprime' in df.columns:
+            df['tprime'] = np.round(df['tprime'], self.n_decimal_places)
+        return df
         
     def attempt_load_all(self):
         
@@ -225,6 +233,8 @@ class ResultManager:
                         momentManager = MomentManagerTwoPS(df, self.waveNames)
                     elif self.channel == "VectorPseudoscalar":
                         momentManager = MomentManagerVecPS(df, self.waveNames)
+                    elif self.channel == "Amp":
+                        momentManager = EscapeMomentManager(df, self.waveNames)
                     else:
                         raise ValueError(f"Unknown channel for moment projection: {self.channel}")
                     self.console.print(f"  Dataset: '{df_name}'")
@@ -243,9 +253,9 @@ class ResultManager:
                     
                     # Save updated dataframes (with moments) to cache
                     if df_name == 'ift':
-                        _results[df_name] = [processed_df, self._ift_results[1]]
+                        _results[df_name] = [processed_df, self._ift_results[1], self._ift_results[2]]
                     elif df_name == 'gen':
-                        _results[df_name] = [processed_df, self._gen_results[1]]
+                        _results[df_name] = [processed_df, self._gen_results[1], self._gen_results[2]]
                     else:
                         _results[df_name] = processed_df
                         
@@ -301,20 +311,22 @@ class ResultManager:
             base_directory = self.base_directory
         if not os.path.exists(base_directory):
             raise FileNotFoundError(f"Base directory {base_directory} does not exist!")
-            
         source_name = self._check_and_get_source_name(self._hist_results, 'hist', base_directory, alias)
         if source_name is None:
             return self._hist_results
         
-        result_dir = f"{base_directory}/BINNED_DATA"
-        if not os.path.exists(result_dir):
-            self.console.print(f"[bold red]No 'histogram' results found in {result_dir}, return existing results with shape {self._hist_results.shape}\n[/bold red]")
-            return self._hist_results
-        
-        self.console.print(header_fmt.format(f"Loading 'HISTOGRAM' result from {result_dir}"))
-        nEvents, nEvents_err = get_nEventsInBin(result_dir)
-        hist_df = {'mass': self.masses, 'nEvents': nEvents, 'nEvents_err': nEvents_err}
-        hist_df = pd.DataFrame(hist_df)
+        if self.pwa_manager_type == "GLUEX_1D":
+            hist_df = pd.read_csv(f"{base_directory}/cache_hist.csv")
+        else:            
+            result_dir = f"{base_directory}/BINNED_DATA"
+            if not os.path.exists(result_dir):
+                self.console.print(f"[bold red]No 'histogram' results found in {result_dir}, return existing results with shape {self._hist_results.shape}\n[/bold red]")
+                return self._hist_results
+            
+            self.console.print(header_fmt.format(f"Loading 'HISTOGRAM' result from {result_dir}"))
+            nEvents, nEvents_err = get_nEventsInBin(result_dir)
+            hist_df = {'mass': self.masses, 'nEvents': nEvents, 'nEvents_err': nEvents_err}
+            hist_df = pd.DataFrame(hist_df)
         
         self.console.print(f"[bold green]Total Events Histogram Summary:[/bold green]")
         self.console.print(f"columns: {hist_df.columns}")
@@ -391,7 +403,7 @@ class ResultManager:
         
         # rotate away reference waves
         ift_df = self._rotate_away_reference_waves(ift_df)
-        ift_df['mass'] = np.round(ift_df['mass'], self.n_decimal_places)
+        ift_df = self._format_bin_values(ift_df)
         
         ift_df = self._add_source_to_dataframe(ift_df, f'ift_{source_type}', source_name)
         ift_res_df = self._add_source_to_dataframe(ift_res_df, None, source_name) # already appeneded above, dont track again
@@ -498,6 +510,8 @@ class ResultManager:
                             results.setdefault(f'{tag}_re_err', []).append(None)
                             results.setdefault(f'{tag}_im_err', []).append(None)
                             results.setdefault(f'{tag}_err_angle', []).append(None)
+                            results.setdefault(f'{wave}_relative_phase', []).append(None)
+                            results.setdefault(f'{wave}_relative_phase_err', []).append(None)
                         else:
                             assert covariance.shape == (2 * len(waveNames), 2 * len(waveNames))
                             
@@ -544,7 +558,10 @@ class ResultManager:
                             relative_phase, relative_phase_error = calculate_relative_phase_and_error(amp1, amp2, submatrix)
                             results.setdefault(f'{wave}_relative_phase', []).append(relative_phase)
                             results.setdefault(f'{wave}_relative_phase_err', []).append(relative_phase_error)
-                    
+            
+            print("\n=================================================================")
+            print("\n=================================================================")
+                
             results = pd.DataFrame(results)
             
             if len(results) == 0:
@@ -574,7 +591,7 @@ class ResultManager:
         self.console.print(f"shape: {mle_results.shape} ~ (n_bins * n_random_starts, columns)")        
         self.console.print(f"\n")
         
-        mle_results['mass'] = np.round(mle_results['mass'], self.n_decimal_places)
+        mle_results = self._format_bin_values(mle_results)
 
         mle_results = self._add_source_to_dataframe(mle_results, 'mle', source_name)
         if not self._mle_results.empty:
@@ -621,7 +638,7 @@ class ResultManager:
         
         # rotate away reference waves
         mcmc_results = self._rotate_away_reference_waves(mcmc_results)
-        mcmc_results['mass'] = np.round(mcmc_results['mass'], self.n_decimal_places)
+        mcmc_results = self._format_bin_values(mcmc_results)
         
         mcmc_results = self._add_source_to_dataframe(mcmc_results, 'mcmc', source_name)
         if not self._mcmc_results.empty:
@@ -684,7 +701,7 @@ class ResultManager:
             
         # rotate away reference waves
         moment_inversion_results = self._rotate_away_reference_waves(moment_inversion_results)
-        moment_inversion_results['mass'] = np.round(moment_inversion_results['mass'], self.n_decimal_places)
+        moment_inversion_results = self._format_bin_values(moment_inversion_results)
         
         moment_inversion_results = self._add_source_to_dataframe(moment_inversion_results, 'moment_inversion', source_name)
         if not self._moment_inversion_results.empty:
@@ -699,6 +716,32 @@ class ResultManager:
         self.console.print(f"\n")
         
         return moment_inversion_results
+    
+    def sample_prior_resonance_parameters(self, nsamples=1000):
+        aux_dict = self.ift_results[2]
+
+        paras = None
+        if 'paras' in aux_dict:
+            paras = aux_dict['paras'] 
+        
+        if paras is None:
+            self.console.print("[bold yellow]No model used, no resonance parameters to plot[/bold yellow]")
+            return None
+        
+        prior_resonance_parameter_samples = {}
+        for _ in range(nsamples):
+            para_sample_dict = paras(from_random(paras.domain)).val
+            for k in para_sample_dict:
+                if "scale" not in k:
+                    if k not in prior_resonance_parameter_samples:
+                        prior_resonance_parameter_samples[k] = []
+                    prior_resonance_parameter_samples[k].append(
+                        para_sample_dict[k].item()
+                    )  # <- this is a zero dimensional array ... use item() to make pandas realize that we have floats not objects -.-
+                    
+        prior_resonance_parameter_samples = pd.DataFrame(prior_resonance_parameter_samples)
+                    
+        return prior_resonance_parameter_samples
     
     def _rotate_away_reference_waves(self, df):
         if not isinstance(df, pd.DataFrame):
@@ -743,7 +786,7 @@ class ResultManager:
         repr_str += f" Number of t-bins (centers): {len(self.t_centers)}: {np.array(self.t_centers)}\n"
         repr_str += f" Number of mass-bins (centers): {len(self.masses)}: {np.array(self.masses)}\n"
         repr_str += f" Number of wave names: {len(self.waveNames)}: {self.waveNames}\n"
-        repr_str += f" Access below dataframes as attributes [mle_results, mcmc_results, gen_results, hist_results, ift_results]\n"
+        repr_str += f" Access below dataframes as attributes [mle_results, mcmc_results, gen_resulsts, hist_results, ift_results]\n"
         repr_str += "********************************************************************\n"
         
         if not self._gen_results[0].empty:
@@ -1005,6 +1048,7 @@ def plot_gen_curves(resultManager: ResultManager, figsize=(10, 10), file_type='p
     nrows, ncols = calculate_subplot_grid_size(len(waveNames))
 
     fig, axes = plt.subplots(nrows, ncols, figsize=figsize, sharex=True, sharey=True)
+    axes = standardize_axes(axes)
     for i, wave in enumerate(waveNames):
         irow = i // ncols
         icol = i % ncols
@@ -1077,6 +1121,7 @@ def plot_binned_intensities(resultManager: ResultManager, bins_to_plot=None, fig
     for bin in tqdm.tqdm(bins_to_plot, disable=silence):
         
         fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
+        axes = standardize_axes(axes)
         
         mass = resultManager.masses[bin]
         binned_mcmc_samples = safe_query(default_mcmc_results, f'mass == {mass}')
@@ -1215,6 +1260,7 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
     for bin in tqdm.tqdm(bins_to_plot, disable=silence):
         
         fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
+        axes = standardize_axes(axes)
         axes = axes.flatten()
         
         mass = resultManager.masses[bin]
@@ -1388,6 +1434,7 @@ def plot_binned_complex_plane(resultManager: ResultManager, bins_to_plot=None, f
 def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin=300, mcmc_selection="thin", file_type='pdf', log_scale=False, min_mass=None, max_mass=None, ylim=None):
     """
     This is a money plot. Two plots stacked vertically (intensity on top, relative phases on bottom)
+    For multi-t-bin data, creates separate plots for each t-bin.
     
     Args:
         resultManager: ResultManager instance
@@ -1420,6 +1467,9 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
 
     waveNames = resultManager.waveNames
     n_mass_bins = resultManager.n_mass_bins
+    n_t_bins = resultManager.n_t_bins
+    has_multi_t_bins = resultManager.n_t_bins > 1
+
     massBins = resultManager.massBins
     masses = resultManager.masses
     line_half_width = resultManager.mass_bin_width / 2
@@ -1451,11 +1501,9 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
     ift_results = dataframes['ift']
     moment_inversion_results = dataframes['moment_inversion']
     
-    nEvents, nEvents_err = None, None
-    if not hist_results.empty:
-        nEvents = hist_results['nEvents'].values
-        nEvents_err = hist_results['nEvents_err'].values
-
+    # Determine t-bins to plot
+    t_bins_to_plot = range(n_t_bins) if has_multi_t_bins else [0]
+    
     samples_to_draw = pd.DataFrame()
     if not mcmc_results.empty:
         resultManager.console.print(f"subsampling mcmc results with '{mcmc_selection}' selection\n", style="bold yellow")
@@ -1472,206 +1520,233 @@ def plot_overview_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bi
         
         reference_wave = 'Sp0+' if waveName[-1] == "+" else 'Sp0-'
         
-        # Create a new figure for each waveName
-        fig, axes = plt.subplots(2, 1, figsize=(10, 10), sharex=True, 
-                                gridspec_kw={'height_ratios': [3, 1]})
-        plt.subplots_adjust(wspace=0, hspace=0.03)
-        
-        # Main intensity plot
-        ax = axes[0]
-        ax.set_xlim(masses[0], masses[-1])
-        
-        # Track available legend elements. We primarily do this so we have control over the alpha of the
-        #   legend lines. We do this by creating empty plots with appropriate styles
-        error_bars = None
-        mcmc_legend_line = None
-        mle_bars = None
-        ift_legend_lines = []
-        moment_inversion_line = None
-        
-        #### PLOT DATA HISTOGRAM
-        # ax.step(masses, nEvents[0], where='post', color='black', alpha=0.8)
-        if nEvents is not None and nEvents_err is not None:
-            data_line = hep.histplot((nEvents, massBins), ax=ax, color='black', alpha=0.8)
-            error_bars = ax.errorbar(masses, nEvents, yerr=nEvents_err, 
-                        color='black', alpha=0.8, fmt='o', markersize=2, capsize=3, label="Data")
-        
-        #### PLOT GENERATED CURVE
-        if not gen_results.empty:
-            gen_cols = [col for col in gen_results.columns if waveName in col and "_amp" not in col]
-            if len(gen_cols) == 0:
-                resultManager.console.print(f"[bold yellow]No generated results found for {waveName}[/bold yellow]")
-            for col in gen_cols:
-                if "_cf" in col: fit_type = "Bkgnd"
-                elif len(col.split("_")) > 1: fit_type = "Param"
-                else: fit_type = "Signal"
-                ax.plot(gen_results['mass'], gen_results[col], color='white',  linestyle='-', alpha=0.4, linewidth=4, zorder=9)
-                ax.plot(gen_results['mass'], gen_results[col], color=ift_color_dict[fit_type],  linestyle='--', alpha=1.0, linewidth=3, zorder=10)
-
-        #### PLOT MCMC FIT INTENSITY
-        if not samples_to_draw.empty:
-            for bin_idx in range(len(masses)):
-                mass = masses[bin_idx]
-                binned_samples = samples_to_draw.query('mass == @mass')
-                x_starts = np.full_like(binned_samples[waveName], mass - line_half_width)
-                x_ends   = np.full_like(binned_samples[waveName], mass + line_half_width)
-                ax.hlines(y=binned_samples[waveName],   
-                        xmin=x_starts,
-                        xmax=x_ends,
-                        colors=mcmc_color,
-                        alpha=0.1,
-                        linewidth=1)
-            mcmc_legend_line = ax.plot([], [], color=mcmc_color, alpha=0.7, linewidth=2, label="MCMC")[0]
+        # Loop over t-bins (or single t-bin for 1D data)
+        for t_bin_idx in t_bins_to_plot:
             
-        #### PLOT NIFTY FIT INTENSITY
-        if not ift_results.empty:
-            ift_cols = [col for col in ift_results.columns if waveName in col and "_amp" not in col]
-            if len(ift_cols) == 0:
-                resultManager.console.print(f"[bold yellow]No 'IFT' results found for {waveName}[/bold yellow]")
-            ift_nsamples = ift_results['sample'].unique().size
-            for col in ift_cols:
-                if "_cf" in col: fit_type = "Bkgnd"
-                elif len(col.split("_")) > 1: fit_type = "Param"
-                else: fit_type = "Signal"
-                for isample in range(ift_nsamples):
-                    tmp = ift_results.query('sample == @isample')
-                    ax.plot(tmp['mass'], tmp[col], color=ift_color_dict[fit_type], 
-                                    linestyle='-', alpha=ift_alpha, linewidth=1, label=fit_type)
-                    if isample == 0: # create empty plot just for the legend to have lines with different alpha
-                        ift_line = ax.plot([], [], color=ift_color_dict[fit_type], linestyle='-', alpha=1.0, linewidth=1, label=fit_type)[0]
-                        ift_legend_lines.append(ift_line)
-        
-        #### PLOT MOMENT INVERSION INTENSITY
-        if not moment_inversion_results.empty:
-            for bin_idx in range(len(masses)):
-                mass = masses[bin_idx]
-                binned_samples = moment_inversion_results.query('mass == @mass')
-                x_starts = np.full_like(binned_samples[waveName], mass - line_half_width)
-                x_ends   = np.full_like(binned_samples[waveName], mass + line_half_width)
-                ax.hlines(y=binned_samples[waveName],
-                        xmin=x_starts,
-                        xmax=x_ends,
-                        colors=moment_inversion_color,
-                        alpha=0.05,
-                        linewidth=1)
-            moment_inversion_line = ax.plot([], [], color=moment_inversion_color, alpha=0.7, linewidth=2, label="Moment Inv.")[0]
-        
-        #### PLOT MLE FIT INTENSITY
-        if not mle_results.empty:
-            jitter_scale = mle_jitter_scale * resultManager.mass_bin_width
-            mass_jitter = np.random.uniform(-jitter_scale, jitter_scale, size=len(mle_results)) # shared with phases below
-            ax.errorbar(mle_results['mass'] + mass_jitter, mle_results[waveName], yerr=mle_results[f"{waveName}_err"], 
-                        color=mle_color, alpha=0.2, fmt='o', markersize=2, capsize=3)
-            mle_bars = ax.plot([], [], label="MLE", color=mle_color, alpha=1.0,  markersize=2)[0]
-        
-        # Create the legend with the style from iftpwa_plot.py
-        handles = []
-        if error_bars is not None: handles.append(error_bars)
-        if mcmc_legend_line is not None: handles.append(mcmc_legend_line)
-        if mle_bars is not None: handles.append(mle_bars)
-        if moment_inversion_line is not None: handles.append(moment_inversion_line)
-        handles += ift_legend_lines
-        ax.legend(handles=handles, labelcolor="linecolor", handlelength=0.3, 
-                 handletextpad=0.15, frameon=False, loc='upper right', prop={'size': 16})
-        
-        #################################
-        ##### BEGIN PLOTTING PHASES #####
-        #################################
-
-        phase_ax = axes[1]
-        phase_ax.set_ylim(-180, 180)
-        phase_ax.axhline(y=0, color='black', linestyle='--', alpha=0.5, linewidth=1)
-        
-        #### PLOT MCMC PHASES
-        if not samples_to_draw.empty:
-            for bin_idx in range(len(masses)):
-                mass = masses[bin_idx]
-                binned_samples = samples_to_draw.query('mass == @mass')
-                x_starts = np.full_like(binned_samples[waveName], mass - line_half_width)
-                x_ends   = np.full_like(binned_samples[waveName], mass + line_half_width)
-                phases = np.angle(binned_samples[f"{waveName}_amp"], deg=True)
-                phase_ax.hlines(y=phases,   
-                        xmin=x_starts, 
-                        xmax=x_ends, 
-                        colors=mcmc_color, 
-                        alpha=0.1, 
-                        linewidth=1)
-        
-        #### PLOT GENERATED PHASES
-        # For NIFTy plots we also plot the mirror ambiguity (since sometimes the fit finds the reflection of the generated phase)
-        if not gen_results.empty:
-            phase = np.angle(gen_results[f"{waveName}_amp"], deg=True)
-            phase = np.unwrap(phase, period=360)
-            for offset in [-360, 0, 360]:
-                phase_ax.plot(gen_results['mass'], phase + offset, color='white',  linestyle='-', alpha=0.3, linewidth=4, zorder=9) # highlight to make more noticeable
-                phase_ax.plot(gen_results['mass'], phase + offset, color=ift_color_dict["Signal"],  linestyle='--', alpha=1.0, linewidth=3, zorder=10)
-                phase_ax.plot(gen_results['mass'], -phase + offset, color='white',  linestyle='-', alpha=0.3, linewidth=4, zorder=9)
-                phase_ax.plot(gen_results['mass'], -phase + offset, color=ift_color_dict["Signal"],  linestyle='--', alpha=1.0, linewidth=3, zorder=10)
+            # Create a new figure for each waveName and t-bin
+            fig, axes = plt.subplots(2, 1, figsize=(10, 10), sharex=True, 
+                                    gridspec_kw={'height_ratios': [3, 1]})
+            plt.subplots_adjust(wspace=0, hspace=0.03)
             
-        #### PLOT NIFTY PHASES
-        # For NIFTy plots we also plot the mirror ambiguity (since sometimes the fit finds the reflection of the generated phase)
-        if not ift_results.empty:
-            for isample in range(ift_nsamples):
-                tmp = ift_results.query('sample == @isample')
-                phase = np.angle(tmp[f"{waveName}_amp"], deg=True)
+            # Main intensity plot
+            ax = axes[0]
+            ax.set_xlim(masses[0], masses[-1])
+            
+            # Track available legend elements. We primarily do this so we have control over the alpha of the
+            #   legend lines. We do this by creating empty plots with appropriate styles
+            error_bars = None
+            mcmc_legend_line = None
+            mle_bars = None
+            ift_legend_lines = []
+            moment_inversion_line = None
+            
+            #### PLOT DATA HISTOGRAM
+            # Extract data for this t-bin
+            nEvents_tbin, nEvents_err_tbin = None, None
+            if not hist_results.empty:
+                if has_multi_t_bins:
+                    # Filter histogram data for this t-bin
+                    tbin_data = hist_results[hist_results['value2'] == resultManager.t_centers[t_bin_idx]]
+                    if not tbin_data.empty:
+                        nEvents_tbin = tbin_data['nEvents'].values
+                        nEvents_err_tbin = tbin_data['nEvents_err'].values
+                else:
+                    # 1D case - use all data
+                    nEvents_tbin = hist_results['nEvents'].values
+                    nEvents_err_tbin = hist_results['nEvents_err'].values
+            
+            if nEvents_tbin is not None and nEvents_err_tbin is not None:
+                hep.histplot((nEvents_tbin, massBins), ax=ax, color='black', alpha=0.8)
+                error_bars = ax.errorbar(masses, nEvents_tbin, yerr=nEvents_err_tbin, 
+                            color='black', alpha=0.8, fmt='o', markersize=2, capsize=3, label="Data")
+            
+            #### PLOT GENERATED CURVE
+            if not gen_results.empty:
+                gen_cols = [col for col in gen_results.columns if waveName in col and "_amp" not in col]
+                if len(gen_cols) == 0:
+                    resultManager.console.print(f"[bold yellow]No generated results found for {waveName}[/bold yellow]")
+                for col in gen_cols:
+                    if "_cf" in col: fit_type = "Bkgnd"
+                    elif len(col.split("_")) > 1: fit_type = "Param"
+                    else: fit_type = "Signal"
+                    ax.plot(gen_results['mass'], gen_results[col], color='white',  linestyle='-', alpha=0.4, linewidth=4, zorder=9)
+                    ax.plot(gen_results['mass'], gen_results[col], color=ift_color_dict[fit_type],  linestyle='--', alpha=1.0, linewidth=3, zorder=10)
+
+            #### PLOT MCMC FIT INTENSITY
+            if not samples_to_draw.empty:
+                for bin_idx in range(len(masses)):
+                    mass = masses[bin_idx]
+                    binned_samples = samples_to_draw.query('mass == @mass')
+                    x_starts = np.full_like(binned_samples[waveName], mass - line_half_width)
+                    x_ends   = np.full_like(binned_samples[waveName], mass + line_half_width)
+                    ax.hlines(y=binned_samples[waveName],   
+                            xmin=x_starts,
+                            xmax=x_ends,
+                            colors=mcmc_color,
+                            alpha=0.1,
+                            linewidth=1)
+                mcmc_legend_line = ax.plot([], [], color=mcmc_color, alpha=0.7, linewidth=2, label="MCMC")[0]
+                
+            #### PLOT NIFTY FIT INTENSITY
+            if not ift_results.empty:
+                ift_cols = [col for col in ift_results.columns if waveName in col and "_amp" not in col]
+                if len(ift_cols) == 0:
+                    resultManager.console.print(f"[bold yellow]No 'IFT' results found for {waveName}[/bold yellow]")
+                ift_nsamples = ift_results['sample'].unique().size
+                for col in ift_cols:
+                    if "_cf" in col: fit_type = "Bkgnd"
+                    elif len(col.split("_")) > 1: fit_type = "Param"
+                    else: fit_type = "Signal"
+                    for isample in range(ift_nsamples):
+                        t_center = resultManager.t_centers[t_bin_idx]
+                        tmp = ift_results.query('sample == @isample and tprime == @t_center')
+                        ax.plot(tmp['mass'], tmp[col], color=ift_color_dict[fit_type], 
+                                        linestyle='-', alpha=ift_alpha, linewidth=1, label=fit_type)
+                        if isample == 0: # create empty plot just for the legend to have lines with different alpha
+                            ift_line = ax.plot([], [], color=ift_color_dict[fit_type], linestyle='-', alpha=1.0, linewidth=1, label=fit_type)[0]
+                            ift_legend_lines.append(ift_line)
+            
+            #### PLOT MOMENT INVERSION INTENSITY
+            if not moment_inversion_results.empty:
+                for bin_idx in range(len(masses)):
+                    mass = masses[bin_idx]
+                    binned_samples = moment_inversion_results.query('mass == @mass')
+                    x_starts = np.full_like(binned_samples[waveName], mass - line_half_width)
+                    x_ends   = np.full_like(binned_samples[waveName], mass + line_half_width)
+                    ax.hlines(y=binned_samples[waveName],
+                            xmin=x_starts,
+                            xmax=x_ends,
+                            colors=moment_inversion_color,
+                            alpha=0.05,
+                            linewidth=1)
+                moment_inversion_line = ax.plot([], [], color=moment_inversion_color, alpha=0.7, linewidth=2, label="Moment Inv.")[0]
+            
+            #### PLOT MLE FIT INTENSITY
+            if not mle_results.empty:
+                jitter_scale = mle_jitter_scale * resultManager.mass_bin_width
+                mass_jitter = np.random.uniform(-jitter_scale, jitter_scale, size=len(mle_results)) # shared with phases below
+                ax.errorbar(mle_results['mass'] + mass_jitter, mle_results[waveName], yerr=mle_results[f"{waveName}_err"], 
+                            color=mle_color, alpha=0.2, fmt='o', markersize=2, capsize=3)
+                mle_bars = ax.plot([], [], label="MLE", color=mle_color, alpha=1.0,  markersize=2)[0]
+        
+            # Create the legend with the style from iftpwa_plot.py
+            handles = []
+            if error_bars is not None: handles.append(error_bars)
+            if mcmc_legend_line is not None: handles.append(mcmc_legend_line)
+            if mle_bars is not None: handles.append(mle_bars)
+            if moment_inversion_line is not None: handles.append(moment_inversion_line)
+            handles += ift_legend_lines
+            ax.legend(handles=handles, labelcolor="linecolor", handlelength=0.3, 
+                     handletextpad=0.15, frameon=False, loc='upper right', prop={'size': 16})
+            
+            #################################
+            ##### BEGIN PLOTTING PHASES #####
+            #################################
+
+            phase_ax = axes[1]
+            phase_ax.set_ylim(-180, 180)
+            phase_ax.axhline(y=0, color='black', linestyle='--', alpha=0.5, linewidth=1)
+        
+            #### PLOT MCMC PHASES
+            if not samples_to_draw.empty:
+                for bin_idx in range(len(masses)):
+                    mass = masses[bin_idx]
+                    binned_samples = samples_to_draw.query('mass == @mass')
+                    x_starts = np.full_like(binned_samples[waveName], mass - line_half_width)
+                    x_ends   = np.full_like(binned_samples[waveName], mass + line_half_width)
+                    phases = np.angle(binned_samples[f"{waveName}_amp"], deg=True)
+                    phase_ax.hlines(y=phases,   
+                            xmin=x_starts, 
+                            xmax=x_ends, 
+                            colors=mcmc_color, 
+                            alpha=0.1, 
+                            linewidth=1)
+            
+            #### PLOT GENERATED PHASES
+            # For NIFTy plots we also plot the mirror ambiguity (since sometimes the fit finds the reflection of the generated phase)
+            if not gen_results.empty:
+                phase = np.angle(gen_results[f"{waveName}_amp"], deg=True)
                 phase = np.unwrap(phase, period=360)
                 for offset in [-360, 0, 360]:
-                    phase_ax.plot(tmp['mass'],  phase + offset, color=ift_color_dict["Signal"], linestyle='-', alpha=ift_alpha, linewidth=1)
-                    phase_ax.plot(tmp['mass'], -phase + offset, color=ift_color_dict["Signal"], linestyle='-', alpha=ift_alpha, linewidth=1)
+                    phase_ax.plot(gen_results['mass'], phase + offset, color='white',  linestyle='-', alpha=0.3, linewidth=4, zorder=9) # highlight to make more noticeable
+                    phase_ax.plot(gen_results['mass'], phase + offset, color=ift_color_dict["Signal"],  linestyle='--', alpha=1.0, linewidth=3, zorder=10)
+                    phase_ax.plot(gen_results['mass'], -phase + offset, color='white',  linestyle='-', alpha=0.3, linewidth=4, zorder=9)
+                    phase_ax.plot(gen_results['mass'], -phase + offset, color=ift_color_dict["Signal"],  linestyle='--', alpha=1.0, linewidth=3, zorder=10)
+                
+            #### PLOT NIFTY PHASES
+            # For NIFTy plots we also plot the mirror ambiguity (since sometimes the fit finds the reflection of the generated phase)
+            if not ift_results.empty:
+                for isample in range(ift_nsamples):
+                    # Filter by both sample and t-bin
+                    t_center = resultManager.t_centers[t_bin_idx]
+                    tmp = ift_results.query('sample == @isample and tprime == @t_center')
+                    phase = np.angle(tmp[f"{waveName}_amp"], deg=True)
+                    phase = np.unwrap(phase, period=360)
+                    for offset in [-360, 0, 360]:
+                        phase_ax.plot(tmp['mass'],  phase + offset, color=ift_color_dict["Signal"], linestyle='-', alpha=ift_alpha, linewidth=1)
+                        phase_ax.plot(tmp['mass'], -phase + offset, color=ift_color_dict["Signal"], linestyle='-', alpha=ift_alpha, linewidth=1)
+                
+            #### PLOT MOMENT INVERSION PHASES
+            if not moment_inversion_results.empty and f"{waveName}_amp" in moment_inversion_results.columns:
+                for bin_idx in range(len(masses)):
+                    mass = masses[bin_idx]
+                    binned_samples = moment_inversion_results.query('mass == @mass')
+                    x_starts = np.full_like(binned_samples[waveName], mass - line_half_width)
+                    x_ends   = np.full_like(binned_samples[waveName], mass + line_half_width)
+                    phases = np.angle(binned_samples[f"{waveName}_amp"], deg=True)
+                    phase_ax.hlines(y=phases,   
+                            xmin=x_starts, 
+                            xmax=x_ends, 
+                            colors=moment_inversion_color, 
+                            alpha=0.1, 
+                            linewidth=1)
+                
+            #### PLOT MLE PHASES
+            if not mle_results.empty:
+                phase = mle_results[f"{waveName}_relative_phase"]
+                phase_error = mle_results[f"{waveName}_relative_phase_err"]
+                phase_ax.errorbar(mle_results['mass'] + mass_jitter, phase, yerr=phase_error, 
+                                color=mle_color, alpha=0.2, fmt='o', markersize=2, capsize=3)
             
-        #### PLOT MOMENT INVERSION PHASES
-        if not moment_inversion_results.empty and f"{waveName}_amp" in moment_inversion_results.columns:
-            for bin_idx in range(len(masses)):
-                mass = masses[bin_idx]
-                binned_samples = moment_inversion_results.query('mass == @mass')
-                x_starts = np.full_like(binned_samples[waveName], mass - line_half_width)
-                x_ends   = np.full_like(binned_samples[waveName], mass + line_half_width)
-                phases = np.angle(binned_samples[f"{waveName}_amp"], deg=True)
-                phase_ax.hlines(y=phases,   
-                        xmin=x_starts, 
-                        xmax=x_ends, 
-                        colors=moment_inversion_color, 
-                        alpha=0.1, 
-                        linewidth=1)
+            #### PLOT WAVE NAME IN CORNER
+            text = ax.text(0.05, 0.92, f"{prettyLabels[waveName]}", transform=ax.transAxes, fontsize=36, c='black', zorder=9)
+            text.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
             
-        #### PLOT MLE PHASES
-        if not mle_results.empty:
-            phase = mle_results[f"{waveName}_relative_phase"]
-            phase_error = mle_results[f"{waveName}_relative_phase_err"]
-            phase_ax.errorbar(mle_results['mass'] + mass_jitter, phase, yerr=phase_error, 
-                            color=mle_color, alpha=0.2, fmt='o', markersize=2, capsize=3)
+            #### AXIS SETTINGS
+            if log_scale:
+                # Set log scale for intensity plot only, ensure reasonable limits
+                ax.set_yscale('log')
+                min_intensity = np.max([1e-3, np.min(nEvents_tbin) * 0.1]) if nEvents_tbin is not None else 1e-3
+                max_intensity = 1.15 * np.max(nEvents_tbin) if nEvents_tbin is not None else 1.0
+                ax.set_ylim(min_intensity, max_intensity)
+            else:
+                if nEvents_tbin is not None:
+                    ax.set_ylim(0, 1.15 * np.max(nEvents_tbin))
             
-        #### PLOT WAVE NAME IN CORNER
-        text = ax.text(0.05, 0.92, f"{prettyLabels[waveName]}", transform=ax.transAxes, fontsize=36, c='black', zorder=9)
-        text.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
-        
-        #### AXIS SETTINGS
-        if log_scale:
-            # Set log scale for intensity plot only, ensure reasonable limits
-            ax.set_yscale('log')
-            min_intensity = np.max([1e-3, np.min(nEvents) * 0.1]) if nEvents is not None else 1e-3
-            max_intensity = 1.15 * np.max(nEvents) if nEvents is not None else 1.0
-            ax.set_ylim(min_intensity, max_intensity)
-        else:
-            ax.set_ylim(0, 1.15 * np.max(nEvents))
-        
-        # Apply ylim if specified (only to intensity plot, not phase plot)
-        _apply_ylim(ax, ylim)
-        
-        phase_ax.set_xlabel(r"$m_X$ [GeV]", size=20)
-        phase_ax.tick_params(axis='x', labelsize=16)
-        
-        ax.set_ylabel(rf"Intensity / {resultManager.mass_bin_width:.3f} GeV", size=22)
-        
-        ax.tick_params(axis='y', labelsize=16)
-        wave_label1 = prettyLabels[waveName].strip("$")
-        wave_label2 = prettyLabels[reference_wave].strip("$")
-        phase_ax.set_ylabel(f"$\phi_{{{wave_label1}}} - \phi_{{{wave_label2}}}$ [deg]", size=18)
+            # Apply ylim if specified (only to intensity plot, not phase plot)
+            _apply_ylim(ax, ylim)
+            
+            phase_ax.set_xlabel(r"$m_X$ [GeV]", size=20)
+            phase_ax.tick_params(axis='x', labelsize=16)
+            
+            ax.set_ylabel(rf"Intensity / {resultManager.mass_bin_width:.3f} GeV", size=22)
+            
+            ax.tick_params(axis='y', labelsize=16)
+            wave_label1 = prettyLabels[waveName].strip("$")
+            wave_label2 = prettyLabels[reference_wave].strip("$")
+            phase_ax.set_ylabel(f"$\phi_{{{wave_label1}}} - \phi_{{{wave_label2}}}$ [deg]", size=18)
 
-        plt.tight_layout()
-        ofile = f"{resultManager.base_directory}/{default_plot_subdir}/intensity_and_phases/intensity_phase_plot_{waveName}.{file_type}"
-        save_and_close_fig(ofile, fig, axes, console=resultManager.console, overwrite=True, verbose=True)
-        plt.close()
+            plt.tight_layout()
+            
+            # Create filename with t-bin information for multi-t-bin data
+            if has_multi_t_bins:
+                t_center = resultManager.t_centers[t_bin_idx]
+                ofile = f"{resultManager.base_directory}/{default_plot_subdir}/intensity_and_phases/intensity_phase_plot_{waveName}_tbin{t_bin_idx}_t{t_center:.3f}.{file_type}"
+            else:
+                ofile = f"{resultManager.base_directory}/{default_plot_subdir}/intensity_and_phases/intensity_phase_plot_{waveName}.{file_type}"
+            
+            save_and_close_fig(ofile, fig, axes, console=resultManager.console, overwrite=True, verbose=True)
+            plt.close()
         
     resultManager.console.print(f"\n")
     
@@ -1845,31 +1920,20 @@ def plot_moments_across_bins(resultManager: ResultManager, mcmc_nsamples_per_bin
     for moment_name in resultManager.moment_latex_dict.keys():
         plot_moment(moment_name, ofile=f"{resultManager.base_directory}/{default_plot_subdir}/moments/moment_{moment_name}.{file_type}")
         
-def plot_resonance_parameters(resultManager: ResultManager, nsamples=1000, nbins=50, figsize=(15, 15), stat_text_size=20, axes_fontsize=20, file_type='pdf'):
+def plot_resonance_parameters(resultManager: ResultManager, nsamples=1000, nbins=50, figsize=(15, 15), stat_text_size=15, axes_fontsize=18, file_type='pdf'):
     
-    aux_dict = resultManager.ift_results[2]
-    paras = aux_dict['paras']
+    # 2x2 --> stat_text_size 18, axes_fontsize = 21
+    # 2x3 --> stat_text_size = 15, axes_fontsize = 18
     
-    if paras is None:
-        resultManager.console.print("[bold yellow]No model used, no resonance parameters to plot[/bold yellow]")
+    prior_resonance_parameter_samples = resultManager.sample_prior_resonance_parameters(nsamples)
+    if prior_resonance_parameter_samples is None:
         return
-        
-    prior_resonance_parameter_samples = {}
-    for _ in range(nsamples):
-        para_sample_dict = paras(from_random(paras.domain)).val
-        for k in para_sample_dict:
-            if "scale" not in k:
-                if k not in prior_resonance_parameter_samples:
-                    prior_resonance_parameter_samples[k] = []
-                prior_resonance_parameter_samples[k].append(
-                    para_sample_dict[k].item()
-                )  # <- this is a zero dimensional array ... use item() to make pandas realize that we have floats not objects -.-
                 
-    prior_resonance_parameter_samples = pd.DataFrame(prior_resonance_parameter_samples)
     posterior_resonance_parameter_samples = resultManager.ift_results[1]
 
     nrows, ncols = calculate_subplot_grid_size(len(prior_resonance_parameter_samples.columns))
     fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
+    axes = standardize_axes(axes)
     axes = axes.flatten()
 
     for iax, var in enumerate(prior_resonance_parameter_samples.columns):
@@ -1891,7 +1955,7 @@ def plot_resonance_parameters(resultManager: ResultManager, nsamples=1000, nbins
         post_std = np.nan_to_num(posterior_resonance_parameter_samples[var].std())
         n_posterior_samples = len(posterior_resonance_parameter_samples[var])
         
-        axes[iax].text(0.05, 0.95, f"Prior = ${prior_mean:.3f} \pm {prior_std:.3f}$\nPosterior ($N_{{samples}}={n_posterior_samples}$) = ${post_mean:.3f} \pm {post_std:.3f}$",
+        axes[iax].text(0.05, 0.95, f"Prior = ${prior_mean:.3f} \pm {prior_std:.3f}$\nPosterior ($N_{{samples}}={n_posterior_samples}$) = \n\t\t${post_mean:.3f} \pm {post_std:.3f}$",
                     transform=axes[iax].transAxes, fontsize=stat_text_size, verticalalignment='top', horizontalalignment='left')
         
         axes[iax].set_ylim(0, axes[iax].get_ylim()[1]*1.2)
@@ -1933,17 +1997,36 @@ def montage_and_gif_select_plots(resultManager: ResultManager, file_type='pdf'):
     subdirs = ["intensity_and_phases"]
     for subdir in subdirs:
         output_directory = f"{base_directory}/{default_plot_subdir}/{subdir}"
-        files = [] # Montage in the same order as waveNames
-        for wave in resultManager.waveNames:
-            files_path = f"{output_directory}/intensity_phase_plot_{wave}.{file_type}"
-            files.append(files_path)
-        if files:
-            files_str = " ".join(files)
-            montage_output = f"{base_directory}/{default_plot_subdir}/{subdir}/montage_output.{file_type}"
-            resultManager.console.print(f"Create montage of plots in '{base_directory}/{default_plot_subdir}/{subdir}'")
-            os.system(f"montage {files_str} -density 300 -geometry +10+10 {montage_output}")
-        else:
-            resultManager.console.print(f"[bold yellow]No intensity phase plot files found in {output_directory}[/bold yellow]")
+        if resultManager.n_t_bins > 1: # create separate montages for each t-bin
+            for tbin_idx in range(resultManager.n_t_bins):
+                files = []
+                for wave in resultManager.waveNames:
+                    t_center = resultManager.t_centers[tbin_idx]
+                    files_path = f"{output_directory}/intensity_phase_plot_{wave}_tbin{tbin_idx}_t{t_center:.3f}.{file_type}"
+                    if os.path.exists(files_path):
+                        files.append(files_path)
+                
+                if files:
+                    files_str = " ".join(files)
+                    montage_output = f"{base_directory}/{default_plot_subdir}/{subdir}/montage_output_tbin{tbin_idx}.{file_type}"
+                    resultManager.console.print(f"Create montage of plots for t-bin {tbin_idx} in '{base_directory}/{default_plot_subdir}/{subdir}'")
+                    os.system(f"montage {files_str} -density 300 -geometry +10+10 {montage_output}")
+                else:
+                    resultManager.console.print(f"[bold yellow]No intensity phase plot files found for t-bin {tbin_idx} in {output_directory}[/bold yellow]")
+        else: # Single t-bin case
+            files = [] 
+            for wave in resultManager.waveNames:
+                files_path = f"{output_directory}/intensity_phase_plot_{wave}.{file_type}"
+                if os.path.exists(files_path):
+                    files.append(files_path)
+            
+            if files:
+                files_str = " ".join(files)
+                montage_output = f"{base_directory}/{default_plot_subdir}/{subdir}/montage_output.{file_type}"
+                resultManager.console.print(f"Create montage of plots in '{base_directory}/{default_plot_subdir}/{subdir}'")
+                os.system(f"montage {files_str} -density 300 -geometry +10+10 {montage_output}")
+            else:
+                resultManager.console.print(f"[bold yellow]No intensity phase plot files found in {output_directory}[/bold yellow]")
             
     subdirs = ["moments"]
     for subdir in subdirs:
