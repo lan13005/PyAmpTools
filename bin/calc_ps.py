@@ -8,6 +8,7 @@ os.environ['JAX_ENABLE_X64'] = '1' # 64-bit
 import numpy as np
 from iftpwa1.model.physics_functions import barrier_factor_sq, breakup_momentum
 from omegaconf import OmegaConf, ListConfig
+from pyamptools.utility.general import converter
 
 from rich.console import Console
 console = Console()
@@ -127,7 +128,10 @@ def calc_ps_ift(yaml_file):
             if spin is None:
                 console.print(f"'{wave}' not found in model parameterization. Assume no barrier factor.", style="bold blue")
         else: # Assume traditional naming convention
-            spin = spin_map[wave[0]]
+            if wave not in converter:
+                console.print(f"'{wave}' not in expected form, unable to determine spin for barrier factor calculation...", style="bold red")
+                exit(1)
+            spin = converter[wave][1] # for both TwoPseudoscalar and VectorPseudoscalar, l is the index 1
             console.print(f"Using traditional spin mapping: wave '{wave}' -> spin {spin}")
                 
         factors = np.zeros(n_mass_bins)
