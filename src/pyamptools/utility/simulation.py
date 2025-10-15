@@ -1,5 +1,5 @@
 import argparse
-
+import os
 
 def setup_generator(generator_name):
     """Parse command line arguments (argparse) and load conditions for the generator"""
@@ -46,8 +46,16 @@ def load_conditions(generator_name):
 
     # Accessing the parsed arguments
     print("Config file:", args.configfile)
+    
+    if os.path.exists(args.outname):
+        print(f"ROOT file output name: {args.outname} already exists. Please update output file location. Exiting...")
+        exit(1)
+    if os.path.exists(args.hddmname):
+        print(f"HDDM file output name: {args.hddmname} already exists. Please update output file location. Exiting...")
+        exit(1)
     print("ROOT file output name:", args.outname)
     print("HDDM file output name:", args.hddmname)
+    
     print("Low edge of mass range (GeV):", args.lowMass)
     print("Upper edge of mass range (GeV):", args.highMass)
     print("Minimum number of events to generate:", args.nEvents)
