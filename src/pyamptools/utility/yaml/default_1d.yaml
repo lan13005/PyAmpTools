@@ -1,0 +1,135 @@
+base_directory: _BASE_DIRECTORY_ # base directory for all results
+n_processes: 1
+nifty:
+  yaml: ${NIFTY}
+  force_load_normint: false
+  mpi_processes: ${n_processes}
+waveset: Amp1Sec1_Amp1Sec2
+phase_reference: Amp1Sec1_Amp1Sec2
+min_mass: 1.15
+max_mass: 3.0
+n_mass_bins: 100
+min_t: 0.1
+max_t: 2.1
+n_t_bins: 2
+bins_per_group: 1
+daughters: [0.135, 0.938] # This example for Delta(1232) -> pi0 proton
+NIFTY:
+  GENERAL:
+    pwa_manager: GLUEX_1D
+    seed: 6
+    verbosityLevel: 1
+    outputFolder: ${base_directory}/NIFTY
+    fitResultPath: ${NIFTY.GENERAL.outputFolder}/niftypwa_fit.pkl
+    maxNIFTyJobs: 1
+    initial_position_std: 0.1
+    default_yaml: null
+  PWA_MANAGER:
+    yaml: ${NIFTY.GENERAL.outputFolder}/main.yaml # dump a copy of this yaml to this location, reproducibility
+    data_path: _PATH_TO_ROOT_FILE_DATA_ # path to root file with data
+    accmc_path: _PATH_TO_ROOT_FILE_ACCMC_ # path to root file with accmc (reconstructed MC)
+    genmc_path: _PATH_TO_ROOT_FILE_GENMC_ # path to root file with genmc (generated MC)
+    tree_name: kin
+    variable_branch: _BRANCH_NAME_TO_HISTOGRAM_ # Create a histogram of this branch
+    weight_branch: _BRANCH_NAME_WITH_WEIGHTS_ # Weighted by this branch
+    independent_branch: _BRANCH_NAME_FOR_2D_HIST_ # 2D histogram if this is passed also
+    min_value_independent: ${min_t} # edit the top level variables: min_t
+    max_value_independent: ${max_t} # edit the top level variables: max_t
+    n_bins_independent: ${n_t_bins} # edit the top level variables: n_t_bins
+    min_value: ${min_mass} # edit the top level variables: min_mass
+    max_value: ${max_mass} # edit the top level variables: max_mass
+    n_bins: ${n_mass_bins} # edit the top level variables: n_mass_bins
+    waveset: ${waveset} # edit the top level variables: waveset
+    phase_reference: ${phase_reference}
+  IFT_MODEL:
+    scale: auto
+    nCalcScale: 500
+    positiveScale: half_normal
+    useLogNormalPriorSlope: false
+    useGammaFlex: false
+    useLaplaceScale: false
+    useGammaAsp: false
+    loglogavgslope: [-4.0, 0.5]
+    flexibility: null
+    loglogavgslopeTprime: [-3.0, 0.5]
+    flexibilityTprime: null
+    asperity: null
+    stdOffset: [1.0, 0.001]
+    dofdexStye: real_imag
+    custom_model_path: null # set to ${NIFTY.PARAMETRIC_MODEL} if you want to use the PARAMETRIC_MODEL below
+    modelName: constructed
+    res2bkg: 1.0
+    bkg2res: 1.0
+    tPrimeFalloff: 0
+    estimateRatios: false
+    perTprimeScaling: true
+    altTprimeNorm: no_norm
+    noInterpScipy: false
+    phaseSpaceMultiplier: ${base_directory}/phasespace.pkl
+    s0: null
+    productionFactor: GLUEX
+    ratio_fluct: null
+    ratio_fluc_std: null
+    ratio_slope: null
+    ratio_stdSlope: null
+    ratio_slopeTprime: null
+    ratio_stdSlopeTprime: null
+    ratio_std_offset: null
+    ratio_std_std_offset: null
+  PARAMETRIC_MODEL:
+    smoothScales: null
+    parameter_priors:
+      m_delta_1232: UnnamedLogNormalOperator(sigma=0.002 * 2, mean=1.232)
+      w_delta_1232: UnnamedLogNormalOperator(sigma=0.003 * 2, mean=0.117)
+    resonances:
+      - delta_1232:
+          name: $\delta(1232)$
+          fun: breitwigner_dyn
+          preScale: 1.0
+          no_bkg: true
+          paras: { mass: m_delta_1232, width: w_delta_1232 }
+          static_paras:
+            spin: 1
+            mass1: ${daughters.0}
+            mass2: ${daughters.1}
+          waves: [Amp1Sec1]
+  OPTIMIZATION:
+    nSamples: [[3, 0], [2, 5], 10]
+    nIterGlobal: 4
+    nMultiStart: 0
+    multiStartObjective: minimize|energy
+    algoOptKL: LBFGS
+    nIterMaxOptKL: [[1, 50], 50]
+    deltaEKL: 0.001
+    convergenceLvlKL: 2
+    nIterMaxSamples: 1000
+    deltaESampling: 0.1
+    convergenceLvlSampling: 2
+    algoOptGeoVI: Newton
+    nIterMaxGeoVI: 50
+    deltaEGeoVI: 0.001
+    convergenceLvlGeoVI: 2
+    resume: true
+    niftyCache: ${NIFTY.GENERAL.outputFolder}
+    overwriteCache: true
+    sanityChecks: false
+    constants: [tamps_mass_dir_loglogavgslope]
+  LIKELIHOOD:
+    approximation: false
+    metric_type: normal
+    learn_metric: false
+    learn_metric_sigma: 1.0
+    subSampleProb: 1.0
+    initialSubSampleProb: 1.0
+    subSampleApproxIndep: false
+    nKeepMetric: 1
+    theta_studentt: null
+    bootstrap: false
+    external_approximation: null
+    dropout_prob: 0.0
+    rotate_phase: null
+    clip_latent: 0
+  HYPERPARAMETER_SCANS:
+    n_trials: 10
+    objective: minimize|energy
+    sampler: RandomSampler
