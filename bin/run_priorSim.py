@@ -1,5 +1,6 @@
 import argparse
 from rich.console import Console
+import os
 
 # TODO:
 # - currently only one polarization is supported with 100% pol mag
@@ -33,7 +34,6 @@ def simulate_from_prior(main_yaml, base_directory, data_folder, channel, verbose
     sim_to_amptools_cfg(stage1_dir + "/niftypwa_fit.pkl", main_yaml, output_file=f"{base_directory}/GENERATED/prior_sim_amptools.cfg")
 
     # Make simulations (DATA)
-    cmd_list.append(f"rm -rf {stage2_dir}")
     cmd_list.append(f"mkdir -p {stage2_dir}")
     configuration = f"-l {min_mass} -u {max_mass} -n {n_data} -a {min_ebeam} -b {max_ebeam} -t {tslope}"
     cmd_list.append(f"pa {simulator} {base_directory}/GENERATED/prior_sim_amptools.cfg -o {stage2_dir}/data000.root {configuration}")
@@ -103,7 +103,8 @@ def sim_to_amptools_cfg(resultFile, main_yaml, output_file):
         polAngle = 0
     else:
         if len(main_dict['polarizations']) != 1:
-            console.print("Only one polarization is supported at the moment. Using first one", style="bold red")
+            console.print("Only one polarization is supported at the moment. Update yaml `polarizations` key.", style="bold red")
+            exit(1)
         polAngle = list(main_dict['polarizations'].keys())[0]
         if isinstance(main_dict['polarizations'][polAngle], (dict, DictConfig)):
             polMag = float(main_dict['polarizations'][polAngle]['pol_mag'])
@@ -293,6 +294,7 @@ if __name__ == "__main__":
     parser.add_argument("-nd", "--n_data", type=int, default=100000, help="Number of data events to generate (default: %(default)s)")
     parser.add_argument("-np", "--n_phasespace", type=int, default=500000, help="Number of phase space events to generate (default: %(default)s)")
     parser.add_argument("-s", "--seed", type=int, default=42, help="Random seed (default: %(default)s)")
+    parser.add_argument("-c", "--clean", action="store_true", help="Clean all directories before running (default: %(default)s)")
     args = parser.parse_args()
     
     import os
@@ -315,6 +317,7 @@ if __name__ == "__main__":
     
     main_dict = load_yaml(main_yaml)
     base_directory = main_dict["base_directory"]
+    data_folder = main_dict["data_folder"]
     min_mass = main_dict["min_mass"]
     max_mass = main_dict["max_mass"]
     min_t = main_dict["min_t"]
@@ -339,7 +342,7 @@ if __name__ == "__main__":
             tslope = np.log(max_t / min_t) / (max_t - min_t)
             prob_max = np.exp(-tslope * min_t) - np.exp(-tslope * max_t)
         console.print(f"tslope was not specified. We will choose a tslope that maximizes the probability mass between tmin and tmax")
-        descrip = f"[bold yellow]- calculated (since unspecified) to max prob mass (prob_mass={prob_max:0.3f}) on (tmin={min_t:0.3f}, tmax={max_t:0.3f})[/bold yellow]"
+        descrip = f"[bold yellow]- calculated (since unspecified) to max probability mass (prob_mass={prob_max:0.3f}) on (tmin={min_t:0.3f}, tmax={max_t:0.3f})[/bold yellow]"
     else:
         tslope = args.t_slope
         console.print(f"tslope was specified by the user. Using tslope={tslope}")
@@ -358,9 +361,23 @@ if __name__ == "__main__":
     console.print(f"Number of data events to generate: {n_data}")
     console.rule()
     console.print("\n\n")
+        
+    if args.clean:
+        cmd_list = []
+        for dirpath, dirnames, filenames in os.walk(base_directory):
+            for dir in dirnames:
+                cmd_list.append(f"rm -rf {dirpath}/{dir}")
+        cmd_list.append(f"rm -rf {data_folder}")
+        execute_cmd(cmd_list, console=console)
+    
+    # Guard against users overwriting data_folder accidentally when running prior simulation
+    if os.path.exists(data_folder):
+        console.print(f"Data Folder: {data_folder} already exists. Cannot safely dump prior simulation data here. Exiting...", style="bold red")
+        exit(1)
 
     if not os.path.exists(f"{base_directory}/GENERATED"):
         os.makedirs(f"{base_directory}/GENERATED")
+        
     iftpwa_dest_path = f"{base_directory}/GENERATED/iftpwa.yaml"
     main_dest_path = f"{base_directory}/GENERATED/main.yaml"
     
@@ -388,7 +405,18 @@ if __name__ == "__main__":
         # Run the prior simulation, drawing a sample from NIFTy prior, use {simulator} to generate data, split data into kinematic bins
         simulate_from_prior(main_dest_path, base_directory, data_folder, channel)
 
+        _dumped_yaml = load_yaml(main_dest_path)
+        if 'share_mc' in _dumped_yaml:
+            exist_but_not_match = 'share_mc' in main_dict and main_dict['share_mc'] != _dumped_yaml['share_mc']
+            not_exist = 'share_mc' not in main_dict
+            if exist_but_not_match or not_exist:
+                console.print("\nUpdating 'share_mc' in yaml file to match prior simulation\n", style="bold green")
+                main_dict['share_mc'] = _dumped_yaml['share_mc']
+                dump_yaml(main_dict, main_yaml)
+            
         # Draw a plot of the generated partial waves
         resultManager = ResultManager(main_dict)
         resultManager.attempt_load_all()
         plot_gen_curves(resultManager)
+        
+        del resultManager

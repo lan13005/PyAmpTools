@@ -169,12 +169,19 @@ class MCMCManager:
         
         # EXTRACTED PARAMETERS FROM YAML
         self.waveNames = self.main_dict["waveset"].split("_")
-        self.nmbMasses = self.main_dict["n_mass_bins"]
-        self.nmbTprimes = self.main_dict["n_t_bins"]
         self.nPars = 2 * len(self.waveNames)
+        # 
+        self.nmbMasses = self.main_dict["n_mass_bins"]
         self.masses = np.linspace(self.main_dict["min_mass"], self.main_dict["max_mass"], self.nmbMasses+1)
         self.mass_centers = np.round(self.masses[:-1] + np.diff(self.masses) / 2, 5)
-        self.ts = np.linspace(self.main_dict["min_t"], self.main_dict["max_t"], self.nmbTprimes+1)
+        # 
+        self.nmbTprimes = self.main_dict.get("n_t_bins", 1)
+        min_t = self.main_dict.get("min_t", -1e9)
+        max_t = self.main_dict.get("max_t",  1e9)
+        if self.nmbTprimes is None: self.nmbTprimes = 1
+        if min_t is None: min_t = -1e9
+        if max_t is None: max_t =  1e9
+        self.ts = np.linspace(min_t, max_t, self.nmbTprimes+1)
         self.t_centers = np.round(self.ts[:-1] + np.diff(self.ts) / 2, 5)
         
         # REFERENCE WAVES
@@ -201,6 +208,12 @@ class MCMCManager:
         self.adapt_step_size = adapt_step_size
         self.dense_mass = dense_mass
         self.adapt_mass_matrix = adapt_mass_matrix
+        
+        # Not sure what the use case for binned 1D fits is
+        pwa_manager = self.iftpwa_dict["GENERAL"]["pwa_manager"]
+        if pwa_manager != "GLUEX":
+            console.print("Only GLUEX manager is supported at the moment for binned MCMC fits", style="bold red")
+            sys.exit(1)
 
         #################################################
         # Check prior distribution and enforce positive reference
@@ -246,7 +259,8 @@ class MCMCManager:
             console.print(f"***************************************************\n\n", style="bold")
 
         # SETUP
-        self._setup_objective()             # sets up objective function to optimize
+        pwa_manager = self.iftpwa_dict["GENERAL"]["pwa_manager"]
+        self._setup_objective(pwa_manager=pwa_manager) # sets up objective function to optimize
         self.model = self.create_model()    # create MCMC prior model
         ### Should be ready to run MCMC now
 
@@ -677,10 +691,9 @@ class MCMCManager:
 
         return final_result_dict, n_samples
     
-    def _setup_objective(self):
+    def _setup_objective(self, pwa_manager):
         """Setup the objective function for the MCMC (negative log likelihood)"""
         from iftpwa1.pwa.gluex.gluex_jax_manager import GluexJaxManager
-
         self.pwa_manager = GluexJaxManager(comm0=None, mpi_offset=1,
                                     yaml_file=self.main_dict,
                                     resolved_secondary=self.iftpwa_dict, prior_simulation=False, sum_returned_nlls=False, logging_level=logging.WARNING)
@@ -1039,8 +1052,11 @@ if __name__ == "__main__":
     adapt_mass_matrix = fyea(main_dict["mcmc"], "adapt_mass_matrix", args.adapt_mass_matrix)
     
     bins = fyea(main_dict["mcmc"], "bins", args.bins)
+    
+    n_t_bins = main_dict.get("n_t_bins", 1) # Optional
+    if n_t_bins is None: n_t_bins = 1
     if bins is None:
-        bins = np.arange(main_dict["n_mass_bins"] * main_dict["n_t_bins"])
+        bins = np.arange(main_dict["n_mass_bins"] * n_t_bins)
     if len(bins) != len(set(bins)):
         console.print("Warning: user requested repeated bins, ignoring repeated bins", style="bold yellow")
         bins = sorted(list(set(bins)))

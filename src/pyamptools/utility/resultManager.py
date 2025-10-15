@@ -81,7 +81,11 @@ class ResultManager:
         self.main_dict = main_yaml
         if isinstance(main_yaml, str):
             self.main_dict = load_yaml(main_yaml)
+        
         self.iftpwa_dict = self.main_dict['nifty']['yaml']
+        if isinstance(self.iftpwa_dict, str):
+            self.iftpwa_dict = load_yaml(self.iftpwa_dict)
+        
         self.base_directory = self.main_dict['base_directory']
         self.waveNames = self.main_dict['waveset'].split("_")
         self.phase_reference = self.main_dict['phase_reference'].split("_")
@@ -95,8 +99,14 @@ class ResultManager:
         self.masses = (self.massBins[:-1] + self.massBins[1:]) / 2
         self.mass_bin_width = self.massBins[1] - self.massBins[0]
         
-        self.n_t_bins = self.main_dict['n_t_bins']
-        self.ts = np.linspace(self.main_dict['min_t'], self.main_dict['max_t'], self.n_t_bins+1)
+        # Safely load hyperparas for t-dependence
+        self.n_t_bins = self.main_dict.get("n_t_bins", 1)
+        if self.n_t_bins is None: self.n_t_bins = 1
+        min_t = self.main_dict.get("min_t", -1e9)
+        max_t = self.main_dict.get("max_t",  1e9)
+        if min_t is None: min_t = -1e9
+        if max_t is None: max_t =  1e9
+        self.ts = np.linspace(min_t, max_t, self.n_t_bins+1)
         self.t_centers = (self.ts[:-1] + self.ts[1:]) / 2
         self.t_bin_width = self.ts[1] - self.ts[0]
         

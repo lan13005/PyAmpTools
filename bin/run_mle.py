@@ -255,9 +255,14 @@ if __name__ == "__main__":
         raise ValueError("Main YAML file is required")
     waveNames = main_dict["waveset"].split("_")
     nmbMasses = main_dict["n_mass_bins"]
-    nmbTprimes = main_dict["n_t_bins"]
+    
+    nmbTprimes = main_dict.get("n_t_bins", 1) # Optional
+    if nmbTprimes is None: nmbTprimes = 1
+    
     nPars = 2 * len(waveNames)
     reference_waves = main_dict["phase_reference"].split("_")
+    
+    pwa_manager_type = iftpwa_dict["GENERAL"]["pwa_manager"]
     
     #### EXIT IF ONLY PRINTING WAVE NAMES
     if args.print_wave_names:
@@ -300,13 +305,20 @@ if __name__ == "__main__":
     console.print(f"  Need to process {len(bins)}/{nmbMasses*nmbTprimes} bins", style="bold yellow")
 
     ##### LOAD PWA MANAGER #####
-    from iftpwa1.pwa.gluex.gluex_jax_manager import (
-        GluexJaxManager,
-    )
-    pwa_manager = GluexJaxManager(comm0=None, mpi_offset=1,
-                                yaml_file=main_dict,
-                                resolved_secondary=iftpwa_dict, prior_simulation=False, sum_returned_nlls=False, 
-                                logging_level=logging.WARNING)
+    if pwa_manager_type == "GLUEX":
+        from iftpwa1.pwa.gluex.gluex_jax_manager import (
+            GluexJaxManager,
+        )
+        pwa_manager = GluexJaxManager(comm0=None, mpi_offset=1,
+                                    yaml_file=main_dict,
+                                    resolved_secondary=iftpwa_dict, prior_simulation=False, sum_returned_nlls=False, 
+                                    logging_level=logging.WARNING)
+    elif pwa_manager_type == "GLUEX_1D":
+        # Not sure what the use case for binned 1D fits is
+        console.print("GLUEX_1D manager not yet implemented for binned MLE fits", style="bold red")
+        sys.exit(1)
+    else:
+        raise ValueError(f"Invalid PWA manager type: {pwa_manager_type}")
 
     ##### CREATE JOB ASSIGNMENTS #####
     job_assignments = {}
