@@ -132,53 +132,6 @@ def console_print(msg, style="bold blue", console=None):
         console = _general_console
     console.print(msg, style=style)
 
-def parse_particle_order(particle_order_str):
-    """
-    Parse particle order string into list of particle names.
-    
-    Args:
-        particle_order_str (str): String like "R12" or "21R" representing particle order
-                                 R = RECOIL, 1 = X1, 2 = X2, 3 = X3
-    
-    Returns:
-        List[str]: List of particle names in the specified order
-        
-    Examples:
-        "R12" -> ["RECOIL", "X1", "X2"]
-        "21R" -> ["X2", "X1", "RECOIL"] 
-        "R123" -> ["RECOIL", "X1", "X2", "X3"]
-        "321R" -> ["X3", "X2", "X1", "RECOIL"]
-    """
-    if not particle_order_str:
-        return None
-        
-    # Mapping from character to particle name
-    char_to_particle = {
-        'R': 'RECOIL',
-        '1': 'X1',
-        '2': 'X2',
-        '3': 'X3'
-    }
-    
-    # Validate input characters
-    valid_chars = set(char_to_particle.keys())
-    input_chars = set(particle_order_str.upper())
-    invalid_chars = input_chars - valid_chars
-    if invalid_chars:
-        raise ValueError(f"Invalid particle order characters: {invalid_chars}. Valid characters are: {sorted(valid_chars)}")
-    
-    # Parse the order
-    particles = []
-    for char in particle_order_str.upper():
-        particles.append(char_to_particle[char])
-    
-    # Check for duplicates
-    if len(particles) != len(set(particles)):
-        raise ValueError(f"Duplicate particles found in order string: {particle_order_str}")
-    
-    return particles
-
-
 def append_kinematics(
     infile, 
     output_location=None, 
@@ -186,8 +139,8 @@ def append_kinematics(
     console=None,
     beam_angle=None,
     overwrite=False,
-    particles=None,
-    particle_order=None,
+    particle_grouping="A[1]B[2]C[R]",
+    add_kinematics="",
     ):
     
     """
@@ -212,37 +165,23 @@ def append_kinematics(
         console (rich.console.Console): Console object for printing
         beam_angle (float, str): Beam angle in degrees or branch name in the tree the beam angles (deg) are stored in
         overwrite (bool): If True, force recalculation of derived kinematics even if they already exist
-        particles (List[str]): List of particle names in the order they appear in the final state. 
-                              Must be one of: {RECOIL, X1, X2, X3}. For 4-particle final states, 
-                              RECOIL and X3 will be combined into BARYRECOIL.
-                              NOTE: The rest of the framework does not support 4-body final states ATM
-                                    Kinematic calculations support it but should not be used with other part of framework
-        particle_order (str): Alternative to particles parameter. String like "R12" or "21R" representing particle order.
-                             R = RECOIL, 1 = X1, 2 = X2, 3 = X3. If provided, will override particles parameter.
+        particle_grouping (str): Required format: "A[...]B[...]C[...]".
+                             - 3 body final state: assumes t-channel reaction where (A, B) produced at top vertex with C at bottom vertex
+                             - Particle order in *_FinalState (input tree branches) will be denote R,1,2,3,...
+                             - A,B,C must group together all FinalState particles where:
+                                - A[1]B[2]C[R] pattern constructs 3 body final state where particles 1,2 are at the top vertex
+                                - A[123]B[4]C[R] pattern constructs 3 body final state where particles A=1+2+3, B=4, C=R
+                                - A[2]B[3]C[R1] pattern constructs 3 body final state where particles A=2, B=3, C=R+1
+        add_kinematics (str): String containing how to calculate user kinematic quantities, in dict format
+                            - python's `eval(add_kinematics)` will evaluate the string into a dictionary
+                            - User defined quantities will override quantities calculated by default
+                            - Example: {"mVanHove4DTheta": "VANHOVETHETA(RECOIL,P1,P2,P3)", "mVanHove4DPhi": "VANHOVEPHI(RECOIL,P1,P2,P3)"}'
     
     Returns:
         df: ROOT.RDataFrame with kinematics appended, None if file already exists
         KINEMATIC_QUANTITIES: Dictionary of kinematic quantities calculated by fsroot
     """
-    
-    # Parse particle order if provided
-    if particle_order is not None:
-        particles = parse_particle_order(particle_order)
-        if console is None:
-            console = _general_console
-        console.print(f"Parsed particle order '{particle_order}' -> {particles}", style="bold blue")
-    
-    # Only validate particles if user provided them
-    if particles is not None:
-        if len(set(particles)) != len(particles):
-            raise ValueError(f"particles must be a list of unique particles, got {particles}")
-        if len(particles) not in [3, 4]:
-            raise ValueError(f"particles must be a list of 3 or 4 particles, got {particles}")
-        if len(particles) == 3 and set(particles) != {"RECOIL", "X1", "X2"}:
-            raise ValueError(f"particles must be a list of unique particles from {{RECOIL, X1, X2}}, got {particles}")
-        elif len(particles) == 4 and set(particles) != {"RECOIL", "X1", "X2", "X3"}:
-            raise ValueError(f"particles must be a list of unique particles from {{RECOIL, X1, X2, X3}}, got {particles}")
-    
+
     # Import here to ensure a clean ROOT environment for each call
     import ROOT
     import os
@@ -257,126 +196,168 @@ def append_kinematics(
     if console is None:
         from rich.console import Console
         console = Console()
+        
+    ##################################
+    ####### VALIDATE INPUTS ##########
+    ##################################
     
-    # Ensure infile is a list of strings
     if isinstance(infile, str):
         infile = [infile]  # Convert single string to list
     if not isinstance(infile, list): # if not a list by now
         raise ValueError(f"infile must be a list of strings or a single string, got {type(infile)}")
     
-    # Set output_location if None
     if output_location is None:
         if len(infile) == 1:
             output_location = infile[0]
         else:
             raise ValueError(f"output_location is None! Check caller.")
     
-    # Load input file and get the tree
+    if not isinstance(particle_grouping, str):
+        raise ValueError(f"particle_grouping must be a string of the form A[...]B[...]C[...], got {type(particle_grouping)}")
+    
+    #####################################################
+    ####### LOAD FILES AND CONSTRUCT PARTICLES ##########
+    #####################################################
+    
     console.print(f"Processing {infile}", style="bold blue")
     df = ROOT.RDataFrame(treeName, infile)
     columns = df.GetColumnNames()
     console.print(f"Available columns: {list(columns)}", style="bold blue")
     
-    # Get NumFinalState to determine which kinematic quantities to calculate
     if "NumFinalState" not in columns:
         raise ValueError("NumFinalState column not found in the tree!")
-    
-    # Get a sample value of NumFinalState (should be constant across all entries)
     num_final_state = df.Take["Int_t"]("NumFinalState").GetValue()[0]
     console.print(f"NumFinalState = {num_final_state}", style="bold blue")
+
+    # Parse particle map (intermediates to final state particle indices)
+    particle_map = None  # {'A': [...], 'B': [...], 'C': [...]} where tokens are digits or 'R'
+    n_final_grouped_final_state = 3
+    pattern = r"^(?:A\[([0-9R]+)\])(?:B\[([0-9R]+)\])(?:C\[([0-9R]+)\])$"
+    m = re.match(pattern, particle_grouping.upper())
+    if m is None:
+        raise ValueError(
+            "particle_grouping format invalid. Expected 'A[...]B[...]C[...]' with A,B,C present exactly once; e.g., 'A[1]B[2]C[R]' or 'A[123]B[4]C[R]'."
+        )
+    a_particles = list(m.group(1))
+    b_particles = list(m.group(2))
+    c_particles = list(m.group(3))
+    if len(a_particles) == 0 or len(b_particles) == 0 or len(c_particles) == 0:
+        raise ValueError("A, B, and C groups must not be empty in particle_grouping.")
+    if "R" not in c_particles:
+        raise ValueError("C[...] must include 'R' to denote the recoil in particle_grouping.")
+    if any(t == "R" for t in a_particles + b_particles):
+        raise ValueError("'R' token must only appear in C[...], not in A[...] or B[...].")
+    digits = [t for t in (a_particles + b_particles + c_particles) if t.isdigit()]
+    if len(digits) != len(set(digits)):
+        raise ValueError(f"Duplicate particle indices found in particle_grouping: {digits}")
+    expected_digits = {str(i) for i in range(1, num_final_state)} # not +1 since (R)ecoil is a unique ID for FinalState
+    if set(digits) != expected_digits:
+        raise ValueError(
+            f"Digits across A,B,C must be exactly { {f'1..{num_final_state-1}'} }, got {sorted(set(digits))}."
+        )
+    particle_map = {"A": a_particles, "B": b_particles, "C": c_particles}
+    if console is None:
+        console = _general_console
+    console.print(
+        f"Parsed particle grouping '{particle_grouping}' -> ABC particles: {particle_map} (effective FS: {n_final_grouped_final_state})",
+        style="bold blue",
+    )
     
-    # Validate particles parameter
-    valid_particles = {"RECOIL", "X1", "X2", "X3"}
-    if particles is None:
-        # Default particle ordering based on NumFinalState
-        if num_final_state == 3:
-            particles = ["RECOIL", "X1", "X2"]  # Default for 3-body final state
-        elif num_final_state == 4:
-            particles = ["RECOIL", "X1", "X2", "X3"]  # Default for 4-body final state
-        else:
-            raise ValueError(f"Unsupported NumFinalState = {num_final_state}. Only 3 and 4 body final states are supported.")
-    else:
-        # Validate user-provided particles
-        if len(particles) != num_final_state:
-            raise ValueError(f"Number of particles ({len(particles)}) must match NumFinalState ({num_final_state})")
-        
-        invalid_particles = set(particles) - valid_particles
-        if invalid_particles:
-            raise ValueError(f"Invalid particle names: {invalid_particles}. Valid names are: {valid_particles}")
-    
-    console.print(f"Using particle order: {particles}", style="bold blue")
-    
-    # Define kinematic quantities based on NumFinalState and particle order
-    if num_final_state == 3:
-        # For 3-body final state (e.g., etapi0: X1=eta, X2=pi0, RECOIL=proton)
-        KINEMATIC_QUANTITIES = {
-            # General Quantities
-            "mMassX": "MASS(X1,X2)",
-            "mMassX1": "MASS(X1)",
-            "mMassX2": "MASS(X2)",
-            "mMassX1Recoil": "MASS(X1,RECOIL)",
-            "mMassX2Recoil": "MASS(X2,RECOIL)",
-            "mMassRecoil": "MASS(RECOIL)",
-            "mVanHoveX": "VANHOVEX(RECOIL,X2,X1)",
-            "mVanHoveY": "VANHOVEY(RECOIL,X2,X1)",
-            "mVanHoveOmega": "VANHOVEOMEGA(RECOIL,X2,X1)",
-            "mCosHel": "HELCOSTHETA(X1,X2,RECOIL)",
-            "mPhiHel": "HELPHI(X1,X2,RECOIL,GLUEXBEAM)",
-            "mt": "T(GLUEXTARGET,RECOIL)",
-            "mBeamPhi": "LABPHI(GLUEXBEAM)",
-            "mProdPlanePhi": "PRODPHI(X1,X2,RECOIL,GLUEXBEAM)",
-        }
-        
-    elif num_final_state == 4:
-        # For 4-body final state (e.g., etapi-pi+: X1=pi+, X2=eta, X3=pi-, RECOIL=proton)
-        # X3 and RECOIL are combined to form excited baryon, X1 and X2 are mesons at top vertex
-        KINEMATIC_QUANTITIES = {
-            "mMassX": "MASS(X1,X2)",
-            "mMassX1": "MASS(X1)",
-            "mMassX2": "MASS(X2)",
-            "mMassX3": "MASS(X3)",
-            "mMassRecoil": "MASS(RECOIL)",
-            "mMassX3Recoil": "MASS(X3,RECOIL)",
-            "mVanHoveTheta": "VANHOVETHETA(RECOIL,X1,X2,X3)",
-            "mVanHovePhi": "VANHOVEPHI(RECOIL,X1,X2,X3)",
-            "mCosHel": "HELCOSTHETA(X1,X2,BARYRECOIL)",
-            "mPhiHel": "HELPHI(X1,X2,BARYRECOIL,GLUEXBEAM)",
-            "mt": "T(GLUEXTARGET,BARYRECOIL)",
-        }
-        
-    else:
-        raise ValueError(f"Unsupported NumFinalState = {num_final_state}. Only 3 and 4 body final states are supported.")
-    
+    # Validation complete, create list for RDataFrame Define variables
+    defined_particles = ["RECOIL"] + [f"P{i}" for i in range(1, num_final_state + 1)]
+
+    ##############################################
+    ####### DEFINE KINEMATIC QUANTITIES ##########
+    ##############################################
+
+    # For 3-body final state (e.g., etapi0: X1=eta, X2=pi0, RECOIL=proton)
+    KINEMATIC_QUANTITIES = {
+        # General Quantities
+        "mMassX": "MASS(XA,XB)",
+        "mMassXA": "MASS(XA)",
+        "mMassXB": "MASS(XB)",
+        "mMassXARecoil": "MASS(XA,XC)",
+        "mMassXBRecoil": "MASS(XB,XC)",
+        "mMassRecoil": "MASS(XC)",
+        "mVanHoveX": "VANHOVEX(XC,XB,XA)",
+        "mVanHoveY": "VANHOVEY(XC,XB,XA)",
+        "mVanHoveOmega": "VANHOVEOMEGA(RECOIL,XB,XA)",
+        "mCosHel": "HELCOSTHETA(XA,XB,XC)",
+        "mPhiHel": "HELPHI(XA,XB,XC,GLUEXBEAM)",
+        "mt": "T(GLUEXTARGET,XC)",
+        "mBeamPhi": "LABPHI(GLUEXBEAM)",
+        "mProdPlanePhi": "PRODPHI(XA,XB,XC,GLUEXBEAM)",
+        # Particle 1 Quantities
+        "mParticleALabTheta": "LABTHETA(XA)",
+        "mParticleALabPhi": "LABPHI(XA)",
+        "mParticleAMomentum": "MOMENTUM(XA)",
+        "mParticleAEnergy": "ENERGY(XA)",
+        # Particle 2 Quantities
+        "mParticleBLabTheta": "LABTHETA(XB)",
+        "mParticleBLabPhi": "LABPHI(XB)",
+        "mParticleBMomentum": "MOMENTUM(XB)",
+        "mParticleBEnergy": "ENERGY(XB)",
+        # Recoil Quantities
+        "mRecoilLabTheta": "LABTHETA(XC)",
+        "mRecoilLabPhi": "LABPHI(XC)",
+        "mRecoilMomentum": "MOMENTUM(XC)",
+        "mRecoilEnergy": "ENERGY(XC)",
+    }
+
     if beam_angle is not None:
-        if num_final_state == 3:
-            KINEMATIC_QUANTITIES["mPhi"] = f"BIGPHI({beam_angle},X1,X2,RECOIL,GLUEXBEAM)"
-        elif num_final_state == 4:
-            KINEMATIC_QUANTITIES["mPhi"] = f"BIGPHI({beam_angle},X1,X2,BARYRECOIL,GLUEXBEAM)"
+        KINEMATIC_QUANTITIES["mPhi"] = f"BIGPHI({beam_angle},XA,XB,RECOIL,GLUEXBEAM)"
     else:
         console.print("beam_angle not set, will not calculate Phi (angle between production plane and beam polarization)", style="bold yellow")
-    
+
     if "mMassX" in columns and "mt" in columns and not overwrite: # woo nothing to do
         console.print(f"Expected kinematics already present in {infile}, loading...", style="bold yellow")
         return df, KINEMATIC_QUANTITIES
     else:
         if overwrite:
             console.print(f"Overwrite=True: Forcing recalculation of kinematics in {infile}", style="bold yellow")
-        
+
         # Define particle four-vectors
         if "GLUEXTARGET" not in columns:
             df = df.Define("GLUEXTARGET", "std::vector<float> p{0.0, 0.0, 0.0, 0.938272}; return p;")
         if "GLUEXBEAM" not in columns:
             df = df.Define("GLUEXBEAM",   "std::vector<float> p{{Px_Beam, Py_Beam, Pz_Beam, E_Beam}}; return p;")
 
-        # Define particle four-vectors based on user-provided particle order
-        for i, particle in enumerate(particles):
+        # Define RDataFrame variables for FinalState particles
+        # NOTE! zero indexed! defined_particles should always have (R)ECOIL first
+        for i, particle in enumerate(defined_particles):
             cmd = f"std::vector<float> p{{ Px_FinalState[{i}], Py_FinalState[{i}], Pz_FinalState[{i}], E_FinalState[{i}] }}; return p;"
             df = df.Define(f"{particle}", cmd)
-        
-        # Define BARYRECOIL for 4-body final states (combine RECOIL and X3)
-        if num_final_state == 4:
-            df = df.Define("BARYRECOIL", "std::vector<float> p{RECOIL[0] + X3[0], RECOIL[1] + X3[1], RECOIL[2] + X3[2], RECOIL[3] + X3[3]}; return p;")
-        
+
+        # Define RDataFrame variables for intermediate particles
+        def summing_expr(particle_map, intermediate):
+            # Map particles to 0-based FS indices; by convention 'R' -> index 0
+            idxs = []
+            for t in particle_map[intermediate]:
+                if t == "R": idxs.append(0)
+                elif t.isdigit(): idxs.append(int(t))
+                else: raise ValueError(f"Unsupported token '{t}' in particle_grouping; use digits or 'R'.")
+            def _summing_expr(arr, indices):
+                parts = [f"{arr}[{ii}]" for ii in indices]
+                return " + ".join(parts) if len(parts) > 1 else parts[0]
+            px = _summing_expr("Px_FinalState", idxs)
+            py = _summing_expr("Py_FinalState", idxs)
+            pz = _summing_expr("Pz_FinalState", idxs)
+            e  = _summing_expr("E_FinalState",  idxs)
+            result = f"std::vector<float> p{{ {px}, {py}, {pz}, {e} }}; return p;"
+            console.print(f"  [bold blue]Defining Particle A:[/bold blue]\n    [italic yellow]{result}[/italic yellow]")
+            return result
+
+        console.print(f"\nAssuming t-channel 3 body final state (A,B) at top vertex with C at bottom vertex", style="bold blue")
+        df = df.Define("XA", summing_expr(particle_map,"A"))
+        df = df.Define("XB", summing_expr(particle_map,"B"))
+        df = df.Define("XC", summing_expr(particle_map,"C"))
+        console.print(f"Successfully defined all intermediate particles: A, B, C\n", style="bold blue")
+
+        # Merge in any additional user-defined kinematics
+        if isinstance(add_kinematics, str) and add_kinematics.strip() != "":
+            add_kinematics = eval(add_kinematics)
+            KINEMATIC_QUANTITIES.update(add_kinematics)
+
         # Define kinematic quantities
         for name, function in KINEMATIC_QUANTITIES.items():
             if overwrite and name in columns:
@@ -390,7 +371,7 @@ def append_kinematics(
             original_columns = [c for c in original_columns if c not in KINEMATIC_QUANTITIES.keys()]
         kinematic_columns = list(KINEMATIC_QUANTITIES.keys())
         columns_to_keep = original_columns + kinematic_columns
-            
+
         if not isinstance(output_location, str):
             raise ValueError(f"output_location must be a string/path, got {type(output_location)}")
 
@@ -410,7 +391,7 @@ def append_kinematics(
         else:
             df.Snapshot(treeName, output_location, columns_to_keep)
             console.print(f"Created new augmented tree with all events at {output_location}", style="bold green")
-                
+
         return df, KINEMATIC_QUANTITIES
 
 class Styler:

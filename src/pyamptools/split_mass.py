@@ -21,7 +21,8 @@ def split_mass_t(
     dump_augmented_tree=False,
     overwrite=False,
     apply_df_filter_before_split="",
-    particle_order=None,
+    particle_grouping="A[1]B[2]C[R]",
+    add_kinematics="",
 ):
     """
     Split events into bins based on (invariant mass, t) and save to separate ROOT files.
@@ -41,7 +42,8 @@ def split_mass_t(
         dump_augmented_tree (bool): Whether to save the augmented tree with all events
         overwrite (bool): If True, force recalculation of derived kinematics even if they already exist
         apply_df_filter_before_split (str): Additional ROOT DataFrame filter query to apply before binning. If empty string or None, no additional filtering is applied.
-        particle_order (str): String like "R12" or "21R" representing particle order. R = RECOIL, 1 = X1, 2 = X2, 3 = X3
+        particle_grouping (str): see append_kinematics.py for details
+        add_kinematics (str): see append_kinematics.py for details
     
     Returns:
         tuple: (mass_edges, t_edges, nBar, nBar_err)
@@ -62,7 +64,7 @@ def split_mass_t(
 
     console.print(f"Appending kinematics to {infile}", style="bold blue")
     df, kin_quantities = append_kinematics(infile, None, treeName, console=console, 
-                                         overwrite=overwrite, particle_order=particle_order)
+                                         overwrite=overwrite, particle_grouping=particle_grouping, add_kinematics=add_kinematics)
 
     # Initialize arrays to store the bin information
     nBar = np.zeros((nMBins, nTBins))
@@ -143,8 +145,8 @@ if __name__ == "__main__":
     parser.add_argument("--t_edges", type=list, default=None, help="Bin the data with these t-bin edges (nBins + 1 elements). If None, will be computed based on other cfg options")
     parser.add_argument("--overwrite", action="store_true", help="Force recalculation of kinematics even if they already exist")
     parser.add_argument("--apply_df_filter_before_split", type=str, default="", help="Additional ROOT DataFrame filter query to apply before binning")
-    parser.add_argument("--particle_order", type=str, default=None, 
-                       help="Particle order string like 'R12' or '21R'. R=RECOIL, 1=X1, 2=X2, 3=X3")
+    parser.add_argument("--particle_grouping", type=str, default="A[1]B[2]C[R]", 
+                       help="FinalState particles 1,2,.. are grouped into 3 body final state A,B,C. See append_kinematics.py for details")
     args = parser.parse_args()
 
     split_mass_t(args.infile, args.outputBase, 
@@ -152,4 +154,4 @@ if __name__ == "__main__":
                 args.lowT, args.highT, args.nTBins,
                 args.treeName, args.mass_edges, args.t_edges, args.overwrite,
                 apply_df_filter_before_split=args.apply_df_filter_before_split,
-                particle_order=args.particle_order)
+                particle_grouping=args.particle_grouping)

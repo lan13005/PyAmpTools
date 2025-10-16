@@ -10,16 +10,6 @@ from pyamptools.utility.general import Timer, dump_yaml, load_yaml
 
 from rich.console import Console
 
-# Setup pyamptools environment here
-#   cannot setup inside split_mass.py nor general.py
-#   PyROOT maintains global state which will lead to conflicts
-from pyamptools import atiSetup
-import ROOT
-atiSetup.setup(globals(), use_fsroot=True)
-ROOT.ROOT.EnableImplicitMT()
-from pyamptools.utility.rdf_macros import loadMacros
-loadMacros()
-
 ############################################################################
 # This makes calls to pyamptools' split_mass function to divide the data
 # sources into separate mass bins and copies over the amptools configuration
@@ -34,11 +24,19 @@ if __name__ == "__main__":
     parser.add_argument("--nosplit", action="store_true", help="Skip the split_mass step")
     parser.add_argument("--nomerge", action="store_true", help="Skip the merge_bins step")
     parser.add_argument("--overwrite", action="store_true", help="Force recalculation of derived kinematics even if they already exist")
-    parser.add_argument("--particle_order", type=str, default=None, 
-                       help="Particle order string like 'R12' or '21R'. R=RECOIL, 1=X1, 2=X2, 3=X3. Overrides yaml setting.")
     args = parser.parse_args()
     main_yaml = args.main_yaml
     use_edges = args.use_edges
+    
+    # Setup pyamptools environment here
+    #   cannot setup inside split_mass.py nor general.py
+    #   PyROOT maintains global state which will lead to conflicts
+    from pyamptools import atiSetup
+    import ROOT
+    atiSetup.setup(globals(), use_fsroot=True)
+    ROOT.ROOT.EnableImplicitMT()
+    from pyamptools.utility.rdf_macros import loadMacros
+    loadMacros()
     
     console = Console()
 
@@ -50,13 +48,13 @@ if __name__ == "__main__":
     console.rule()
     console.print(f"Running {__file__}")
     console.print(f"  yaml location: {main_yaml}")
-    console.print(f"  particle order: {args.particle_order if args.particle_order else 'default'}")
     console.rule()
 
     main_dict = load_yaml(main_yaml)
 
-    # Get particle order from CLI args or yaml
-    particle_order = args.particle_order if args.particle_order else main_dict.get("particle_order", None)
+    # Get particle order and additional kinematics to calculate from yaml input
+    particle_grouping = main_dict.get("particle_grouping", "A[1]B[2]C[R]")
+    add_kinematics = main_dict.get("add_kinematics", "")
 
     min_mass = main_dict["min_mass"]
     max_mass = main_dict["max_mass"]
@@ -165,7 +163,8 @@ if __name__ == "__main__":
                                                     treeName="kin", mass_edges=mass_edges, t_edges=t_edges, 
                                                     overwrite=args.overwrite,
                                                     apply_df_filter_before_split=apply_df_filter_before_split,
-                                                    particle_order=particle_order)
+                                                    particle_grouping=particle_grouping,
+                                                    add_kinematics=add_kinematics)
                         _pol = "shared" if sharemc else pol
                         nBars[f"{ftype}_{_pol}"] = nBar
                         nBar_errs[f"{ftype}_{_pol}"] = nBar_err
@@ -181,7 +180,8 @@ if __name__ == "__main__":
                                                         treeName="kin", mass_edges=mass_edges, t_edges=t_edges, 
                                                         overwrite=args.overwrite,
                                                         apply_df_filter_before_split=apply_df_filter_before_split,
-                                                        particle_order=particle_order)
+                                                        particle_grouping=particle_grouping,
+                                                        add_kinematics=add_kinematics)
                     nBars[f"bkgnd_{pol}"] = nBar
                     nBar_errs[f"bkgnd_{pol}"] = nBar_err
                 else:
