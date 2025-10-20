@@ -98,6 +98,22 @@ if [ -z "$CONDA_DEFAULT_ENV" ] || [ "$CONDA_DEFAULT_ENV" = "base" ]; then
     return
 fi
 
+## Check montage availability
+if ! command -v montage &> /dev/null; then
+    echo "ImageMagick montage command not found."
+    if command -v conda &> /dev/null; then
+        echo "Attempting to install ImageMagick via conda..."
+        conda install -c conda-forge imagemagick -y
+        if [ $? -eq 0 ]; then
+            echo "ImageMagick successfully installed."
+        else
+            echo "Warning: Failed to install ImageMagick via conda. Some plotting functionality may be missing (i.e. montage)."
+        fi
+    else
+        echo "Warning: Conda command not found, unable to install ImageMagick. Some plotting functionality may be missing (i.e. montage)"
+    fi
+fi
+
 ### Set up environment variables for AmpTools ###
 export AMPTOOLS_HOME=$PYAMPTOOLS_HOME/external/AmpTools
 export AMPTOOLS=$AMPTOOLS_HOME/AmpTools
@@ -139,4 +155,4 @@ for file in fit.cfg fitInit.cfg fit_fakeParams.cfg result.fit result_fakeParams.
     fi
 done
 
-
+# export LD_LIBRARY_PATH="/d/home/ln16/extra_libs/:$LD_LIBRARY_PATH"
