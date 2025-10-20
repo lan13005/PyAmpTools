@@ -1,3 +1,10 @@
+# Bypass jax multithreading and python multiprocessing deadlock issues
+import multiprocessing
+try:
+    multiprocessing.set_start_method('spawn', force=True)
+except RuntimeError:
+    pass
+
 from pyamptools.utility.MomentCalculatorTwoPS import (
     AmplitudeSet,
     AmplitudeValue,

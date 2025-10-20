@@ -1,5 +1,13 @@
 import os
 os.environ["JAX_PLATFORMS"] = "cpu"
+
+# Bypass jax multithreading and python multiprocessing deadlock issues
+import multiprocessing
+try:
+    multiprocessing.set_start_method('spawn', force=True)
+except RuntimeError:
+    pass
+
 from pyamptools.utility.general import load_yaml, calculate_subplot_grid_size, prettyLabels, identify_channel, standardize_axes # TODO: must be loaded before loadIFTResultsFromPkl, IDKY yet
 from pyamptools.utility.MomentUtilities import MomentManagerTwoPS, MomentManagerVecPS, EscapeMomentManager
 from pyamptools.utility.IO import loadIFTResultsFromPkl
