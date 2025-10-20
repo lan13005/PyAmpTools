@@ -24,6 +24,7 @@ def simulate_from_prior(main_yaml, base_directory, data_folder, channel, verbose
     cmd_list = []
     cmd_list.append(f"sed -i -E 's/force_load_normint: true/force_load_normint: false/' {main_yaml}")
     cmd_list.append(f"mkdir -p {stage1_dir}")
+    cmd_list.append(f"pa calc_ps {main_yaml}")
     cmd_list.append(f"pa run_ift {main_yaml} --prior_simulation")
     cmd_list.append(f"mv {base_directory}/NIFTY/niftypwa_fit.pkl {stage1_dir}/niftypwa_fit.pkl")
     
@@ -286,7 +287,9 @@ def sim_to_amptools_cfg(resultFile, main_yaml, output_file):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Draw sample from NIFTy prior, create amptools cfg file, generate data using gen_amp/gen_vec_ps, and split data into kinematic bins")
+    description = """Draw sample from NIFTy prior, create amptools cfg file, generate data using gen_amp/gen_vec_ps, and split data into kinematic bins
+        NOTE: This script uses calc_ps, run_cfgGen, run_divideData, and run_processEvents"""
+    parser = argparse.ArgumentParser(description=description)
     parser.add_argument("main_yaml", type=str, help="Path to main yaml file")
     parser.add_argument("-emin", "--min_ebeam", type=float, default=8.2, help="Minimum photon beam energy (default: %(default)s)")
     parser.add_argument("-emax", "--max_ebeam", type=float, default=8.8, help="Maximum photon beam energy (default: %(default)s)")
@@ -302,6 +305,7 @@ if __name__ == "__main__":
     import sys
     from pyamptools.utility.general import load_yaml, dump_yaml, identify_channel, converter, execute_cmd
     from pyamptools.utility.resultManager import ResultManager, plot_gen_curves
+    from omegaconf import DictConfig
     import numpy as np
 
     main_yaml = args.main_yaml
@@ -323,6 +327,12 @@ if __name__ == "__main__":
     min_t = main_dict["min_t"]
     max_t = main_dict["max_t"]
     iftpwa_dict = main_dict["nifty"]["yaml"]
+    
+    if isinstance(iftpwa_dict, str):
+        iftpwa_dict = load_yaml(iftpwa_dict)
+    if not isinstance(iftpwa_dict, (dict, DictConfig)):
+        raise ValueError(f"iftpwa_dict is not a string or (dict, omega): {iftpwa_dict}")
+    
     wave_names = main_dict["waveset"].split("_")
     channel = identify_channel(wave_names) # this function performs a check to ensure channel is supported
     

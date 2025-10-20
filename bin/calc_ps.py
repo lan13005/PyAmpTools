@@ -75,9 +75,10 @@ def calc_ps_ift(yaml_file):
         os.makedirs(base_directory)
     
     # Get output path from NIFTY.IFT_MODEL.phaseSpaceMultiplier
-    output = config.NIFTY.IFT_MODEL.phaseSpaceMultiplier
+    output = config.NIFTY.IFT_MODEL.get('phaseSpaceMultiplier', None)
     if output is None:
-        raise ValueError("phaseSpaceMultiplier dump location is not set in the config file")
+        console.print("phaseSpaceMultiplier dump location is not set in the config file, doing nothing...", style="bold yellow")
+        return
     console.print(f"Output path from config: {output}")
 
     if isinstance(config["daughters"], (list, ListConfig)):
@@ -87,10 +88,10 @@ def calc_ps_ift(yaml_file):
 
     if len(masses) == 1:
         mass1, mass2 = masses[0], masses[0]
-        console.print(f"Only 1 daughter specified in yaml, calculating phase space factors for decay into 2 identical particles")
+        console.print("Only 1 daughter specified in yaml, calculating phase space factors for decay into 2 identical particles")
     elif len(masses) == 2:
         mass1, mass2 = masses
-        console.print(f"Calculating phase space factors for decay into 2 different particles")
+        console.print("Calculating phase space factors for decay into 2 different particles")
     else:
         console.print(f"Invalid number of daughters specified in yaml: {len(masses)}", style="bold red")
         return

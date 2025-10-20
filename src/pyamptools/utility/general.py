@@ -169,11 +169,11 @@ def append_kinematics(
                              - 3 body final state: assumes t-channel reaction where (A, B) produced at top vertex with C at bottom vertex
                              - Particle order in *_FinalState (input tree branches) will be denote R,1,2,3,...
                              - A,B,C must group together all FinalState particles where:
-                                - A[1]B[2]C[R] pattern constructs 3 body final state where particles 1,2 are at the top vertex
+                                - A[1]B[2]C[R] pattern constructs 3 body final state A,B,C out of particles R,1,2,...
                                 - A[123]B[4]C[R] pattern constructs 3 body final state where particles A=1+2+3, B=4, C=R
                                 - A[2]B[3]C[R1] pattern constructs 3 body final state where particles A=2, B=3, C=R+1
         add_kinematics (str): String containing how to calculate user kinematic quantities, in dict format
-                            - python's `eval(add_kinematics)` will evaluate the string into a dictionary
+                            - python's `eval(add_kinematics)` will evaluate the string into a dictionary (risk of code injection but trust user...)
                             - User defined quantities will override quantities calculated by default
                             - Example: {"mVanHove4DTheta": "VANHOVETHETA(RECOIL,P1,P2,P3)", "mVanHove4DPhi": "VANHOVEPHI(RECOIL,P1,P2,P3)"}'
     
@@ -329,8 +329,9 @@ def append_kinematics(
             df = df.Define(f"{particle}", cmd)
 
         # Define RDataFrame variables for intermediate particles
-        def summing_expr(particle_map, intermediate):
-            # Map particles to 0-based FS indices; by convention 'R' -> index 0
+        #   by summing over 4-vectors in a list of particle array indices
+        def summing_expr(particle_map: dict[str, list[str]], intermediate: str) -> str:
+            # Map particles to FinalState array indices; by convention 'R' -> index 0
             idxs = []
             for t in particle_map[intermediate]:
                 if t == "R": idxs.append(0)
@@ -344,7 +345,7 @@ def append_kinematics(
             pz = _summing_expr("Pz_FinalState", idxs)
             e  = _summing_expr("E_FinalState",  idxs)
             result = f"std::vector<float> p{{ {px}, {py}, {pz}, {e} }}; return p;"
-            console.print(f"  [bold blue]Defining Particle A:[/bold blue]\n    [italic yellow]{result}[/italic yellow]")
+            console.print(f"  [bold blue]Defining Particle {intermediate}:[/bold blue]\n    [yellow]{result}[/yellow]")
             return result
 
         console.print(f"\nAssuming t-channel 3 body final state (A,B) at top vertex with C at bottom vertex", style="bold blue")
