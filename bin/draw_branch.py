@@ -196,9 +196,9 @@ def draw_branch_histogram(
 
         ax.set_xlabel(branch_name)
         if density:
-            ax.set_ylabel('Density (Events / {bin_width:.3f})')
+            ax.set_ylabel(f'Density / {bin_width:.3f})')
         else:
-            ax.set_ylabel(f'Intensity (Events / {bin_width:.3f})')
+            ax.set_ylabel(f'Intensity / {bin_width:.3f})')
         if log_y:
             ax.set_yscale('log')
         ax.grid(False)

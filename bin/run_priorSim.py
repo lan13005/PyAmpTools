@@ -214,6 +214,9 @@ def sim_to_amptools_cfg(resultFile, main_yaml, output_file):
     fitName = "prior_sim"
     basereactName = "reaction"
     particles = main_dict['reaction'].split()
+    n_initial_particles = 2
+    n_final_particles = len(particles) - n_initial_particles
+    fs_particles_str = "".join(str(_) for _ in range(n_initial_particles, n_final_particles + n_initial_particles))
 
     # Generate the basic config file
     initialization = complex(1.0, 0.0)
@@ -276,7 +279,7 @@ def sim_to_amptools_cfg(resultFile, main_yaml, output_file):
             if amp_name != wave_name:
                 raise ValueError(f"Failed to properly parse amplitude name from line: {line}")
             refl_tag = "Pos" if wave_name[-1] == "+" else "Neg"
-            new_cfg.append(f"amplitude {react_name}::{sum_name}::{wave_name} Piecewise {min_mass} {max_mass} {nmbMasses} 23 {refl_tag} ReIm {amp_parTag}")                
+            new_cfg.append(f"amplitude {react_name}::{sum_name}::{wave_name} Piecewise {min_mass} {max_mass} {nmbMasses} {fs_particles_str} {refl_tag} ReIm {amp_parTag}")                
     
     # Write the final config
     with open(output_file, "w") as f:

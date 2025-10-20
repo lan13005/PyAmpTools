@@ -22,6 +22,7 @@
 
 #include "AMPTOOLS_AMPS/omegapiAngles.h"
 #include "AMPTOOLS_AMPS/Vec_ps_refl.h"
+#include "AMPTOOLS_AMPS/Piecewise.h"
 #include "AMPTOOLS_AMPS/BreitWigner.h"
 #include "AMPTOOLS_AMPS/Uniform.h"
 #include "AMPTOOLS_AMPS/OmegaDalitz.h"
@@ -194,6 +195,7 @@ gen_vec_ps::generate(){
 	AmpToolsInterface::registerAmplitude( BreitWigner() );
 	AmpToolsInterface::registerAmplitude( Uniform() );
 	AmpToolsInterface::registerAmplitude( OmegaDalitz() );
+	AmpToolsInterface::registerAmplitude( Piecewise() );
 	AmpToolsInterface::registerAmplitude( PhaseOffset() );
 	AmpToolsInterface::registerAmplitude( ComplexCoeff() );
 

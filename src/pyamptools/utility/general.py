@@ -264,7 +264,7 @@ def append_kinematics(
     )
     
     # Validation complete, create list for RDataFrame Define variables
-    defined_particles = ["RECOIL"] + [f"P{i}" for i in range(1, num_final_state + 1)]
+    defined_particles = ["RECOIL"] + [f"X{i}" for i in range(1, num_final_state)]
 
     ##############################################
     ####### DEFINE KINEMATIC QUANTITIES ##########
@@ -324,8 +324,10 @@ def append_kinematics(
 
         # Define RDataFrame variables for FinalState particles
         # NOTE! zero indexed! defined_particles should always have (R)ECOIL first
+        console.print(f"\n[bold blue]Defining FinalState particles as:[/bold blue]")
         for i, particle in enumerate(defined_particles):
             cmd = f"std::vector<float> p{{ Px_FinalState[{i}], Py_FinalState[{i}], Pz_FinalState[{i}], E_FinalState[{i}] }}; return p;"
+            console.print(f"  [bold blue]{particle}:[/bold blue]\n    [yellow]{cmd}[/yellow]")
             df = df.Define(f"{particle}", cmd)
 
         # Define RDataFrame variables for intermediate particles
@@ -356,8 +358,12 @@ def append_kinematics(
 
         # Merge in any additional user-defined kinematics
         if isinstance(add_kinematics, str) and add_kinematics.strip() != "":
+            if not (add_kinematics.startswith("{") and add_kinematics.endswith("}")):
+                raise ValueError(f"add_kinematics is not a string in the form of a dictionary: {add_kinematics}")
             add_kinematics = eval(add_kinematics)
             KINEMATIC_QUANTITIES.update(add_kinematics)
+        else:
+            console.print(f"User did not define additional kinematics to calculate in the add_kinematics yaml field, continuing...", style="bold yellow")
 
         # Define kinematic quantities
         for name, function in KINEMATIC_QUANTITIES.items():
