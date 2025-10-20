@@ -189,12 +189,16 @@ class Objective:
         self.ref_indices = ref_indices
         self.refl_sectors = refl_sectors
 
-def regularize_hessian_return_covariance(hessian_matrix, tikhonov_delta=1e-4, ref_indices=None):
+def regularize_hessian_return_covariance(hessian_matrix, tikhonov_delta=1e-4, ref_indices=None, bin_idx=None):
     """
     Compute regularized covariance matrices from a Hessian using Tikhonov regularization.
     NOTE: The covariance matrix is conditionally positive semi-definite (submatrix of non-fixed parameters is positive semi-definite)
           If you were to use the full matrix for sampling (from multivariate normal distribution), you must ignore the fixed indices
           If you are doing linear error propagation zeroed out covariance matrix elements should be fine since fixed parameters indeed have no variance
+
+    Minimal stability updates:
+      - Symmetrize the Hessian up front to mitigate round-off/asymmetry.
+      - Apply fixed-parameter structure (zero rows/cols; set diag=1) BEFORE any eigen/regularization/inversion.
     
     Args:
         hessian_matrix: The Hessian matrix to invert
@@ -214,27 +218,29 @@ def regularize_hessian_return_covariance(hessian_matrix, tikhonov_delta=1e-4, re
         hessian_matrix = np.array(hessian_matrix)
     
     try:
-        # Make a copy of the hessian to avoid modifying the original
-        hess_copy = hessian_matrix.copy()
+        # Symmetrize first to resolve precision issues and autodiff noise
+        hess_copy = 0.5 * (hessian_matrix + hessian_matrix.T)
         
-        # Calculate eigenvalues and eigenvectors of the original hessian (for diagnostics)
-        eigenvalues, eigenvectors = np.linalg.eigh(hessian_matrix)
-        
-        # Handle fixed parameters BEFORE regularization and inversion otherwise covariance matrix might not be positive semi-definite afterwards
-        # Set the row and column to zero except for reference waves and diagonal element to 1
+        # Handle fixed parameters (BEFORE eigval/regularization/inversion)
         if ref_indices:
             for ref_idx in ref_indices:
-                hess_copy[2*ref_idx+1, :] = 0.0
-                hess_copy[:, 2*ref_idx+1] = 0.0
-                hess_copy[2*ref_idx+1, 2*ref_idx+1] = 1.0
+                i = 2 * ref_idx + 1
+                if 0 <= i < hess_copy.shape[0]:
+                    hess_copy[i, :] = 0.0
+                    hess_copy[:, i] = 0.0
+                    hess_copy[i, i] = 1.0
         
-        # Calculate eigenvalues of the ref-wave modified hessian
-        mod_eigenvalues = np.linalg.eigvalsh(hess_copy)
+        # Calculate eigenvalues of the modified hessian (for diagnostics)
+        eigenvalues = np.linalg.eigvalsh(hess_copy)
+        
+        # Identify fixed parameter eigenvalues (=1) and exclude them from downstream calculations
+        fixed_eigenvalue_tolerance = 1e-10
+        is_fixed_eigenvalue = np.abs(eigenvalues - 1) < fixed_eigenvalue_tolerance
+        non_fixed_eigenvalues = eigenvalues[~is_fixed_eigenvalue]
         
         # Apply Tikhonov regularization if needed - better than eigenvalue clipping if more small to negative eigenvalues
         #    Basically adding a small positive value to the diagonal
-        if np.any(mod_eigenvalues <= 0):
-            non_fixed_eigenvalues = mod_eigenvalues[np.abs(mod_eigenvalues - 1) > 1e-10] # eigenvalues set to 1 for fixed parameters
+        if np.any(non_fixed_eigenvalues <= 0):
             lambda_max = np.max(non_fixed_eigenvalues) if len(non_fixed_eigenvalues) > 0 else 1.0
             regularization_amount = tikhonov_delta * lambda_max # scale invariant regularization (depends on the largest eigenvalue)
 
@@ -258,19 +264,22 @@ def regularize_hessian_return_covariance(hessian_matrix, tikhonov_delta=1e-4, re
                 covariance[2*ref_idx+1, 2*ref_idx+1] = 0.0
         
         # Diagnostics
+        evals = non_fixed_eigenvalues if len(non_fixed_eigenvalues) > 0 else eigenvalues
         hessian_diagnostics = {
-            'smallest_eigenvalue': float(np.min(eigenvalues)),
-            'largest_eigenvalue': float(np.max(eigenvalues)),
-            'condition_number': float(np.max(np.abs(eigenvalues)) / np.min(np.abs(eigenvalues))),
-            'fraction_negative_eigenvalues': np.sum(eigenvalues < 0) / len(eigenvalues),
-            'fraction_small_eigenvalues': np.sum((eigenvalues > 0) & (eigenvalues < min_eigenvalue)) / len(eigenvalues),
+            'smallest_eigenvalue': float(np.min(evals)),
+            'largest_eigenvalue': float(np.max(evals)),
+            'condition_number': float(np.max(np.abs(evals)) / np.min(np.abs(evals))),
+            'fraction_negative_eigenvalues': np.sum(evals < 0) / len(evals),
+            'fraction_small_eigenvalues': np.sum((evals > 0) & (evals < min_eigenvalue)) / len(evals),
+            'n_fixed_parameters': np.sum(is_fixed_eigenvalue),
+            'n_non_fixed_parameters': len(evals),
         }
         
         # NOTE: covariance is conditionally positive semi-definite (see above!)
         return covariance, eigenvalues, hessian_diagnostics
         
     except np.linalg.LinAlgError as e:
-        print(f"Error calculating covariance matrix (return nans): {e}")
+        print(f"Error in bin {bin_idx} calculating covariance matrix (return nans): {e}")
         error_result = {
              'error': str(e),
              'smallest_eigenvalue': np.nan,
@@ -280,6 +289,7 @@ def regularize_hessian_return_covariance(hessian_matrix, tikhonov_delta=1e-4, re
              'fraction_small_eigenvalues': np.nan,
         }
         return None, None, error_result
+
     
 def calculate_intensity_and_error(amp, cov_amp, ampMatrix, ampMatrixTermOrder, wave_list, all_waves_list, scale_factors=None):
     """
@@ -441,7 +451,7 @@ def optimize_single_bin_minuit(objective, initial_params, bin_idx, use_analytic_
     
     # Calculate covariance from objective's Hessian for comparison
     hessian_matrix = objective.hessian(m.values)
-    covariance, eigenvalues, hessian_diagnostics = regularize_hessian_return_covariance(hessian_matrix, ref_indices=objective.ref_indices)
+    covariance, eigenvalues, hessian_diagnostics = regularize_hessian_return_covariance(hessian_matrix, ref_indices=objective.ref_indices, bin_idx=bin_idx)
     
     return {
         'parameters': m.values,
@@ -535,7 +545,7 @@ def optimize_single_bin_scipy(objective, initial_params, bin_idx, method='L-BFGS
         
     # Always calculate Hessian and covariance at the solution
     hessian_matrix = objective.hessian(result.x)
-    covariance, eigenvalues, hessian_diagnostics = regularize_hessian_return_covariance(hessian_matrix, ref_indices=objective.ref_indices)
+    covariance, eigenvalues, hessian_diagnostics = regularize_hessian_return_covariance(hessian_matrix, ref_indices=objective.ref_indices, bin_idx=bin_idx)
     
     # For comparison, try to get lbfgs approximated inverse Hessian if available
     #   NOTE: lbfgs does not store the full hessian, only a low rank approximation
