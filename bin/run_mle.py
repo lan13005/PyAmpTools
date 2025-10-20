@@ -55,8 +55,10 @@ def run_single_bin_fits(
     np.random.seed(bin_seed)
     seed_list = np.random.randint(0, 1000000, n_iterations)
     
+    error_count = 0
     def run_single_random_fit(initial_guess):
         """Single fit in a single bin"""
+        nonlocal error_count # allow modification outside local scope
                 
         reference_waves = main_dict["phase_reference"].split("_")
         acceptance_correct = main_dict["acceptance_correct"]
@@ -81,6 +83,9 @@ def run_single_bin_fits(
             optim_result = optimize_single_bin_scipy(obj, initial_guess, bin_idx, method=method)
         else:
             raise ValueError(f"Invalid Maximum Likelihood Based method: {method}")
+        
+        if not optim_result['success']:
+            error_count += 1
         
         # NOTE: Here we force the usage of Tikhonov regularized covariance matrix to obtain the intensity and intensity errors
         #       Minuit does not always return a covariance matrix (i.e. if it fails). Tikhonov regularization adds a small value
@@ -173,6 +178,8 @@ def run_single_bin_fits(
     # Close the file if we opened one
     if not dump_to_stdout:
         bin_console.file.close()
+    
+    return bin_idx, error_count
 
 class OptimizerHelpFormatter(argparse.ArgumentParser):
     def error(self, message):
@@ -336,13 +343,34 @@ if __name__ == "__main__":
         
     ##### RUN JOBS IN PARALLEL #####
     timer = Timer()
+    error_summary = {}
     with Pool(processes=n_processes) as pool:
         job_args = [(pwa_manager, bin_idx, bin_seed, n_iterations, scale, method) for job_idx, (bin_idx, bin_seed) in job_assignments.items()]
         # Distribute work across processes
         with tqdm(total=total_jobs, desc="Processing jobs", unit="job") as pbar:
-            for _ in pool.imap_unordered(run_single_bin_fits, job_args):
+            for result in pool.imap_unordered(run_single_bin_fits, job_args):
+                bin_idx, error_count = result
+                error_summary[bin_idx] = error_count
                 pbar.update(1)
-    console.print(f"Total time elapsed: {timer.read()[2]}", style="bold")
+    
+    # Print error summary
+    console.print(f"\nTotal time elapsed: {timer.read()[2]}", style="bold")
+    console.print("\n" + "="*60, style="bold")
+    console.print("ERROR SUMMARY BY BIN", style="bold red")
+    console.print("="*60, style="bold")
+    
+    total_errors = 0
+    total_fits = 0
+    for bin_idx in sorted(error_summary.keys()):
+        error_count = error_summary[bin_idx]
+        total_errors += error_count
+        total_fits += n_iterations
+        status_color = "red" if error_count > 0 else "green"
+        console.print(f"Bin {bin_idx:3d}: {error_count:3d}/{n_iterations:3d} failed ({error_count/n_iterations*100:5.1f}%)", style=status_color)
+    
+    console.print("-"*60, style="bold")
+    console.print(f"TOTAL: {total_errors:3d}/{total_fits:3d} failed ({total_errors/total_fits*100:5.1f}%)", style="bold red" if total_errors > 0 else "bold green")
+    console.print("="*60, style="bold")
 
     sys.exit(0)
 
