@@ -1,16 +1,19 @@
 import os
+
 os.environ["JAX_PLATFORMS"] = "cpu"
-from pyamptools.utility.general import load_yaml, Timer
-import numpy as np
-import sys
-import pickle as pkl
-from iminuit import Minuit
 import argparse
-from tqdm import tqdm
-from multiprocessing import Pool
-from pyamptools.utility.opt_utils import Objective
-from rich.console import Console
 import logging
+import pickle as pkl
+import sys
+from multiprocessing import Pool
+
+import numpy as np
+from iminuit import Minuit
+from rich.console import Console
+from tqdm import tqdm
+
+from pyamptools.utility.general import Timer, load_yaml
+from pyamptools.utility.opt_utils import Objective
 
 Minuit.errordef = Minuit.LIKELIHOOD
 console = Console()
@@ -313,9 +316,7 @@ if __name__ == "__main__":
 
     ##### LOAD PWA MANAGER #####
     if pwa_manager_type == "GLUEX":
-        from iftpwa1.pwa.gluex.gluex_jax_manager import (
-            GluexJaxManager,
-        )
+        from iftpwa1.pwa.gluex.gluex_jax_manager import GluexJaxManager
         pwa_manager = GluexJaxManager(comm0=None, mpi_offset=1,
                                     yaml_file=main_dict,
                                     resolved_secondary=iftpwa_dict, prior_simulation=False, sum_returned_nlls=False, 

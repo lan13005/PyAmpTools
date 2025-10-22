@@ -8,9 +8,9 @@ from rich.console import Console
 from pyamptools.utility.general import get_git_commit_hash_for_package
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Pull default yaml file into your current directory (with guidance tutorial)")
+    parser = argparse.ArgumentParser(description="Pull default yaml file into your current directory (with some guidance on what to update)")
     parser.add_argument("-o", "--output_file", type=str, default="main.yaml")
-    parser.add_argument("-t", "--type", type=str, default='1d', choices=['1d', 'twops', 'vecps'])
+    parser.add_argument("-t", "--type", type=str, default='twops', choices=['twops', 'vecps', '1d'])
     parser.add_argument("-c", "--clean", action='store_true')
     args = parser.parse_args()
     
