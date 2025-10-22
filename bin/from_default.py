@@ -1,14 +1,16 @@
-import os
 import argparse
-from rich.console import Console
+import os
 import re
+
 from omegaconf import OmegaConf, dictconfig
-from pyamptools.utility.general import get_git_commit_hash_for_package   
+from rich.console import Console
+
+from pyamptools.utility.general import get_git_commit_hash_for_package
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Pull default yaml file into your current directory (with guidance tutorial)")
     parser.add_argument("-o", "--output_file", type=str, default="main.yaml")
-    parser.add_argument("-t", "--type", type=str, default='1d', choices=['twops', '1d'])
+    parser.add_argument("-t", "--type", type=str, default='1d', choices=['1d', 'twops', 'vecps'])
     parser.add_argument("-c", "--clean", action='store_true')
     args = parser.parse_args()
     
@@ -23,10 +25,12 @@ if __name__ == "__main__":
         console.print(f"\nFile {output_file} already exists. Exiting.\n", style="bold red")
         exit(1)
     
-    if args.type == 'twops':
-        default_src = f"{os.environ['PYAMPTOOLS_HOME']}/src/pyamptools/utility/yaml/default_etapi.yaml"
-    elif args.type == '1d':
+    if args.type == '1d':
         default_src = f"{os.environ['PYAMPTOOLS_HOME']}/src/pyamptools/utility/yaml/default_1d.yaml"
+    elif args.type == 'twops':
+        default_src = f"{os.environ['PYAMPTOOLS_HOME']}/src/pyamptools/utility/yaml/default_etapi.yaml"
+    elif args.type == 'vecps':
+        default_src = f"{os.environ['PYAMPTOOLS_HOME']}/src/pyamptools/utility/yaml/default_omegaeta.yaml"
     else:
         console.print(f"\nInvalid CLI argument (-t, --type) passed: {args.type}. Exiting.\n", style="bold red")
         exit(1)
