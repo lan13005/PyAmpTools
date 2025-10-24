@@ -1,34 +1,45 @@
 import os
+
 os.environ["JAX_PLATFORMS"] = "cpu"
 
 # Bypass jax multithreading and python multiprocessing deadlock issues
 import multiprocessing
+
 try:
     multiprocessing.set_start_method('spawn', force=True)
 except RuntimeError:
     pass
 
-from pyamptools.utility.general import load_yaml, calculate_subplot_grid_size, prettyLabels, identify_channel, standardize_axes # TODO: must be loaded before loadIFTResultsFromPkl, IDKY yet
-from pyamptools.utility.MomentUtilities import MomentManagerTwoPS, MomentManagerVecPS, EscapeMomentManager
-from pyamptools.utility.IO import loadIFTResultsFromPkl
-from pyamptools.utility.IO import get_nEventsInBin
-import pandas as pd
-import numpy as np
-import dill as pkl
+import gc
 import glob
-from typing import Tuple, Dict
-import matplotlib.pyplot as plt
-from rich.console import Console
+import io
 import re
+from typing import Dict, Tuple
+
+import dill as pkl
+import matplotlib.patheffects as path_effects
+import matplotlib.pyplot as plt
+import mplhep as hep
+import numpy as np
+import pandas as pd
 import tqdm
 from matplotlib.patches import Ellipse
-import matplotlib.patheffects as path_effects
-import mplhep as hep
-import gc
-import io
 from nifty8 import from_random
-import mplhep as hep
-from pyamptools.utility.general import calculate_subplot_grid_size
+from rich.console import Console
+
+from pyamptools.utility.general import (  # TODO: must be loaded before loadIFTResultsFromPkl, IDKY yet
+    calculate_subplot_grid_size,
+    identify_channel,
+    load_yaml,
+    prettyLabels,
+    standardize_axes,
+)
+from pyamptools.utility.IO import get_nEventsInBin, loadIFTResultsFromPkl
+from pyamptools.utility.MomentUtilities import (
+    EscapeMomentManager,
+    MomentManagerTwoPS,
+    MomentManagerVecPS,
+)
 
 # TODO:
 # - Ensure all IFT, MLE, MCMC uses intensity, intensity_error
@@ -220,7 +231,7 @@ class ResultManager:
             self._gen_results = self.load_ift_results(source_type="GENERATED")
             self._moment_inversion_results = self.load_moment_inversion_results()
             
-    def attempt_project_moments(self, normalization_scheme=0, pool_size=-1, silence=False):
+    def attempt_project_moments(self, normalization_scheme=0, pool_size=-1, batch_size=100):
         
         self.console.print(f"User requested moments to be calculated")
         dfs_to_process = [
@@ -254,15 +265,15 @@ class ResultManager:
                     elif self.channel == "Amp":
                         momentManager = EscapeMomentManager(df, self.waveNames)
                     else:
-                        raise ValueError(f"Unknown channel for moment projection: {self.channel}")
-                    self.console.print(f"  Dataset: '{df_name}'")
-                    
+                        raise ValueError(f"Unknown channel for moment projection: {self.channel}")                    
                     # Normalize to the intensity in the bin [scheme=1] (acceptance corrected or not depends on your setting in the YAML file when the dataframe was created)
+                    self.console.print(f"Projecting moments for '{df_name}' dataframe with specs:\n  pool_size: {pool_size}\n  number of samples: {len(df)}\n  batch size: {batch_size}")
                     processed_df, moment_latex_dict = momentManager.process_and_return_df(
                         normalization_scheme=normalization_scheme,
                         pool_size=pool_size, 
+                        batch_size=batch_size,
                         append=True,
-                        silence=silence
+                        silence=self.silence
                     )                
                     if   df_name == "mle":  self._mle_results    = processed_df
                     elif df_name == "mcmc": self._mcmc_results   = processed_df

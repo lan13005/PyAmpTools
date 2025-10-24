@@ -1,33 +1,35 @@
 import os
-os.environ["JAX_PLATFORMS"] = "cpu"
-import jax
-import numpyro
-import numpyro.distributions as dist
-import jax.numpy as jnp
-from jax import jit, vmap
-from pyamptools.utility.general import load_yaml, Timer
-import numpy as np
-import sys
-import pickle as pkl
-import argparse
-from numpyro.infer import NUTS, MCMC
-from rich.console import Console
-import os
-from pyamptools.utility.general import identify_channel, converter
-from pyamptools.utility.opt_utils import Objective
-import tempfile
-import time
-import logging
-import shutil
-from numpyro.diagnostics import summary, hpdi
-import pandas as pd
-from collections import OrderedDict
-from rich.table import Table
 
-from itertools import product
+os.environ["JAX_PLATFORMS"] = "cpu"
+import argparse
+import logging
 
 # Set multiprocessing start method to 'spawn' to avoid deadlocks with JAX
 import multiprocessing as mp
+import os
+import pickle as pkl
+import shutil
+import sys
+import tempfile
+import time
+from collections import OrderedDict
+
+import jax
+import jax.numpy as jnp
+import numpy as np
+import numpyro
+import numpyro.distributions as dist
+import pandas as pd
+from jax import jit, vmap
+from numpyro.diagnostics import hpdi, summary
+from numpyro.infer import MCMC, NUTS
+from omegaconf.dictconfig import DictConfig
+from rich.console import Console
+from rich.table import Table
+
+from pyamptools.utility.general import Timer, converter, identify_channel, load_yaml
+from pyamptools.utility.opt_utils import Objective
+
 mp.set_start_method('spawn', force=True)
 
 ########################################################
@@ -1021,20 +1023,25 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main_dict = load_yaml(args.main_yaml)
+    if not main_dict:
+        console.print("main YAML file is required", style="bold red")
+        sys.exit(1)
+        
     iftpwa_dict = main_dict["nifty"]["yaml"] # DictConfig ~ Dict-like object
+    if not iftpwa_dict:
+        console.print("iftpwa YAML file is required", style="bold red")
+        sys.exit(1)
+    if isinstance(iftpwa_dict, str):
+        iftpwa_dict = load_yaml(iftpwa_dict)
+    if not isinstance(iftpwa_dict, (dict, DictConfig)):
+        raise ValueError(f"iftpwa_dict is not a string or (dict, omegaconf.config.DictConfig): {iftpwa_dict}")
+    
     output_folder = os.path.join(main_dict["base_directory"], "MCMC")
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     else:
         raise ValueError(f"Output folder {output_folder} already exists! Please provide a different path or remove the folder.")
     
-    if not iftpwa_dict:
-        console.print("iftpwa YAML file is required", style="bold red")
-        sys.exit(1)
-    if not main_dict:
-        console.print("main YAML file is required", style="bold red")
-        sys.exit(1)
-        
     #### PARSE ARGS ####
     from pyamptools.utility.general import fyea
     seed = fyea(main_dict["mcmc"], "seed", args.seed)

@@ -9,6 +9,7 @@ from multiprocessing import Pool
 
 import numpy as np
 from iminuit import Minuit
+from omegaconf.dictconfig import DictConfig
 from rich.console import Console
 from tqdm import tqdm
 
@@ -43,8 +44,10 @@ def run_single_bin_fits(
         n_iterations: Number of random initializations to perform
         scale: Scale for random initialization, real/imag parts are sampled from uniform [-scale, scale]
         method: Optimization method to use
+        aux: Auxiliary information
     """
-    pwa_manager, bin_idx, bin_seed, n_iterations, scale, method = job_info
+    pwa_manager, bin_idx, bin_seed, n_iterations, scale, method, aux = job_info
+    dump_to_stdout, output_folder, main_dict, waveNames, nPars, nmbMasses, nmbTprimes, reference_waves = aux
     
     # Create a bin-specific console if writing to files
     bin_console = console
@@ -63,7 +66,6 @@ def run_single_bin_fits(
         """Single fit in a single bin"""
         nonlocal error_count # allow modification outside local scope
                 
-        reference_waves = main_dict["phase_reference"].split("_")
         acceptance_correct = main_dict["acceptance_correct"]
         obj = Objective(pwa_manager, bin_idx, nPars, nmbMasses, nmbTprimes, reference_waves=reference_waves)
         
@@ -258,11 +260,17 @@ if __name__ == "__main__":
     
     #### LOAD YAML FILES ####
     main_dict = load_yaml(args.main_yaml)
+    if not main_dict:
+        raise ValueError("Main YAML file is required")
+    
     iftpwa_dict = main_dict["nifty"]["yaml"] # DictConfig ~ Dict-like object
     if not iftpwa_dict:
         raise ValueError("iftpwa YAML file is required")
-    if not main_dict:
-        raise ValueError("Main YAML file is required")
+    if isinstance(iftpwa_dict, str):
+        iftpwa_dict = load_yaml(iftpwa_dict)
+    if not isinstance(iftpwa_dict, (dict, DictConfig)):
+        raise ValueError(f"iftpwa_dict is not a string or (dict, omegaconf.dictconfig.DictConfig): {iftpwa_dict}")
+    
     waveNames = main_dict["waveset"].split("_")
     nmbMasses = main_dict["n_mass_bins"]
     
@@ -271,7 +279,7 @@ if __name__ == "__main__":
     
     nPars = 2 * len(waveNames)
     reference_waves = main_dict["phase_reference"].split("_")
-    
+
     pwa_manager_type = iftpwa_dict["GENERAL"]["pwa_manager"]
     
     #### EXIT IF ONLY PRINTING WAVE NAMES
@@ -345,9 +353,9 @@ if __name__ == "__main__":
     ##### RUN JOBS IN PARALLEL #####
     timer = Timer()
     error_summary = {}
+    aux = (dump_to_stdout, output_folder, main_dict, waveNames, nPars, nmbMasses, nmbTprimes, reference_waves)
     with Pool(processes=n_processes) as pool:
-        job_args = [(pwa_manager, bin_idx, bin_seed, n_iterations, scale, method) for job_idx, (bin_idx, bin_seed) in job_assignments.items()]
-        # Distribute work across processes
+        job_args = [(pwa_manager, bin_idx, bin_seed, n_iterations, scale, method, aux) for job_idx, (bin_idx, bin_seed) in job_assignments.items()]
         with tqdm(total=total_jobs, desc="Processing jobs", unit="job") as pbar:
             for result in pool.imap_unordered(run_single_bin_fits, job_args):
                 bin_idx, error_count = result
