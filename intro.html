@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
     <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
     <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -438,6 +438,7 @@ document.write(`
 <section class="tex2jax_ignore mathjax_ignore" id="usage-design">
 <h1>Usage / Design<a class="headerlink" href="#usage-design" title="Link to this heading">#</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">pa</span></code> is an <strong>executable</strong> that dispatches various functions to perform various tasks related to optimization and provides easy access to specific AmpTools functionality like generating simulations from <code class="docutils literal notranslate"><span class="pre">gen_amp</span></code> and <code class="docutils literal notranslate"><span class="pre">gen_vec_ps</span></code>, fitting, and extracting fit fractions.</p>
+<p>There are a variety of auxillary CLI programs that can perform filtering/selection, subsetting, and plotting of flat root files that are typically used in analysis workflows. Since this is a simple dispatch system, a user can easily add new CLI programs by placing them in the <code class="docutils literal notranslate"><span class="pre">bin</span></code> directory and adding their location to the <code class="docutils literal notranslate"><span class="pre">src/pyamptools/pa.py</span></code> script. This extensibility allows for a centralized hub of available tools to handle most analysis workflows.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pa<span class="w"> </span>-h<span class="w"> </span><span class="c1"># for usage</span>
 pa<span class="w"> </span>-f<span class="w"> </span><span class="c1"># for dispatched file locations</span>
 </pre></div>
@@ -461,7 +462,8 @@ pa<span class="w"> </span>-f<span class="w"> </span><span class="c1"># for dispa
 </div>
 <section id="apptainer-usage">
 <h2>Apptainer Usage<a class="headerlink" href="#apptainer-usage" title="Link to this heading">#</a></h2>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># /scratch needed for MPI and fontconfig for matplotlib(not so important)</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># You might want to add `--cleanenv` flag to run the container in a clean environment</span>
+<span class="c1"># /scratch needed for MPI and fontconfig for matplotlib(not so important)</span>
 <span class="c1"># --writable-tmpfs allows temp modifications to sif contents. Ideally you can git pull and push updates changes to repos</span>
 <span class="c1"># --bind whatever directories you need access to</span>
 apptainer<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>--contain<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>

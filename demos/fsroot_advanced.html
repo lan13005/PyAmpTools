@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -441,7 +441,10 @@ atiSetup| GPU is disabled
 
 atiSetup| Loading library libIUAmpTools.so ............  ON
 atiSetup| Loading library libAmpTools.so ..............  ON
-atiSetup| Loading library libAmpPlotter.so ............  ON
+atiSetup| Loading library libAmpPlotter.so ............
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  ON
 atiSetup| Loading library libAmpsDataIO.so ............  ON
 atiSetup| Loading library libFSRoot.so ................  ON
 atiSetup| Loading library libAmpsGen.so ...............  OFF
@@ -452,14 +455,16 @@ atiSetup| Loading library libAmpsGen.so ...............  OFF
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>------------------------------------------------
 
-atiSetup| Saved aliases found in /w/halld-scshelf2101/lng/WORK/PyAmpTools9/src/pyamptools/.aliases.txt, attempting to load...
-atiSetup| minor warning: Unable to alias FSFitFunctions - doesn&#39;t exist under ROOT namespace
-atiSetup| minor warning: Unable to alias FSFitPrivate - doesn&#39;t exist under ROOT namespace
+atiSetup| Saved aliases found in /d/grid17/ln16/PyAmpTools/src/pyamptools/.aliases.txt, attempting to load...
+atiSetup| minor warning: Unable to alias omegapiAngles - doesn&#39;t exist under ROOT namespace
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>atiSetup| minor warning: Unable to alias omegapiAngles - doesn&#39;t exist under ROOT namespace
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>atiSetup| minor warning: Unable to alias URConfig - doesn&#39;t exist under ROOT namespace
 atiSetup| minor warning: Unable to alias URtypes - doesn&#39;t exist under ROOT namespace
-atiSetup| minor warning: Unable to alias URConfig - doesn&#39;t exist under ROOT namespace
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>atiSetup| minor warning: Unable to alias FSFitFunctions - doesn&#39;t exist under ROOT namespace
+atiSetup| minor warning: Unable to alias FSFitPrivate - doesn&#39;t exist under ROOT namespace
 </pre></div>
 </div>
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(False, False, 0)
@@ -509,25 +514,8 @@ atiSetup| minor warning: Unable to alias URConfig - doesn&#39;t exist under ROOT
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>READING CACHE: 
-    root file = /w/halld-scshelf2101/lng/WORK/PyAmpTools9/demos/.cache.root
-    data file = /w/halld-scshelf2101/lng/WORK/PyAmpTools9/demos/.cache.dat
-FSHistogram:  READ HISTOGRAM...          FSRootHist:000001   101_1             OKAY           (entries = 36081)
-FSHistogram:  READ HISTOGRAM...          FSRootHist:000002   101_1             OKAY           (entries = 36081)
-FSHistogram:  READ HISTOGRAM...          FSRootHist:000003   101_1             OKAY           (entries = 36081)
-FSHistogram:  READ HISTOGRAM...          FSRootHist:000004   101_1             OKAY           (entries = 36081)
-FSHistogram:  READ HISTOGRAM...          FSRootHist:000005   101_1             OKAY           (entries = 36081)
-FSHistogram:  READ HISTOGRAM...          FSRootHist:000006   101_1             OKAY           (entries = 36081)
-FSHistogram:  READ HISTOGRAM...          FSRootHist:000007   101_1             OKAY           (entries = 60608)
-FSHistogram:  READ HISTOGRAM...          FSRootHist:000008   101_1             OKAY           (entries = 60608)
-FSHistogram:  READ HISTOGRAM...          FSRootHist:000009   101_1             OKAY           (entries = 36081)
-FSHistogram:  READ HISTOGRAM...          FSRootHist:000010   101_1             OKAY           (entries = 90785)
-FSHistogram:  READ HISTOGRAM...          FSRootHist:000011   101_1             OKAY           (entries = 36081)
-FSHistogram:  READ HISTOGRAM...          FSRootHist:000012   101_1             OKAY           (entries = 0)
-FSHistogram:  READ HISTOGRAM...          FSRootHist:000013   101_1             OKAY           (entries = 0)
-FSHistogram:  READ HISTOGRAM...          FSRootHist:000014   101_1             OKAY           (entries = 0)
-FSHistogram:  READ HISTOGRAM...          FSRootHist:000015   101_1             OKAY           (entries = 0)
-FSHistogram:  READ HISTOGRAM...          FSRootHist:000016   101_1             OKAY           (entries = 0)
-FSHistogram:  READ HISTOGRAM...          FSRootHist:000017   101_1             OKAY           (entries = 0)
+    root file = /d/grid17/ln16/PyAmpTools/demos/.cache.root
+    data file = /d/grid17/ln16/PyAmpTools/demos/.cache.dat
 </pre></div>
 </div>
 </div>
@@ -711,16 +699,16 @@ FSHistogram:  READ HISTOGRAM...          FSRootHist:000017   101_1             O
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>    FOUND HISTOGRAM...    FSRootHist:000001   101_1             OKAY           (entries = 36081)
-    FOUND HISTOGRAM...    FSRootHist:000002   101_1             OKAY           (entries = 36081)
-    FOUND HISTOGRAM...    FSRootHist:000003   101_1             OKAY           (entries = 36081)
-    FOUND HISTOGRAM...    FSRootHist:000004   101_1             OKAY           (entries = 36081)
-    FOUND HISTOGRAM...    FSRootHist:000005   101_1             OKAY           (entries = 36081)
-    FOUND HISTOGRAM...    FSRootHist:000006   101_1             OKAY           (entries = 36081)
-    FOUND HISTOGRAM...    FSRootHist:000007   101_1             OKAY           (entries = 60608)
-    FOUND HISTOGRAM...    FSRootHist:000008   101_1             OKAY           (entries = 60608)
-    FOUND HISTOGRAM...    FSRootHist:000009   101_1             OKAY           (entries = 36081)
-    FOUND HISTOGRAM...    FSRootHist:000010   101_1             OKAY           (entries = 90785)
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>    CREATING HISTOGRAM... FSRootHist:000001   101_1             !!NO_FILE!!    (entries = 0)
+    CREATING HISTOGRAM... FSRootHist:000002   101_1             !!NO_FILE!!    (entries = 0)
+    CREATING HISTOGRAM... FSRootHist:000003   101_1             !!NO_FILE!!    (entries = 0)
+    CREATING HISTOGRAM... FSRootHist:000004   101_1             !!NO_FILE!!    (entries = 0)
+    CREATING HISTOGRAM... FSRootHist:000005   101_1             !!NO_FILE!!    (entries = 0)
+    CREATING HISTOGRAM... FSRootHist:000006   101_1             !!NO_FILE!!    (entries = 0)
+    CREATING HISTOGRAM... FSRootHist:000007   101_1             !!NO_FILE!!    (entries = 0)
+    CREATING HISTOGRAM... FSRootHist:000008   101_1             !!NO_FILE!!    (entries = 0)
+    CREATING HISTOGRAM... FSRootHist:000009   101_1             !!NO_FILE!!    (entries = 0)
+    CREATING HISTOGRAM... FSRootHist:000010   101_1             !!NO_FILE!!    (entries = 0)
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Info in &lt;TCanvas::Print&gt;: pdf file plots/p001_etapi.pdf has been created
@@ -786,11 +774,9 @@ FSHistogram:  READ HISTOGRAM...          FSRootHist:000017   101_1             O
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>fg Integral: 499.999597944485
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>    FOUND HISTOGRAM...    FSRootHist:000011   101_1             OKAY           (entries = 36081)
-    FOUND HISTOGRAM...    FSRootHist:000012   101_1             OKAY           (entries = 0)
-    FOUND HISTOGRAM...    FSRootHist:000013   101_1             OKAY           (entries = 0)
+    CREATING HISTOGRAM... FSRootHist:000011   101_1             !!NO_FILE!!    (entries = 0)
+    CREATING HISTOGRAM... FSRootHist:000012   101_1             !!NO_FILE!!    (entries = 0)
+    CREATING HISTOGRAM... FSRootHist:000013   101_1             !!NO_FILE!!    (entries = 0)
  PARAMETER DEFINITIONS:
     NO.   NAME         VALUE      STEP SIZE      LIMITS
      1 p:a          1.60000e+03  1.60000e+02     no limits
@@ -865,7 +851,7 @@ ERR MATRIX APPROXIMATE
         4  0.00000   0.000  1.000  0.000
         5  0.00000   0.000  0.000  1.000
  ERR MATRIX APPROXIMATE
-    FOUND HISTOGRAM...    FSRootHist:000014   101_1             OKAY           (entries = 0)
+    CREATING HISTOGRAM... FSRootHist:000014   101_1             !!NO_FILE!!    (entries = 0)
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Info in &lt;TCanvas::Print&gt;: pdf file plots/p002_etapi.pdf has been created
@@ -914,26 +900,9 @@ ERR MATRIX APPROXIMATE
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>    FOUND HISTOGRAM...    FSRootHist:000015   101_1             OKAY           (entries = 0)
-    FOUND HISTOGRAM...    FSRootHist:000016   101_1             OKAY           (entries = 0)
-    FOUND HISTOGRAM...    FSRootHist:000017   101_1             OKAY           (entries = 0)
-    FOUND HISTOGRAM...    FSRootHist:000001   101_1             OKAY           (entries = 36081)
-    FOUND HISTOGRAM...    FSRootHist:000002   101_1             OKAY           (entries = 36081)
-    FOUND HISTOGRAM...    FSRootHist:000003   101_1             OKAY           (entries = 36081)
-    FOUND HISTOGRAM...    FSRootHist:000004   101_1             OKAY           (entries = 36081)
-    FOUND HISTOGRAM...    FSRootHist:000005   101_1             OKAY           (entries = 36081)
-    FOUND HISTOGRAM...    FSRootHist:000006   101_1             OKAY           (entries = 36081)
-    FOUND HISTOGRAM...    FSRootHist:000007   101_1             OKAY           (entries = 60608)
-    FOUND HISTOGRAM...    FSRootHist:000008   101_1             OKAY           (entries = 60608)
-    FOUND HISTOGRAM...    FSRootHist:000009   101_1             OKAY           (entries = 36081)
-    FOUND HISTOGRAM...    FSRootHist:000010   101_1             OKAY           (entries = 90785)
-    FOUND HISTOGRAM...    FSRootHist:000011   101_1             OKAY           (entries = 36081)
-    FOUND HISTOGRAM...    FSRootHist:000012   101_1             OKAY           (entries = 0)
-    FOUND HISTOGRAM...    FSRootHist:000013   101_1             OKAY           (entries = 0)
-    FOUND HISTOGRAM...    FSRootHist:000014   101_1             OKAY           (entries = 0)
-    FOUND HISTOGRAM...    FSRootHist:000015   101_1             OKAY           (entries = 0)
-    FOUND HISTOGRAM...    FSRootHist:000016   101_1             OKAY           (entries = 0)
-    FOUND HISTOGRAM...    FSRootHist:000017   101_1             OKAY           (entries = 0)
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>    CREATING HISTOGRAM... FSRootHist:000015   101_1             !!NO_FILE!!    (entries = 0)
+    CREATING HISTOGRAM... FSRootHist:000016   101_1             !!NO_FILE!!    (entries = 0)
+    CREATING HISTOGRAM... FSRootHist:000017   101_1             !!NO_FILE!!    (entries = 0)
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Info in &lt;TCanvas::Print&gt;: pdf file plots/p003_etapi.pdf has been created

@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -505,12 +505,29 @@ document.write(`
     <span class="n">display</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
 
 <span class="n">PYAMPTOOLS_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;PYAMPTOOLS_HOME&quot;</span><span class="p">)</span>
-<span class="n">result_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PYAMPTOOLS_HOME</span><span class="si">}</span><span class="s2">/demos/ift_example/&quot;</span>
+<span class="n">BASE_DIRECTORY</span> <span class="o">=</span> <span class="s2">&quot;RESULTS_TEST&quot;</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Welcome to JupyROOT 6.28/06
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Doing some pre-run cleanup...&quot;</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;rm -rf main.yaml local_beam.conf *.lock&#39;</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rm -rf </span><span class="si">{</span><span class="n">BASE_DIRECTORY</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Doing some pre-run cleanup...
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0
 </pre></div>
 </div>
 </div>
@@ -522,7 +539,26 @@ document.write(`
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">main_yaml</span> <span class="o">=</span> <span class="s2">&quot;main.yaml&quot;</span>
 
-<span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pa from_default -o </span><span class="si">{</span><span class="n">main_yaml</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Generating default YAML file...&quot;</span><span class="p">)</span>
+<span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pa from_default -o </span><span class="si">{</span><span class="n">main_yaml</span><span class="si">}</span><span class="s2"> -t twops -c&quot;</span><span class="p">)</span> <span class="c1"># -c for starting clean slate</span>
+
+<span class="c1"># Update required fields the user is supposed to update manually for testing</span>
+<span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+<span class="n">update_required_fields</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="sa">f</span><span class="s2">&quot;sed -i &#39;s|_BASE_DIRECTORY_|</span><span class="si">{</span><span class="n">cwd</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">BASE_DIRECTORY</span><span class="si">}</span><span class="s2">|g&#39; </span><span class="si">{</span><span class="n">main_yaml</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="sa">f</span><span class="s2">&quot;sed -i &#39;s|_DATA_SOURCES_|DATA_SOURCES|g&#39; </span><span class="si">{</span><span class="n">main_yaml</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="n">update_required_fields</span><span class="p">:</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Updated required fields in YAML file...&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Generating default YAML file...
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Updated required fields in YAML file...
 </pre></div>
 </div>
 </div>
@@ -544,7 +580,7 @@ document.write(`
 </div>
 <div class="cell_output docutils container">
 <div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">defaults_location</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">null                                                                                            </span>
-<span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">base_directory</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">/w/halld-scshelf2101/lng/WORK/PyAmpTools9/demos/RESULTS</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># base directory for all results</span><span style="background-color: #f8f8f8">           </span>
+<span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">base_directory</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">/d/grid17/ln16/PyAmpTools/demos/RESULTS_TEST</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># base directory for all results</span><span style="background-color: #f8f8f8">                      </span>
 <span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">data_folder</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">${base_directory}/DATA_SOURCES</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># folder for data sources that will be binned</span><span style="background-color: #f8f8f8">                          </span>
 <span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">n_processes</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">4</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># global number of processes to generally use</span><span style="background-color: #f8f8f8">                                                       </span>
 <span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">polarizations</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="background-color: #f8f8f8">                                                                                                     </span>
@@ -572,7 +608,7 @@ document.write(`
 <span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">add_amp_factor</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #ba2121; text-decoration-color: #ba2121; background-color: #f8f8f8">""</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># Add an amplitude factor to every amplitude. For example, OmegaDalitz 0.1212 0.0257 0.0 0.0 wil</span>
 <span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">append_to_decay</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #ba2121; text-decoration-color: #ba2121; background-color: #f8f8f8">""</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># append this string to the decay amplitude, i.e. 'omega3pi' can be appended to Vec_ps_refl amp</span>
 <span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">append_to_cfg</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #ba2121; text-decoration-color: #ba2121; background-color: #f8f8f8">""</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># append this string to the AmpTools configuration file</span><span style="background-color: #f8f8f8">                                          </span>
-<span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">coherent_sums</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">null</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># Dict[coherentSumName: UnderscoreSeparatedListOfWaves]</span><span style="background-color: #f8f8f8">                                        </span>
+<span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">coherent_sums</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">null</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># Dict[coherentSumName: UnderscoreSeparatedListOfWaves], i.e. D+: Dp0+_Dp2+</span><span style="background-color: #f8f8f8">                    </span>
 <span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">mle</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="background-color: #f8f8f8">                                                                                                               </span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">  </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">seed</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">42</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># rng seed</span><span style="background-color: #f8f8f8">                                                                                              </span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">  </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">scale</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">100</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># production coenfficients sampled uniformly from [-scale, scale]</span><span style="background-color: #f8f8f8">                                     </span>
@@ -652,7 +688,7 @@ document.write(`
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">    </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">perTprimeScaling</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">true</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># scale each t bin separately</span><span style="background-color: #f8f8f8">                                                           </span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">    </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">altTprimeNorm</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">no_norm</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># (peak_norm, no_norm, kin_norm) normalize scheme of phase space multiplier for each t-b</span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">    </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">noInterpScipy</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">false</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># use scipy.interpolate.interp1d cubic interpolation instead of nifty.interp linear interp</span>
-<span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">    </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">phaseSpaceMultiplier</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">null</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># Path to a pickled file containing phase space factors, generated by `pa calc_ps`</span><span style="background-color: #f8f8f8">  </span>
+<span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">    </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">phaseSpaceMultiplier</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">${base_directory}/phasespace.pkl</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># Path to a pickled file containing phase space factors,</span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">    </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">s0</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">null</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># energy scale factor</span><span style="background-color: #f8f8f8">                                                                                 </span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">    </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">productionFactor</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">GLUEX</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># Production factor scheme, depends on beam energy and target mass</span><span style="background-color: #f8f8f8">                     </span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">    </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic">####### BELOW ARE ONLY USED IF USING MULTIPLE DATASETS #######</span><span style="background-color: #f8f8f8">                                                 </span>
@@ -680,7 +716,7 @@ document.write(`
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">            </span><span style="background-color: #f8f8f8">{                                                                                                      </span>
 <span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">              name</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #19177c; text-decoration-color: #19177c; background-color: #f8f8f8">$a_2(1320)$</span><span style="background-color: #f8f8f8">,                                                                                   </span>
 <span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">              fun</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #19177c; text-decoration-color: #19177c; background-color: #f8f8f8">breitwigner_dyn</span><span style="background-color: #f8f8f8">,                                                                                </span>
-<span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">              preScale</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #19177c; text-decoration-color: #19177c; background-color: #f8f8f8">0.6</span><span style="background-color: #f8f8f8">,                                                                                       </span>
+<span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">              preScale</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #19177c; text-decoration-color: #19177c; background-color: #f8f8f8">1.0</span><span style="background-color: #f8f8f8">,                                                                                       </span>
 <span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">              no_bkg</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #19177c; text-decoration-color: #19177c; background-color: #f8f8f8">false</span><span style="background-color: #f8f8f8">,                                                                                       </span>
 <span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">              paras</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">{</span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold"> mass</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #19177c; text-decoration-color: #19177c; background-color: #f8f8f8">m_a2_1320</span><span style="background-color: #f8f8f8">,</span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold"> width</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #19177c; text-decoration-color: #19177c; background-color: #f8f8f8">w_a2_1320</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">},                                                        </span>
 <span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">              static_paras</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">{</span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold"> spin</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #19177c; text-decoration-color: #19177c; background-color: #f8f8f8">2</span><span style="background-color: #f8f8f8">,</span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold"> mass1</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #19177c; text-decoration-color: #19177c; background-color: #f8f8f8">0.548</span><span style="background-color: #f8f8f8">,</span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold"> mass2</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="color: #19177c; text-decoration-color: #19177c; background-color: #f8f8f8">0.135</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">},                                               </span>
@@ -736,7 +772,7 @@ document.write(`
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">    </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># Fields within this yaml can be referenced following a field path that is period delimited.</span><span style="background-color: #f8f8f8">                   </span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">    </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># An Optuna `suggest` command and associated args must also be passed. Field values must be a</span><span style="background-color: #f8f8f8">                  </span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">    </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic"># string that is then `eval`'d by `python` to construct `args` and `kwargs`.</span><span style="background-color: #f8f8f8">                                   </span>
-<span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">    </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic">#   - For example, `NIFTY.OPTIMIZATION.nSamples.1|suggest_int: "2, 10, step=2"` would modify the</span><span style="background-color: #f8f8f8">               </span>
+<span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">    </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic">#   - For example, OPTIMIZATION.nSamples.1|suggest_int: "2, 10, step=2"` would modify the</span><span style="background-color: #f8f8f8">                      </span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">    </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic">#     `nSamples` sub-field within the `OPTIMIZATION` field of `NIFTY` field so that Optuna makes integer</span><span style="background-color: #f8f8f8">       </span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">    </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic">#     suggestions on list index element 1. The suggestions are integers between 2 and 10 in steps of 2.</span><span style="background-color: #f8f8f8">        </span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">    </span><span style="color: #3d7b7b; text-decoration-color: #3d7b7b; background-color: #f8f8f8; font-style: italic">#   - See Optuna docs for available `suggest` commands.</span><span style="background-color: #f8f8f8">                                                        </span>
@@ -755,13 +791,8 @@ document.write(`
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">  </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">regex_merge</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">--regex_merge '.*::.*::'                                                                            </span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">  </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">n_processes</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">${n_processes}                                                                                      </span>
 <span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">  </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">skip_plotting_mle</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">true                                                                                          </span>
-<span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">pyamptools_commit_hash</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">489345652d2ccda0cf973298453426cd4a1df58a                                                   </span>
-<span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">iftpwa_commit_hash</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">ab748dc794e9041639eeafdd8d7e76f8cf81bcb2                                                       </span>
-<span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">share_mc</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="background-color: #f8f8f8">                                                                                                          </span>
-<span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">  </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">data</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">false                                                                                                      </span>
-<span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">  </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">bkgnd</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">false                                                                                                     </span>
-<span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">  </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">accmc</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">false                                                                                                     </span>
-<span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8">  </span><span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">genmc</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">false                                                                                                     </span>
+<span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">pyamptools_commit_hash</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">277f26c3f7f36bdec5f00fe67729fd2dd4f5aac1                                                   </span>
+<span style="color: #008000; text-decoration-color: #008000; background-color: #f8f8f8; font-weight: bold">iftpwa_commit_hash</span><span style="color: #000000; text-decoration-color: #000000; background-color: #f8f8f8">:</span><span style="color: #bbbbbb; text-decoration-color: #bbbbbb; background-color: #f8f8f8"> </span><span style="background-color: #f8f8f8">f7f89b6cef3ca49316d8c3e6bcd48a6f6f1754b9                                                       </span>
 <span style="background-color: #f8f8f8">                                                                                                                   </span>
 </pre>
 </div></div>
@@ -791,37 +822,41 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 <span class="n">t_slope</span> <span class="o">=</span> <span class="mf">3.0</span> <span class="c1"># slope of the momentum transfer (exponentially distributed)</span>
 <span class="n">min_ebeam</span> <span class="o">=</span> <span class="mf">8.2</span> <span class="c1"># minimum energy of the photon beam</span>
 <span class="n">max_ebeam</span> <span class="o">=</span> <span class="mf">8.8</span> <span class="c1"># maximum energy of the photon beam</span>
-<span class="n">n_data</span> <span class="o">=</span> <span class="mi">25000</span> <span class="c1"># number of data samples to generate</span>
-<span class="n">n_ps</span> <span class="o">=</span> <span class="mi">100000</span>   <span class="c1"># number of phase space samples to generate</span>
-<span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pa run_priorSim </span><span class="si">{</span><span class="n">main_yaml</span><span class="si">}</span><span class="s2"> -s </span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="s2"> -emin </span><span class="si">{</span><span class="n">min_ebeam</span><span class="si">}</span><span class="s2"> -emax </span><span class="si">{</span><span class="n">max_ebeam</span><span class="si">}</span><span class="s2"> -t </span><span class="si">{</span><span class="n">t_slope</span><span class="si">}</span><span class="s2"> -nd </span><span class="si">{</span><span class="n">n_data</span><span class="si">}</span><span class="s2"> -np </span><span class="si">{</span><span class="n">n_ps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">n_data</span> <span class="o">=</span> <span class="mi">10000</span> <span class="c1"># number of data samples to generate</span>
+<span class="n">n_ps</span> <span class="o">=</span> <span class="mi">50000</span>   <span class="c1"># number of phase space samples to generate</span>
+
+<span class="c1"># -c for starting clean</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running prior simulation...&quot;</span><span class="p">)</span>
+<span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pa run_priorSim </span><span class="si">{</span><span class="n">main_yaml</span><span class="si">}</span><span class="s2"> -s </span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="s2"> -emin </span><span class="si">{</span><span class="n">min_ebeam</span><span class="si">}</span><span class="s2"> -emax </span><span class="si">{</span><span class="n">max_ebeam</span><span class="si">}</span><span class="s2"> -t </span><span class="si">{</span><span class="n">t_slope</span><span class="si">}</span><span class="s2"> -nd </span><span class="si">{</span><span class="n">n_data</span><span class="si">}</span><span class="s2"> -np </span><span class="si">{</span><span class="n">n_ps</span><span class="si">}</span><span class="s2"> -c&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Running prior simulation...
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">resultManager</span> <span class="o">=</span> <span class="n">ResultManager</span><span class="p">(</span><span class="n">main_yaml</span><span class="p">,</span> <span class="n">silence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Prior simulation complete, drawing results...&quot;</span><span class="p">)</span>
+<span class="n">resultManager</span> <span class="o">=</span> <span class="n">ResultManager</span><span class="p">(</span><span class="n">main_yaml</span><span class="p">,</span> <span class="n">silence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">resultManager</span><span class="o">.</span><span class="n">attempt_load_all</span><span class="p">()</span>
 <span class="n">plot_gen_curves</span><span class="p">(</span><span class="n">resultManager</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">)</span>
+<span class="n">show_pdf</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">BASE_DIRECTORY</span><span class="si">}</span><span class="s2">/PLOTS/gen_curves.pdf&quot;</span><span class="p">)</span>
 <span class="k">del</span> <span class="n">resultManager</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Prior simulation complete, drawing results...
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/d/grid17/ln16/miniconda/envs/pyamptools/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
   warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
 </pre></div>
 </div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/gen_curves.pdf&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<img alt="../_images/7b80f36e68b419c94c981c42b717efa61eecc0ef163390ba1e9ac073747ab17d.png" src="../_images/7b80f36e68b419c94c981c42b717efa61eecc0ef163390ba1e9ac073747ab17d.png" />
+<img alt="../_images/425ede03522752efe040cd7be415c887073921ef31f99713ec7ea8d5263613db.png" src="../_images/425ede03522752efe040cd7be415c887073921ef31f99713ec7ea8d5263613db.png" />
 </div>
 </div>
 </section>
@@ -829,31 +864,35 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 <section id="run-the-mle-fits-using-iminuit">
 <h2>Run the MLE fits using iminuit<a class="headerlink" href="#run-the-mle-fits-using-iminuit" title="Link to this heading">#</a></h2>
 <p>We begin by running a set of maximum likelihood fits on the generated data and compare the results to the generated amplitudes. The specifications for this optimization are specified in the YAML file under the <code class="docutils literal notranslate"><span class="pre">mle</span></code> key.</p>
-<p>The <strong>ResultManager</strong> class, when initialized with the path to the YAML file, will automatically attempt to load all results into memory. Each result (from MLE, MCMC, IFT) is stored a separate directory for unique access. All results (complex amplitude values, intensities, and metadata like mass, likelihood, etc.) are pulled into a flat pandas dataframe for efficient plotting and analysis. <strong>These dataframes are directly accessible as attributes of the ResultManager object, i.e. <code class="docutils literal notranslate"><span class="pre">resultManager.mle_results</span></code></strong></p>
+<p>The <strong>ResultManager</strong> class, when initialized with the path to the YAML file, will automatically attempt to load all results into memory. Each result (from MLE, MCMC, IFT) is stored a separate directory for unique access. All results (complex amplitude values, intensities, and metadata like mass, likelihood, etc.) are pulled into a flat pandas dataframe for efficient plotting and analysis.</p>
 <p>The main “money” plot (intensity and relative phases of all partial waves) can be generated with the default plotting function, <strong>plot_overview_across_bins</strong>. The MLE results a slightly jittered to avoid too much overlap. The <strong>dashed lines</strong> are the generated amplitudes</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pa run_mle </span><span class="si">{</span><span class="n">main_yaml</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running MLE fits...&quot;</span><span class="p">)</span>
+<span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pa run_mle </span><span class="si">{</span><span class="n">main_yaml</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Running MLE fits...
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">resultManager</span> <span class="o">=</span> <span class="n">ResultManager</span><span class="p">(</span><span class="n">main_yaml</span><span class="p">,</span> <span class="n">silence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Silence all the helpful output for clean documentation</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;MLE fits complete, plotting results...&quot;</span><span class="p">)</span>
+<span class="n">resultManager</span> <span class="o">=</span> <span class="n">ResultManager</span><span class="p">(</span><span class="n">main_yaml</span><span class="p">,</span> <span class="n">silence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Silence all the helpful output for clean documentation</span>
 <span class="n">resultManager</span><span class="o">.</span><span class="n">attempt_load_all</span><span class="p">()</span>
 <span class="n">plot_overview_across_bins</span><span class="p">(</span><span class="n">resultManager</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">)</span>
 <span class="n">montage_and_gif_select_plots</span><span class="p">(</span><span class="n">resultManager</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">)</span>
-<span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/intensity_and_phases/montage_output.pdf&quot;</span><span class="p">)</span>
+<span class="n">show_pdf</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">BASE_DIRECTORY</span><span class="si">}</span><span class="s2">/PLOTS/intensity_and_phases/montage_output.pdf&quot;</span><span class="p">)</span>
 <span class="k">del</span> <span class="n">resultManager</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/WORK/PyAmpTools9/src/pyamptools/utility/resultManager.py:461: RuntimeWarning: invalid value encountered in sqrt
-  relative_phase_error = np.sqrt(variance) * 180.0 / np.pi
-/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
-  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MLE fits complete, plotting results...
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>=================================================================
@@ -861,7 +900,14 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 =================================================================
 </pre></div>
 </div>
-<img alt="../_images/3c2d0b45aacd119523ae558a511a31d52d343101aab81aa50ec52aeba51f81c7.png" src="../_images/3c2d0b45aacd119523ae558a511a31d52d343101aab81aa50ec52aeba51f81c7.png" />
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/d/grid17/ln16/miniconda/envs/pyamptools/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
+</pre></div>
+</div>
+<img alt="../_images/b72a62da08f0137afc4b65e09791ef31d4a017c9ee95247d41b0780084e30696.png" src="../_images/b72a62da08f0137afc4b65e09791ef31d4a017c9ee95247d41b0780084e30696.png" />
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>montage: unable to read font `&#39; @ error/annotate.c/RenderFreetype/1658.
+</pre></div>
+</div>
 </div>
 </div>
 </section>
@@ -875,26 +921,32 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 <span class="n">n_processes</span> <span class="o">=</span> <span class="mi">17</span>
 <span class="n">n_chains</span> <span class="o">=</span> <span class="mi">8</span>
 <span class="n">n_warmup</span> <span class="o">=</span> <span class="mi">500</span>
-<span class="n">n_samples</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">n_samples</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running MCMC fits...&quot;</span><span class="p">)</span>
 <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pa run_mcmc </span><span class="si">{</span><span class="n">main_yaml</span><span class="si">}</span><span class="s2"> -np </span><span class="si">{</span><span class="n">n_processes</span><span class="si">}</span><span class="s2"> -nc </span><span class="si">{</span><span class="n">n_chains</span><span class="si">}</span><span class="s2"> -nw </span><span class="si">{</span><span class="n">n_warmup</span><span class="si">}</span><span class="s2"> -ns </span><span class="si">{</span><span class="n">n_samples</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Running MCMC fits...
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">resultManager</span> <span class="o">=</span> <span class="n">ResultManager</span><span class="p">(</span><span class="n">main_yaml</span><span class="p">,</span> <span class="n">silence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;MCMC fits complete, plotting results...&quot;</span><span class="p">)</span>
+<span class="n">resultManager</span> <span class="o">=</span> <span class="n">ResultManager</span><span class="p">(</span><span class="n">main_yaml</span><span class="p">,</span> <span class="n">silence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">resultManager</span><span class="o">.</span><span class="n">attempt_load_all</span><span class="p">()</span>
 <span class="n">plot_overview_across_bins</span><span class="p">(</span><span class="n">resultManager</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">)</span>
 <span class="n">montage_and_gif_select_plots</span><span class="p">(</span><span class="n">resultManager</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">)</span>
-<span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/intensity_and_phases/montage_output.pdf&quot;</span><span class="p">)</span>
+<span class="n">show_pdf</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">BASE_DIRECTORY</span><span class="si">}</span><span class="s2">/PLOTS/intensity_and_phases/montage_output.pdf&quot;</span><span class="p">)</span>
 <span class="k">del</span> <span class="n">resultManager</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/WORK/PyAmpTools9/src/pyamptools/utility/resultManager.py:461: RuntimeWarning: invalid value encountered in sqrt
-  relative_phase_error = np.sqrt(variance) * 180.0 / np.pi
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MCMC fits complete, plotting results...
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>=================================================================
@@ -902,11 +954,14 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 =================================================================
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/d/grid17/ln16/miniconda/envs/pyamptools/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
   warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
 </pre></div>
 </div>
-<img alt="../_images/67cb8a05c33f1f26713cc4f2000f6c5b87364d0d2f2894f66ccd8715b300bea6.png" src="../_images/67cb8a05c33f1f26713cc4f2000f6c5b87364d0d2f2894f66ccd8715b300bea6.png" />
+<img alt="../_images/1b53c5c35ed65e2a20aecf50c106addb62c5faf7c50c1551ad7ab0decd9b246c.png" src="../_images/1b53c5c35ed65e2a20aecf50c106addb62c5faf7c50c1551ad7ab0decd9b246c.png" />
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>montage: unable to read font `&#39; @ error/annotate.c/RenderFreetype/1658.
+</pre></div>
+</div>
 </div>
 </div>
 </section>
@@ -915,24 +970,31 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 <p>Finally we run a IFT analysis with the same prior model used to generate the synthetic data to obtain a posterior estimate. These are shown in the <strong>solid lines</strong>. The settings for the IFT model are specified in the YAML file under the <code class="docutils literal notranslate"><span class="pre">nifty</span></code> key.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pa run_ift </span><span class="si">{</span><span class="n">main_yaml</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running IFT fit...&quot;</span><span class="p">)</span>
+<span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">run_command</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pa run_ift </span><span class="si">{</span><span class="n">main_yaml</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Running IFT fit...
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">resultManager</span> <span class="o">=</span> <span class="n">ResultManager</span><span class="p">(</span><span class="n">main_yaml</span><span class="p">,</span> <span class="n">silence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;IFT fit complete, plotting results...&quot;</span><span class="p">)</span>
+<span class="n">resultManager</span> <span class="o">=</span> <span class="n">ResultManager</span><span class="p">(</span><span class="n">main_yaml</span><span class="p">,</span> <span class="n">silence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">resultManager</span><span class="o">.</span><span class="n">attempt_load_all</span><span class="p">()</span>
 <span class="n">plot_overview_across_bins</span><span class="p">(</span><span class="n">resultManager</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">)</span>
 <span class="n">montage_and_gif_select_plots</span><span class="p">(</span><span class="n">resultManager</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">)</span>
-<span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/intensity_and_phases/montage_output.pdf&quot;</span><span class="p">)</span>
+<span class="n">show_pdf</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">BASE_DIRECTORY</span><span class="si">}</span><span class="s2">/PLOTS/intensity_and_phases/montage_output.pdf&quot;</span><span class="p">)</span>
+<span class="k">del</span> <span class="n">resultManager</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/WORK/PyAmpTools9/src/pyamptools/utility/resultManager.py:461: RuntimeWarning: invalid value encountered in sqrt
-  relative_phase_error = np.sqrt(variance) * 180.0 / np.pi
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>IFT fit complete, plotting results...
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>=================================================================
@@ -940,15 +1002,18 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 =================================================================
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/d/grid17/ln16/miniconda/envs/pyamptools/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
   warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/d/grid17/ln16/miniconda/envs/pyamptools/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
   warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
 </pre></div>
 </div>
-<img alt="../_images/89dae23be9082734eb4f24d4b75b7cdedcfd0f41367f103a284a33490e73de56.png" src="../_images/89dae23be9082734eb4f24d4b75b7cdedcfd0f41367f103a284a33490e73de56.png" />
+<img alt="../_images/7983a7066b280d2a3626e5192718427f1047279e0ae81541d6f0e5f2cfa69e4d.png" src="../_images/7983a7066b280d2a3626e5192718427f1047279e0ae81541d6f0e5f2cfa69e4d.png" />
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>montage: unable to read font `&#39; @ error/annotate.c/RenderFreetype/1658.
+</pre></div>
+</div>
 </div>
 </div>
 </section>
@@ -964,9 +1029,10 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 <p>We first need to create the plots which also requires projecting the amplitudes onto the moment basis.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">resultManager</span> <span class="o">=</span> <span class="n">ResultManager</span><span class="p">(</span><span class="n">main_yaml</span><span class="p">,</span> <span class="n">silence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Plotting additional results...&quot;</span><span class="p">)</span>
+<span class="n">resultManager</span> <span class="o">=</span> <span class="n">ResultManager</span><span class="p">(</span><span class="n">main_yaml</span><span class="p">,</span> <span class="n">silence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">resultManager</span><span class="o">.</span><span class="n">attempt_load_all</span><span class="p">()</span>
-<span class="n">resultManager</span><span class="o">.</span><span class="n">attempt_project_moments</span><span class="p">(</span><span class="n">normalization_scheme</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">pool_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">silence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">resultManager</span><span class="o">.</span><span class="n">attempt_project_moments</span><span class="p">(</span><span class="n">normalization_scheme</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">pool_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
 <span class="n">plot_binned_complex_plane</span><span class="p">(</span><span class="n">resultManager</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">,</span> <span class="n">silence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">plot_binned_intensities</span><span class="p">(</span><span class="n">resultManager</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">,</span> <span class="n">silence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">plot_moments_across_bins</span><span class="p">(</span><span class="n">resultManager</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">)</span>
@@ -976,10 +1042,7 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/WORK/PyAmpTools9/src/pyamptools/utility/resultManager.py:461: RuntimeWarning: invalid value encountered in sqrt
-  relative_phase_error = np.sqrt(variance) * 180.0 / np.pi
-/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
-  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Plotting additional results...
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>=================================================================
@@ -987,36 +1050,34 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 =================================================================
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/d/grid17/ln16/miniconda/envs/pyamptools/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
+  warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/d/grid17/ln16/miniconda/envs/pyamptools/lib/python3.9/site-packages/nifty8/library/correlated_fields.py:460: UserWarning: unable to add JAX operator for total_N=8
   warn(f&quot;unable to add JAX operator for total_N={total_N}&quot;)
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MomentManagerTwoPS| Calculating moments assuming a TwoPseudoscalar system with max J = 4
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/multiprocessing/popen_fork.py:66: RuntimeWarning: os.fork() was called. os.fork() is incompatible with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
-  self.pid = os.fork()
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MomentManagerTwoPS| Calculating moments assuming a TwoPseudoscalar system with max J = 4
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MomentManagerTwoPS| Calculating moments assuming a TwoPseudoscalar system with max J = 4
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/multiprocessing/popen_fork.py:66: RuntimeWarning: os.fork() was called. os.fork() is incompatible with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
-  self.pid = os.fork()
-</pre></div>
-</div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MomentManagerTwoPS| Calculating moments assuming a TwoPseudoscalar system with max J = 4
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/multiprocessing/popen_fork.py:66: RuntimeWarning: os.fork() was called. os.fork() is incompatible with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
-  self.pid = os.fork()
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MomentManagerTwoPS| Calculating moments assuming a TwoPseudoscalar system with max J = 4
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/w/halld-scshelf2101/lng/micromamba/envs/pyamptools2/lib/python3.9/multiprocessing/popen_fork.py:66: RuntimeWarning: os.fork() was called. os.fork() is incompatible with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
-  self.pid = os.fork()
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>montage: unable to read font `&#39; @ error/annotate.c/RenderFreetype/1658.
+WARNING: The convert command is deprecated in IMv7, use &quot;magick&quot; instead of &quot;convert&quot; or &quot;magick convert&quot;
+
+montage: unable to read font `&#39; @ error/annotate.c/RenderFreetype/1658.
+WARNING: The convert command is deprecated in IMv7, use &quot;magick&quot; instead of &quot;convert&quot; or &quot;magick convert&quot;
+
+montage: unable to read font `&#39; @ error/annotate.c/RenderFreetype/1658.
+montage: unable to read font `&#39; @ error/annotate.c/RenderFreetype/1658.
 </pre></div>
 </div>
 </div>
@@ -1027,12 +1088,12 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 <p>Here, we only plot the non-zero moments (given the set of inferred partial waves). The moments are normalized to the zeroth moment. The MLE point estimates are only shown (errors not propagated)</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/moments/montage_output.pdf&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">show_pdf</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">BASE_DIRECTORY</span><span class="si">}</span><span class="s2">/PLOTS/moments/montage_output.pdf&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/264939a5f2f59a68d9cd96d9b47bbfb0c81a92d54e4f23c784c08816389e34ec.png" src="../_images/264939a5f2f59a68d9cd96d9b47bbfb0c81a92d54e4f23c784c08816389e34ec.png" />
+<img alt="../_images/b3be7ca74d0d1641460d4b684dc698fcb3140c367380cc254da1e8a4836a6ef7.png" src="../_images/b3be7ca74d0d1641460d4b684dc698fcb3140c367380cc254da1e8a4836a6ef7.png" />
 </div>
 </div>
 </section>
@@ -1041,12 +1102,12 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 <p>The inferred amplitudes live in the complex plane. We can scatter the inferred amplitudes and compare the results from the different techniques to see how they compare. A comparison is only shown for one bin. The reference waves are shown as histograms since they have no imaginary component. The color of the scattered points in the non-reference waves is mapped to the intensity of the corresponding reference wave. In this example, the MLE and MCMC results agree and that the MLE errors track the MCMC samples. The band of MCMC solutions is from the smaller reference wave intensity not locking in a well defined phase</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/complex_plane/bin3_complex_plane.pdf&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">show_pdf</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">BASE_DIRECTORY</span><span class="si">}</span><span class="s2">/PLOTS/complex_plane/bin3_complex_plane.pdf&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/8ac22ba1681c3c0f4eaf16c97ca5a9e076876bef1b1449c3e42d3523ddae3e93.png" src="../_images/8ac22ba1681c3c0f4eaf16c97ca5a9e076876bef1b1449c3e42d3523ddae3e93.png" />
+<img alt="../_images/455cc90135f1be6ed0d5a05712a555f607eed1b77ce6a446b773fc15bf673520.png" src="../_images/455cc90135f1be6ed0d5a05712a555f607eed1b77ce6a446b773fc15bf673520.png" />
 </div>
 </div>
 </section>
@@ -1055,12 +1116,12 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 <p>The overview plot (intensity and relative phases as a function of mass) gives a qualitative description of the results. This plot shows the intensity distribution of the results from the various techniques in a single bin. The <span class="math notranslate nohighlight">\(D_2^-\)</span> wave in this bin is small. The estimated MLE uncertainties are bad in this case and covers negative values. The MCMC results shows a highly skewed distribution.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">show_pdf</span><span class="p">(</span><span class="s2">&quot;RESULTS/PLOTS/intensity/bin1_intensities.pdf&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">show_pdf</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">BASE_DIRECTORY</span><span class="si">}</span><span class="s2">/PLOTS/intensity/bin1_intensities.pdf&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/c84b755bbac66650c8180a7dc0f72333a9a97a30d7da818f713e0765adea9655.png" src="../_images/c84b755bbac66650c8180a7dc0f72333a9a97a30d7da818f713e0765adea9655.png" />
+<img alt="../_images/cea5a00f7a5a163c8a7de801681d5fe839218d571355707a063999926be27970.png" src="../_images/cea5a00f7a5a163c8a7de801681d5fe839218d571355707a063999926be27970.png" />
 </div>
 </div>
 </section>
@@ -1069,8 +1130,17 @@ pa<span class="w"> </span>run_processEvents<span class="w"> </span>&lt;main_yaml
 <h1>Cleanup<a class="headerlink" href="#cleanup" title="Link to this heading">#</a></h1>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># os.system(f&#39;rm -rf main.yaml local_beam.conf *.lock&#39;)</span>
-<span class="c1"># os.system(f&#39;rm -r RESULTS&#39;)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Cleaning up...&quot;</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;rm -rf main.yaml local_beam.conf *.lock&#39;</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rm -r </span><span class="si">{</span><span class="n">BASE_DIRECTORY</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Cleaning up...
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0
 </pre></div>
 </div>
 </div>

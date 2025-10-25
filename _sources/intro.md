@@ -8,7 +8,9 @@ Additionally, this repository contains Python bindings for [AmpTools](https://gi
 
 # Usage / Design
 
-`pa` is an **executable** that dispatches various functions to perform various tasks related to optimization and provides easy access to specific AmpTools functionality like generating simulations from `gen_amp` and `gen_vec_ps`, fitting, and extracting fit fractions.
+`pa` is an **executable** that dispatches various functions to perform various tasks related to optimization and provides easy access to specific AmpTools functionality like generating simulations from `gen_amp` and `gen_vec_ps`, fitting, and extracting fit fractions. 
+
+There are a variety of auxillary CLI programs that can perform filtering/selection, subsetting, and plotting of flat root files that are typically used in analysis workflows. Since this is a simple dispatch system, a user can easily add new CLI programs by placing them in the `bin` directory and adding their location to the `src/pyamptools/pa.py` script. This extensibility allows for a centralized hub of available tools to handle most analysis workflows. 
 
 ```shell
 pa -h # for usage
@@ -37,6 +39,7 @@ Please make modifications to `DockerInstall.sh` to match your environment. These
 ## Apptainer Usage
 
 ```shell
+# You might want to add `--cleanenv` flag to run the container in a clean environment
 # /scratch needed for MPI and fontconfig for matplotlib(not so important)
 # --writable-tmpfs allows temp modifications to sif contents. Ideally you can git pull and push updates changes to repos
 # --bind whatever directories you need access to
